@@ -5,12 +5,31 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { players } = await request.json()
+    const { players, tournamentId } = await request.json()
 
     if (!Array.isArray(players) || players.length === 0) {
       return NextResponse.json(
         { message: "Players array is required and cannot be empty" },
         { status: 400 }
+      )
+    }
+
+    if (!tournamentId) {
+      return NextResponse.json(
+        { message: "Tournament ID is required" },
+        { status: 400 }
+      )
+    }
+
+    // Verify tournament exists
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId }
+    })
+
+    if (!tournament) {
+      return NextResponse.json(
+        { message: "Tournament not found" },
+        { status: 404 }
       )
     }
 
@@ -113,7 +132,8 @@ export async function POST(request: NextRequest) {
             name: playerData.name,
             role: playerData.role,
             jerseyNumber: playerData.jerseyNumber || null,
-            iplTeamId: playerData.iplTeamId
+            iplTeamId: playerData.iplTeamId,
+            tournamentId: tournamentId
           }
         })
         created++

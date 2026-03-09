@@ -37,11 +37,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, role, price, jerseyNumber, iplTeamId } = await request.json()
+    const { name, role, price, jerseyNumber, iplTeamId, tournamentId } = await request.json()
 
-    if (!name || !role || !price || !iplTeamId) {
+    if (!name || !role || !price || !iplTeamId || !tournamentId) {
       return NextResponse.json(
-        { message: "Name, role, price, and team are required" },
+        { message: "Name, role, price, team, and tournament are required" },
         { status: 400 }
       )
     }
@@ -63,6 +63,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if tournament exists
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId }
+    })
+
+    if (!tournament) {
+      return NextResponse.json(
+        { message: "Tournament not found" },
+        { status: 404 }
+      )
+    }
+
     // Check if team exists
     const team = await prisma.iPLTeam.findUnique({
       where: { id: iplTeamId }
@@ -75,11 +87,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if jersey number is already taken in the team
+    // Check if jersey number is already taken in the team for this tournament
     if (jerseyNumber) {
       const existingPlayer = await prisma.player.findFirst({
         where: {
           iplTeamId: iplTeamId,
+          tournamentId: tournamentId,
           jerseyNumber: jerseyNumber,
           isActive: true
         }
@@ -87,24 +100,25 @@ export async function POST(request: NextRequest) {
 
       if (existingPlayer) {
         return NextResponse.json(
-          { message: "Jersey number already taken by another player in this team" },
+          { message: "Jersey number already taken by another player in this team for this tournament" },
           { status: 400 }
         )
       }
     }
 
-    // Check if player with same name already exists in the team
+    // Check if player with same name already exists in the team for this tournament
     const existingPlayerName = await prisma.player.findFirst({
       where: {
         name: name,
         iplTeamId: iplTeamId,
+        tournamentId: tournamentId,
         isActive: true
       }
     })
 
     if (existingPlayerName) {
       return NextResponse.json(
-        { message: "Player with this name already exists in this team" },
+        { message: "Player with this name already exists in this team for this tournament" },
         { status: 400 }
       )
     }
@@ -114,7 +128,8 @@ export async function POST(request: NextRequest) {
         name,
         role,
         jerseyNumber: jerseyNumber ? parseInt(jerseyNumber) : null,
-        iplTeamId
+        iplTeamId,
+        tournamentId
       },
       include: {
         iplTeam: {
