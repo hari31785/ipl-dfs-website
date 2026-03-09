@@ -5,8 +5,7 @@ const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const tournamentId = searchParams.get('tournamentId')
+    const tournamentId = request.nextUrl.searchParams.get('tournamentId')
     
     if (!tournamentId) {
       // Return empty array if no tournament selected
