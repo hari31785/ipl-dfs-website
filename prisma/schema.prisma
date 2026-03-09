@@ -22,6 +22,7 @@ model User {
   totalMatches    Int      @default(0)
   winPercentage   Float    @default(0)
   coins           Int      @default(0) // User's current coin balance
+  isActive        Boolean  @default(true) // User account status
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

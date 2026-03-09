@@ -13,7 +13,6 @@ export async function GET() {
         email: true,
         phone: true,
         coins: true,
-        isActive: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -28,7 +27,13 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ users })
+    // Add isActive as true for all users for now (until migration runs)
+    const usersWithStatus = users.map(user => ({
+      ...user,
+      isActive: true
+    }))
+
+    return NextResponse.json({ users: usersWithStatus })
   } catch (error) {
     console.error("Error fetching users:", error)
     return NextResponse.json(
@@ -42,6 +47,12 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    return NextResponse.json({ 
+      message: "User status management will be available after database migration",
+    }, { status: 501 })
+    
+    // TODO: Enable after migration
+    /*
     const { userId, isActive } = await request.json()
 
     if (!userId || typeof isActive !== 'boolean') {
@@ -66,6 +77,7 @@ export async function PUT(request: Request) {
       message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
       user: updatedUser 
     })
+    */
   } catch (error) {
     console.error("Error updating user:", error)
     return NextResponse.json(
