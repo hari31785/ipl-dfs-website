@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react"
 import { Shield, Plus, Edit, Trash2, ArrowLeft, Users, TrendingUp, Star } from "lucide-react"
 
+interface Tournament {
+  id: string
+  name: string
+  isActive: boolean
+}
+
 interface IPLTeam {
   id: string
   name: string
@@ -33,6 +39,8 @@ const PLAYER_ROLES = [
 export default function PlayersManagement() {
   const [players, setPlayers] = useState<Player[]>([])
   const [teams, setTeams] = useState<IPLTeam[]>([])
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [selectedTournament, setSelectedTournament] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [showBulkForm, setShowBulkForm] = useState(false)
@@ -49,7 +57,8 @@ export default function PlayersManagement() {
     role: "BATSMAN",
     price: 8.5, // Hidden default price
     jerseyNumber: "",
-    iplTeamId: ""
+    iplTeamId: "",
+    tournamentId: ""
   })
 
   useEffect(() => {
@@ -60,9 +69,15 @@ export default function PlayersManagement() {
       return
     }
     
+    fetchTournaments()
     fetchTeams()
-    fetchPlayers()
   }, [])
+
+  useEffect(() => {
+    if (selectedTournament) {
+      fetchPlayers()
+    }
+  }, [selectedTournament])
 
   const fetchTeams = async () => {
     try {
@@ -78,7 +93,29 @@ export default function PlayersManagement() {
     }
   }
 
+  const fetchTournaments = async () => {
+    try {
+      const response = await fetch("/api/tournaments")
+      const data = await response.json()
+      
+      if (response.ok) {
+        const tournamentsData = Array.isArray(data) ? data : []
+        setTournaments(tournamentsData)
+        // Auto-select first active tournament
+        const activeTournament = tournamentsData.find((t: Tournament) => t.isActive)
+        if (activeTournament) {
+          setSelectedTournament(activeTournament.id)
+          setFormData(prev => ({ ...prev, tournamentId: activeTournament.id }))
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching tournaments:", error)
+    }
+  }
+
   const fetchPlayers = async () => {
+    if (!selectedTournament) return
+    
     try {
       const response = await fetch("/api/admin/players")
       const data = await response.json()
@@ -126,7 +163,8 @@ export default function PlayersManagement() {
           role: "BATSMAN",
           price: 8.5,
           jerseyNumber: "",
-          iplTeamId: ""
+          iplTeamId: "",
+          tournamentId: selectedTournament
         })
         setShowForm(false)
         setEditingPlayer(null)
@@ -145,7 +183,8 @@ export default function PlayersManagement() {
       role: player.role,
       price: player.price, // Keep existing price but don't show in form
       jerseyNumber: player.jerseyNumber ? player.jerseyNumber.toString() : "",
-      iplTeamId: player.iplTeamId
+      iplTeamId: player.iplTeamId,
+      tournamentId: selectedTournament
     })
     setEditingPlayer(player)
     setShowForm(true)
@@ -310,7 +349,10 @@ export default function PlayersManagement() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ players }),
+        body: JSON.stringify({ 
+          players,
+          tournamentId: selectedTournament 
+        }),
       })
 
       const data = await response.json()
@@ -382,16 +424,32 @@ export default function PlayersManagement() {
         {/* Controls */}
         <div className="mb-8 flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex gap-3">
+            {/* Tournament Selector */}
+            <select
+              value={selectedTournament}
+              onChange={(e) => setSelectedTournament(e.target.value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">Select Tournament</option>
+              {tournaments.map((tournament) => (
+                <option key={tournament.id} value={tournament.id}>
+                  {tournament.name} {tournament.isActive ? '(Active)' : ''}
+                </option>
+              ))}
+            </select>
+            
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              disabled={!selectedTournament}
+              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               <Plus className="h-5 w-5" />
               Add Single Player
             </button>
             <button
               onClick={() => setShowBulkForm(true)}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              disabled={!selectedTournament}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               <Users className="h-5 w-5" />
               Bulk Add Players
