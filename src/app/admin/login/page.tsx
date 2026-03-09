@@ -147,7 +147,7 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
-
+        </div>
 
         {/* Back to Main Site */}
         <div className="mt-8 text-center">
