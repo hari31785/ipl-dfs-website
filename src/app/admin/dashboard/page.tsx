@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { Shield, Users, Trophy, Target, Database, BarChart3, LogOut, Plus } from "lucide-react"
 
 interface AdminData {
@@ -113,15 +114,15 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <Link href="/admin/users" className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-3xl font-bold text-primary-800">{stats.totalUsers}</p>
+                <p className="text-sm font-medium text-gray-600 group-hover:text-blue-600 transition-colors">Total Users</p>
+                <p className="text-3xl font-bold text-primary-800 group-hover:text-blue-700 transition-colors">{stats.totalUsers}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-500" />
+              <Users className="h-8 w-8 text-blue-500 group-hover:text-blue-600 transition-colors" />
             </div>
-          </div>
+          </Link>
 
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
@@ -178,6 +179,31 @@ export default function AdminDashboard() {
                   <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </a>
+            </div>
+          </div>
+
+          {/* User Management */}
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <h3 className="text-xl font-bold text-primary-800 mb-6 flex items-center gap-2">
+              <Users className="h-6 w-6" />
+              User Management
+            </h3>
+            <div className="space-y-4">
+              <Link
+                href="/admin/users"
+                className="block w-full p-4 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg transition-colors group shadow-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-6 w-6" />
+                    <div>
+                      <div className="font-semibold">Manage Users</div>
+                      <div className="text-sm opacity-90">View and manage registered users</div>
+                    </div>
+                  </div>
+                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
             </div>
           </div>
 
