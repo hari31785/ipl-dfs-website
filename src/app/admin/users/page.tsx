@@ -286,12 +286,6 @@ export default function AdminUsersPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
                   {filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
