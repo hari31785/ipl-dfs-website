@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { 
         message: "Failed to create admin user",
-        error: error.message
+        error: error instanceof Error ? error.message : "Unknown error"
       },
       { status: 500 }
     )
