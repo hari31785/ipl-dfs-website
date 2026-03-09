@@ -102,32 +102,24 @@ export default function PlayersManagement() {
 
   const fetchTournaments = async () => {
     try {
-      console.log('🏏 Fetching tournaments from admin API...')
       const response = await fetch("/api/admin/tournaments")
       const data = await response.json()
       
-      console.log('🏏 Tournament response:', { status: response.status, data })
-      
       if (response.ok) {
         const tournamentsData = Array.isArray(data) ? data : []
-        console.log('🏏 Processed tournaments:', tournamentsData)
         setTournaments(tournamentsData)
         // Auto-select first active tournament, or first tournament if none active
         const activeTournament = tournamentsData.find((t: Tournament) => t.isActive)
         const firstTournament = tournamentsData[0]
         const selectedTourney = activeTournament || firstTournament
         
-        console.log('🏏 Auto-selecting tournament:', selectedTourney)
-        
         if (selectedTourney) {
           setSelectedTournament(selectedTourney.id)
           setFormData(prev => ({ ...prev, tournamentId: selectedTourney.id }))
         }
-      } else {
-        console.error('🏏 Tournament fetch failed:', response.status, data)
       }
     } catch (error) {
-      console.error("🏏 Error fetching tournaments:", error)
+      console.error("Error fetching tournaments:", error)
     }
   }
 
@@ -436,24 +428,6 @@ export default function PlayersManagement() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Debug Panel - Temporary */}
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-semibold text-blue-800">Debug Info:</h4>
-          <p className="text-sm text-blue-700">
-            Tournaments loaded: {tournaments.length} | 
-            Selected: {selectedTournament || 'None'} | 
-            Loading: {loading.toString()}
-          </p>
-          {tournaments.length > 0 && (
-            <details className="mt-2">
-              <summary className="cursor-pointer text-blue-700">Show tournaments data</summary>
-              <pre className="text-xs mt-2 bg-white p-2 rounded border">
-                {JSON.stringify(tournaments, null, 2)}
-              </pre>
-            </details>
-          )}
-        </div>
-
         {/* Success/Error Messages */}
         {success && (
           <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
@@ -475,7 +449,7 @@ export default function PlayersManagement() {
               onChange={(e) => setSelectedTournament(e.target.value)}
               className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
-              <option value="">Select Tournament ({tournaments.length} available)</option>
+              <option value="">Select Tournament</option>
               {tournaments.map((tournament) => (
                 <option key={tournament.id} value={tournament.id}>
                   {tournament.name} {tournament.isActive ? '(Active)' : ''}
