@@ -359,13 +359,13 @@ export default function GamesPage() {
                       className="w-4 h-4 rounded-full" 
                       style={{ backgroundColor: game.team1.color }}
                     ></span>
-                    <span className="font-medium">{game.team1.shortName}</span>
+                    <span className="font-medium text-gray-900">{game.team1.shortName}</span>
                     <span className="text-gray-400">vs</span>
                     <span 
                       className="w-4 h-4 rounded-full" 
                       style={{ backgroundColor: game.team2.color }}
                     ></span>
-                    <span className="font-medium">{game.team2.shortName}</span>
+                    <span className="font-medium text-gray-900">{game.team2.shortName}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
