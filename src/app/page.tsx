@@ -79,7 +79,7 @@ function HomeContent() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="text-center group">
               <div className="w-16 h-16 bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
@@ -105,15 +105,6 @@ function HomeContent() {
               </div>
               <h3 className="text-xl font-semibold text-primary-800 mb-2">Friend Challenges</h3>
               <p className="text-gray-600">Invite friends and create private contests</p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Target className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-primary-800 mb-2">Strategy</h3>
-              <p className="text-gray-600">Build teams with salary cap and player limits</p>
             </div>
           </div>
         </div>
