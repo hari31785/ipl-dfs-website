@@ -165,6 +165,16 @@ export default function LoginPage() {
                 </>
               )}
             </button>
+
+            {/* Forgot Password Link */}
+            <div className="text-center mt-4">
+              <Link 
+                href="/forgot-password"
+                className="text-sm text-secondary-600 hover:text-secondary-800 transition-colors"
+              >
+                Forgot your password?
+              </Link>
+            </div>
           </form>
 
           {/* Divider */}

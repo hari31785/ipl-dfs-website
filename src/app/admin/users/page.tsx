@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, ArrowLeft, Home, Search, Filter, Calendar, Mail, Phone, Coins, Activity, AlertTriangle, CheckCircle } from "lucide-react"
+import { Users, ArrowLeft, Home, Search, Filter, Calendar, Mail, Phone, Coins, CheckCircle, Activity } from "lucide-react"
 import Link from "next/link"
 
 interface User {
@@ -10,6 +10,7 @@ interface User {
   name: string | null
   email: string | null
   phone: string | null
+  password: string
   coins: number
   isActive: boolean
   createdAt: string
@@ -85,30 +86,36 @@ export default function AdminUsersPage() {
     setFilteredUsers(filtered)
   }
 
-  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+  const deleteUser = async (userId: string, username: string) => {
+    if (!confirm(`Are you sure you want to permanently delete user "${username}"? This action cannot be undone and will remove all their data.`)) {
+      return
+    }
+
     try {
       const response = await fetch('/api/admin/users', {
-        method: 'PUT',
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          userId,
-          isActive: !currentStatus
-        })
+        body: JSON.stringify({ userId })
       })
 
       if (response.ok) {
         await fetchUsers() // Refresh the list
-        alert(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`)
+        alert('User deleted successfully')
       } else {
         const error = await response.json()
-        alert(`Failed to update user: ${error.message}`)
+        alert(`Failed to delete user: ${error.message}`)
       }
     } catch (error) {
-      console.error('Error updating user status:', error)
-      alert('Network error while updating user status')
+      console.error('Error deleting user:', error)
+      alert('Network error while deleting user')
     }
+  }
+
+  const copyPassword = (password: string, username: string) => {
+    navigator.clipboard.writeText(password)
+    alert(`Password for ${username} copied to clipboard`)
   }
 
   const formatDate = (dateString: string) => {
@@ -119,24 +126,6 @@ export default function AdminUsersPage() {
       hour: '2-digit',
       minute: '2-digit'
     })
-  }
-
-  const getStatusBadge = (isActive: boolean) => {
-    if (isActive) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          <CheckCircle className="h-3 w-3" />
-          Active
-        </span>
-      )
-    } else {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-          <AlertTriangle className="h-3 w-3" />
-          Inactive
-        </span>
-      )
-    }
   }
 
   if (loading) {
@@ -278,9 +267,9 @@ export default function AdminUsersPage() {
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">User</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Password</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Coins</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
                     </tr>
@@ -316,6 +305,20 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                            {user.password}
+                          </span>
+                          <button
+                            onClick={() => copyPassword(user.password, user.username)}
+                            className="text-blue-600 hover:text-blue-800 text-xs"
+                            title="Copy password"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <Coins className="h-4 w-4 text-yellow-500" />
                           <span className="font-medium text-gray-900">{user.coins.toLocaleString()}</span>
@@ -332,9 +335,6 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {getStatusBadge(user.isActive)}
-                      </td>
-                      <td className="px-6 py-4">
                         <div className="flex items-center gap-1 text-sm text-gray-600">
                           <Calendar className="h-3 w-3" />
                           {formatDate(user.createdAt)}
@@ -342,14 +342,10 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => toggleUserStatus(user.id, user.isActive)}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            user.isActive
-                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                              : 'bg-green-100 text-green-700 hover:bg-green-200'
-                          }`}
+                          onClick={() => deleteUser(user.id, user.username)}
+                          className="px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
                         >
-                          {user.isActive ? 'Deactivate' : 'Activate'}
+                          Delete User
                         </button>
                       </td>
                     </tr>
@@ -375,7 +371,6 @@ export default function AdminUsersPage() {
                         <p className="text-sm text-gray-600">@{user.username}</p>
                       </div>
                     </div>
-                    {getStatusBadge(user.isActive)}
                   </div>
                   
                   {/* Contact Info */}
@@ -392,6 +387,22 @@ export default function AdminUsersPage() {
                         {user.phone}
                       </div>
                     )}
+                  </div>
+                  
+                  {/* Password Section */}
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Password</p>
+                        <span className="font-mono text-sm text-gray-800">{user.password}</span>
+                      </div>
+                      <button
+                        onClick={() => copyPassword(user.password, user.username)}
+                        className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-50 rounded"
+                      >
+                        Copy
+                      </button>
+                    </div>
                   </div>
                   
                   {/* Stats Row */}
@@ -412,14 +423,10 @@ export default function AdminUsersPage() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <button
-                      onClick={() => toggleUserStatus(user.id, user.isActive)}
-                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        user.isActive
-                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                          : 'bg-green-100 text-green-700 hover:bg-green-200'
-                      }`}
+                      onClick={() => deleteUser(user.id, user.username)}
+                      className="w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
                     >
-                      {user.isActive ? 'Deactivate User' : 'Activate User'}
+                      Delete User
                     </button>
                   </div>
                 </div>
