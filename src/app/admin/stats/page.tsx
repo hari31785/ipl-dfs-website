@@ -53,7 +53,8 @@ export default function StatsPage() {
     wickets: '',
     catches: '',
     runOuts: '',
-    stumpings: ''
+    stumpings: '',
+    didNotPlay: false
   });
 
   useEffect(() => {
@@ -123,7 +124,8 @@ export default function StatsPage() {
     const runOuts = parseInt(formData.runOuts) || 0;
     const stumpings = parseInt(formData.stumpings) || 0;
 
-    const points = calculatePoints(runs, wickets, catches, runOuts, stumpings);
+    // If player did not play, set points to 0
+    const points = formData.didNotPlay ? 0 : calculatePoints(runs, wickets, catches, runOuts, stumpings);
 
     try {
       const response = await fetch('/api/admin/stats', {
@@ -139,6 +141,7 @@ export default function StatsPage() {
           catches,
           runOuts,
           stumpings,
+          didNotPlay: formData.didNotPlay,
           points
         }),
       });
@@ -164,7 +167,8 @@ export default function StatsPage() {
       wickets: '',
       catches: '',
       runOuts: '',
-      stumpings: ''
+      stumpings: '',
+      didNotPlay: false
     });
     setShowForm(false);
   };
@@ -422,15 +426,37 @@ export default function StatsPage() {
                   </div>
                 </div>
 
+                {/* DNP Checkbox */}
+                <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.didNotPlay}
+                      onChange={(e) => setFormData({ ...formData, didNotPlay: e.target.checked })}
+                      className="w-5 h-5 text-orange-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
+                    />
+                    <div>
+                      <span className="font-semibold text-gray-900">Did Not Play (DNP)</span>
+                      <p className="text-sm text-gray-600">Check this if the player did not participate in the game. Stats will be set to 0 points.</p>
+                    </div>
+                  </label>
+                </div>
+
                 {/* Points Preview */}
                 <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
                   <div className="font-medium text-blue-900">Points Calculation Preview:</div>
-                  <div className="text-sm text-blue-800 mt-1">
-                    Runs: {formData.runs || 0} × 1 = {(parseInt(formData.runs) || 0) * 1} pts<br/>
-                    Wickets: {formData.wickets || 0} × 20 = {(parseInt(formData.wickets) || 0) * 20} pts<br/>
-                    Fielding: {((parseInt(formData.catches) || 0) + (parseInt(formData.runOuts) || 0) + (parseInt(formData.stumpings) || 0))} × 5 = {((parseInt(formData.catches) || 0) + (parseInt(formData.runOuts) || 0) + (parseInt(formData.stumpings) || 0)) * 5} pts<br/>
-                    <strong className="text-blue-900 text-base">Total: {previewPoints()} points</strong>
-                  </div>
+                  {formData.didNotPlay ? (
+                    <div className="text-sm text-blue-800 mt-1">
+                      <strong className="text-blue-900 text-base">Player marked as DNP - 0 points</strong>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-blue-800 mt-1">
+                      Runs: {formData.runs || 0} × 1 = {(parseInt(formData.runs) || 0) * 1} pts<br/>
+                      Wickets: {formData.wickets || 0} × 20 = {(parseInt(formData.wickets) || 0) * 20} pts<br/>
+                      Fielding: {((parseInt(formData.catches) || 0) + (parseInt(formData.runOuts) || 0) + (parseInt(formData.stumpings) || 0))} × 5 = {((parseInt(formData.catches) || 0) + (parseInt(formData.runOuts) || 0) + (parseInt(formData.stumpings) || 0)) * 5} pts<br/>
+                      <strong className="text-blue-900 text-base">Total: {previewPoints()} points</strong>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">

@@ -67,7 +67,7 @@ export async function POST(
     // Determine whose turn it is
     const currentPickOrder = matchup.draftPicks.length + 1;
     
-    if (currentPickOrder > 10) {
+    if (currentPickOrder > 14) {
       return NextResponse.json(
         { message: 'Draft is complete' },
         { status: 400 }
@@ -96,13 +96,17 @@ export async function POST(
       );
     }
 
+    // Determine if this pick is a bench player (picks 11-14)
+    const isBench = currentPickOrder > 10;
+
     // Create the draft pick
     const draftPick = await prisma.draftPick.create({
       data: {
         matchupId,
         playerId,
         pickedByUserId: userSignupId,
-        pickOrder: currentPickOrder
+        pickOrder: currentPickOrder,
+        isBench
       },
       include: {
         player: {
@@ -114,7 +118,7 @@ export async function POST(
     });
 
     // If draft is complete, update matchup status
-    if (currentPickOrder === 10) {
+    if (currentPickOrder === 14) {
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
         data: { status: 'COMPLETED' }

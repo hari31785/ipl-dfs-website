@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/stats - Add player stats
 export async function POST(request: NextRequest) {
   try {
-    const { iplGameId, playerId, runs, wickets, catches, runOuts, stumpings, points } = await request.json();
+    const { iplGameId, playerId, runs, wickets, catches, runOuts, stumpings, points, didNotPlay } = await request.json();
 
     // Validation
     if (!iplGameId || !playerId) {
@@ -119,6 +119,7 @@ export async function POST(request: NextRequest) {
           catches,
           runOuts,
           stumpings,
+          didNotPlay: didNotPlay || false,
           points
         },
         include: {
@@ -138,6 +139,13 @@ export async function POST(request: NextRequest) {
           iplGameId,
           playerId,
           runs,
+          wickets,
+          catches,
+          runOuts,
+          stumpings,
+          didNotPlay: didNotPlay || false,
+          points
+        },
           wickets,
           catches,
           runOuts,
