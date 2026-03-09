@@ -143,6 +143,7 @@ model PlayerStat {
   catches     Int      @default(0)
   runOuts     Int      @default(0)
   stumpings   Int      @default(0)
+  didNotPlay  Boolean  @default(false) // DNP flag - player did not participate in the game
   points      Float    @default(0) // Calculated: (runs * 1) + (wickets * 20) + ((catches + runOuts + stumpings) * 5)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -264,7 +265,8 @@ model DraftPick {
   matchupId       String
   playerId        String
   pickedByUserId  String   // ContestSignup ID
-  pickOrder       Int      // 1-10 for snake draft
+  pickOrder       Int      // 1-14 for snake draft (7 picks each: 5 starters + 2 bench)
+  isBench         Boolean  @default(false) // True if this is a bench player (picks 11-14)
   pickTimestamp   DateTime @default(now())
   
   // Relations
