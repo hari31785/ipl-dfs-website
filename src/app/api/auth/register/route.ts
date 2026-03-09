@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { PrismaClient } from "@prisma/client"
+import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   const prisma = new PrismaClient()
@@ -76,17 +77,18 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating new user...')
 
-    // Use plaintext password temporarily to avoid bcrypt issues
-    // TODO: Re-enable bcrypt hashing after testing
-    
-    // Create user
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12)
+
+    // Create user - explicitly exclude isActive field to avoid database column error
     const user = await prisma.user.create({
       data: {
         name,
-        username: username,
+        username,
         email,
         phone: phone || null,
-        password: password, // Temporarily storing plaintext - SECURITY RISK
+        password: hashedPassword,
+        // Don't include isActive until the database column exists
       },
       select: {
         id: true,
