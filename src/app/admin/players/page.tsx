@@ -121,8 +121,9 @@ export default function PlayersManagement() {
       const data = await response.json()
       
       if (response.ok) {
-        setPlayers(data.players)
+        setPlayers(Array.isArray(data.players) ? data.players : [])
       } else {
+        setPlayers([])
         setError(data.message || "Failed to fetch players")
       }
     } catch (error) {
