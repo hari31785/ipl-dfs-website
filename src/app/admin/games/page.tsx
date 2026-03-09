@@ -487,7 +487,7 @@ export default function GamesPage() {
                       <option value="" className="text-gray-500">Select Home Team</option>
                       {Array.isArray(teams) && teams.map((team) => (
                         <option key={team.id} value={team.id} className="text-gray-900">
-                          {team.name} ({team.shortName})
+                          {team.name}
                         </option>
                       ))}
                     </select>
@@ -509,7 +509,7 @@ export default function GamesPage() {
                       <option value="" className="text-gray-500">Select Away Team</option>
                       {Array.isArray(teams) && teams.map((team) => (
                         <option key={team.id} value={team.id} className="text-gray-900">
-                          {team.name} ({team.shortName})
+                          {team.name}
                         </option>
                       ))}
                     </select>
