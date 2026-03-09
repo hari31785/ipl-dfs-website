@@ -286,7 +286,8 @@ export default function PlayersManagement() {
       role: "BATSMAN", 
       price: 8.5, // Hidden default price
       jerseyNumber: "",
-      iplTeamId: ""
+      iplTeamId: "",
+      tournamentId: selectedTournament
     })
     setShowForm(false)
     setShowBulkForm(false)
