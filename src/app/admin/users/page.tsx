@@ -154,25 +154,25 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link href="/admin/dashboard" className="text-gray-600 hover:text-gray-800 transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div className="flex items-center gap-3">
               <Users className="h-6 w-6 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">User Management</h1>
             </div>
           </div>
-          <Link href="/admin/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors">
+          <Link href="/admin/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors text-sm">
             <Home className="h-4 w-4" />
             Dashboard
           </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -221,8 +221,8 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-8">
+          <div className="flex flex-col gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -231,16 +231,16 @@ export default function AdminUsersPage() {
                   placeholder="Search by username, name, or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-2">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="all">All Users</option>
                 <option value="active">Active Only</option>
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "newest" | "oldest" | "name" | "coins")}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -270,14 +270,22 @@ export default function AdminUsersPage() {
               <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">User</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Coins</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
+            <>
+              {/* Desktop Table */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">User</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Coins</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
                     <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th>
                     <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
                     <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
@@ -354,6 +362,74 @@ export default function AdminUsersPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            
+            {/* Mobile Card Layout */}
+            <div className="lg:hidden divide-y divide-gray-200">
+              {filteredUsers.map((user) => (
+                <div key={user.id} className="p-4 space-y-3">
+                  {/* User Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">
+                          {user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{user.name || 'N/A'}</h3>
+                        <p className="text-sm text-gray-600">@{user.username}</p>
+                      </div>
+                    </div>
+                    {getStatusBadge(user.isActive)}
+                  </div>
+                  
+                  {/* Contact Info */}
+                  <div className="space-y-1">
+                    {user.email && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Mail className="h-3 w-3" />
+                        {user.email}
+                      </div>
+                    )}
+                    {user.phone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone className="h-3 w-3" />
+                        {user.phone}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                    <div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Coins className="h-4 w-4 text-yellow-500" />
+                        <span className="font-medium">{user.coins.toLocaleString()}</span>
+                      </div>
+                      <p className="text-xs text-gray-500">Coins</p>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">{user._count.contestSignups}</div>
+                      <p className="text-xs text-gray-500">Contest Signups</p>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button */}
+                  <div className="pt-2">
+                    <button
+                      onClick={() => toggleUserStatus(user.id, user.isActive)}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        user.isActive
+                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                          : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      }`}
+                    >
+                      {user.isActive ? 'Deactivate User' : 'Activate User'}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
