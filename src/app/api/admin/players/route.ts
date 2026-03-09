@@ -3,9 +3,22 @@ import { PrismaClient } from "@prisma/client"
 
 const prisma = new PrismaClient()
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const tournamentId = searchParams.get('tournamentId')
+    
+    if (!tournamentId) {
+      return NextResponse.json(
+        { message: "Tournament ID is required" },
+        { status: 400 }
+      )
+    }
+
     const players = await prisma.player.findMany({
+      where: {
+        tournamentId: tournamentId
+      },
       orderBy: [
         { iplTeam: { shortName: 'asc' } },
         { name: 'asc' }

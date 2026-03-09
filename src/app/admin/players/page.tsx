@@ -117,7 +117,7 @@ export default function PlayersManagement() {
     if (!selectedTournament) return
     
     try {
-      const response = await fetch("/api/admin/players")
+      const response = await fetch(`/api/admin/players?tournamentId=${selectedTournament}`)
       const data = await response.json()
       
       if (response.ok) {
