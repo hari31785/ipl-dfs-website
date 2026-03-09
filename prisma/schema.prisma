@@ -18,6 +18,7 @@ model User {
   email           String   @unique
   phone           String?
   password        String
+  isActive        Boolean  @default(true) // Add back to match production DB
   totalWins       Int      @default(0)
   totalMatches    Int      @default(0)
   winPercentage   Float    @default(0)
