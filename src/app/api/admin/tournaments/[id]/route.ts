@@ -76,10 +76,13 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  console.log('DELETE tournament called')
   try {
     const { id } = await params
+    console.log('Tournament ID:', id)
     
     // Check what's associated with this tournament
+    console.log('Checking associated data...')
     const [gamesCount, playersCount, contestsCount] = await Promise.all([
       prisma.iPLGame.count({ where: { tournamentId: id } }),
       prisma.player.count({ where: { tournamentId: id } }),
@@ -89,6 +92,8 @@ export async function DELETE(
         } 
       })
     ])
+
+    console.log('Counts:', { gamesCount, playersCount, contestsCount })
 
     // If there are active contests, prevent deletion
     if (contestsCount > 0) {
@@ -167,17 +172,25 @@ export async function DELETE(
     }
 
     // Simple delete if no games
+    console.log('Performing simple delete...')
     await prisma.tournament.delete({
       where: { id }
     })
 
+    console.log('Tournament deleted successfully')
     return NextResponse.json({ message: "Tournament deleted successfully" })
   } catch (error) {
     console.error("Error deleting tournament:", error)
+    console.error("Error details:", {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    })
     return NextResponse.json(
       { 
         message: "Failed to delete tournament",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
+        details: process.env.NODE_ENV === 'development' ? error : undefined
       },
       { status: 500 }
     )
