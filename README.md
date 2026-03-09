@@ -1,8 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IPL DFS Website
+
+A fantasy cricket platform built with Next.js, featuring snake draft tournaments, head-to-head matchups, and score-based coin rewards.
+
+## Features
+
+- **Snake Draft System**: 10-round draft with alternating pick order
+- **Score Calculation**: Points based on runs (1pt), wickets (20pts), catches/runouts/stumpings (5pts)
+- **Coin System**: Winnings = (score difference) × contest multiplier - 10% admin fee
+- **Admin Panel**: Complete contest and player management
+- **Real-time Updates**: Live drafting and score tracking
+
+## Tech Stack
+
+- **Frontend**: Next.js 16, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: PostgreSQL (production), SQLite (development)
+- **Authentication**: NextAuth.js
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Set up environment variables:
+```bash
+cp .env.local.example .env.local
+# Edit .env.local with your settings
+```
+
+Set up the database:
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
