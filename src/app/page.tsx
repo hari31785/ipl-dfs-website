@@ -41,10 +41,10 @@ function HomeContent() {
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
               IPL <span className="text-secondary-400">DFS</span>
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-black mb-8 max-w-3xl mx-auto">
               Fantasy Cricket Head-to-Head
             </p>
-            <p className="text-lg text-blue-200 mb-12 max-w-2xl mx-auto">
+            <p className="text-lg text-black mb-12 max-w-2xl mx-auto">
               Compete with your friends in Indian Premier League Daily Fantasy Sports. 
               Build your dream team, challenge your friends, and prove who knows cricket best!
             </p>
