@@ -1,12 +1,12 @@
 // Prisma Schema for IPL DFS Website with Admin Management
-// Database: SQLite for development (can switch to PostgreSQL for production)
+// Database: PostgreSQL for production, SQLite for development
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
