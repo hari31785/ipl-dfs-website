@@ -69,8 +69,15 @@ export default function PlayersManagement() {
       return
     }
     
-    fetchTournaments()
-    fetchTeams()
+    async function initializeData() {
+      await Promise.all([
+        fetchTournaments(),
+        fetchTeams()
+      ])
+      setLoading(false)
+    }
+    
+    initializeData()
   }, [])
 
   useEffect(() => {
@@ -114,19 +121,26 @@ export default function PlayersManagement() {
   }
 
   const fetchPlayers = async () => {
-    if (!selectedTournament) return
+    if (!selectedTournament) {
+      setPlayers([])
+      setLoading(false)
+      return
+    }
     
+    setLoading(true)
     try {
       const response = await fetch(`/api/admin/players?tournamentId=${selectedTournament}`)
       const data = await response.json()
       
       if (response.ok) {
         setPlayers(Array.isArray(data.players) ? data.players : [])
+        setError("")
       } else {
         setPlayers([])
         setError(data.message || "Failed to fetch players")
       }
     } catch (error) {
+      setPlayers([])
       setError("Network error")
     } finally {
       setLoading(false)
