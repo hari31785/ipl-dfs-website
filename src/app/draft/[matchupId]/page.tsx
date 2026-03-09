@@ -203,7 +203,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   const currentPickOrder = matchup.draftPicks.length + 1;
   const isMyTurn = (() => {
-    if (currentPickOrder > 10) return false;
+    if (currentPickOrder > 14) return false;
     
     // Snake draft logic
     const round = Math.ceil(currentPickOrder / 2);
@@ -217,7 +217,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     }
   })();
 
-  const isDraftComplete = matchup.draftPicks.length >= 10;
+  const isDraftComplete = matchup.draftPicks.length >= 14;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
