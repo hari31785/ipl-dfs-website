@@ -20,6 +20,9 @@ export async function GET() {
           where: {
             status: {
               in: ['UPCOMING', 'SIGNUP_OPEN']
+            },
+            gameDate: {
+              gte: new Date()
             }
           },
           orderBy: {
