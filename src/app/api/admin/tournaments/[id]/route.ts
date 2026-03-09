@@ -88,7 +88,7 @@ export async function DELETE(
       prisma.player.count({ where: { tournamentId: id } }),
       prisma.contest.count({ 
         where: { 
-          game: { tournamentId: id } 
+          iplGame: { tournamentId: id } 
         } 
       })
     ])
@@ -106,14 +106,18 @@ export async function DELETE(
       )
     }
 
-    // If there are games, offer cascading delete
-    if (gamesCount > 0) {
+    // If there are games or players, offer cascading delete
+    if (gamesCount > 0 || playersCount > 0) {
       const force = request.nextUrl.searchParams.get('force') === 'true'
       
       if (!force) {
+        const message = gamesCount > 0 
+          ? `Tournament has ${gamesCount} games and ${playersCount} players. Add ?force=true to delete everything.`
+          : `Tournament has ${playersCount} players. Add ?force=true to delete everything.`
+          
         return NextResponse.json(
           { 
-            message: `Tournament has ${gamesCount} games and ${playersCount} players. Add ?force=true to delete everything.`,
+            message,
             details: { contests: contestsCount, games: gamesCount, players: playersCount },
             canForceDelete: true
           },
@@ -130,7 +134,7 @@ export async function DELETE(
         await tx.contestSignup.deleteMany({
           where: {
             contest: {
-              game: { tournamentId: id }
+              iplGame: { tournamentId: id }
             }
           }
         })
@@ -138,7 +142,7 @@ export async function DELETE(
         // Delete contests for games in this tournament  
         await tx.contest.deleteMany({
           where: {
-            game: { tournamentId: id }
+            iplGame: { tournamentId: id }
           }
         })
 
