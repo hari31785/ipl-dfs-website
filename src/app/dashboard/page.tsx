@@ -416,10 +416,13 @@ export default function DashboardPage() {
                                         className="flex flex-col items-center justify-center gap-1 px-4 py-3 bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 text-gray-800 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
                                         <span className="font-bold text-base text-gray-900">
-                                          {contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100)' : 
-                                           contest.contestType === 'REGULAR' ? 'Regular (50)' : 
-                                           contest.contestType === 'LOW_STAKES' ? 'Low Stakes (25)' : 
-                                           contest.contestType}
+                                          {(() => {
+                                            const type = typeof contest.contestType === 'string' ? contest.contestType : contest.contestType?.name || '';
+                                            return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
+                                                   type === 'REGULAR' ? 'Regular (50)' : 
+                                                   type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
+                                                   type;
+                                          })()}
                                         </span>
                                         <span className="text-xs text-gray-700">{contest._count.signups}/{contest.maxParticipants} joined</span>
                                         {joiningContest === contest.id ? (
