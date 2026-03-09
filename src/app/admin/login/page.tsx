@@ -148,18 +148,6 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* Demo Info */}
-          <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="text-center text-sm text-amber-800">
-              <strong>First Time Setup:</strong>
-              <div className="mt-2">
-                <span className="font-mono bg-amber-100 px-2 py-1 rounded">Username: admin</span>
-                <br />
-                <span className="font-mono bg-amber-100 px-2 py-1 rounded mt-1 inline-block">Password: admin123</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Back to Main Site */}
         <div className="mt-8 text-center">
