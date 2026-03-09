@@ -3,10 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Trophy, Users, Zap, Target, ArrowRight, CheckCircle } from "lucide-react";
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -219,5 +219,13 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

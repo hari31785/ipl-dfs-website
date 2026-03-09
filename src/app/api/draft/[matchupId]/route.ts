@@ -110,7 +110,7 @@ export async function GET(
   } catch (error) {
     console.error('Error fetching draft details:', error);
     return NextResponse.json(
-      { message: 'Failed to fetch draft details', error: error.message },
+      { message: 'Failed to fetch draft details', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

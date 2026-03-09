@@ -6,11 +6,12 @@ const prisma = new PrismaClient();
 // GET /api/admin/games/[id] - Get single game details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const game = await prisma.iPLGame.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         team1: true,
         team2: true,
@@ -47,9 +48,10 @@ export async function GET(
 // PUT /api/admin/games/[id] - Update game
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { tournamentId, title, description, team1Id, team2Id, gameDate, signupDeadline } = await request.json();
 
     // Validation
@@ -80,7 +82,7 @@ export async function PUT(
 
     // Check if game exists
     const existingGame = await prisma.iPLGame.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingGame) {
@@ -111,7 +113,7 @@ export async function PUT(
     }
 
     const game = await prisma.iPLGame.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         tournamentId,
         title,
@@ -142,12 +144,13 @@ export async function PUT(
 // DELETE /api/admin/games/[id] - Delete game
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Check if game exists and has any contests with signups
     const game = await prisma.iPLGame.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         contests: {
           include: {
@@ -180,11 +183,11 @@ export async function DELETE(
 
     // Delete associated contests first, then the game
     await prisma.contest.deleteMany({
-      where: { iplGameId: params.id }
+      where: { iplGameId: id }
     });
 
     await prisma.iPLGame.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ message: 'Game deleted successfully' });

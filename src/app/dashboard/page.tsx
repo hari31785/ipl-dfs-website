@@ -409,7 +409,7 @@ export default function DashboardPage() {
                                         disabled={joiningContest === contest.id}
                                         className="flex flex-col items-center justify-center gap-1 px-4 py-3 bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 text-gray-800 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
-                                        <span className="font-bold text-base text-gray-900">{contest.contestType.replace('_COIN', '')}</span>
+                                        <span className="font-bold text-base text-gray-900">{String(contest.contestType).replace('_COIN', '')}</span>
                                         <span className="text-xs text-gray-700">{contest._count.signups}/{contest.maxParticipants} joined</span>
                                         {joiningContest === contest.id ? (
                                           <span className="text-xs text-gray-800 font-medium">Joining...</span>

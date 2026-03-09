@@ -116,7 +116,9 @@ export async function GET(request: NextRequest) {
         matchup: matchup ? {
           id: matchup.id,
           status: matchup.status,
-          opponent: signup.matchupsAsUser1[0] ? matchup.user2.user : matchup.user1.user,
+          opponent: signup.matchupsAsUser1[0] 
+            ? (matchup as any).user2?.user 
+            : (matchup as any).user1?.user,
           myScore,
           opponentScore
         } : null

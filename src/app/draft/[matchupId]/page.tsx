@@ -8,6 +8,7 @@ interface Player {
   name: string;
   role: string;
   iplTeam: {
+    id: string;
     name: string;
     shortName: string;
     color: string;
