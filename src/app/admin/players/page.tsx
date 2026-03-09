@@ -102,24 +102,32 @@ export default function PlayersManagement() {
 
   const fetchTournaments = async () => {
     try {
+      console.log('🏏 Fetching tournaments from admin API...')
       const response = await fetch("/api/admin/tournaments")
       const data = await response.json()
       
+      console.log('🏏 Tournament response:', { status: response.status, data })
+      
       if (response.ok) {
         const tournamentsData = Array.isArray(data) ? data : []
+        console.log('🏏 Processed tournaments:', tournamentsData)
         setTournaments(tournamentsData)
         // Auto-select first active tournament, or first tournament if none active
         const activeTournament = tournamentsData.find((t: Tournament) => t.isActive)
         const firstTournament = tournamentsData[0]
         const selectedTourney = activeTournament || firstTournament
         
+        console.log('🏏 Auto-selecting tournament:', selectedTourney)
+        
         if (selectedTourney) {
           setSelectedTournament(selectedTourney.id)
           setFormData(prev => ({ ...prev, tournamentId: selectedTourney.id }))
         }
+      } else {
+        console.error('🏏 Tournament fetch failed:', response.status, data)
       }
     } catch (error) {
-      console.error("Error fetching tournaments:", error)
+      console.error("🏏 Error fetching tournaments:", error)
     }
   }
 
