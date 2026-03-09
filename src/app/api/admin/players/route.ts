@@ -7,6 +7,8 @@ export async function GET(request: NextRequest) {
   try {
     const tournamentId = request.nextUrl.searchParams.get('tournamentId')
     
+    console.log('Players API called with tournamentId:', tournamentId)
+    
     if (!tournamentId) {
       // Return empty array if no tournament selected
       return NextResponse.json({ players: [] })
@@ -17,7 +19,6 @@ export async function GET(request: NextRequest) {
         tournamentId: tournamentId
       },
       orderBy: [
-        { iplTeam: { shortName: 'asc' } },
         { name: 'asc' }
       ],
       include: {
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    console.log('Found players:', players.length)
     return NextResponse.json({ players })
 
   } catch (error) {
