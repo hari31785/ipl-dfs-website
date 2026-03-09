@@ -146,12 +146,6 @@ export async function POST(request: NextRequest) {
           didNotPlay: didNotPlay || false,
           points
         },
-          wickets,
-          catches,
-          runOuts,
-          stumpings,
-          points
-        },
         include: {
           player: {
             include: {

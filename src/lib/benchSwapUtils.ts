@@ -1,6 +1,7 @@
 // Utility functions for bench player auto-swap logic
 
 interface PlayerStats {
+  iplGameId: string;
   didNotPlay: boolean;
   points: number;
 }
