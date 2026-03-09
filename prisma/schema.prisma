@@ -89,6 +89,7 @@ model Tournament {
   
   // Relations
   games       IPLGame[]
+  players     Player[]  // Players in this tournament
   
   @@map("tournaments")
 }
@@ -113,12 +114,13 @@ model IPLTeam {
   @@map("ipl_teams")
 }
 
-// Players managed by Admin
+// Players managed by Admin (tournament-specific rosters)
 model Player {
   id            String   @id @default(cuid())
   name          String
   role          String   // BATSMAN, BOWLER, ALL_ROUNDER, WICKET_KEEPER
   iplTeamId     String
+  tournamentId  String   // Player roster is tournament-specific
   isActive      Boolean  @default(true)
   jerseyNumber  Int?
   createdAt     DateTime @default(now())
@@ -126,10 +128,12 @@ model Player {
   
   // Relations
   iplTeam       IPLTeam     @relation(fields: [iplTeamId], references: [id])
+  tournament    Tournament  @relation(fields: [tournamentId], references: [id])
   stats         PlayerStat[]
   teamPlayers   TeamPlayer[]
   draftPicks    DraftPick[]
   
+  @@unique([name, tournamentId, iplTeamId]) // Same player can exist in different tournaments/teams
   @@map("players")
 }
 
