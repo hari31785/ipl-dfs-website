@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const { name, username, email, phone, password } = await request.json()
+
+    console.log('Registration attempt for:', { username, email, name })
 
     // Validation
     if (!name || !email || !password || !username) {
@@ -39,29 +43,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log('Checking for existing user...')
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      select: { id: true, email: true }
     })
 
     if (existingUser) {
+      console.log('Email already exists:', email)
       return NextResponse.json(
         { message: "User with this email already exists" },
         { status: 400 }
       )
     }
 
+    console.log('Checking for existing username...')
+
     // Check if username is taken (required field now)
     const existingUsername = await prisma.user.findUnique({
-      where: { username }
+      where: { username },
+      select: { id: true, username: true }
     })
 
     if (existingUsername) {
+      console.log('Username already exists:', username)
       return NextResponse.json(
         { message: "Username is already taken" },
         { status: 400 }
       )
     }
+
+    console.log('Creating new user...')
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
@@ -85,6 +99,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('User created successfully:', user.id)
+
     return NextResponse.json(
       { 
         message: "User created successfully",
@@ -96,8 +112,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Registration error:", error)
     return NextResponse.json(
-      { message: "Internal server error" },
+      { 
+        message: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
