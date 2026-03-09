@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { PrismaClient } from "@prisma/client"
 
 export async function GET(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const { searchParams } = new URL(request.url)
     const username = searchParams.get('username')
+
+    console.log('Username check request for:', username)
 
     if (!username) {
       return NextResponse.json(
@@ -21,20 +25,31 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if username exists in database
+    console.log('Checking username in database...')
     const existingUser = await prisma.user.findUnique({
-      where: { username }
+      where: { username },
+      select: { id: true, username: true }
     })
 
+    console.log('Database result:', existingUser ? 'User found' : 'User not found')
+
+    const isAvailable = !existingUser
+    
     return NextResponse.json({
-      available: !existingUser,
+      available: isAvailable,
       message: existingUser ? "Username is already taken" : "Username is available"
     })
 
   } catch (error) {
     console.error("Username check error:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error" 
+      },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
