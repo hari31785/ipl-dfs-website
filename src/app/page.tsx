@@ -86,7 +86,7 @@ function HomeContent() {
                 <Trophy className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-primary-800 mb-2">Head-to-Head</h3>
-              <p className="text-gray-600">Challenge your friends directly in 1v1 fantasy matchups</p>
+              <p className="text-gray-600">Compete against other players in exciting 1v1 fantasy matchups</p>
             </div>
 
             {/* Feature 2 */}
@@ -103,8 +103,8 @@ function HomeContent() {
               <div className="w-16 h-16 bg-gradient-to-r from-primary-600 to-primary-700 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <Users className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-primary-800 mb-2">Friend Challenges</h3>
-              <p className="text-gray-600">Invite friends and create private contests</p>
+              <h3 className="text-xl font-semibold text-primary-800 mb-2">Coin Rewards</h3>
+              <p className="text-gray-600">Earn coins by winning contests and climb the leaderboards</p>
             </div>
           </div>
         </div>
@@ -124,13 +124,13 @@ function HomeContent() {
             <div className="text-center">
               <div className="w-12 h-12 bg-secondary-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
               <h3 className="text-xl font-semibold text-primary-800 mb-4">Create Your Team</h3>
-              <p className="text-gray-600">Select your best 11 players from upcoming IPL matches to build your dream team</p>
+              <p className="text-gray-600">Select your best 5 players from upcoming IPL matches to build your dream team</p>
             </div>
 
             <div className="text-center">
               <div className="w-12 h-12 bg-secondary-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
-              <h3 className="text-xl font-semibold text-primary-800 mb-4">Challenge Friends</h3>
-              <p className="text-gray-600">Create head-to-head contests and invite your friends to compete against your team</p>
+              <h3 className="text-xl font-semibold text-primary-800 mb-4">Join Contests</h3>
+              <p className="text-gray-600">Join head-to-head contests and compete against other players with your team</p>
             </div>
 
             <div className="text-center">
@@ -148,25 +148,25 @@ function HomeContent() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-2xl font-bold text-secondary-400 mb-4">IPL DFS</h3>
-              <p className="text-gray-300">
+              <p className="text-blue-900">
                 The ultimate fantasy cricket platform for IPL enthusiasts.
               </p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
+              <h4 className="text-lg font-semibold mb-4 text-amber-700">Quick Links</h4>
               <div className="space-y-2">
-                <Link href="/how-to-play" className="block text-gray-300 hover:text-white">How to Play</Link>
-                <Link href="/rules" className="block text-gray-300 hover:text-white">Rules</Link>
-                <Link href="/scoring" className="block text-gray-300 hover:text-white">Scoring</Link>
+                <Link href="/how-to-play" className="block text-blue-900 hover:text-white">How to Play</Link>
+                <Link href="/rules" className="block text-blue-900 hover:text-white">Rules</Link>
+                <Link href="/scoring" className="block text-blue-900 hover:text-white">Scoring</Link>
               </div>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Support</h4>
+              <h4 className="text-lg font-semibold mb-4 text-amber-700">Support</h4>
               <div className="space-y-2">
-                <Link href="/contact" className="block text-gray-300 hover:text-white">Contact Us</Link>
-                <Link href="/privacy" className="block text-gray-300 hover:text-white">Privacy Policy</Link>
-                <Link href="/terms" className="block text-gray-300 hover:text-white">Terms of Service</Link>
-                <Link href="/admin/login" className="block text-gray-300 hover:text-secondary-400 border-t border-gray-700 pt-2 mt-4">
+                <Link href="/contact" className="block text-blue-900 hover:text-white">Contact Us</Link>
+                <Link href="/privacy" className="block text-blue-900 hover:text-white">Privacy Policy</Link>
+                <Link href="/terms" className="block text-blue-900 hover:text-white">Terms of Service</Link>
+                <Link href="/admin/login" className="block text-blue-900 hover:text-secondary-400 border-t border-gray-700 pt-2 mt-4">
                   🛡️ Admin Portal
                 </Link>
               </div>

@@ -58,9 +58,30 @@ export default function ContestsPage() {
   const [createError, setCreateError] = useState('');
 
   useEffect(() => {
-    fetchContests();
-    fetchGames();
+    // First run cleanup for past due contests
+    cleanupPastDueContests().then(() => {
+      // Then fetch the updated contests
+      fetchContests();
+      fetchGames();
+    });
   }, []);
+
+  const cleanupPastDueContests = async () => {
+    try {
+      const response = await fetch('/api/admin/contests/cleanup', {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.completedContests > 0 || result.cleanedUpSignups > 0) {
+          console.log(`Cleanup completed: ${result.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    }
+  };
 
   const fetchContests = async () => {
     try {

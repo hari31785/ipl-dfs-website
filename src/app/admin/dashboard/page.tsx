@@ -25,13 +25,33 @@ export default function AdminDashboard() {
     const adminData = localStorage.getItem('currentAdmin')
     if (adminData) {
       setAdmin(JSON.parse(adminData))
-      fetchDashboardStats() // Fetch stats after confirming admin
+      // Run cleanup first, then fetch stats
+      cleanupPastDueContests().then(() => {
+        fetchDashboardStats() // Fetch stats after cleanup
+      })
     } else {
       // Redirect to admin login if no admin data
       window.location.href = '/admin/login'
     }
     setLoading(false)
   }, [])
+
+  const cleanupPastDueContests = async () => {
+    try {
+      const response = await fetch('/api/admin/contests/cleanup', {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.completedContests > 0 || result.cleanedUpSignups > 0) {
+          console.log(`Cleanup completed: ${result.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    }
+  };
 
   const fetchDashboardStats = async () => {
     try {

@@ -99,6 +99,7 @@ export default function DashboardPage() {
   const [userContests, setUserContests] = useState<UserContest[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'available' | 'my-contests'>('available')
+  const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'active' | 'completed'>('upcoming')
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
 
@@ -348,13 +349,15 @@ export default function DashboardPage() {
             {/* Available Contests Tab */}
             {activeTab === 'available' && (
               <div className="space-y-6">
-                {tournaments.length === 0 ? (
+                {tournaments.filter(tournament => tournament.games && tournament.games.length > 0).length === 0 ? (
                   <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
                     <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600">No active tournaments available</p>
                   </div>
                 ) : (
-                  tournaments.map((tournament) => (
+                  tournaments
+                    .filter(tournament => tournament.games && tournament.games.length > 0)
+                    .map((tournament) => (
                     <div key={tournament.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
                       {/* Tournament Header */}
                       <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 p-3">
@@ -451,22 +454,155 @@ export default function DashboardPage() {
 
             {/* My Contests Tab */}
             {activeTab === 'my-contests' && (
-              <div className="space-y-4">
-                {userContests.length === 0 ? (
-                  <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">You haven't joined any contests yet</p>
-                    <button
-                      onClick={() => setActiveTab('available')}
-                      className="text-secondary-600 hover:text-secondary-700 font-semibold"
-                    >
-                      Browse available contests →
-                    </button>
-                  </div>
-                ) : (
-                  userContests
-                    .sort((a, b) => a.contest.coinValue - b.contest.coinValue)
-                    .map((signup) => (
+              <div className="space-y-6">
+                {/* Contest Sub-tabs */}
+                <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setContestSubTab('upcoming')}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      contestSubTab === 'upcoming'
+                        ? 'bg-white text-blue-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Upcoming
+                      {userContests.filter(contest => 
+                        contest.contest.status !== 'COMPLETED' && 
+                        contest.contest.iplGame.status !== 'COMPLETED' &&
+                        (!contest.matchup || contest.matchup.status !== 'COMPLETED')
+                      ).length > 0 && (
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
+                          {userContests.filter(contest => 
+                            contest.contest.status !== 'COMPLETED' && 
+                            contest.contest.iplGame.status !== 'COMPLETED' &&
+                            (!contest.matchup || contest.matchup.status !== 'COMPLETED')
+                          ).length}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setContestSubTab('active')}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      contestSubTab === 'active'
+                        ? 'bg-white text-blue-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Zap className="h-4 w-4" />
+                      Active
+                      {userContests.filter(contest => 
+                        (contest.contest.iplGame.status === 'LIVE' ||
+                        (contest.matchup?.status === 'DRAFTING')) &&
+                        contest.contest.status !== 'COMPLETED'
+                      ).length > 0 && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
+                          {userContests.filter(contest => 
+                            (contest.contest.iplGame.status === 'LIVE' ||
+                            (contest.matchup?.status === 'DRAFTING')) &&
+                            contest.contest.status !== 'COMPLETED'
+                          ).length}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setContestSubTab('completed')}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      contestSubTab === 'completed'
+                        ? 'bg-white text-blue-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Trophy className="h-4 w-4" />
+                      Completed
+                      {userContests.filter(contest => 
+                        contest.contest.status === 'COMPLETED' ||
+                        contest.matchup?.status === 'COMPLETED' ||
+                        contest.contest.iplGame.status === 'COMPLETED'
+                      ).length > 0 && (
+                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full">
+                          {userContests.filter(contest => 
+                            contest.contest.status === 'COMPLETED' ||
+                            contest.matchup?.status === 'COMPLETED' ||
+                            contest.contest.iplGame.status === 'COMPLETED'
+                          ).length}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                </div>
+
+                {/* Contest Content based on sub-tab */}
+                <div className="space-y-4">
+                  {(() => {
+                    let filteredContests = userContests
+                    
+                    if (contestSubTab === 'upcoming') {
+                      filteredContests = userContests.filter(contest => 
+                        // Show upcoming if contest is not completed and game hasn't been marked as completed
+                        contest.contest.status !== 'COMPLETED' && 
+                        contest.contest.iplGame.status !== 'COMPLETED' &&
+                        (!contest.matchup || contest.matchup.status !== 'COMPLETED')
+                      )
+                    } else if (contestSubTab === 'active') {
+                      filteredContests = userContests.filter(contest => 
+                        // Show active if game is live or matchup is in drafting phase (and not completed)
+                        (contest.contest.iplGame.status === 'LIVE' ||
+                        (contest.matchup?.status === 'DRAFTING')) &&
+                        contest.contest.status !== 'COMPLETED'
+                      )
+                    } else if (contestSubTab === 'completed') {
+                      filteredContests = userContests.filter(contest => 
+                        // Show completed if contest is marked as completed OR matchup is completed
+                        contest.contest.status === 'COMPLETED' ||
+                        contest.matchup?.status === 'COMPLETED' ||
+                        contest.contest.iplGame.status === 'COMPLETED'
+                      )
+                    }
+
+                    if (filteredContests.length === 0) {
+                      return (
+                        <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
+                          <div className="h-12 w-12 mx-auto mb-4">
+                            {contestSubTab === 'upcoming' && <Clock className="h-12 w-12 text-gray-400" />}
+                            {contestSubTab === 'active' && <Zap className="h-12 w-12 text-gray-400" />}
+                            {contestSubTab === 'completed' && <Trophy className="h-12 w-12 text-gray-400" />}
+                          </div>
+                          <p className="text-gray-600 mb-2">
+                            {contestSubTab === 'upcoming' && 'No upcoming contests'}
+                            {contestSubTab === 'active' && 'No active contests'}
+                            {contestSubTab === 'completed' && 'No completed contests yet'}
+                          </p>
+                          {contestSubTab === 'upcoming' && (
+                            <button
+                              onClick={() => setActiveTab('available')}
+                              className="text-secondary-600 hover:text-secondary-700 font-semibold"
+                            >
+                              Browse available contests →
+                            </button>
+                          )}
+                        </div>
+                      )
+                    }
+
+                    return filteredContests
+                      .sort((a, b) => {
+                        // Sort by game date for better organization
+                        const dateA = new Date(a.contest.iplGame.gameDate)
+                        const dateB = new Date(b.contest.iplGame.gameDate)
+                        if (contestSubTab === 'completed') {
+                          return dateB.getTime() - dateA.getTime() // Most recent first for completed
+                        }
+                        return dateA.getTime() - dateB.getTime() // Earliest first for upcoming/active
+                      })
+                      .map((signup) => (
                     <div key={signup.id} className="bg-white rounded-lg shadow border border-gray-200 p-3">
                       {/* Compact Header with Team Badges */}
                       <div className="flex items-center justify-between mb-2">
@@ -617,9 +753,64 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))
-                )}
+                  })()}
+                </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Quick Links */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 mt-6">
+          <h3 className="text-lg font-bold text-primary-800 mb-4">Quick Links</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a 
+              href="/how-to-play"
+              className="flex items-center justify-between p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Target className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-green-800">How to Play</div>
+                  <div className="text-sm text-gray-600">Game guide & strategies</div>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-green-600 group-hover:translate-x-1 transition-transform" />
+            </a>
+
+            <a 
+              href="/rules"
+              className="flex items-center justify-between p-4 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Settings className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-blue-800">Official Rules</div>
+                  <div className="text-sm text-gray-600">Terms & regulations</div>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+            </a>
+
+            <a 
+              href="/scoring"
+              className="flex items-center justify-between p-4 bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200 rounded-xl hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-orange-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-orange-800">Scoring System</div>
+                  <div className="text-sm text-gray-600">Points calculation</div>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
+            </a>
           </div>
         </div>
       </div>

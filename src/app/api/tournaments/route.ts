@@ -10,6 +10,19 @@ export async function GET() {
         isActive: true,
         status: {
           in: ['ACTIVE', 'UPCOMING']
+        },
+        games: {
+          some: {
+            status: {
+              in: ['UPCOMING', 'SIGNUP_OPEN']
+            },
+            gameDate: {
+              gte: new Date()
+            },
+            contests: {
+              some: {}
+            }
+          }
         }
       },
       orderBy: {
@@ -23,6 +36,9 @@ export async function GET() {
             },
             gameDate: {
               gte: new Date()
+            },
+            contests: {
+              some: {}
             }
           },
           orderBy: {

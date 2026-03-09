@@ -133,75 +133,58 @@ export default function HowToPlayPage() {
                 Scoring System
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-primary-800 mb-3">Batting Points</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Run scored</span>
-                      <span className="font-medium">1 point</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Four hit</span>
-                      <span className="font-medium">1 bonus</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Six hit</span>
-                      <span className="font-medium">2 bonus</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Half-century</span>
-                      <span className="font-medium">4 bonus</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Century</span>
-                      <span className="font-medium">8 bonus</span>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-xl p-6 mb-6">
+                <p className="text-gray-700 text-center font-medium">
+                  Our scoring system is simple and straightforward - no complex bonuses or penalties!
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                  <div className="text-4xl mb-3">🏏</div>
+                  <h4 className="font-bold text-primary-800 mb-3 text-lg">Batting</h4>
+                  <div className="space-y-3">
+                    <div className="bg-white rounded-lg p-3 border border-green-200">
+                      <div className="font-bold text-green-700 text-xl">1 Point</div>
+                      <div className="text-sm text-gray-600">per run scored</div>
                     </div>
                   </div>
                 </div>
                 
-                <div>
-                  <h4 className="font-semibold text-primary-800 mb-3">Bowling Points</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Wicket taken</span>
-                      <span className="font-medium">25 points</span>
+                <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-200">
+                  <div className="text-4xl mb-3">🎯</div>
+                  <h4 className="font-bold text-primary-800 mb-3 text-lg">Bowling</h4>
+                  <div className="space-y-3">
+                    <div className="bg-white rounded-lg p-3 border border-blue-200">
+                      <div className="font-bold text-blue-700 text-xl">20 Points</div>
+                      <div className="text-sm text-gray-600">per wicket taken</div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Maiden over</span>
-                      <span className="font-medium">12 points</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">3 wickets</span>
-                      <span className="font-medium">4 bonus</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">4 wickets</span>
-                      <span className="font-medium">8 bonus</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">5 wickets</span>
-                      <span className="font-medium">16 bonus</span>
+                  </div>
+                </div>
+                
+                <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl border-2 border-orange-200">
+                  <div className="text-4xl mb-3">🧤</div>
+                  <h4 className="font-bold text-primary-800 mb-3 text-lg">Fielding</h4>
+                  <div className="space-y-3">
+                    <div className="bg-white rounded-lg p-3 border border-orange-200">
+                      <div className="font-bold text-orange-700 text-xl">5 Points</div>
+                      <div className="text-sm text-gray-600">per catch, run out, or stumping</div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="font-semibold text-primary-800 mb-3">Fielding Points</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Catch</span>
-                    <span className="font-medium">8 points</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Stumping</span>
-                    <span className="font-medium">12 points</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Run out</span>
-                    <span className="font-medium">6 points</span>
-                  </div>
+              <div className="mt-8 p-6 bg-gray-50 rounded-xl border-l-4 border-primary-500">
+                <h4 className="font-bold text-primary-800 mb-3 flex items-center">
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Scoring Formula
+                </h4>
+                <p className="text-gray-700 font-mono text-sm bg-white p-3 rounded border">
+                  Total Points = (Runs × 1) + (Wickets × 20) + (Catches + Run Outs + Stumpings) × 5
+                </p>
+                <div className="mt-4 text-sm text-gray-600">
+                  <strong>Example:</strong> A player who scores 45 runs, takes 2 wickets, and makes 1 catch would earn:
+                  (45 × 1) + (2 × 20) + (1 × 5) = <strong>90 points</strong>
                 </div>
               </div>
             </div>
@@ -271,7 +254,7 @@ export default function HowToPlayPage() {
           {/* Call to Action */}
           <div className="text-center mt-12">
             <Link 
-              href="/signup" 
+              href="/login" 
               className="bg-secondary-500 hover:bg-secondary-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-xl inline-flex items-center"
             >
               Start Playing Now
