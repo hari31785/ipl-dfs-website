@@ -124,13 +124,13 @@ function HomeContent() {
             <div className="text-center">
               <div className="w-12 h-12 bg-secondary-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
               <h3 className="text-xl font-semibold text-primary-800 mb-4">Create Your Team</h3>
-              <p className="text-gray-600">Select 11 players from upcoming IPL matches within the salary cap</p>
+              <p className="text-gray-600">Select your best 11 players from upcoming IPL matches to build your dream team</p>
             </div>
 
             <div className="text-center">
               <div className="w-12 h-12 bg-secondary-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
               <h3 className="text-xl font-semibold text-primary-800 mb-4">Challenge Friends</h3>
-              <p className="text-gray-600">Send head-to-head challenges to your friends and wait for them to accept</p>
+              <p className="text-gray-600">Create head-to-head contests and invite your friends to compete against your team</p>
             </div>
 
             <div className="text-center">
