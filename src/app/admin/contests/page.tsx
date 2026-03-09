@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, ArrowLeft, Trophy } from 'lucide-react';
+import { Home, ArrowLeft, Trophy, Trash2, Plus } from 'lucide-react';
 
 interface IPLGame {
   id: string;
@@ -46,6 +46,16 @@ export default function ContestsPage() {
   const [games, setGames] = useState<IPLGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [selectedContests, setSelectedContests] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    contestType: '',
+    maxParticipants: 10,
+    iplGameId: ''
+  });
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
 
   useEffect(() => {
     fetchContests();
@@ -220,6 +230,99 @@ export default function ContestsPage() {
     }
   };
 
+  const handleSelectContest = (contestId: string) => {
+    setSelectedContests(prev => 
+      prev.includes(contestId)
+        ? prev.filter(id => id !== contestId)
+        : [...prev, contestId]
+    )
+  }
+
+  const handleSelectAll = () => {
+    const filteredContestIds = filteredContests.map(contest => contest.id)
+    if (selectedContests.length === filteredContestIds.length) {
+      setSelectedContests([])
+    } else {
+      setSelectedContests(filteredContestIds)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedContests.length === 0) {
+      alert("Please select contests to delete")
+      return
+    }
+
+    const selectedContestTitles = contests
+      .filter(c => selectedContests.includes(c.id))
+      .map(c => `${c.contestType} (${c.iplGame.title})`)
+      .join(', ')
+
+    if (!confirm(`Are you sure you want to delete ${selectedContests.length} contest(s)?\n\n${selectedContestTitles}\n\nThis action cannot be undone. Only contests without signups or matchups can be deleted.`)) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const deletePromises = selectedContests.map(contestId =>
+        fetch(`/api/admin/contests/${contestId}`, { method: "DELETE" })
+      )
+
+      const results = await Promise.all(deletePromises)
+      const successCount = results.filter(r => r.ok).length
+      const failCount = results.length - successCount
+
+      if (successCount > 0) {
+        alert(`Successfully deleted ${successCount} contest(s)`)
+        setSelectedContests([])
+        fetchContests()
+      }
+      
+      if (failCount > 0) {
+        alert(`Failed to delete ${failCount} contest(s). They may have signups or matchups.`)
+      }
+    } catch (error) {
+      alert("Network error during bulk delete")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleSubmitCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    setCreateError('');
+    
+    try {
+      const response = await fetch('/api/admin/contests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(createForm),
+      });
+
+      if (response.ok) {
+        fetchContests();
+        setShowCreateForm(false);
+        setCreateForm({
+          contestType: '',
+          maxParticipants: 10,
+          iplGameId: ''
+        });
+        alert('Contest created successfully!');
+      } else {
+        const error = await response.json();
+        setCreateError(error.message || 'Failed to create contest');
+      }
+    } catch (error) {
+      console.error('Error creating contest:', error);
+      setCreateError('Network error occurred');
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
   const filteredContests = statusFilter === 'ALL' 
     ? contests 
     : contests.filter(contest => contest.status === statusFilter);
@@ -268,27 +371,130 @@ export default function ContestsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Create Contest Modal */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Create Contest</h3>
+            
+            <form onSubmit={handleSubmitCreate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Contest Type</label>
+                <select
+                  value={createForm.contestType}
+                  onChange={(e) => setCreateForm({...createForm, contestType: e.target.value})}
+                  required
+                  className="w-full border rounded px-3 py-2 text-gray-900 bg-white"
+                >
+                  <option value="">Select Contest Type</option>
+                  <option value="HIGH_ROLLER">High Roller (100 coins)</option>
+                  <option value="REGULAR">Regular (50 coins)</option>
+                  <option value="LOW_STAKES">Low Stakes (25 coins)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Max Participants</label>
+                <input
+                  type="number"
+                  value={createForm.maxParticipants}
+                  onChange={(e) => setCreateForm({...createForm, maxParticipants: parseInt(e.target.value)})}
+                  required
+                  min="2"
+                  className="w-full border rounded px-3 py-2 text-gray-900 bg-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">IPL Game</label>
+                <select
+                  value={createForm.iplGameId}
+                  onChange={(e) => setCreateForm({...createForm, iplGameId: e.target.value})}
+                  required
+                  className="w-full border rounded px-3 py-2 text-gray-900 bg-white"
+                >
+                  <option value="">Select IPL Game</option>
+                  {games.map((game) => (
+                    <option key={game.id} value={game.id}>
+                      {game.team1?.shortName || game.team1?.name} vs {game.team2?.shortName || game.team2?.name} | {new Date(game.gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(game.gameDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {createError && (
+                <div className="text-red-600 text-sm">{createError}</div>
+              )}
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={isCreating}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded font-semibold"
+                >
+                  {isCreating ? "Creating..." : "Create Contest"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setCreateError('');
+                    setCreateForm({
+                      contestType: '',
+                      maxParticipants: 10,
+                      iplGameId: ''
+                    });
+                  }}
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-6">
         <div>
           <p className="text-gray-900 font-medium">Contests are automatically created when IPL games are scheduled</p>
         </div>
+        <button
+          onClick={() => setShowCreateForm(true)}
+          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+        >
+          <Plus className="h-5 w-5" />
+          Add Contest
+        </button>
       </div>
 
-      {/* Status Filter */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">Filter by Status:</label>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border rounded px-3 py-2"
-        >
-          <option value="ALL">All Contests</option>
-          <option value="SIGNUP_OPEN">Signup Open</option>
-          <option value="SIGNUP_CLOSED">Signup Closed</option>
-          <option value="DRAFT_PHASE">Draft Phase</option>
-          <option value="LIVE">Live</option>
-          <option value="COMPLETED">Completed</option>
-        </select>
+      {/* Status Filter and Bulk Actions */}
+      <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div>
+          <label className="block text-sm font-medium mb-2">Filter by Status:</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border rounded px-3 py-2 text-gray-900 bg-white"
+          >
+            <option value="ALL">All Contests</option>
+            <option value="SIGNUP_OPEN">Signup Open</option>
+            <option value="SIGNUP_CLOSED">Signup Closed</option>
+            <option value="DRAFT_PHASE">Draft Phase</option>
+            <option value="LIVE">Live</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
+        </div>
+
+        {selectedContests.length > 0 && (
+          <button
+            onClick={handleBulkDelete}
+            disabled={isDeleting}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            {isDeleting ? "Deleting..." : `Delete Selected (${selectedContests.length})`}
+          </button>
+        )}
       </div>
 
       {/* Contests List */}
@@ -296,6 +502,14 @@ export default function ContestsPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                <input
+                  type="checkbox"
+                  checked={filteredContests.length > 0 && selectedContests.length === filteredContests.length}
+                  onChange={handleSelectAll}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Game & Contest
               </th>
@@ -319,6 +533,14 @@ export default function ContestsPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredContests.map((contest) => (
               <tr key={contest.id}>
+                <td className="px-6 py-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedContests.includes(contest.id)}
+                    onChange={() => handleSelectContest(contest.id)}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className="font-medium text-gray-900">{contest.iplGame.title}</div>

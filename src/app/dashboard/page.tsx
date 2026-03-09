@@ -401,7 +401,13 @@ export default function DashboardPage() {
                               {game.contests && game.contests.length > 0 && (
                                 <div className="space-y-2">
                                   <p className="text-xs font-semibold text-gray-700 mb-2">Available Contests:</p>
-                                  <div className="grid grid-cols-3 gap-2">
+                                  <div className={`grid gap-2 ${
+                                    game.contests.length === 1 
+                                      ? 'grid-cols-1' 
+                                      : game.contests.length === 2 
+                                      ? 'grid-cols-2' 
+                                      : 'grid-cols-3'
+                                  }`}>
                                     {game.contests.map((contest) => (
                                       <button 
                                         key={contest.id}
@@ -409,7 +415,12 @@ export default function DashboardPage() {
                                         disabled={joiningContest === contest.id}
                                         className="flex flex-col items-center justify-center gap-1 px-4 py-3 bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 text-gray-800 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
-                                        <span className="font-bold text-base text-gray-900">{String(contest.contestType).replace('_COIN', '')}</span>
+                                        <span className="font-bold text-base text-gray-900">
+                                          {contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100)' : 
+                                           contest.contestType === 'REGULAR' ? 'Regular (50)' : 
+                                           contest.contestType === 'LOW_STAKES' ? 'Low Stakes (25)' : 
+                                           contest.contestType}
+                                        </span>
                                         <span className="text-xs text-gray-700">{contest._count.signups}/{contest.maxParticipants} joined</span>
                                         {joiningContest === contest.id ? (
                                           <span className="text-xs text-gray-800 font-medium">Joining...</span>
@@ -481,7 +492,12 @@ export default function DashboardPage() {
                       {/* Contest Info */}
                       <div className="flex items-center justify-between p-2 bg-secondary-50 rounded mb-2">
                         <div className="flex items-center gap-3">
-                          <span className="font-semibold text-sm text-gray-900">{signup.contest.contestType}</span>
+                          <span className="font-semibold text-sm text-gray-900">
+                            {signup.contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100)' : 
+                             signup.contest.contestType === 'REGULAR' ? 'Regular (50)' : 
+                             signup.contest.contestType === 'LOW_STAKES' ? 'Low Stakes (25)' : 
+                             signup.contest.contestType}
+                          </span>
                           <span className="text-xs text-gray-600">{signup.contest.coinValue} coins/pt</span>
                         </div>
                         <span className="text-xs text-gray-500">{new Date(signup.contest.iplGame.gameDate).toLocaleDateString()}</span>

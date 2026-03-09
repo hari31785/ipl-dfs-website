@@ -41,6 +41,8 @@ export default function PlayersManagement() {
   const [success, setSuccess] = useState("")
   const [selectedTeam, setSelectedTeam] = useState("all")
   const [bulkData, setBulkData] = useState("")
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -171,6 +173,64 @@ export default function PlayersManagement() {
       }
     } catch (error) {
       setError("Network error")
+    }
+  }
+
+  const handleSelectPlayer = (playerId: string) => {
+    setSelectedPlayers(prev => 
+      prev.includes(playerId)
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    )
+  }
+
+  const handleSelectAll = () => {
+    const filteredPlayerIds = filteredPlayers.map(player => player.id)
+    if (selectedPlayers.length === filteredPlayerIds.length) {
+      setSelectedPlayers([])
+    } else {
+      setSelectedPlayers(filteredPlayerIds)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedPlayers.length === 0) {
+      setError("Please select players to delete")
+      return
+    }
+
+    const selectedPlayerNames = players
+      .filter(p => selectedPlayers.includes(p.id))
+      .map(p => p.name)
+      .join(', ')
+
+    if (!confirm(`Are you sure you want to delete ${selectedPlayers.length} player(s)? (${selectedPlayerNames})\n\nThis action cannot be undone.`)) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const deletePromises = selectedPlayers.map(playerId =>
+        fetch(`/api/admin/players/${playerId}`, { method: "DELETE" })
+      )
+
+      const results = await Promise.all(deletePromises)
+      const successCount = results.filter(r => r.ok).length
+      const failCount = results.length - successCount
+
+      if (successCount > 0) {
+        setSuccess(`Successfully deleted ${successCount} player(s)`)
+        setSelectedPlayers([])
+        fetchPlayers()
+      }
+      
+      if (failCount > 0) {
+        setError(`Failed to delete ${failCount} player(s)`)
+      }
+    } catch (error) {
+      setError("Network error during bulk delete")
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -336,6 +396,16 @@ export default function PlayersManagement() {
               <Users className="h-5 w-5" />
               Bulk Add Players
             </button>
+            {selectedPlayers.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                <Trash2 className="h-5 w-5" />
+                {isDeleting ? "Deleting..." : `Delete Selected (${selectedPlayers.length})`}
+              </button>
+            )}
           </div>
 
           {/* Team Filter */}
@@ -344,7 +414,7 @@ export default function PlayersManagement() {
             <select
               value={selectedTeam}
               onChange={(e) => setSelectedTeam(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
             >
               <option value="all">All Teams</option>
               {teams.map(team => (
@@ -554,6 +624,14 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-gray-700 w-12">
+                      <input
+                        type="checkbox"
+                        checked={filteredPlayers.length > 0 && selectedPlayers.length === filteredPlayers.length}
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                    </th>
                     <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Player</th>
                     <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Team</th>
                     <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Role</th>
@@ -564,6 +642,14 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
                 <tbody className="divide-y divide-gray-200">
                   {filteredPlayers.map((player) => (
                     <tr key={player.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedPlayers.includes(player.id)}
+                          onChange={() => handleSelectPlayer(player.id)}
+                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <span className="text-xl">{getRoleIcon(player.role)}</span>

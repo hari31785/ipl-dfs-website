@@ -50,3 +50,53 @@ export async function PUT(
     );
   }
 }
+
+// DELETE /api/admin/contests/[id] - Delete contest
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // Check if contest exists and has any signups
+    const contest = await prisma.contest.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            signups: true,
+            matchups: true
+          }
+        }
+      }
+    });
+
+    if (!contest) {
+      return NextResponse.json(
+        { message: 'Contest not found' },
+        { status: 404 }
+      );
+    }
+
+    // Prevent deletion if contest has signups or matchups
+    if (contest._count.signups > 0 || contest._count.matchups > 0) {
+      return NextResponse.json(
+        { message: 'Cannot delete contest with existing signups or matchups' },
+        { status: 400 }
+      );
+    }
+
+    await prisma.contest.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ message: 'Contest deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting contest:', error);
+    return NextResponse.json(
+      { message: 'Failed to delete contest' },
+      { status: 500 }
+    );
+  }
+}

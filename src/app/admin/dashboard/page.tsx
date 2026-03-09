@@ -25,12 +25,27 @@ export default function AdminDashboard() {
     const adminData = localStorage.getItem('currentAdmin')
     if (adminData) {
       setAdmin(JSON.parse(adminData))
+      fetchDashboardStats() // Fetch stats after confirming admin
     } else {
       // Redirect to admin login if no admin data
       window.location.href = '/admin/login'
     }
     setLoading(false)
   }, [])
+
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await fetch('/api/admin/dashboard')
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+      } else {
+        console.error('Failed to fetch dashboard stats')
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error)
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('currentAdmin')
@@ -92,7 +107,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Players</p>
-                <p className="text-3xl font-bold text-cricket-600">{stats.totalPlayers}</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.totalPlayers}</p>
               </div>
               <Target className="h-8 w-8 text-cricket-500" />
             </div>
@@ -102,7 +117,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">IPL Teams</p>
-                <p className="text-3xl font-bold text-secondary-600">{stats.totalTeams}</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.totalTeams}</p>
               </div>
               <Database className="h-8 w-8 text-secondary-500" />
             </div>

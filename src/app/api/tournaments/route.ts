@@ -22,6 +22,9 @@ export async function GET() {
               in: ['UPCOMING', 'SIGNUP_OPEN']
             }
           },
+          orderBy: {
+            gameDate: 'desc'
+          },
           include: {
             team1: true,
             team2: true,

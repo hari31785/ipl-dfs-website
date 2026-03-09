@@ -63,3 +63,82 @@ export async function GET() {
     );
   }
 }
+
+// POST /api/admin/contests - Create new contest
+export async function POST(request: NextRequest) {
+  try {
+    const { contestType, maxParticipants, iplGameId } = await request.json();
+
+    // Validation
+    if (!contestType || !maxParticipants || !iplGameId) {
+      return NextResponse.json(
+        { message: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+
+    // Set coinValue based on contest type (not used for entry fee)
+    const coinValue = contestType === 'HIGH_ROLLER' ? 100 : contestType === 'REGULAR' ? 50 : 25;
+
+    // Validate contest type
+    const validContestTypes = ['HIGH_ROLLER', 'REGULAR', 'LOW_STAKES'];
+    if (!validContestTypes.includes(contestType)) {
+      return NextResponse.json(
+        { message: 'Invalid contest type' },
+        { status: 400 }
+      );
+    }
+
+    // Check if game exists and is valid for contest creation
+    const game = await prisma.iPLGame.findUnique({
+      where: { id: iplGameId }
+    });
+
+    if (!game) {
+      return NextResponse.json(
+        { message: 'Game not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if game is still upcoming (can create contests)
+    if (new Date(game.gameDate) < new Date()) {
+      return NextResponse.json(
+        { message: 'Cannot create contests for past games' },
+        { status: 400 }
+      );
+    }
+
+    const contest = await prisma.contest.create({
+      data: {
+        contestType,
+        coinValue,
+        maxParticipants,
+        iplGameId,
+        status: 'SIGNUP_OPEN'
+      },
+      include: {
+        iplGame: {
+          include: {
+            team1: true,
+            team2: true
+          }
+        },
+        _count: {
+          select: {
+            signups: true,
+            matchups: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(contest);
+  } catch (error) {
+    console.error('Error creating contest:', error);
+    return NextResponse.json(
+      { message: 'Failed to create contest' },
+      { status: 500 }
+    );
+  }
+}

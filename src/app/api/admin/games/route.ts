@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
 
     // Auto-create contest types for the game
     const contestTypes = [
-      { type: '25_COIN', value: 25 },
-      { type: '50_COIN', value: 50 },
-      { type: '100_COIN', value: 100 }
+      { type: 'LOW_STAKES', value: 25 },
+      { type: 'REGULAR', value: 50 },
+      { type: 'HIGH_ROLLER', value: 100 }
     ];
 
     await Promise.all(
