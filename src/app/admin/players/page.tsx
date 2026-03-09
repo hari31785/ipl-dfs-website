@@ -505,7 +505,7 @@ export default function PlayersManagement() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
                   placeholder="e.g., Virat Kohli"
                 />
               </div>
@@ -519,7 +519,7 @@ export default function PlayersManagement() {
                   required
                   value={formData.iplTeamId}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
                 >
                   <option value="">Select Team</option>
                   {teams.map(team => (
@@ -539,7 +539,7 @@ export default function PlayersManagement() {
                   required
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
                 >
                   {PLAYER_ROLES.map(role => (
                     <option key={role.value} value={role.value}>
@@ -560,7 +560,7 @@ export default function PlayersManagement() {
                   max="99"
                   value={formData.jerseyNumber}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
                   placeholder="18"
                 />
               </div>
@@ -626,7 +626,7 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
                   onChange={(e) => setBulkData(e.target.value)}
                   required
                   rows={10}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm text-gray-900 bg-white"
                   placeholder="Enter player data, one per line..."
                 />
                 <p className="text-sm text-gray-500 mt-1">
