@@ -437,7 +437,7 @@ export default function ContestsPage() {
                   <option value="">Select IPL Game</option>
                   {games.map((game) => (
                     <option key={game.id} value={game.id}>
-                      {game.team1?.shortName || game.team1?.name} vs {game.team2?.shortName || game.team2?.name} | {new Date(game.gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(game.gameDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                      {game.team1?.shortName} vs {game.team2?.shortName} | {new Date(game.gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(game.gameDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                     </option>
                   ))}
                 </select>
