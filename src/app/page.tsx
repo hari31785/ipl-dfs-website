@@ -41,10 +41,10 @@ function HomeContent() {
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
               IPL <span className="text-secondary-400">DFS</span>
             </h1>
-            <p className="text-xl md:text-2xl text-black mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-blue-900 mb-8 max-w-3xl mx-auto">
               Fantasy Cricket Head-to-Head
             </p>
-            <p className="text-lg text-black mb-12 max-w-2xl mx-auto">
+            <p className="text-lg text-blue-900 mb-12 max-w-2xl mx-auto">
               Compete with your friends in Indian Premier League Daily Fantasy Sports. 
               Build your dream team, challenge your friends, and prove who knows cricket best!
             </p>
@@ -154,10 +154,10 @@ function HomeContent() {
       {/* CTA Section */}
       <div className="py-20 bg-gradient-to-r from-primary-700 to-primary-800">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-6">
             Ready to Start Your IPL Journey?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-blue-900 mb-8">
             Join thousands of cricket fans competing in daily fantasy sports
           </p>
           <Link 
