@@ -9,10 +9,8 @@ export async function GET(request: NextRequest) {
     const tournamentId = searchParams.get('tournamentId')
     
     if (!tournamentId) {
-      return NextResponse.json(
-        { message: "Tournament ID is required" },
-        { status: 400 }
-      )
+      // Return empty array if no tournament selected
+      return NextResponse.json({ players: [] })
     }
 
     const players = await prisma.player.findMany({
