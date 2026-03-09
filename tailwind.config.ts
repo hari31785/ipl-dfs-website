@@ -10,64 +10,72 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Indian T20 Team Colors
+        // Authentic Indian Cricket Team Colors
         primary: {
-          DEFAULT: '#003366', // Navy Blue
-          50: '#e6f2ff',
-          100: '#cce5ff',
-          200: '#99ccff',
-          300: '#66b2ff',
-          400: '#3399ff',
-          500: '#0080ff',
-          600: '#0066cc',
-          700: '#004d99',
-          800: '#003366', // Main Navy
-          900: '#001a33',
+          DEFAULT: '#002244', // Deep Navy Blue (Indian team jersey)
+          50: '#e6f0ff',
+          100: '#cce0ff',
+          200: '#99c2ff',
+          300: '#66a3ff',
+          400: '#3385ff',
+          500: '#0066ff',
+          600: '#0052cc',
+          700: '#003d99',
+          800: '#002244', // Main Deep Navy
+          900: '#001122',
         },
         secondary: {
-          DEFAULT: '#FF6600', // Saffron Orange
-          50: '#fff3e6',
-          100: '#ffe7cc',
-          200: '#ffcc99',
-          300: '#ffb366',
-          400: '#ff9933',
-          500: '#FF6600', // Main Saffron
-          600: '#cc5200',
-          700: '#993d00',
-          800: '#662900',
-          900: '#331400',
+          DEFAULT: '#FF9933', // Authentic Saffron Orange
+          50: '#fff7e6',
+          100: '#ffedcc',
+          200: '#ffdb99',
+          300: '#ffc966',
+          400: '#ffb633',
+          500: '#FF9933', // Main Saffron Orange
+          600: '#cc7a29',
+          700: '#995c1f',
+          800: '#663d14',
+          900: '#331f0a',
         },
         accent: {
-          DEFAULT: '#FFFFFF', // White
+          DEFAULT: '#FFFFFF', // Pure White
           50: '#ffffff',
-          100: '#f9f9f9',
-          200: '#f0f0f0',
-          300: '#e0e0e0',
-          400: '#d0d0d0',
-          500: '#c0c0c0',
-          600: '#a0a0a0',
-          700: '#808080',
-          800: '#606060',
+          100: '#fafafa',
+          200: '#f5f5f5',
+          300: '#f0f0f0',
+          400: '#e5e5e5',
+          500: '#d9d9d9',
+          600: '#b3b3b3',
+          700: '#8c8c8c',
+          800: '#666666',
           900: '#404040',
         },
-        // Cricket-themed greens
+        // Cricket field green
         cricket: {
+          DEFAULT: '#228B22', // Cricket field green
           50: '#f0fdf4',
           100: '#dcfce7',
           200: '#bbf7d0',
           300: '#86efac',
           400: '#4ade80',
-          500: '#22c55e',
+          500: '#228B22', // Main cricket green
           600: '#16a34a',
           700: '#15803d',
           800: '#166534',
           900: '#14532d',
         },
+        // Indian flag inspired colors
+        tricolor: {
+          saffron: '#FF9933',
+          white: '#FFFFFF', 
+          green: '#138808',
+          navy: '#002244',
+        },
         // Status colors
-        success: '#22c55e',
-        warning: '#f59e0b',
-        error: '#ef4444',
-        info: '#3b82f6',
+        success: '#138808',
+        warning: '#FF9933',
+        error: '#dc2626',
+        info: '#002244',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],

@@ -1,8 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Indian Cricket Team Color Palette */
+  --cricket-navy: #002244;
+  --cricket-saffron: #FF9933;
+  --cricket-white: #FFFFFF;
+  --cricket-field: #228B22;
+  --cricket-sky: #e6f0ff;
+  
+  /* Theme Variables */
+  --background: var(--cricket-white);
+  --foreground: var(--cricket-navy);
+  --primary: var(--cricket-navy);
+  --secondary: var(--cricket-saffron);
+  --accent: var(--cricket-field);
 }
 
 @theme inline {
@@ -14,13 +25,155 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Dark mode with cricket team colors */
+    --background: var(--cricket-navy);
+    --foreground: var(--cricket-white);
   }
 }
 
+/* Force Indian Cricket Team Colors */
+html {
+  background-color: var(--cricket-white) !important;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  font-family: 'Inter', system-ui, sans-serif;
+  
+  /* Cricket-themed scrollbar */
+  scrollbar-color: var(--cricket-saffron) var(--cricket-sky);
+}
+
+/* Override any default dark backgrounds */
+* {
+  box-sizing: border-box;
+}
+
+/* Force Saffron Orange Colors - Direct CSS Override */
+.bg-secondary-500,
+.bg-secondary-600,
+.hover\:bg-secondary-600:hover,
+.bg-secondary {
+  background-color: #FF9933 !important;
+}
+
+.text-secondary-400,
+.text-secondary {
+  color: #FF9933 !important;
+}
+
+/* Force Navy Blue Colors */
+.bg-primary,
+.bg-primary-800,
+.bg-primary-700,
+.bg-primary-600,
+.text-primary-800 {
+  background-color: #002244 !important;
+  color: #FFFFFF !important;
+}
+
+.text-primary-800 {
+  background-color: transparent !important;
+  color: #002244 !important;
+}
+
+/* Ensure primary colors are cricket team colors */
+.bg-primary {
+  background-color: var(--cricket-navy) !important;
+}
+
+.text-primary {
+  color: var(--cricket-navy) !important;
+}
+
+.bg-secondary {
+  background-color: var(--cricket-saffron) !important;
+}
+
+.text-secondary {
+  color: var(--cricket-saffron) !important;
+}
+
+/* Cricket Green Override */
+.bg-cricket-500,
+.bg-cricket-600 {
+  background-color: #228B22 !important;
+}
+
+/* Button specific overrides */
+button.bg-secondary-500,
+a.bg-secondary-500,
+.bg-secondary-500 {
+  background-color: #FF9933 !important;
+  border-color: #FF9933 !important;
+}
+
+button.bg-secondary-500:hover,
+a.bg-secondary-500:hover,
+.hover\:bg-secondary-600:hover {
+  background-color: #e6851a !important;
+  border-color: #e6851a !important;
+}
+
+/* Form Input Styling - Ensure text is visible */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"] {
+  color: #1f2937 !important; /* Dark gray text */
+  background-color: #ffffff !important; /* White background */
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="password"]:focus {
+  color: #1f2937 !important; /* Dark gray text on focus */
+  background-color: #ffffff !important; /* White background on focus */
+}
+
+input::placeholder {
+  color: #9ca3af !important; /* Light gray placeholder */
+  opacity: 1 !important;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cricket-sky);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cricket-saffron);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e6851a;
+}
+
+/* Selection styling */
+::selection {
+  background-color: var(--cricket-saffron);
+  color: var(--cricket-white);
+}
+
+/* Animation for success message */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
 }

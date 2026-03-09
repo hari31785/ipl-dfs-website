@@ -1,0 +1,311 @@
+// Prisma Schema for IPL DFS Website with Admin Management
+// Database: SQLite for development (can switch to PostgreSQL for production)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id              String   @id @default(cuid())
+  name            String
+  username        String   @unique
+  email           String   @unique
+  phone           String?
+  password        String
+  totalWins       Int      @default(0)
+  totalMatches    Int      @default(0)
+  winPercentage   Float    @default(0)
+  coins           Int      @default(0) // User's current coin balance
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  teams           Team[]
+  contestEntries  ContestEntry[]
+  contestSignups  ContestSignup[]
+  coinTransactions CoinTransaction[]
+  
+  @@map("users")
+}
+
+// Coin Transaction History
+model CoinTransaction {
+  id              String   @id @default(cuid())
+  userId          String
+  amount          Int      // Positive for winnings, negative for losses
+  balance         Int      // Balance after transaction
+  type            String   // "WIN", "LOSS"
+  description     String
+  matchupId       String?  // Related matchup if applicable
+  contestId       String?  // Related contest if applicable
+  adminFee        Int      @default(0) // 10% admin fee on winnings
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+  contest         Contest?  @relation(fields: [contestId], references: [id])
+  
+  @@map("coin_transactions")
+}
+
+// Admin Coins Tracker
+model AdminCoins {
+  id              String   @id @default(cuid())
+  totalCoins      Int      @default(0)
+  updatedAt       DateTime @updatedAt
+  
+  @@map("admin_coins")
+}
+
+// Admin Management - Separate from User login
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String   @default("Admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("admins")
+}
+
+// Tournament Management (e.g., IPL 2024, IPL 2025, etc.)
+model Tournament {
+  id          String   @id @default(cuid())
+  name        String   @unique // "IPL 2024", "IPL 2025"
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  status      String   @default("UPCOMING") // UPCOMING, ACTIVE, COMPLETED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  games       IPLGame[]
+  
+  @@map("tournaments")
+}
+
+// IPL Teams (10 teams)
+model IPLTeam {
+  id          String   @id @default(cuid())
+  name        String   @unique // "Mumbai Indians", "Chennai Super Kings", etc.
+  shortName   String   @unique // "MI", "CSK", etc.
+  city        String
+  color       String   // Primary team color hex
+  logoUrl     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  players     Player[]
+  gamesAsTeam1 IPLGame[] @relation("GameTeam1")
+  gamesAsTeam2 IPLGame[] @relation("GameTeam2")
+  
+  @@map("ipl_teams")
+}
+
+// Players managed by Admin
+model Player {
+  id            String   @id @default(cuid())
+  name          String
+  role          String   // BATSMAN, BOWLER, ALL_ROUNDER, WICKET_KEEPER
+  iplTeamId     String
+  isActive      Boolean  @default(true)
+  jerseyNumber  Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  iplTeam       IPLTeam     @relation(fields: [iplTeamId], references: [id])
+  stats         PlayerStat[]
+  teamPlayers   TeamPlayer[]
+  draftPicks    DraftPick[]
+  
+  @@map("players")
+}
+
+// Player Statistics entered by Admin  
+model PlayerStat {
+  id          String   @id @default(cuid())
+  playerId    String
+  iplGameId   String   // Link to specific IPL game
+  runs        Int      @default(0)
+  wickets     Int      @default(0)
+  catches     Int      @default(0)
+  runOuts     Int      @default(0)
+  stumpings   Int      @default(0)
+  points      Float    @default(0) // Calculated: (runs * 1) + (wickets * 20) + ((catches + runOuts + stumpings) * 5)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  player      Player   @relation(fields: [playerId], references: [id])
+  
+  @@map("player_stats")
+}
+
+// IPL Games created by Admin
+model IPLGame {
+  id            String   @id @default(cuid())
+  tournamentId  String
+  title         String   // "MI vs CSK - Match 1"
+  description   String?
+  team1Id       String
+  team2Id       String
+  gameDate      DateTime
+  signupDeadline DateTime  // 8 PM EST day before game
+  status        String   @default("UPCOMING") // UPCOMING, SIGNUP_CLOSED, LIVE, COMPLETED, CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  tournament    Tournament @relation(fields: [tournamentId], references: [id])
+  team1         IPLTeam  @relation("GameTeam1", fields: [team1Id], references: [id])
+  team2         IPLTeam  @relation("GameTeam2", fields: [team2Id], references: [id])
+  contests      Contest[]
+  
+  @@map("ipl_games")
+}
+
+// Contest types for each IPL Game
+model Contest {
+  id            String   @id @default(cuid())
+  iplGameId     String
+  contestType   String   // "25_COIN", "50_COIN", "100_COIN"
+  coinValue     Int      // 25, 50, or 100 coins per point
+  maxParticipants Int    @default(100)
+  totalSignups  Int      @default(0)
+  status        String   @default("SIGNUP_OPEN") // SIGNUP_OPEN, SIGNUP_CLOSED, DRAFT_PHASE, LIVE, COMPLETED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  iplGame       IPLGame  @relation(fields: [iplGameId], references: [id])
+  signups       ContestSignup[]
+  matchups      HeadToHeadMatchup[]
+  entries       ContestEntry[]
+  coinTransactions CoinTransaction[]
+  
+  @@map("contests")
+}
+
+// User entries in contests
+model ContestEntry {
+  id        String   @id @default(cuid())
+  contestId String
+  userId    String
+  teamId    String
+  points    Float    @default(0)
+  rank      Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  contest   Contest  @relation(fields: [contestId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  team      Team     @relation(fields: [teamId], references: [id])
+  
+  @@unique([contestId, userId, teamId])
+  @@map("contest_entries")
+}
+
+// Contest signups for head-to-head system
+model ContestSignup {
+  id        String   @id @default(cuid())
+  contestId String
+  userId    String
+  signupAt  DateTime @default(now())
+  
+  // Relations
+  contest   Contest  @relation(fields: [contestId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  matchupsAsUser1 HeadToHeadMatchup[] @relation("MatchupUser1")
+  matchupsAsUser2 HeadToHeadMatchup[] @relation("MatchupUser2")
+  
+  @@unique([contestId, userId])
+  @@map("contest_signups")
+}
+
+// Head-to-head matchups
+model HeadToHeadMatchup {
+  id              String   @id @default(cuid())
+  contestId       String
+  user1Id         String   // ContestSignup ID
+  user2Id         String   // ContestSignup ID
+  firstPickUser   String   // "user1" or "user2" - randomized
+  status          String   @default("WAITING_DRAFT") // WAITING_DRAFT, DRAFTING, COMPLETED
+  user1Score      Float    @default(0)
+  user2Score      Float    @default(0)
+  winnerId        String?  // ContestSignup ID of winner
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  contest         Contest       @relation(fields: [contestId], references: [id])
+  user1           ContestSignup @relation("MatchupUser1", fields: [user1Id], references: [id])
+  user2           ContestSignup @relation("MatchupUser2", fields: [user2Id], references: [id])
+  draftPicks      DraftPick[]
+  
+  @@map("head_to_head_matchups")
+}
+
+// Draft picks in snake order
+model DraftPick {
+  id              String   @id @default(cuid())
+  matchupId       String
+  playerId        String
+  pickedByUserId  String   // ContestSignup ID
+  pickOrder       Int      // 1-10 for snake draft
+  pickTimestamp   DateTime @default(now())
+  
+  // Relations
+  matchup         HeadToHeadMatchup @relation(fields: [matchupId], references: [id])
+  player          Player            @relation(fields: [playerId], references: [id])
+  
+  @@unique([matchupId, playerId]) // Each player picked once per matchup
+  @@unique([matchupId, pickOrder]) // Each pick order used once per matchup
+  @@map("draft_picks")
+}
+
+// User-created fantasy teams
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  userId      String
+  captain     String?  // Player ID
+  viceCaptain String?  // Player ID
+  totalPrice  Float    @default(0)
+  isValid     Boolean  @default(false) // Team validation status
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User           @relation(fields: [userId], references: [id])
+  players     TeamPlayer[]
+  entries     ContestEntry[]
+  
+  @@map("teams")
+}
+
+// Junction table for team-player relationships
+model TeamPlayer {
+  id       String @id @default(cuid())
+  teamId   String
+  playerId String
+  
+  // Relations
+  team     Team   @relation(fields: [teamId], references: [id])
+  player   Player @relation(fields: [playerId], references: [id])
+  
+  @@unique([teamId, playerId])
+  @@map("team_players")
+}

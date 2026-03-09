@@ -1,0 +1,193 @@
+// Prisma Schema for IPL DFS Website
+// Database: SQLite for development (can switch to PostgreSQL for production)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // For credential auth
+  phone         String?   // Cell phone number
+  
+  // Cricket Profile
+  username      String?   @unique
+  bio           String?
+  favoriteTeam  String?   // IPL team
+  totalWins     Int       @default(0)
+  totalMatches  Int       @default(0)
+  winPercentage Float     @default(0.0)
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  teams         Team[]
+  challenges    Challenge[] @relation("ChallengeCreator")
+  participations Challenge[] @relation("ChallengeParticipant")
+  
+  @@map("users")
+}
+
+// NextAuth Required Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+// IPL Specific Models
+model IPLTeam {
+  id        String   @id @default(cuid())
+  name      String   @unique // "Mumbai Indians", "Chennai Super Kings", etc.
+  shortName String   @unique // "MI", "CSK", etc.
+  color     String   // Team color hex code
+  logo      String?  // Logo URL
+  
+  players   Player[]
+  
+  @@map("ipl_teams")
+}
+
+model Player {
+  id          String     @id @default(cuid())
+  name        String
+  position    String     // "BATSMAN", "BOWLER", "ALL_ROUNDER", "WICKET_KEEPER"
+  price       Float      // Salary cap price
+  iplTeamId   String
+  
+  // Stats
+  runs        Int        @default(0)
+  wickets     Int        @default(0)
+  catches     Int        @default(0)
+  
+  // Relations
+  iplTeam     IPLTeam    @relation(fields: [iplTeamId], references: [id])
+  teamPlayers TeamPlayer[]
+  
+  @@map("players")
+}
+
+model Match {
+  id          String      @id @default(cuid())
+  team1       String      // Team name
+  team2       String      // Team name
+  matchDate   DateTime
+  venue       String
+  status      String      @default("SCHEDULED") // "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"
+  
+  // Results
+  winner      String?
+  team1Score  String?     // "185/6 (20)"
+  team2Score  String?     // "186/4 (19.3)"
+  
+  teams       Team[]
+  
+  @@map("matches")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  userId      String
+  matchId     String
+  totalPrice  Float    @default(0.0)
+  captain     String?  // Player ID
+  viceCaptain String?  // Player ID
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User        @relation(fields: [userId], references: [id])
+  match       Match       @relation(fields: [matchId], references: [id])
+  players     TeamPlayer[]
+  challenges  Challenge[]
+  
+  @@map("teams")
+}
+
+model TeamPlayer {
+  id       String @id @default(cuid())
+  teamId   String
+  playerId String
+  
+  team     Team   @relation(fields: [teamId], references: [id])
+  player   Player @relation(fields: [playerId], references: [id])
+  
+  @@unique([teamId, playerId])
+  @@map("team_players")
+}
+
+model Challenge {
+  id            String          @id @default(cuid())
+  creatorId     String
+  participantId String?
+  teamId        String
+  status        String          @default("PENDING") // "PENDING", "ACCEPTED", "LIVE", "COMPLETED", "CANCELLED"
+  entryFee      Float           @default(0.0)
+  prize         Float           @default(0.0)
+  
+  // Results
+  winnerId      String?
+  creatorScore  Int             @default(0)
+  participantScore Int          @default(0)
+  
+  // Timestamps
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  // Relations
+  creator       User @relation("ChallengeCreator", fields: [creatorId], references: [id])
+  participant   User? @relation("ChallengeParticipant", fields: [participantId], references: [id])
+  team          Team @relation(fields: [teamId], references: [id])
+  
+  @@map("challenges")
+}

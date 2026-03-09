@@ -1,0 +1,616 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Shield, Plus, Edit, Trash2, ArrowLeft, Users, TrendingUp, Star } from "lucide-react"
+
+interface IPLTeam {
+  id: string
+  name: string
+  shortName: string
+  color: string
+}
+
+interface Player {
+  id: string
+  name: string
+  role: string
+  price: number
+  jerseyNumber?: number
+  isActive: boolean
+  iplTeamId: string
+  iplTeam: IPLTeam
+  createdAt: string
+  updatedAt: string
+}
+
+const PLAYER_ROLES = [
+  { value: "BATSMAN", label: "Batsman" },
+  { value: "BOWLER", label: "Bowler" },
+  { value: "ALL_ROUNDER", label: "All-Rounder" },
+  { value: "WICKET_KEEPER", label: "Wicket Keeper" }
+]
+
+export default function PlayersManagement() {
+  const [players, setPlayers] = useState<Player[]>([])
+  const [teams, setTeams] = useState<IPLTeam[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [showBulkForm, setShowBulkForm] = useState(false)
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [selectedTeam, setSelectedTeam] = useState("all")
+  const [bulkData, setBulkData] = useState("")
+
+  const [formData, setFormData] = useState({
+    name: "",
+    role: "BATSMAN",
+    price: 8.5, // Hidden default price
+    jerseyNumber: "",
+    iplTeamId: ""
+  })
+
+  useEffect(() => {
+    // Check admin authentication
+    const adminData = localStorage.getItem('currentAdmin')
+    if (!adminData) {
+      window.location.href = '/admin/login'
+      return
+    }
+    
+    fetchTeams()
+    fetchPlayers()
+  }, [])
+
+  const fetchTeams = async () => {
+    try {
+      const response = await fetch("/api/admin/teams")
+      const data = await response.json()
+      
+      if (response.ok) {
+        // API returns teams array directly, not wrapped in object
+        setTeams(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error("Error fetching teams:", error)
+    }
+  }
+
+  const fetchPlayers = async () => {
+    try {
+      const response = await fetch("/api/admin/players")
+      const data = await response.json()
+      
+      if (response.ok) {
+        setPlayers(data.players)
+      } else {
+        setError(data.message || "Failed to fetch players")
+      }
+    } catch (error) {
+      setError("Network error")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setSuccess("")
+
+    try {
+      const url = editingPlayer ? `/api/admin/players/${editingPlayer.id}` : "/api/admin/players"
+      const method = editingPlayer ? "PUT" : "POST"
+
+      const requestData = {
+        ...formData,
+        jerseyNumber: formData.jerseyNumber ? parseInt(formData.jerseyNumber) : null
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess(editingPlayer ? "Player updated successfully!" : "Player created successfully!")
+        setFormData({
+          name: "",
+          role: "BATSMAN",
+          price: 8.5,
+          jerseyNumber: "",
+          iplTeamId: ""
+        })
+        setShowForm(false)
+        setEditingPlayer(null)
+        fetchPlayers()
+      } else {
+        setError(data.message || `Failed to ${editingPlayer ? 'update' : 'create'} player`)
+      }
+    } catch (error) {
+      setError("Network error")
+    }
+  }
+
+  const handleEdit = (player: Player) => {
+    setFormData({
+      name: player.name,
+      role: player.role,
+      price: player.price, // Keep existing price but don't show in form
+      jerseyNumber: player.jerseyNumber ? player.jerseyNumber.toString() : "",
+      iplTeamId: player.iplTeamId
+    })
+    setEditingPlayer(player)
+    setShowForm(true)
+    setError("")
+    setSuccess("")
+  }
+
+  const handleDelete = async (player: Player) => {
+    if (!confirm(`Are you sure you want to delete ${player.name}? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/players/${player.id}`, {
+        method: "DELETE"
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess("Player deleted successfully!")
+        fetchPlayers()
+      } else {
+        setError(data.message || "Failed to delete player")
+      }
+    } catch (error) {
+      setError("Network error")
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      role: "BATSMAN", 
+      price: 8.5, // Hidden default price
+      jerseyNumber: "",
+      iplTeamId: ""
+    })
+    setShowForm(false)
+    setShowBulkForm(false)
+    setEditingPlayer(null)
+    setError("")
+    setSuccess("")
+    setBulkData("")
+  }
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case "BATSMAN": return "🏏"
+      case "BOWLER": return "⚡"
+      case "ALL_ROUNDER": return "⭐"
+      case "WICKET_KEEPER": return "🧤"
+      default: return "🏏"
+    }
+  }
+
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setSuccess("")
+
+    try {
+      const lines = bulkData.trim().split('\n').filter(line => line.trim())
+      const players = []
+
+      for (const line of lines) {
+        const parts = line.split(',').map(part => part.trim())
+        if (parts.length < 3) {
+          setError(`Invalid line format: "${line}". Expected format: Name, Role, Team [, Jersey]`)
+          return
+        }
+
+        const [name, role, teamShort, jersey] = parts
+        const team = teams.find(t => t.shortName.toLowerCase() === teamShort.toLowerCase())
+        
+        if (!team) {
+          setError(`Invalid team "${teamShort}" for player "${name}". Use team abbreviations like MI, CSK, RCB, etc.`)
+          return
+        }
+
+        if (!PLAYER_ROLES.find(r => r.value === role.toUpperCase())) {
+          setError(`Invalid role "${role}" for player "${name}". Use: BATSMAN, BOWLER, ALL_ROUNDER, WICKET_KEEPER`)
+          return
+        }
+
+        players.push({
+          name,
+          role: role.toUpperCase(),
+          price: 8.5,
+          jerseyNumber: jersey ? parseInt(jersey) : null,
+          iplTeamId: team.id
+        })
+      }
+
+      const response = await fetch("/api/admin/players/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ players }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess(`Successfully added ${data.created} players!`)
+        setBulkData("")
+        setShowBulkForm(false)
+        fetchPlayers()
+      } else {
+        setError(data.message || "Failed to add players")
+      }
+    } catch (error) {
+      setError("Network error or invalid data format")
+    }
+  }
+
+  const filteredPlayers = selectedTeam === "all" 
+    ? players 
+    : players.filter(player => player.iplTeamId === selectedTeam)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-red-50 flex items-center justify-center">
+        <div className="text-primary-800">Loading players...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-red-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-green-500 via-green-600 to-green-700 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center gap-4">
+              <a
+                href="/admin/dashboard"
+                className="flex items-center gap-2 text-white hover:text-green-200 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                Back to Dashboard
+              </a>
+              <div className="w-px h-6 bg-white/30"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-400 rounded-full flex items-center justify-center">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold text-white">Player Management</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Success/Error Messages */}
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+            {success}
+          </div>
+        )}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Controls */}
+        <div className="mb-8 flex flex-col sm:flex-row gap-4 justify-between">
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              Add Single Player
+            </button>
+            <button
+              onClick={() => setShowBulkForm(true)}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            >
+              <Users className="h-5 w-5" />
+              Bulk Add Players
+            </button>
+          </div>
+
+          {/* Team Filter */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-700">Filter by Team:</span>
+            <select
+              value={selectedTeam}
+              onChange={(e) => setSelectedTeam(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="all">All Teams</option>
+              {teams.map(team => (
+                <option key={team.id} value={team.id}>{team.shortName}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Add/Edit Player Form */}
+        {showForm && (
+          <div className="mb-8 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center gap-2 mb-6">
+              <Users className="h-6 w-6 text-primary-600" />
+              <h3 className="text-xl font-bold text-primary-800">
+                {editingPlayer ? "Edit" : "Add New"} Player
+              </h3>
+            </div>
+
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Player Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="e.g., Virat Kohli"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  IPL Team *
+                </label>
+                <select
+                  name="iplTeamId"
+                  required
+                  value={formData.iplTeamId}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">Select Team</option>
+                  {teams.map(team => (
+                    <option key={team.id} value={team.id}>
+                      {team.shortName} - {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Role *
+                </label>
+                <select
+                  name="role"
+                  required
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {PLAYER_ROLES.map(role => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Jersey Number (Optional)
+                </label>
+                <input
+                  type="number"
+                  name="jerseyNumber"
+                  min="1"
+                  max="99"
+                  value={formData.jerseyNumber}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="18"
+                />
+              </div>
+
+              <div className="md:col-span-2 flex gap-4">
+                <button
+                  type="submit"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  {editingPlayer ? "Update" : "Create"} Player
+                </button>
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Bulk Add Players Form */}
+        {showBulkForm && (
+          <div className="mb-8 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center gap-2 mb-6">
+              <Users className="h-6 w-6 text-green-600" />
+              <h3 className="text-xl font-bold text-primary-800">Bulk Add Players</h3>
+            </div>
+
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2">Format Instructions:</h4>
+              <p className="text-blue-700 text-sm mb-2">
+                Enter one player per line using this format:
+              </p>
+              <code className="block bg-blue-100 p-2 rounded text-sm font-mono">
+                Player Name, Role, Team, Jersey Number (optional)
+              </code>
+              <p className="text-blue-700 text-sm mt-2">
+                <strong>Roles:</strong> BATSMAN, BOWLER, ALL_ROUNDER, WICKET_KEEPER<br/>
+                <strong>Teams:</strong> MI, CSK, RCB, KKR, DC, PBKS, RR, SRH, GT, LSG
+              </p>
+            </div>
+
+            <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded">
+              <h5 className="font-medium text-gray-700 mb-2">Example:</h5>
+              <pre className="text-sm text-gray-600 font-mono">
+{`Shubman Gill, BATSMAN, GT, 77
+Rashid Khan, BOWLER, GT, 19
+David Miller, BATSMAN, GT
+Hardik Pandya, ALL_ROUNDER, GT, 33`}
+              </pre>
+            </div>
+
+            <form onSubmit={handleBulkSubmit}>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Player Data *
+                </label>
+                <textarea
+                  value={bulkData}
+                  onChange={(e) => setBulkData(e.target.value)}
+                  required
+                  rows={10}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
+                  placeholder="Enter player data, one per line..."
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Lines: {bulkData.trim().split('\n').filter(line => line.trim()).length}
+                </p>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Add Players
+                </button>
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Players List */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-xl font-bold text-primary-800">
+              Players ({filteredPlayers.length})
+              {selectedTeam !== "all" && (
+                <span className="text-sm font-normal text-gray-600 ml-2">
+                  - {teams.find(t => t.id === selectedTeam)?.shortName}
+                </span>
+              )}
+            </h3>
+          </div>
+
+          {filteredPlayers.length === 0 ? (
+            <div className="p-8 text-center">
+              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">
+                {selectedTeam === "all" ? "No players created yet" : "No players in this team yet"}
+              </p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="text-primary-600 hover:text-primary-700 font-semibold"
+              >
+                Add your first player
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Player</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Team</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Role</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Jersey</th>
+                    <th className="text-right px-6 py-3 text-sm font-medium text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredPlayers.map((player) => (
+                    <tr key={player.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{getRoleIcon(player.role)}</span>
+                          <span className="font-semibold text-gray-900">{player.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{ backgroundColor: player.iplTeam.color }}
+                          ></div>
+                          <span className="text-gray-600">{player.iplTeam.shortName}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">
+                        {PLAYER_ROLES.find(r => r.value === player.role)?.label}
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">
+                        {player.jerseyNumber ? `#${player.jerseyNumber}` : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => handleEdit(player)}
+                            className="text-primary-600 hover:text-primary-800 p-2 transition-colors"
+                            title="Edit player"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(player)}
+                            className="text-red-600 hover:text-red-800 p-2 transition-colors"
+                            title="Delete player"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
