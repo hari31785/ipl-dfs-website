@@ -102,17 +102,20 @@ export default function PlayersManagement() {
 
   const fetchTournaments = async () => {
     try {
-      const response = await fetch("/api/tournaments")
+      const response = await fetch("/api/admin/tournaments")
       const data = await response.json()
       
       if (response.ok) {
         const tournamentsData = Array.isArray(data) ? data : []
         setTournaments(tournamentsData)
-        // Auto-select first active tournament
+        // Auto-select first active tournament, or first tournament if none active
         const activeTournament = tournamentsData.find((t: Tournament) => t.isActive)
-        if (activeTournament) {
-          setSelectedTournament(activeTournament.id)
-          setFormData(prev => ({ ...prev, tournamentId: activeTournament.id }))
+        const firstTournament = tournamentsData[0]
+        const selectedTourney = activeTournament || firstTournament
+        
+        if (selectedTourney) {
+          setSelectedTournament(selectedTourney.id)
+          setFormData(prev => ({ ...prev, tournamentId: selectedTourney.id }))
         }
       }
     } catch (error) {
