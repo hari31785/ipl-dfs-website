@@ -160,13 +160,6 @@ function HomeContent() {
           <p className="text-xl text-blue-900 mb-8">
             Join thousands of cricket fans competing in daily fantasy sports
           </p>
-          <Link 
-            href="/signup" 
-            className="bg-secondary-500 hover:bg-secondary-600 text-white px-10 py-4 rounded-lg text-xl font-semibold transition-colors shadow-lg hover:shadow-xl inline-flex items-center"
-          >
-            Create Account
-            <ArrowRight className="ml-2 h-6 w-6" />
-          </Link>
         </div>
       </div>
 
