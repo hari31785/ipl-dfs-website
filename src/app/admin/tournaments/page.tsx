@@ -104,24 +104,49 @@ export default function TournamentsPage() {
     setShowForm(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this tournament?')) return
+  const handleDelete = async (id: string, tournamentName: string = '') => {
+    if (!confirm(`Are you sure you want to delete ${tournamentName || 'this tournament'}?`)) return
 
     try {
       const response = await fetch(`/api/admin/tournaments/${id}`, {
         method: 'DELETE',
       })
 
+      const responseData = await response.json()
+
       if (response.ok) {
         await fetchTournaments()
         alert('Tournament deleted successfully!')
+      } else if (response.status === 400 && responseData.canForceDelete) {
+        // Tournament has associated data but can be force deleted
+        const confirmMessage = `${responseData.message}\n\nThis will permanently delete:\n${responseData.details?.games || 0} games\n${responseData.details?.players || 0} players\n${responseData.details?.contests || 0} contests\n\nDo you want to continue?`
+        
+        if (confirm(confirmMessage)) {
+          // Force delete
+          const forceResponse = await fetch(`/api/admin/tournaments/${id}?force=true`, {
+            method: 'DELETE',
+          })
+          
+          const forceData = await forceResponse.json()
+          
+          if (forceResponse.ok) {
+            await fetchTournaments()
+            alert(`Tournament deleted successfully!\nDeleted: ${forceData.deleted?.games || 0} games, ${forceData.deleted?.players || 0} players, ${forceData.deleted?.contests || 0} contests`)
+          } else {
+            alert(`Failed to force delete tournament: ${forceData.message}`)
+          }
+        }
       } else {
-        const errorData = await response.json()
-        alert(`Failed to delete tournament: ${errorData.message}`)
+        // Show detailed error message
+        let errorMessage = responseData.message || 'Failed to delete tournament'
+        if (responseData.details) {
+          errorMessage += `\n\nAssociated data:\n• ${responseData.details.games || 0} games\n• ${responseData.details.players || 0} players\n• ${responseData.details.contests || 0} contests`
+        }
+        alert(errorMessage)
       }
     } catch (error) {
       console.error('Failed to delete tournament:', error)
-      alert('Error deleting tournament. Please try again.')
+      alert('Network error while deleting tournament. Please try again.')
     }
   }
 
@@ -327,7 +352,7 @@ export default function TournamentsPage() {
                         <Edit3 className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(tournament.id)}
+                        onClick={() => handleDelete(tournament.id, tournament.name)}
                         className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />
