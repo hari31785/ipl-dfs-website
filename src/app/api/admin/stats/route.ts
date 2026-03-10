@@ -155,6 +155,14 @@ export async function POST(request: NextRequest) {
         }
       });
 
+      // Update game status to COMPLETED when stats are being entered
+      await prisma.iPLGame.update({
+        where: { id: iplGameId },
+        data: {
+          status: 'COMPLETED'
+        }
+      });
+
       return NextResponse.json(newStats, { status: 201 });
     }
   } catch (error) {

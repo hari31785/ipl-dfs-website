@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, Ticket, Coins } from "lucide-react"
+import { useLoading } from '@/contexts/LoadingContext'
 
 interface UserData {
   id: string
@@ -92,6 +93,7 @@ interface UserContest {
 }
 
 export default function DashboardPage() {
+  const { setLoading: setGlobalLoading } = useLoading();
   const [user, setUser] = useState<UserData | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [userContests, setUserContests] = useState<UserContest[]>([])
@@ -149,6 +151,7 @@ export default function DashboardPage() {
     if (!user) return
     
     setJoiningContest(contestId)
+    setGlobalLoading(true, 'Joining contest...')
     
     try {
       const response = await fetch('/api/contests/join', {
@@ -165,16 +168,19 @@ export default function DashboardPage() {
       const data = await response.json()
 
       if (response.ok) {
-        alert(`✓ ${data.message}\n\nYou'll be able to draft your team once the signup deadline closes and matchups are created.`)
         // Refresh tournaments to update signup counts
-        fetchTournaments()
+        await fetchTournaments()
         // Refresh user contests
-        fetchUserContests(user.id)
+        await fetchUserContests(user.id)
+        setGlobalLoading(false)
+        alert(`✓ ${data.message}\n\nYou'll be able to draft your team once the signup deadline closes and matchups are created.`)
       } else {
+        setGlobalLoading(false)
         alert(`Error: ${data.message}`)
       }
     } catch (error) {
       console.error('Error joining contest:', error)
+      setGlobalLoading(false)
       alert('Failed to join contest. Please try again.')
     } finally {
       setJoiningContest(null)
@@ -187,6 +193,7 @@ export default function DashboardPage() {
     }
 
     setLeavingContest(signupId)
+    setGlobalLoading(true, 'Leaving contest...')
 
     try {
       const response = await fetch('/api/contests/leave', {
@@ -202,17 +209,20 @@ export default function DashboardPage() {
       const data = await response.json()
 
       if (response.ok) {
-        alert(data.message)
         // Refresh the data
-        fetchTournaments()
+        await fetchTournaments()
         if (user) {
-          fetchUserContests(user.id)
+          await fetchUserContests(user.id)
         }
+        setGlobalLoading(false)
+        alert(data.message)
       } else {
+        setGlobalLoading(false)
         alert(data.error || 'Failed to leave contest')
       }
     } catch (error) {
       console.error('Error leaving contest:', error)
+      setGlobalLoading(false)
       alert('Failed to leave contest')
     } finally {
       setLeavingContest(null)
@@ -764,13 +774,31 @@ export default function DashboardPage() {
                           </button>
                         ) : (
                           <button 
-                            disabled={!signup.matchup}
+                            disabled={
+                              !signup.matchup || 
+                              (signup.matchup.status !== 'DRAFTING' && 
+                               signup.matchup.status !== 'COMPLETED' &&
+                               new Date() <= new Date(signup.contest.iplGame.signupDeadline))
+                            }
                             onClick={() => window.location.href = `/draft/${signup.matchup?.id}`}
                             className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                              signup.matchup
+                              signup.matchup && (
+                                signup.matchup.status === 'DRAFTING' || 
+                                signup.matchup.status === 'COMPLETED' ||
+                                new Date() > new Date(signup.contest.iplGame.signupDeadline)
+                              )
                                 ? 'bg-blue-500 hover:bg-blue-600 text-white cursor-pointer'
                                 : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                             }`}
+                            title={
+                              !signup.matchup 
+                                ? 'Waiting for matchup' 
+                                : signup.matchup.status !== 'DRAFTING' && 
+                                  signup.matchup.status !== 'COMPLETED' &&
+                                  new Date() <= new Date(signup.contest.iplGame.signupDeadline)
+                                ? 'Draft will open after signup deadline or when admin opens it'
+                                : 'Click to draft your team'
+                            }
                           >
                             Draft Team
                           </button>

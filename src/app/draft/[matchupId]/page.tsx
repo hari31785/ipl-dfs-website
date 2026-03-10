@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { ArrowLeft, Users, Trophy, Clock, Target } from 'lucide-react';
+import { useLoading } from '@/contexts/LoadingContext';
 
 interface Player {
   id: string;
@@ -74,6 +75,7 @@ interface Matchup {
 
 export default function DraftPage({ params }: { params: Promise<{ matchupId: string }> }) {
   const { matchupId } = use(params);
+  const { setLoading: setGlobalLoading } = useLoading();
   const [matchup, setMatchup] = useState<Matchup | null>(null);
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,13 +114,17 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     const matchupStatus = matchup.status;
     const isDraftingStatus = matchupStatus === 'DRAFTING' || matchupStatus === 'COMPLETED';
     
-    // Additional check: draft should be accessible only after signup deadline
+    // If admin has opened the drafting window (matchup status is DRAFTING or COMPLETED),
+    // allow access regardless of signup deadline
+    if (matchupStatus === 'DRAFTING' || matchupStatus === 'COMPLETED') {
+      return true;
+    }
+    
+    // Otherwise, check if deadline has passed
     const signupDeadline = new Date(matchup.contest.iplGame.signupDeadline);
     const now = new Date();
     const isPastSignupDeadline = now > signupDeadline;
     
-    // Allow if matchup is in DRAFTING status (admin opened draft window)
-    // OR if it's completed (for viewing)
     return isDraftingStatus && isPastSignupDeadline;
   };
 
@@ -141,6 +147,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     if (!selectedPlayer || !currentUser) return;
 
     setMakingPick(true);
+    setGlobalLoading(true, 'Making draft pick...');
     try {
       const response = await fetch(`/api/draft/${matchupId}/pick`, {
         method: 'POST',
@@ -154,13 +161,16 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       if (response.ok) {
         setSelectedPlayer(null);
         await fetchMatchupDetails();
+        setGlobalLoading(false);
       } else {
         const error = await response.json();
-        alert(error.message);
+        setGlobalLoading(false);
+        alert(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error making pick:', error);
-      alert('Failed to make pick');
+      setGlobalLoading(false);
+      alert('Failed to make pick. Please try again.');
     } finally {
       setMakingPick(false);
     }

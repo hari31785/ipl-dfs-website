@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { ArrowLeft, Users, Trophy } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Search, Edit } from 'lucide-react';
 
 interface Player {
   id: string;
@@ -65,15 +65,57 @@ interface Contest {
   };
 }
 
+interface UserSearchResult {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  totalWins: number;
+  totalMatches: number;
+}
+
 export default function ContestMatchupsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [contest, setContest] = useState<Contest | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMatchup, setSelectedMatchup] = useState<string | null>(null);
+  const [showCreateMatchup, setShowCreateMatchup] = useState(false);
+  const [user1Username, setUser1Username] = useState('');
+  const [user2Username, setUser2Username] = useState('');
+  const [creatingMatchup, setCreatingMatchup] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchField, setActiveSearchField] = useState<'user1' | 'user2' | null>(null);
+  const [selectedUser1, setSelectedUser1] = useState<UserSearchResult | null>(null);
+  const [selectedUser2, setSelectedUser2] = useState<UserSearchResult | null>(null);
+  const [editingMatchup, setEditingMatchup] = useState<Matchup | null>(null);
+  const [updatingMatchup, setUpdatingMatchup] = useState(false);
+  const [updateError, setUpdateError] = useState('');
 
   useEffect(() => {
     fetchContestDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (searchQuery.length >= 2) {
+      searchUsers(searchQuery);
+    } else {
+      setUserSearchResults([]);
+    }
+  }, [searchQuery]);
+
+  const searchUsers = async (query: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/search?q=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserSearchResults(data.users);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  };
 
   const fetchContestDetails = async () => {
     try {
@@ -111,6 +153,100 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
     return matchup.draftPicks
       .filter(pick => pick.pickOrder % 2 === (matchup.user1.id === userSignupId ? 1 : 0))
       .sort((a, b) => a.pickOrder - b.pickOrder);
+  };
+
+  const handleCreateMatchup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedUser1 || !selectedUser2) {
+      setCreateError('Please select both users');
+      return;
+    }
+
+    if (selectedUser1.id === selectedUser2.id) {
+      setCreateError('Cannot create matchup with the same user');
+      return;
+    }
+
+    setCreatingMatchup(true);
+    setCreateError('');
+
+    try {
+      const response = await fetch(`/api/admin/contests/${id}/create-matchup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user1Username: selectedUser1.username,
+          user2Username: selectedUser2.username
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ ${data.message}\n\nMatchup ID: ${data.matchup.id}\nStatus: ${data.matchup.status}\nFirst Pick: ${data.matchup.firstPick}`);
+        setShowCreateMatchup(false);
+        setSelectedUser1(null);
+        setSelectedUser2(null);
+        setSearchQuery('');
+        setActiveSearchField(null);
+        fetchContestDetails(); // Refresh the list
+      } else {
+        setCreateError(data.message || 'Failed to create matchup');
+      }
+    } catch (error) {
+      console.error('Error creating matchup:', error);
+      setCreateError('Network error occurred');
+    } finally {
+      setCreatingMatchup(false);
+    }
+  };
+
+  const handleUpdateMatchup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingMatchup || !selectedUser1 || !selectedUser2) {
+      setUpdateError('Please select both users');
+      return;
+    }
+
+    if (selectedUser1.id === selectedUser2.id) {
+      setUpdateError('Cannot create matchup with the same user');
+      return;
+    }
+
+    setUpdatingMatchup(true);
+    setUpdateError('');
+
+    try {
+      const response = await fetch(`/api/admin/matchups/${editingMatchup.id}/update-users`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user1Username: selectedUser1.username,
+          user2Username: selectedUser2.username
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ ${data.message}`);
+        setEditingMatchup(null);
+        setSelectedUser1(null);
+        setSelectedUser2(null);
+        setSearchQuery('');
+        setActiveSearchField(null);
+        fetchContestDetails(); // Refresh the list
+      } else {
+        setUpdateError(data.message || 'Failed to update matchup');
+      }
+    } catch (error) {
+      console.error('Error updating matchup:', error);
+      setUpdateError('Network error occurred');
+    } finally {
+      setUpdatingMatchup(false);
+    }
   };
 
   if (loading) {
@@ -181,6 +317,370 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
 
+        {/* Create Custom Matchup Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowCreateMatchup(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md flex items-center gap-2"
+          >
+            <Users className="h-5 w-5" />
+            Create Custom Matchup
+          </button>
+        </div>
+
+        {/* Edit Matchup Modal */}
+        {editingMatchup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Edit H2H Matchup</h3>
+              <p className="text-sm text-gray-600 mb-2">
+                Update the opponents for this matchup.
+              </p>
+              <p className="text-xs text-orange-600 bg-orange-50 p-2 rounded mb-4">
+                ⚠️ Note: Cannot update if drafting has started ({editingMatchup.draftPicks.length} picks made)
+              </p>
+              
+              <form onSubmit={handleUpdateMatchup} className="space-y-4">
+                {/* User 1 Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    User 1 {selectedUser1 && <span className="text-green-600">✓</span>}
+                  </label>
+                  {selectedUser1 ? (
+                    <div className="border border-green-300 bg-green-50 rounded-lg p-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-gray-900">{selectedUser1.name}</div>
+                        <div className="text-sm text-gray-600">@{selectedUser1.username}</div>
+                        <div className="text-xs text-gray-500">{selectedUser1.totalWins}W - {selectedUser1.totalMatches}M</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUser1(null)}
+                        className="text-red-600 hover:text-red-700 font-medium text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={activeSearchField === 'user1' ? searchQuery : ''}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setActiveSearchField('user1');
+                          }}
+                          onFocus={() => setActiveSearchField('user1')}
+                          placeholder="Search by name, username, or email..."
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      {activeSearchField === 'user1' && userSearchResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {userSearchResults.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser1(user);
+                                setSearchQuery('');
+                                setActiveSearchField(null);
+                                setUserSearchResults([]);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
+                              disabled={selectedUser2?.id === user.id}
+                            >
+                              <div className="font-medium text-gray-900">{user.name}</div>
+                              <div className="text-sm text-gray-600">@{user.username}</div>
+                              <div className="text-xs text-gray-500">{user.email} • {user.totalWins}W - {user.totalMatches}M</div>
+                              {selectedUser2?.id === user.id && (
+                                <div className="text-xs text-orange-600 mt-1">Already selected as User 2</div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* User 2 Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    User 2 {selectedUser2 && <span className="text-green-600">✓</span>}
+                  </label>
+                  {selectedUser2 ? (
+                    <div className="border border-green-300 bg-green-50 rounded-lg p-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-gray-900">{selectedUser2.name}</div>
+                        <div className="text-sm text-gray-600">@{selectedUser2.username}</div>
+                        <div className="text-xs text-gray-500">{selectedUser2.totalWins}W - {selectedUser2.totalMatches}M</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUser2(null)}
+                        className="text-red-600 hover:text-red-700 font-medium text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={activeSearchField === 'user2' ? searchQuery : ''}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setActiveSearchField('user2');
+                          }}
+                          onFocus={() => setActiveSearchField('user2')}
+                          placeholder="Search by name, username, or email..."
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      {activeSearchField === 'user2' && userSearchResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {userSearchResults.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser2(user);
+                                setSearchQuery('');
+                                setActiveSearchField(null);
+                                setUserSearchResults([]);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
+                              disabled={selectedUser1?.id === user.id}
+                            >
+                              <div className="font-medium text-gray-900">{user.name}</div>
+                              <div className="text-sm text-gray-600">@{user.username}</div>
+                              <div className="text-xs text-gray-500">{user.email} • {user.totalWins}W - {user.totalMatches}M</div>
+                              {selectedUser1?.id === user.id && (
+                                <div className="text-xs text-orange-600 mt-1">Already selected as User 1</div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {updateError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">
+                    {updateError}
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={updatingMatchup || !selectedUser1 || !selectedUser2 || editingMatchup.draftPicks.length > 0}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                  >
+                    {updatingMatchup ? 'Updating...' : 'Update Matchup'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingMatchup(null);
+                      setSelectedUser1(null);
+                      setSelectedUser2(null);
+                      setSearchQuery('');
+                      setActiveSearchField(null);
+                      setUpdateError('');
+                      setUserSearchResults([]);
+                    }}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Create Matchup Modal */}
+        {showCreateMatchup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Create Custom H2H Matchup</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Search and select 2 active users. They will be automatically signed up if not already.
+              </p>
+              
+              <form onSubmit={handleCreateMatchup} className="space-y-4">
+                {/* User 1 Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    User 1 {selectedUser1 && <span className="text-green-600">✓</span>}
+                  </label>
+                  {selectedUser1 ? (
+                    <div className="border border-green-300 bg-green-50 rounded-lg p-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-gray-900">{selectedUser1.name}</div>
+                        <div className="text-sm text-gray-600">@{selectedUser1.username}</div>
+                        <div className="text-xs text-gray-500">{selectedUser1.totalWins}W - {selectedUser1.totalMatches}M</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUser1(null)}
+                        className="text-red-600 hover:text-red-700 font-medium text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={activeSearchField === 'user1' ? searchQuery : ''}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setActiveSearchField('user1');
+                          }}
+                          onFocus={() => setActiveSearchField('user1')}
+                          placeholder="Search by name, username, or email..."
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                      {activeSearchField === 'user1' && userSearchResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {userSearchResults.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser1(user);
+                                setSearchQuery('');
+                                setActiveSearchField(null);
+                                setUserSearchResults([]);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
+                              disabled={selectedUser2?.id === user.id}
+                            >
+                              <div className="font-medium text-gray-900">{user.name}</div>
+                              <div className="text-sm text-gray-600">@{user.username}</div>
+                              <div className="text-xs text-gray-500">{user.email} • {user.totalWins}W - {user.totalMatches}M</div>
+                              {selectedUser2?.id === user.id && (
+                                <div className="text-xs text-orange-600 mt-1">Already selected as User 2</div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* User 2 Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    User 2 {selectedUser2 && <span className="text-green-600">✓</span>}
+                  </label>
+                  {selectedUser2 ? (
+                    <div className="border border-green-300 bg-green-50 rounded-lg p-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-gray-900">{selectedUser2.name}</div>
+                        <div className="text-sm text-gray-600">@{selectedUser2.username}</div>
+                        <div className="text-xs text-gray-500">{selectedUser2.totalWins}W - {selectedUser2.totalMatches}M</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUser2(null)}
+                        className="text-red-600 hover:text-red-700 font-medium text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={activeSearchField === 'user2' ? searchQuery : ''}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setActiveSearchField('user2');
+                          }}
+                          onFocus={() => setActiveSearchField('user2')}
+                          placeholder="Search by name, username, or email..."
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                      {activeSearchField === 'user2' && userSearchResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {userSearchResults.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser2(user);
+                                setSearchQuery('');
+                                setActiveSearchField(null);
+                                setUserSearchResults([]);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
+                              disabled={selectedUser1?.id === user.id}
+                            >
+                              <div className="font-medium text-gray-900">{user.name}</div>
+                              <div className="text-sm text-gray-600">@{user.username}</div>
+                              <div className="text-xs text-gray-500">{user.email} • {user.totalWins}W - {user.totalMatches}M</div>
+                              {selectedUser1?.id === user.id && (
+                                <div className="text-xs text-orange-600 mt-1">Already selected as User 1</div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {createError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">
+                    {createError}
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={creatingMatchup || !selectedUser1 || !selectedUser2}
+                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                  >
+                    {creatingMatchup ? 'Creating...' : 'Create Matchup'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateMatchup(false);
+                      setSelectedUser1(null);
+                      setSelectedUser2(null);
+                      setSearchQuery('');
+                      setActiveSearchField(null);
+                      setCreateError('');
+                      setUserSearchResults([]);
+                    }}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Matchups List */}
         {contest.matchups.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -228,6 +728,21 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                       </div>
 
                       <div className="flex items-center gap-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingMatchup(matchup);
+                            setSelectedUser1(null);
+                            setSelectedUser2(null);
+                            setSearchQuery('');
+                            setActiveSearchField(null);
+                            setUpdateError('');
+                          }}
+                          className="text-blue-600 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit matchup opponents"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
                         <div className="text-right">
                           <div className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(matchup.status)}`}>
                             {getStatusIcon(matchup.status)} {matchup.status.replace('_', ' ')}

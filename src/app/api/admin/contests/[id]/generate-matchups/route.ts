@@ -64,8 +64,12 @@ export async function POST(
       );
     }
 
-    // Shuffle signups randomly
-    const shuffledSignups = [...signups].sort(() => Math.random() - 0.5);
+    // Shuffle signups using Fisher-Yates algorithm for true randomization
+    const shuffledSignups = [...signups];
+    for (let i = shuffledSignups.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledSignups[i], shuffledSignups[j]] = [shuffledSignups[j], shuffledSignups[i]];
+    }
     
     // Create head-to-head matchups
     const matchups = [];

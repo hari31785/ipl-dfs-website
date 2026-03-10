@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Home, ArrowLeft, Trophy, Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { useLoading } from '@/contexts/LoadingContext';
 
 interface IPLGame {
   id: string;
@@ -192,6 +193,7 @@ function ContestCard({
 }
 
 export default function ContestsPage() {
+  const { setLoading: setGlobalLoading } = useLoading();
   const [contests, setContests] = useState<Contest[]>([]);
   const [games, setGames] = useState<IPLGame[]>([]);
   const [loading, setLoading] = useState(true);
@@ -262,6 +264,7 @@ export default function ContestsPage() {
   };
 
   const updateContestStatus = async (contestId: string, newStatus: string) => {
+    setGlobalLoading(true, 'Updating contest status...');
     try {
       const response = await fetch(`/api/admin/contests/${contestId}`, {
         method: 'PUT',
@@ -272,14 +275,17 @@ export default function ContestsPage() {
       });
 
       if (response.ok) {
-        fetchContests();
+        await fetchContests();
+        setGlobalLoading(false);
         alert('Contest status updated successfully!');
       } else {
         const error = await response.json();
+        setGlobalLoading(false);
         alert(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error updating contest:', error);
+      setGlobalLoading(false);
       alert('Error updating contest status');
     }
   };
@@ -289,6 +295,7 @@ export default function ContestsPage() {
       return;
     }
 
+    setGlobalLoading(true, 'Ending contest and calculating results...');
     try {
       const url = forceEnd 
         ? `/api/admin/contests/${contestId}/end?force=true`
@@ -303,10 +310,12 @@ export default function ContestsPage() {
 
       if (response.ok) {
         const result = await response.json();
-        fetchContests();
+        await fetchContests();
+        setGlobalLoading(false);
         alert(`Contest ended successfully!\n\nResults:\n- Total Matchups: ${result.totalMatchups}\n- Winners Paid: ${result.winnersPaid}\n- Losers Charged: ${result.losersCharged}\n- Admin Fee Collected: ${result.adminFeeCollected} coins`);
       } else {
         const error = await response.json();
+        setGlobalLoading(false);
         
         // Handle stats validation errors with force-end option
         if (error.canForce && (error.error === 'NO_STATS' || error.error === 'INSUFFICIENT_STATS')) {
@@ -327,11 +336,13 @@ export default function ContestsPage() {
       }
     } catch (error) {
       console.error('Error ending contest:', error);
+      setGlobalLoading(false);
       alert('Error ending contest');
     }
   };
 
   const closeSignups = async (contestId: string) => {
+    setGlobalLoading(true, 'Closing signups and generating matchups...');
     try {
       const response = await fetch(`/api/admin/contests/${contestId}/close-signups`, {
         method: 'POST',
@@ -339,14 +350,17 @@ export default function ContestsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        fetchContests();
+        await fetchContests();
+        setGlobalLoading(false);
         alert(data.message);
       } else {
         const error = await response.json();
+        setGlobalLoading(false);
         alert(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error closing signups:', error);
+      setGlobalLoading(false);
       alert('Error closing signups');
     }
   };
@@ -356,6 +370,7 @@ export default function ContestsPage() {
       return;
     }
 
+    setGlobalLoading(true, 'Generating matchups...');
     try {
       const response = await fetch(`/api/admin/contests/${contestId}/generate-matchups`, {
         method: 'POST',
@@ -363,14 +378,17 @@ export default function ContestsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        fetchContests();
+        await fetchContests();
+        setGlobalLoading(false);
         alert(data.message);
       } else {
         const error = await response.json();
+        setGlobalLoading(false);
         alert(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error generating matchups:', error);
+      setGlobalLoading(false);
       alert('Error generating matchups');
     }
   };
@@ -380,6 +398,7 @@ export default function ContestsPage() {
       return;
     }
 
+    setGlobalLoading(true, 'Opening drafting window...');
     try {
       const response = await fetch(`/api/admin/contests/${contestId}/open-drafting`, {
         method: 'POST',
@@ -387,23 +406,27 @@ export default function ContestsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        fetchContests();
+        await fetchContests();
+        setGlobalLoading(false);
         alert(data.message);
       } else {
         const error = await response.json();
+        setGlobalLoading(false);
         alert(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error opening drafting:', error);
+      setGlobalLoading(false);
       alert('Error opening drafting window');
     }
   };
 
   const reopenSignups = async (contestId: string) => {
-    if (!confirm('Reopen signups? This will delete all matchups if drafting has not started.')) {
+    if (!confirm('Reopen signups? This will allow more users to join the contest. Existing matchups will be preserved.')) {
       return;
     }
 
+    setGlobalLoading(true, 'Reopening signups...');
     try {
       const response = await fetch(`/api/admin/contests/${contestId}/reopen-signups`, {
         method: 'POST',
@@ -411,14 +434,17 @@ export default function ContestsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        fetchContests();
+        await fetchContests();
+        setGlobalLoading(false);
         alert(data.message);
       } else {
         const error = await response.json();
+        setGlobalLoading(false);
         alert(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error reopening signups:', error);
+      setGlobalLoading(false);
       alert('Error reopening signups');
     }
   };
@@ -997,7 +1023,7 @@ export default function ContestsPage() {
                     <button
                       onClick={() => reopenSignups(contest.id)}
                       className="block w-full px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
-                      title="Reopen signups (deletes matchups if no drafting has started)"
+                      title="Reopen signups to allow more users to join (preserves existing matchups)"
                     >
                       🔓 Reopen Signups
                     </button>

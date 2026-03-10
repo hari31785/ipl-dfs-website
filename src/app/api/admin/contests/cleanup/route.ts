@@ -5,6 +5,39 @@ export async function POST(request: NextRequest) {
   try {
     const now = new Date()
     
+    // 0. Update game statuses based on current time
+    // Update games to LIVE if game has started (within 4 hours of start time)
+    const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000)
+    await prisma.iPLGame.updateMany({
+      where: {
+        status: {
+          in: ['UPCOMING', 'SIGNUP_CLOSED']
+        },
+        gameDate: {
+          lte: now,
+          gte: fourHoursAgo
+        }
+      },
+      data: {
+        status: 'LIVE'
+      }
+    })
+    
+    // Update games to COMPLETED if game ended (more than 4 hours past start time)
+    await prisma.iPLGame.updateMany({
+      where: {
+        status: {
+          in: ['UPCOMING', 'SIGNUP_CLOSED', 'LIVE']
+        },
+        gameDate: {
+          lt: fourHoursAgo
+        }
+      },
+      data: {
+        status: 'COMPLETED'
+      }
+    })
+    
     // 1. Find contests that are past due and not completed
     const pastDueContests = await prisma.contest.findMany({
       where: {

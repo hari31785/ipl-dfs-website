@@ -37,27 +37,8 @@ export async function POST(
       );
     }
 
-    // Check if any drafting has begun
-    const hasDraftingStarted = contest.matchups.some(
-      matchup => matchup._count.draftPicks > 0
-    );
-
-    if (hasDraftingStarted) {
-      return NextResponse.json(
-        { message: 'Cannot reopen signups - drafting has already begun' },
-        { status: 400 }
-      );
-    }
-
-    // Delete all matchups if they exist
-    if (contest._count.matchups > 0) {
-      await prisma.headToHeadMatchup.deleteMany({
-        where: { contestId: contest.id }
-      });
-      console.log(`🗑️ Deleted ${contest._count.matchups} matchups for contest ${contest.id}`);
-    }
-
-    // Reopen the contest
+    // Just reopen the contest without deleting matchups
+    // This allows more users to join while preserving existing matchups
     const updatedContest = await prisma.contest.update({
       where: { id },
       data: { status: 'SIGNUP_OPEN' },
