@@ -406,7 +406,7 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.runs ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, runs: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center"
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
                                 />
                               </td>
                               <td className="px-4 py-3">
@@ -415,7 +415,7 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.wickets ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, wickets: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center"
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
                                 />
                               </td>
                               <td className="px-4 py-3">
@@ -424,7 +424,7 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.catches ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, catches: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center"
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
                                 />
                               </td>
                               <td className="px-4 py-3">
@@ -433,7 +433,7 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.runOuts ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, runOuts: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center"
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
                                 />
                               </td>
                               <td className="px-4 py-3">
@@ -442,7 +442,7 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.stumpings ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, stumpings: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center"
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
                                 />
                               </td>
                               <td className="px-4 py-3 text-center">
@@ -601,7 +601,7 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'runs') as number}
                             onChange={(e) => handleStatChange(player.id, 'runs', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500"
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
                             placeholder="0"
                           />
                         </td>
@@ -611,7 +611,7 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'wickets') as number}
                             onChange={(e) => handleStatChange(player.id, 'wickets', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500"
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
                             placeholder="0"
                           />
                         </td>
@@ -621,7 +621,7 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'catches') as number}
                             onChange={(e) => handleStatChange(player.id, 'catches', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500"
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
                             placeholder="0"
                           />
                         </td>
@@ -631,7 +631,7 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'runOuts') as number}
                             onChange={(e) => handleStatChange(player.id, 'runOuts', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500"
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
                             placeholder="0"
                           />
                         </td>
@@ -641,7 +641,7 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'stumpings') as number}
                             onChange={(e) => handleStatChange(player.id, 'stumpings', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500"
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
                             placeholder="0"
                           />
                         </td>
