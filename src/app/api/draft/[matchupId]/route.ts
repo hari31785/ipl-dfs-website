@@ -74,15 +74,20 @@ export async function GET(
     const signupDeadline = new Date(contest.iplGame.signupDeadline);
     const now = new Date();
     
-    // Draft should only be accessible after signup deadline and if contest is in correct phase
+    // Draft should be accessible after signup deadline and if contest is in correct phase
+    // Also allow access for completed contests (for viewing scores)
     const isDraftPhase = contest.status === 'DRAFTING' || contest.status === 'DRAFT_PHASE';
+    const isCompletedPhase = contest.status === 'COMPLETED' || contest.status === 'LIVE';
     const isPastDeadline = now > signupDeadline;
     
-    if (!isDraftPhase || !isPastDeadline) {
+    // Allow access if:
+    // 1. Contest is completed/live (bypass deadline check for completed contests)
+    // 2. OR deadline has passed AND contest is in draft phase
+    if (!isCompletedPhase && (!isPastDeadline || !isDraftPhase)) {
       return NextResponse.json(
         { 
           message: 'Draft not accessible yet',
-          reason: !isPastDeadline ? 'Signup deadline not passed' : 'Contest not in draft phase',
+          reason: !isPastDeadline ? 'Signup deadline not passed' : 'Contest not in accessible phase',
           signupDeadline: signupDeadline.toISOString(),
           currentStatus: contest.status
         },
