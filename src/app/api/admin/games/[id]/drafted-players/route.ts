@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ gameId: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { gameId } = await context.params;
+    const { id: gameId } = await context.params;
 
     // Get all contests for this game
     const contests = await prisma.contest.findMany({
