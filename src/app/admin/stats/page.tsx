@@ -66,6 +66,7 @@ export default function BulkStatsPage() {
   const [bulkStats, setBulkStats] = useState<Record<string, BulkStatEntry>>({});
   const [editingStatId, setEditingStatId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<PlayerStat>>({});
+  const [draftedPlayerIds, setDraftedPlayerIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchGames();
@@ -74,6 +75,7 @@ export default function BulkStatsPage() {
   useEffect(() => {
     if (selectedGame) {
       fetchStats(selectedGame);
+      fetchDraftedPlayers(selectedGame);
       const game = games.find(g => g.id === selectedGame);
       if (game && game.tournamentId) {
         fetchPlayersForTournament(game.tournamentId);
@@ -82,6 +84,7 @@ export default function BulkStatsPage() {
       setPlayers([]);
       setExistingStats([]);
       setBulkStats({});
+      setDraftedPlayerIds(new Set());
     }
   }, [selectedGame, games]);
 
@@ -123,15 +126,36 @@ export default function BulkStatsPage() {
     }
   };
 
+  const fetchDraftedPlayers = async (gameId: string) => {
+    try {
+      const response = await fetch(`/api/admin/games/${gameId}/drafted-players`);
+      if (response.ok) {
+        const data = await response.json();
+        setDraftedPlayerIds(new Set(data.playerIds || []));
+      }
+    } catch (error) {
+      console.error('Error fetching drafted players:', error);
+      setDraftedPlayerIds(new Set());
+    }
+  };
+
   const getGamePlayers = () => {
     if (!selectedGame) return [];
     const game = games.find(g => g.id === selectedGame);
     if (!game) return [];
     
-    return players.filter(player => 
+    // Filter to only players from the two teams playing
+    const teamPlayers = players.filter(player => 
       player.iplTeam.id === game.team1.id || 
       player.iplTeam.id === game.team2.id
     );
+    
+    // Further filter to only players who have been drafted by users
+    if (draftedPlayerIds.size === 0) {
+      return teamPlayers; // Show all if no draft data yet
+    }
+    
+    return teamPlayers.filter(player => draftedPlayerIds.has(player.id));
   };
 
   const calculatePoints = (runs: number, wickets: number, catches: number, runOuts: number, stumpings: number) => {
