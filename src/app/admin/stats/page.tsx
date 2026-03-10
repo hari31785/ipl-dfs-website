@@ -339,11 +339,11 @@ export default function BulkStatsPage() {
           <select
             value={selectedGame}
             onChange={(e) => setSelectedGame(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-medium"
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-medium text-gray-900"
           >
-            <option value="">-- Select a game --</option>
+            <option value="" className="text-gray-900">-- Select a game --</option>
             {games.map((game) => (
-              <option key={game.id} value={game.id}>
+              <option key={game.id} value={game.id} className="text-gray-900">
                 {game.title} - {new Date(game.gameDate).toLocaleDateString()}
               </option>
             ))}
@@ -388,7 +388,7 @@ export default function BulkStatsPage() {
                         <tr key={stat.id} className="hover:bg-gray-50">
                           {editingStatId === stat.id ? (
                             <>
-                              <td className="px-4 py-3 font-medium">{stat.player.name}</td>
+                              <td className="px-4 py-3 font-medium text-gray-900">{stat.player.name}</td>
                               <td className="px-4 py-3">
                                 <span 
                                   className="text-xs font-bold px-2 py-1 rounded"
@@ -486,7 +486,7 @@ export default function BulkStatsPage() {
                             </>
                           ) : (
                             <>
-                              <td className="px-4 py-3 font-medium">{stat.player.name}</td>
+                              <td className="px-4 py-3 font-medium text-gray-900">{stat.player.name}</td>
                               <td className="px-4 py-3">
                                 <span 
                                   className="text-xs font-bold px-2 py-1 rounded"
@@ -583,7 +583,7 @@ export default function BulkStatsPage() {
                         key={player.id} 
                         className={`hover:bg-gray-50 ${hasAnyStats(player.id) ? 'bg-green-50' : ''}`}
                       >
-                        <td className="px-4 py-3 font-medium">{player.name}</td>
+                        <td className="px-4 py-3 font-medium text-gray-900">{player.name}</td>
                         <td className="px-4 py-3">
                           <span 
                             className="text-xs font-bold px-2 py-1 rounded"
