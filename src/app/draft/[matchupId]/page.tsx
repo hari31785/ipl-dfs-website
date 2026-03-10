@@ -50,9 +50,11 @@ interface Matchup {
     id: string;
     contestType: string;
     coinValue: number;
+    status: string;
     iplGame: {
       title: string;
       gameDate: string;
+      signupDeadline: string;
       team1: {
         id: string;
         name: string;
@@ -82,6 +84,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [filterRole, setFilterRole] = useState<string>('all');
   const [searchName, setSearchName] = useState<string>('');
   const [playerStats, setPlayerStats] = useState<Record<string, number>>({});
+  const [isDraftingPhase, setIsDraftingPhase] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
@@ -90,6 +93,32 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     }
     fetchMatchupDetails();
   }, [matchupId]);
+
+  // Real-time polling for turn updates
+  useEffect(() => {
+    if (!matchup || !currentUser || matchup.draftPicks.length >= 14) return;
+
+    const pollInterval = setInterval(() => {
+      fetchMatchupDetails();
+    }, 3000); // Poll every 3 seconds during draft
+
+    return () => clearInterval(pollInterval);
+  }, [matchup, currentUser]);
+
+  const checkDraftAccess = () => {
+    if (!matchup) return false;
+    
+    // Check if contest is in drafting phase
+    const contestStatus = matchup.contest.status;
+    const isDraftingStatus = contestStatus === 'DRAFTING';
+    
+    // Additional check: draft should be accessible only after signup deadline
+    const signupDeadline = new Date(matchup.contest.iplGame.signupDeadline);
+    const now = new Date();
+    const isPastSignupDeadline = now > signupDeadline;
+    
+    return isDraftingStatus && isPastSignupDeadline;
+  };
 
   const fetchMatchupDetails = async () => {
     try {
@@ -179,6 +208,32 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             User 2: {matchup.user2.user.username} ({matchup.user2.user.id})
           </div>
           <a href="/dashboard" className="text-primary-600 underline">Go to Dashboard</a>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if draft is accessible
+  if (!checkDraftAccess()) {
+    const signupDeadline = new Date(matchup.contest.iplGame.signupDeadline);
+    const gameDate = new Date(matchup.contest.iplGame.gameDate);
+    const now = new Date();
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-xl text-orange-600 mb-4">🚫 Draft Not Available Yet</div>
+          <div className="text-gray-700 mb-4">
+            <p className="mb-2">The draft will be available after the signup deadline.</p>
+            <p className="text-sm">Signup Deadline: {signupDeadline.toLocaleDateString()} at {signupDeadline.toLocaleTimeString()}</p>
+            <p className="text-sm">Game Date: {gameDate.toLocaleDateString()} at {gameDate.toLocaleTimeString()}</p>
+          </div>
+          {now < signupDeadline && (
+            <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+              <p className="text-blue-800 text-sm">⏳ Please wait until after the signup deadline to access the draft.</p>
+            </div>
+          )}
+          <a href="/dashboard" className="inline-block bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 transition-colors">Go to Dashboard</a>
         </div>
       </div>
     );
@@ -285,11 +340,13 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <>
                   <Target className="h-6 w-6 text-secondary-400" />
                   Your Turn - Pick #{currentPickOrder}
+                  <span className="ml-2 animate-pulse bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-normal">🔴 LIVE</span>
                 </>
               ) : (
                 <>
                   <Clock className="h-6 w-6" />
                   Waiting for {opponent.name} - Pick #{currentPickOrder}
+                  <span className="ml-2 animate-pulse bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-normal">Auto-refreshing...</span>
                 </>
               )}
             </p>
@@ -318,38 +375,95 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               {myPicks.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 italic">No picks yet</div>
               ) : (
-                myPicks.map(pick => (
-                  <div key={pick.id} className="group relative bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-cricket-600 to-green-800 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shrink-0">
-                        {pick.pickOrder}
+                <>
+                  {/* Starting XI Section */}
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b-2 border-green-600">
+                      <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">XI</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-bold text-black bg-green-200 px-2 py-1 rounded-md shadow-sm border border-green-400">
-                            {pick.player.role}
-                          </span>
-                          <span 
-                            className="text-xs font-bold px-2 py-1 rounded-md shadow-sm border-2" 
-                            style={{ 
-                              backgroundColor: pick.player.iplTeam.color + '15', 
-                              color: 'black',
-                              borderColor: pick.player.iplTeam.color + '60'
-                            }}
-                          >
-                            {pick.player.iplTeam.shortName}
-                          </span>
-                          {pick.player.stats && pick.player.stats.length > 0 && (
-                            <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
-                              ⭐ {pick.player.stats[0].points.toFixed(1)} pts
-                            </span>
-                          )}
+                      <h4 className="font-bold text-green-800 text-lg">Starting XI</h4>
+                      <span className="text-sm text-green-600">({Math.min(myPicks.length, 11)}/11)</span>
+                    </div>
+                    {myPicks.slice(0, 11).map(pick => (
+                      <div key={pick.id} className="mb-3 group relative bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-cricket-600 to-green-800 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shrink-0">
+                            {pick.pickOrder}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-bold text-black bg-green-200 px-2 py-1 rounded-md shadow-sm border border-green-400">
+                                {pick.player.role}
+                              </span>
+                              <span 
+                                className="text-xs font-bold px-2 py-1 rounded-md shadow-sm border-2" 
+                                style={{ 
+                                  backgroundColor: pick.player.iplTeam.color + '15', 
+                                  color: 'black',
+                                  borderColor: pick.player.iplTeam.color + '60'
+                                }}
+                              >
+                                {pick.player.iplTeam.shortName}
+                              </span>
+                              {pick.player.stats && pick.player.stats.length > 0 && (
+                                <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
+                                  ⭐ {pick.player.stats[0].points.toFixed(1)} pts
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))
+
+                  {/* Substitutes Section */}
+                  {myPicks.length > 11 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b-2 border-orange-500">
+                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">SUB</span>
+                        </div>
+                        <h4 className="font-bold text-orange-700 text-lg">Substitutes</h4>
+                        <span className="text-sm text-orange-600">({myPicks.length - 11}/3)</span>
+                      </div>
+                      {myPicks.slice(11).map(pick => (
+                        <div key={pick.id} className="mb-3 group relative bg-gradient-to-br from-orange-50 via-amber-50 to-white border-2 border-orange-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">
+                              {pick.pickOrder}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-bold text-black bg-orange-200 px-2 py-1 rounded-md shadow-sm border border-orange-400">
+                                  {pick.player.role}
+                                </span>
+                                <span 
+                                  className="text-xs font-bold px-2 py-1 rounded-md shadow-sm border-2" 
+                                  style={{ 
+                                    backgroundColor: pick.player.iplTeam.color + '15', 
+                                    color: 'black',
+                                    borderColor: pick.player.iplTeam.color + '60'
+                                  }}
+                                >
+                                  {pick.player.iplTeam.shortName}
+                                </span>
+                                {pick.player.stats && pick.player.stats.length > 0 && (
+                                  <span className="text-sm font-black text-black bg-gradient-to-r from-orange-300 to-amber-300 px-3 py-1.5 rounded-md shadow-md border-2 border-orange-600">
+                                    ⭐ {pick.player.stats[0].points.toFixed(1)} pts
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -366,7 +480,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   <select
                     value={filterTeam}
                     onChange={(e) => setFilterTeam(e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none bg-white"
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none bg-white text-black"
                   >
                     <option value="all">All Teams</option>
                     {matchup && [
@@ -383,7 +497,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   <select
                     value={filterRole}
                     onChange={(e) => setFilterRole(e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none bg-white"
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none bg-white text-black"
                   >
                     <option value="all">All Roles</option>
                     <option value="Batsman">Batsman</option>
@@ -417,11 +531,42 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             </div>
 
             <div className="space-y-2 max-h-[450px] overflow-y-auto pr-2">
-              {availablePlayers
-                .filter(player => filterTeam === 'all' || player.iplTeam.id === filterTeam)
-                .filter(player => filterRole === 'all' || player.role === filterRole)
-                .filter(player => !searchName || player.name.toLowerCase().includes(searchName.toLowerCase()))
-                .map(player => (
+              {(() => {
+                if (availablePlayers.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-gray-400 italic">
+                      No available players remaining
+                    </div>
+                  );
+                }
+                
+                const filteredPlayers = availablePlayers
+                  .filter(player => {
+                    // Team filter
+                    if (filterTeam === 'all') return true;
+                    return player.iplTeam.id === filterTeam;
+                  })
+                  .filter(player => {
+                    // Role filter  
+                    if (filterRole === 'all') return true;
+                    return player.role === filterRole;
+                  })
+                  .filter(player => {
+                    // Name search filter
+                    if (!searchName) return true;
+                    return player.name.toLowerCase().includes(searchName.toLowerCase());
+                  });
+                
+                if (filteredPlayers.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-lg mb-2">No players match your filters</div>
+                      <div className="text-sm">Try adjusting your team, role, or name filters</div>
+                    </div>
+                  );
+                }
+                
+                return filteredPlayers.map(player => (
                 <div
                   key={player.id}
                   onClick={() => isMyTurn && !isDraftComplete && setSelectedPlayer(player.id)}
@@ -448,7 +593,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     </span>
                   </div>
                 </div>
-              ))}
+                ));
+              })()}
             </div>
             {isMyTurn && !isDraftComplete && (
               <button

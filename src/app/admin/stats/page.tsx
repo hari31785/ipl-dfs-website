@@ -8,6 +8,7 @@ interface IPLGame {
   title: string;
   gameDate: string;
   status: string;
+  tournamentId: string;
   team1: {
     name: string;
     shortName: string;
@@ -59,14 +60,21 @@ export default function StatsPage() {
 
   useEffect(() => {
     fetchGames();
-    fetchPlayers();
   }, []);
 
   useEffect(() => {
     if (selectedGame) {
       fetchStats(selectedGame);
+      // Fetch players for this game's tournament
+      const game = games.find(g => g.id === selectedGame);
+      if (game && game.tournamentId) {
+        fetchPlayersForTournament(game.tournamentId);
+      }
+    } else {
+      // Clear players when no game is selected
+      setPlayers([]);
     }
-  }, [selectedGame]);
+  }, [selectedGame, games]);
 
   const fetchGames = async () => {
     try {
@@ -79,6 +87,18 @@ export default function StatsPage() {
       console.error('Error fetching games:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPlayersForTournament = async (tournamentId: string) => {
+    try {
+      const response = await fetch(`/api/admin/players?tournamentId=${tournamentId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setPlayers(data.players || []);
+      }
+    } catch (error) {
+      console.error('Error fetching players:', error);
     }
   };
 
@@ -210,10 +230,10 @@ export default function StatsPage() {
                 <ArrowLeft className="h-5 w-5" />
                 Back to Dashboard
               </a>
-              <div className="w-px h-6 bg-white/30"></div>
+              <div className="w-px h-6 bg-primary-800/30"></div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center">
-                  <BarChart3 className="h-6 w-6 text-white" />
+                  <BarChart3 className="h-6 w-6 text-primary-800" />
                 </div>
                 <h1 className="text-2xl font-bold text-white">Player Statistics Management</h1>
               </div>

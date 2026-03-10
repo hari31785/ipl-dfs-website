@@ -401,47 +401,70 @@ export default function DashboardPage() {
                               </div>
 
                               {/* Contests - Visible Join Buttons */}
-                              {game.contests && game.contests.length > 0 && (
-                                <div className="space-y-2">
-                                  <p className="text-xs font-semibold text-gray-700 mb-2">Available Contests:</p>
-                                  <div className={`grid gap-2 ${
-                                    game.contests.length === 1 
-                                      ? 'grid-cols-1' 
-                                      : game.contests.length === 2 
-                                      ? 'grid-cols-2' 
-                                      : 'grid-cols-3'
-                                  }`}>
-                                    {game.contests.map((contest) => (
-                                      <button 
-                                        key={contest.id}
-                                        onClick={() => handleJoinContest(contest.id, game.id)}
-                                        disabled={joiningContest === contest.id}
-                                        className="flex flex-col items-center justify-center gap-1 px-4 py-3 bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 text-gray-800 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                      >
-                                        <span className="font-bold text-base text-gray-900">
-                                          {(() => {
-                                            const type = typeof contest.contestType === 'string' ? contest.contestType : contest.contestType?.name || '';
-                                            return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
-                                                   type === 'REGULAR' ? 'Regular (50)' : 
-                                                   type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
-                                                   type;
-                                          })()}
-                                        </span>
-                                        <span className="text-xs text-gray-700">{contest._count.signups}/{contest.maxParticipants} joined</span>
-                                        {joiningContest === contest.id ? (
-                                          <span className="text-xs text-gray-800 font-medium">Joining...</span>
-                                        ) : (
-                                          <span className="text-xs font-bold text-gray-900">JOIN NOW</span>
-                                        )}
-                                      </button>
-                                    ))}
+                              {(() => {
+                                if (!game.contests || game.contests.length === 0) return null;
+                                
+                                // Filter out contests where signup deadline has passed
+                                const now = new Date();
+                                const signupDeadline = new Date(game.signupDeadline);
+                                const availableContests = signupDeadline > now ? game.contests : [];
+                                
+                                if (availableContests.length === 0) return null;
+                                
+                                return (
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-semibold text-gray-700 mb-2">Available Contests:</p>
+                                    <div className={`grid gap-2 ${
+                                      availableContests.length === 1 
+                                        ? 'grid-cols-1' 
+                                        : availableContests.length === 2 
+                                        ? 'grid-cols-2' 
+                                        : 'grid-cols-3'
+                                    }`}>
+                                      {availableContests.map((contest) => (
+                                        <button 
+                                          key={contest.id}
+                                          onClick={() => handleJoinContest(contest.id, game.id)}
+                                          disabled={joiningContest === contest.id}
+                                          className="flex flex-col items-center justify-center gap-1 px-4 py-3 bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 text-gray-800 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          <span className="font-bold text-base text-gray-900">
+                                            {(() => {
+                                              const type = typeof contest.contestType === 'string' ? contest.contestType : contest.contestType?.name || '';
+                                              return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
+                                                     type === 'REGULAR' ? 'Regular (50)' : 
+                                                     type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
+                                                     type;
+                                            })()} 
+                                          </span>
+                                          <span className="text-xs text-gray-700">{contest._count.signups}/{contest.maxParticipants} joined</span>
+                                          {joiningContest === contest.id ? (
+                                            <span className="text-xs text-gray-800 font-medium">Joining...</span>
+                                          ) : (
+                                            <span className="text-xs font-bold text-gray-900">JOIN NOW</span>
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-
-                              {(!game.contests || game.contests.length === 0) && (
-                                <p className="text-gray-500 text-sm text-center py-2">No contests available</p>
-                              )}
+                                );
+                              })()}
+                              {(() => {
+                                if (!game.contests || game.contests.length === 0) {
+                                  return <p className="text-gray-500 text-sm text-center py-2">No contests available</p>;
+                                }
+                                
+                                // Check if all contests are past deadline
+                                const now = new Date();
+                                const signupDeadline = new Date(game.signupDeadline);
+                                const availableContests = signupDeadline > now ? game.contests : [];
+                                
+                                if (availableContests.length === 0) {
+                                  return <p className="text-gray-500 text-sm text-center py-2">Signup deadline has passed</p>;
+                                }
+                                
+                                return null;
+                              })()} 
                             </div>
                           ))
                         )}
@@ -469,15 +492,19 @@ export default function DashboardPage() {
                       <Clock className="h-4 w-4" />
                       Upcoming
                       {userContests.filter(contest => 
-                        contest.contest.status !== 'COMPLETED' && 
-                        contest.contest.iplGame.status !== 'COMPLETED' &&
-                        (!contest.matchup || contest.matchup.status !== 'COMPLETED')
+                        // Upcoming: Contests that are not yet started by admin
+                        // Includes: SIGNUP_OPEN, SIGNUP_CLOSED, DRAFTING states
+                        contest.contest.status === 'SIGNUP_OPEN' || 
+                        contest.contest.status === 'SIGNUP_CLOSED' ||
+                        contest.contest.status === 'DRAFTING' ||
+                        contest.contest.status === 'DRAFT_PHASE'
                       ).length > 0 && (
                         <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
                           {userContests.filter(contest => 
-                            contest.contest.status !== 'COMPLETED' && 
-                            contest.contest.iplGame.status !== 'COMPLETED' &&
-                            (!contest.matchup || contest.matchup.status !== 'COMPLETED')
+                            contest.contest.status === 'SIGNUP_OPEN' || 
+                            contest.contest.status === 'SIGNUP_CLOSED' ||
+                            contest.contest.status === 'DRAFTING' ||
+                            contest.contest.status === 'DRAFT_PHASE'
                           ).length}
                         </span>
                       )}
@@ -496,15 +523,12 @@ export default function DashboardPage() {
                       <Zap className="h-4 w-4" />
                       Active
                       {userContests.filter(contest => 
-                        (contest.contest.iplGame.status === 'LIVE' ||
-                        (contest.matchup?.status === 'DRAFTING')) &&
-                        contest.contest.status !== 'COMPLETED'
+                        // Active: Contest has been started by admin (status is LIVE)
+                        contest.contest.status === 'LIVE'
                       ).length > 0 && (
                         <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
                           {userContests.filter(contest => 
-                            (contest.contest.iplGame.status === 'LIVE' ||
-                            (contest.matchup?.status === 'DRAFTING')) &&
-                            contest.contest.status !== 'COMPLETED'
+                            contest.contest.status === 'LIVE'
                           ).length}
                         </span>
                       )}
@@ -523,15 +547,12 @@ export default function DashboardPage() {
                       <Trophy className="h-4 w-4" />
                       Completed
                       {userContests.filter(contest => 
-                        contest.contest.status === 'COMPLETED' ||
-                        contest.matchup?.status === 'COMPLETED' ||
-                        contest.contest.iplGame.status === 'COMPLETED'
+                        // Completed: Contest has been ended by admin (status is COMPLETED)
+                        contest.contest.status === 'COMPLETED'
                       ).length > 0 && (
                         <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full">
                           {userContests.filter(contest => 
-                            contest.contest.status === 'COMPLETED' ||
-                            contest.matchup?.status === 'COMPLETED' ||
-                            contest.contest.iplGame.status === 'COMPLETED'
+                            contest.contest.status === 'COMPLETED'
                           ).length}
                         </span>
                       )}
@@ -546,24 +567,21 @@ export default function DashboardPage() {
                     
                     if (contestSubTab === 'upcoming') {
                       filteredContests = userContests.filter(contest => 
-                        // Show upcoming if contest is not completed and game hasn't been marked as completed
-                        contest.contest.status !== 'COMPLETED' && 
-                        contest.contest.iplGame.status !== 'COMPLETED' &&
-                        (!contest.matchup || contest.matchup.status !== 'COMPLETED')
+                        // Upcoming: Contests not yet started by admin (includes signup, drafting phases)
+                        contest.contest.status === 'SIGNUP_OPEN' || 
+                        contest.contest.status === 'SIGNUP_CLOSED' ||
+                        contest.contest.status === 'DRAFTING' ||
+                        contest.contest.status === 'DRAFT_PHASE'
                       )
                     } else if (contestSubTab === 'active') {
                       filteredContests = userContests.filter(contest => 
-                        // Show active if game is live or matchup is in drafting phase (and not completed)
-                        (contest.contest.iplGame.status === 'LIVE' ||
-                        (contest.matchup?.status === 'DRAFTING')) &&
-                        contest.contest.status !== 'COMPLETED'
+                        // Active: Contest has been started by admin
+                        contest.contest.status === 'LIVE'
                       )
                     } else if (contestSubTab === 'completed') {
                       filteredContests = userContests.filter(contest => 
-                        // Show completed if contest is marked as completed OR matchup is completed
-                        contest.contest.status === 'COMPLETED' ||
-                        contest.matchup?.status === 'COMPLETED' ||
-                        contest.contest.iplGame.status === 'COMPLETED'
+                        // Completed: Contest has been ended by admin
+                        contest.contest.status === 'COMPLETED'
                       )
                     }
 

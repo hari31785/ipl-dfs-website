@@ -69,6 +69,27 @@ export async function GET(
       );
     }
 
+    // Access control: Check if draft is accessible
+    const contest = matchup.contest;
+    const signupDeadline = new Date(contest.iplGame.signupDeadline);
+    const now = new Date();
+    
+    // Draft should only be accessible after signup deadline and if contest is in correct phase
+    const isDraftPhase = contest.status === 'DRAFTING' || contest.status === 'DRAFT_PHASE';
+    const isPastDeadline = now > signupDeadline;
+    
+    if (!isDraftPhase || !isPastDeadline) {
+      return NextResponse.json(
+        { 
+          message: 'Draft not accessible yet',
+          reason: !isPastDeadline ? 'Signup deadline not passed' : 'Contest not in draft phase',
+          signupDeadline: signupDeadline.toISOString(),
+          currentStatus: contest.status
+        },
+        { status: 403 }
+      );
+    }
+
     // Filter stats to only include the current game
     const gameId = matchup.contest.iplGame.id;
     const matchupWithFilteredStats = {
