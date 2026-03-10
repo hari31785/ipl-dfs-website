@@ -143,16 +143,19 @@ export default function CoinVaultPage() {
             <div>
               <div className="flex items-center gap-2 text-yellow-100 mb-2">
                 <Coins className="h-6 w-6" />
-                <span className="text-lg font-medium">Your Net VC Balance</span>
+                <span className="text-lg font-medium">Your Net Balance</span>
               </div>
               <div className="text-6xl font-bold text-white mb-2">
-                {(balance / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                V̶₵{(balance / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
+              <p className="text-yellow-100 text-sm font-semibold mb-1">
+                Virtual Credits (V̶₵)
+              </p>
               <p className="text-yellow-100 text-sm">
-                Total Winnings: {(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} VC | Total Losses: {(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} VC
+                Total Winnings: V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} | Total Losses: V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
               <p className="text-yellow-100 text-xs mt-1">
-                (1 VC = 100 Coins)
+                (1 V̶₵ = 100 Coins)
               </p>
             </div>
             <div className="w-32 h-32 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
@@ -170,7 +173,7 @@ export default function CoinVaultPage() {
               </div>
               <div>
                 <p className="text-sm text-green-700 font-medium">Total Winnings</p>
-                <p className="text-3xl font-bold text-green-900">{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} VC</p>
+                <p className="text-3xl font-bold text-green-900">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
@@ -181,7 +184,7 @@ export default function CoinVaultPage() {
               </div>
               <div>
                 <p className="text-sm text-red-700 font-medium">Total Losses</p>
-                <p className="text-3xl font-bold text-red-900">{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} VC</p>
+                <p className="text-3xl font-bold text-red-900">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
@@ -316,16 +319,14 @@ export default function CoinVaultPage() {
                           {coinsWon > 0 ? (
                             <div>
                               <span className="text-xl font-bold text-purple-600">
-                                +{(coinsWon / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                +V̶₵{(coinsWon / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
-                              <span className="text-sm text-purple-500 ml-1">VC</span>
                             </div>
                           ) : coinsLost > 0 ? (
                             <div>
                               <span className="text-xl font-bold text-purple-600">
-                                -{(coinsLost / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                -V̶₵{(coinsLost / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
-                              <span className="text-sm text-purple-500 ml-1">VC</span>
                             </div>
                           ) : (
                             <span className="text-gray-300">-</span>
