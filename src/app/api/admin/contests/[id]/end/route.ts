@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
 
 const prisma = new PrismaClient();
 
@@ -62,19 +63,13 @@ export async function POST(
 
     // Process each matchup
     for (const matchup of contest.matchups) {
-      // Calculate scores for both users
+      // Calculate scores for both users using bench swap logic
       const user1Picks = matchup.draftPicks.filter(p => p.pickedByUserId === matchup.user1.id);
       const user2Picks = matchup.draftPicks.filter(p => p.pickedByUserId === matchup.user2.id);
 
-      const user1Score = user1Picks.reduce((sum, pick) => {
-        const playerStats = pick.player.stats.find(s => s.iplGameId === contest.iplGameId);
-        return sum + (playerStats?.points || 0);
-      }, 0);
-
-      const user2Score = user2Picks.reduce((sum, pick) => {
-        const playerStats = pick.player.stats.find(s => s.iplGameId === contest.iplGameId);
-        return sum + (playerStats?.points || 0);
-      }, 0);
+      // Use the bench swap utility to calculate correct scores (only active 5 players count)
+      const user1Score = calculateTotalPointsWithSwap(user1Picks, contest.iplGameId);
+      const user2Score = calculateTotalPointsWithSwap(user2Picks, contest.iplGameId);
 
       // Update matchup with calculated scores
       await prisma.headToHeadMatchup.update({
