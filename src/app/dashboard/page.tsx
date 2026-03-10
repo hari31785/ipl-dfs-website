@@ -349,15 +349,39 @@ export default function DashboardPage() {
             {/* Available Contests Tab */}
             {activeTab === 'available' && (
               <div className="space-y-6">
-                {tournaments.filter(tournament => tournament.games && tournament.games.length > 0).length === 0 ? (
-                  <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
-                    <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No active tournaments available</p>
-                  </div>
-                ) : (
-                  tournaments
+                {(() => {
+                  // Filter tournaments and games to only show those with available contests
+                  const availableTournaments = tournaments
                     .filter(tournament => tournament.games && tournament.games.length > 0)
-                    .map((tournament) => (
+                    .map(tournament => ({
+                      ...tournament,
+                      games: tournament.games.filter(game => {
+                        // Only include games that have at least one available contest
+                        if (!game.contests || game.contests.length === 0) return false;
+                        if (!game.signupDeadline) return false;
+                        
+                        const now = new Date();
+                        const signupDeadline = new Date(game.signupDeadline);
+                        
+                        if (isNaN(signupDeadline.getTime())) return false;
+                        
+                        // Check if this game has any available contests
+                        return signupDeadline > now && game.contests.length > 0;
+                      })
+                    }))
+                    .filter(tournament => tournament.games.length > 0); // Remove tournaments with no available games
+
+                  if (availableTournaments.length === 0) {
+                    return (
+                      <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
+                        <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">No contests available for signup</p>
+                        <p className="text-gray-500 text-sm mt-2">Check back later for new contests</p>
+                      </div>
+                    );
+                  }
+
+                  return availableTournaments.map((tournament) => (
                     <div key={tournament.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
                       {/* Tournament Header */}
                       <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 p-3">
@@ -401,33 +425,17 @@ export default function DashboardPage() {
                               </div>
 
                               {(() => {
-                                // Handle contest display logic
+                                // Since we've already filtered games to only show those with available contests,
+                                // we can safely display the contests here
                                 if (!game.contests || game.contests.length === 0) {
-                                  return <p className="text-gray-500 text-sm text-center py-2">No contests available</p>;
-                                }
-                                
-                                // Check signup deadline
-                                if (!game.signupDeadline) {
-                                  console.warn('No signupDeadline found for game:', game.title);
-                                  return null; // Don't show anything if no deadline data
+                                  return null; // This shouldn't happen due to our filtering above
                                 }
                                 
                                 const now = new Date();
                                 const signupDeadline = new Date(game.signupDeadline);
                                 
-                                // Validate the parsed date
-                                if (isNaN(signupDeadline.getTime())) {
-                                  console.warn('Invalid signupDeadline for game:', game.title, game.signupDeadline);
-                                  return null; // Don't show anything if deadline is invalid
-                                }
-                                
-                                // Filter contests based on deadline
+                                // Filter contests based on deadline (should all be available due to game filtering)
                                 const availableContests = signupDeadline > now ? game.contests : [];
-                                
-                                if (availableContests.length === 0) {
-                                  // Don't show expired contests at all - they are hidden
-                                  return null;
-                                }
                                 
                                 return (
                                   <div className="space-y-2">
@@ -472,8 +480,8 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </div>
-                  ))
-                )}
+                  ));
+                })()} 
               </div>
             )}
 
