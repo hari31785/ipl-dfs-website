@@ -163,14 +163,34 @@ export default function BulkStatsPage() {
   };
 
   const handleStatChange = (playerId: string, field: string, value: string | boolean) => {
-    setBulkStats(prev => ({
-      ...prev,
-      [playerId]: {
-        ...prev[playerId],
-        playerId,
-        [field]: field === 'didNotPlay' ? value : (value === '' ? 0 : parseInt(value as string) || 0)
+    setBulkStats(prev => {
+      const currentStats = prev[playerId] || {};
+      
+      // If DNP is being checked, clear all stats
+      if (field === 'didNotPlay' && value === true) {
+        return {
+          ...prev,
+          [playerId]: {
+            playerId,
+            runs: 0,
+            wickets: 0,
+            catches: 0,
+            runOuts: 0,
+            stumpings: 0,
+            didNotPlay: true
+          }
+        };
       }
-    }));
+      
+      return {
+        ...prev,
+        [playerId]: {
+          ...currentStats,
+          playerId,
+          [field]: field === 'didNotPlay' ? value : (value === '' ? 0 : parseInt(value as string) || 0)
+        }
+      };
+    });
   };
 
   const getStatValue = (playerId: string, field: keyof BulkStatEntry): number | boolean => {
@@ -430,7 +450,8 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.runs ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, runs: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
+                                  disabled={editFormData.didNotPlay ?? false}
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                               </td>
                               <td className="px-4 py-3">
@@ -439,7 +460,8 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.wickets ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, wickets: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
+                                  disabled={editFormData.didNotPlay ?? false}
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                               </td>
                               <td className="px-4 py-3">
@@ -448,7 +470,8 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.catches ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, catches: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
+                                  disabled={editFormData.didNotPlay ?? false}
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                               </td>
                               <td className="px-4 py-3">
@@ -457,7 +480,8 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.runOuts ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, runOuts: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
+                                  disabled={editFormData.didNotPlay ?? false}
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                               </td>
                               <td className="px-4 py-3">
@@ -466,24 +490,43 @@ export default function BulkStatsPage() {
                                   min="0"
                                   value={editFormData.stumpings ?? 0}
                                   onChange={(e) => setEditFormData({ ...editFormData, stumpings: parseInt(e.target.value) || 0 })}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900"
+                                  disabled={editFormData.didNotPlay ?? false}
+                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <input
                                   type="checkbox"
                                   checked={editFormData.didNotPlay ?? false}
-                                  onChange={(e) => setEditFormData({ ...editFormData, didNotPlay: e.target.checked })}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    setEditFormData({ 
+                                      ...editFormData, 
+                                      didNotPlay: isChecked,
+                                      // Clear all stats if DNP is checked
+                                      ...(isChecked && {
+                                        runs: 0,
+                                        wickets: 0,
+                                        catches: 0,
+                                        runOuts: 0,
+                                        stumpings: 0
+                                      })
+                                    });
+                                  }}
                                   className="w-4 h-4"
                                 />
                               </td>
                               <td className="px-4 py-3 text-center font-bold text-green-600">
-                                {calculatePoints(
-                                  editFormData.runs ?? 0,
-                                  editFormData.wickets ?? 0,
-                                  editFormData.catches ?? 0,
-                                  editFormData.runOuts ?? 0,
-                                  editFormData.stumpings ?? 0
+                                {editFormData.didNotPlay ? (
+                                  <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span>
+                                ) : (
+                                  calculatePoints(
+                                    editFormData.runs ?? 0,
+                                    editFormData.wickets ?? 0,
+                                    editFormData.catches ?? 0,
+                                    editFormData.runOuts ?? 0,
+                                    editFormData.stumpings ?? 0
+                                  )
                                 )}
                               </td>
                               <td className="px-4 py-3">
@@ -522,11 +565,11 @@ export default function BulkStatsPage() {
                                   {stat.player.iplTeam.shortName}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-center text-gray-900">{stat.runs}</td>
-                              <td className="px-4 py-3 text-center text-gray-900">{stat.wickets}</td>
-                              <td className="px-4 py-3 text-center text-gray-900">{stat.catches}</td>
-                              <td className="px-4 py-3 text-center text-gray-900">{stat.runOuts}</td>
-                              <td className="px-4 py-3 text-center text-gray-900">{stat.stumpings}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.runs}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.wickets}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.catches}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.runOuts}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.stumpings}</td>
                               <td className="px-4 py-3 text-center">
                                 {stat.didNotPlay ? (
                                   <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span>
@@ -625,7 +668,8 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'runs') as number}
                             onChange={(e) => handleStatChange(player.id, 'runs', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
+                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="0"
                           />
                         </td>
@@ -635,7 +679,8 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'wickets') as number}
                             onChange={(e) => handleStatChange(player.id, 'wickets', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
+                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="0"
                           />
                         </td>
@@ -645,7 +690,8 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'catches') as number}
                             onChange={(e) => handleStatChange(player.id, 'catches', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
+                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="0"
                           />
                         </td>
@@ -655,7 +701,8 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'runOuts') as number}
                             onChange={(e) => handleStatChange(player.id, 'runOuts', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
+                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="0"
                           />
                         </td>
@@ -665,7 +712,8 @@ export default function BulkStatsPage() {
                             min="0"
                             value={getStatValue(player.id, 'stumpings') as number}
                             onChange={(e) => handleStatChange(player.id, 'stumpings', e.target.value)}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900"
+                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
+                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="0"
                           />
                         </td>
@@ -678,12 +726,16 @@ export default function BulkStatsPage() {
                           />
                         </td>
                         <td className="px-4 py-3 text-center font-bold text-green-600">
-                          {calculatePoints(
-                            getStatValue(player.id, 'runs') as number,
-                            getStatValue(player.id, 'wickets') as number,
-                            getStatValue(player.id, 'catches') as number,
-                            getStatValue(player.id, 'runOuts') as number,
-                            getStatValue(player.id, 'stumpings') as number
+                          {getStatValue(player.id, 'didNotPlay') ? (
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span>
+                          ) : (
+                            calculatePoints(
+                              getStatValue(player.id, 'runs') as number,
+                              getStatValue(player.id, 'wickets') as number,
+                              getStatValue(player.id, 'catches') as number,
+                              getStatValue(player.id, 'runOuts') as number,
+                              getStatValue(player.id, 'stumpings') as number
+                            )
                           )}
                         </td>
                       </tr>

@@ -29,15 +29,17 @@ interface DraftPick {
  * 
  * @param userPicks - All draft picks for one user (7 total: 5 starters + 2 bench)
  * @param gameId - The IPL game ID to filter stats
- * @returns Array of 5 active players with their points
+ * @returns Object with active lineup and bench players (including swapped-out starters)
  */
 export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
   // Separate starters and bench
   const starters = userPicks.filter(p => !p.isBench).sort((a, b) => a.pickOrder - b.pickOrder);
   const bench = userPicks.filter(p => p.isBench).sort((a, b) => a.pickOrder - b.pickOrder);
   
-  // Track which bench players have been used
+  // Track which bench players have been used and which starters were benched
   let benchIndex = 0;
+  const swappedOutPlayers: any[] = [];
+  const usedBenchPlayerIds = new Set<string>();
   
   // Build final lineup
   const finalLineup = starters.map(starter => {
@@ -47,8 +49,17 @@ export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
     if (starterStats?.didNotPlay && benchIndex < bench.length) {
       const benchPlayer = bench[benchIndex];
       benchIndex++;
+      usedBenchPlayerIds.add(benchPlayer.playerId);
       
       const benchStats = benchPlayer.player.stats.find(s => s.iplGameId === gameId);
+      
+      // Track the swapped-out starter
+      swappedOutPlayers.push({
+        ...starter,
+        swappedOut: true,
+        replacedBy: benchPlayer.player.name,
+        points: starterStats?.points || 0
+      });
       
       return {
         ...benchPlayer,
@@ -66,7 +77,13 @@ export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
     };
   });
   
-  return finalLineup;
+  // Get unused bench players
+  const unusedBench = bench.filter(b => !usedBenchPlayerIds.has(b.playerId));
+  
+  // Combine swapped-out starters with unused bench players
+  const benchPlayers = [...swappedOutPlayers, ...unusedBench];
+  
+  return { finalLineup, benchPlayers };
 }
 
 /**
@@ -77,6 +94,6 @@ export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
  * @returns Total points after applying bench swaps
  */
 export function calculateTotalPointsWithSwap(userPicks: DraftPick[], gameId: string): number {
-  const finalLineup = calculateFinalLineup(userPicks, gameId);
+  const { finalLineup } = calculateFinalLineup(userPicks, gameId);
   return finalLineup.reduce((total, player) => total + player.points, 0);
 }

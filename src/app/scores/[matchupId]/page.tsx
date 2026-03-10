@@ -163,15 +163,15 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
   const opponentTotalPoints = calculateTotalPointsWithSwap(opponentPicks, gameId);
 
   // Get final lineups with bench swaps applied
-  const myFinalLineup = calculateFinalLineup(myPicks, gameId);
-  const opponentFinalLineup = calculateFinalLineup(opponentPicks, gameId);
+  const { finalLineup: myFinalLineup, benchPlayers: myBenchPlayers } = calculateFinalLineup(myPicks, gameId);
+  const { finalLineup: opponentFinalLineup, benchPlayers: opponentBenchPlayers } = calculateFinalLineup(opponentPicks, gameId);
 
   const didIWin = myTotalPoints > opponentTotalPoints;
   const isTie = myTotalPoints === opponentTotalPoints;
   const hasScores = myTotalPoints > 0 || opponentTotalPoints > 0;
 
   // Helper function to render a player card
-  const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean) => {
+  const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean, swappedOut?: boolean, replacedBy?: string) => {
     const gameId = matchup.contest.iplGame.id;
     const playerStats = pick.player.stats.find((s: any) => s.iplGameId === gameId);
     const playerPoints = playerStats?.points || 0;
@@ -191,7 +191,12 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
             SWAPPED IN
           </div>
         )}
-        {didNotPlay && !isActive && (
+        {swappedOut && (
+          <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+            BENCHED
+          </div>
+        )}
+        {didNotPlay && !isActive && !swappedOut && (
           <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
             DNP
           </div>
@@ -209,6 +214,11 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
                 {isSwapped && swappedFor && (
                   <span className="text-xs text-blue-600 block">
                     (replacing {swappedFor})
+                  </span>
+                )}
+                {swappedOut && replacedBy && (
+                  <span className="text-xs text-orange-600 block">
+                    (replaced by {replacedBy})
                   </span>
                 )}
               </div>
@@ -382,10 +392,15 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
                 </span>
               </h4>
               <div className="space-y-3">
-                {myPicks.filter(p => p.isBench).map((pick: any) => {
-                  const isUsed = myFinalLineup.some((fp: any) => fp.playerId === pick.playerId);
-                  return !isUsed ? renderPlayerCard(pick, false) : null;
-                })}
+                {myBenchPlayers.length > 0 ? (
+                  myBenchPlayers.map((pick: any) => 
+                    renderPlayerCard(pick, false, undefined, false, pick.swappedOut, pick.replacedBy)
+                  )
+                ) : (
+                  <div className="text-gray-500 text-sm italic p-4 bg-gray-50 rounded-lg">
+                    All bench players are in use
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -433,10 +448,15 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
                 </span>
               </h4>
               <div className="space-y-3">
-                {opponentPicks.filter(p => p.isBench).map((pick: any) => {
-                  const isUsed = opponentFinalLineup.some((fp: any) => fp.playerId === pick.playerId);
-                  return !isUsed ? renderPlayerCard(pick, false) : null;
-                })}
+                {opponentBenchPlayers.length > 0 ? (
+                  opponentBenchPlayers.map((pick: any) => 
+                    renderPlayerCard(pick, false, undefined, false, pick.swappedOut, pick.replacedBy)
+                  )
+                ) : (
+                  <div className="text-gray-500 text-sm italic p-4 bg-gray-50 rounded-lg">
+                    All bench players are in use
+                  </div>
+                )}
               </div>
             </div>
           </div>
