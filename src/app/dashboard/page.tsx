@@ -24,13 +24,11 @@ interface IPLTeam {
 
 interface Contest {
   id: string
-  name: string
-  entryFee: number
-  prizePool: number
+  contestType: string
+  coinValue: number
   maxParticipants: number
-  contestType: {
-    name: string
-  }
+  totalSignups: number
+  status: string
   _count: {
     signups: number
   }
@@ -365,8 +363,15 @@ export default function DashboardPage() {
                         
                         if (isNaN(signupDeadline.getTime())) return false;
                         
-                        // Check if this game has any available contests
-                        return signupDeadline > now && game.contests.length > 0;
+                        // Check if signup deadline hasn't passed
+                        if (signupDeadline <= now) return false;
+                        
+                        // Check if this game has any contests that are open for signup
+                        const availableContests = game.contests.filter(contest => 
+                          contest.status === 'SIGNUP_OPEN'
+                        );
+                        
+                        return availableContests.length > 0;
                       })
                     }))
                     .filter(tournament => tournament.games.length > 0); // Remove tournaments with no available games
@@ -425,8 +430,7 @@ export default function DashboardPage() {
                               </div>
 
                               {(() => {
-                                // Since we've already filtered games to only show those with available contests,
-                                // we can safely display the contests here
+                                // Filter contests to only show those available for signup
                                 if (!game.contests || game.contests.length === 0) {
                                   return null; // This shouldn't happen due to our filtering above
                                 }
@@ -434,8 +438,10 @@ export default function DashboardPage() {
                                 const now = new Date();
                                 const signupDeadline = new Date(game.signupDeadline);
                                 
-                                // Filter contests based on deadline (should all be available due to game filtering)
-                                const availableContests = signupDeadline > now ? game.contests : [];
+                                // Filter contests based on both deadline and status
+                                const availableContests = game.contests.filter(contest => 
+                                  signupDeadline > now && contest.status === 'SIGNUP_OPEN'
+                                );
                                 
                                 return (
                                   <div className="space-y-2">
@@ -456,11 +462,11 @@ export default function DashboardPage() {
                                         >
                                           <span className="font-bold text-base text-gray-900">
                                             {(() => {
-                                              const type = typeof contest.contestType === 'string' ? contest.contestType : contest.contestType?.name || '';
+                                              const type = contest.contestType;
                                               return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
                                                      type === 'REGULAR' ? 'Regular (50)' : 
                                                      type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
-                                                     type;
+                                                     `${contest.coinValue} Coins`;
                                             })()} 
                                           </span>
                                           <span className="text-xs text-gray-700">{contest._count.signups}/{contest.maxParticipants} joined</span>

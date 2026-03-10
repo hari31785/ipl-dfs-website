@@ -54,7 +54,13 @@ export async function GET() {
             team1: true,
             team2: true,
             contests: {
-              include: {
+              select: {
+                id: true,
+                contestType: true,
+                coinValue: true,
+                maxParticipants: true,
+                totalSignups: true,
+                status: true,
                 _count: {
                   select: {
                     signups: true
