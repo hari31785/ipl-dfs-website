@@ -400,16 +400,34 @@ export default function DashboardPage() {
                                 </div>
                               </div>
 
-                              {/* Contests - Visible Join Buttons */}
                               {(() => {
-                                if (!game.contests || game.contests.length === 0) return null;
+                                // Handle contest display logic
+                                if (!game.contests || game.contests.length === 0) {
+                                  return <p className="text-gray-500 text-sm text-center py-2">No contests available</p>;
+                                }
                                 
-                                // Filter out contests where signup deadline has passed
+                                // Check signup deadline
+                                if (!game.signupDeadline) {
+                                  console.warn('No signupDeadline found for game:', game.title);
+                                  return null; // Don't show anything if no deadline data
+                                }
+                                
                                 const now = new Date();
                                 const signupDeadline = new Date(game.signupDeadline);
+                                
+                                // Validate the parsed date
+                                if (isNaN(signupDeadline.getTime())) {
+                                  console.warn('Invalid signupDeadline for game:', game.title, game.signupDeadline);
+                                  return null; // Don't show anything if deadline is invalid
+                                }
+                                
+                                // Filter contests based on deadline
                                 const availableContests = signupDeadline > now ? game.contests : [];
                                 
-                                if (availableContests.length === 0) return null;
+                                if (availableContests.length === 0) {
+                                  // Don't show expired contests at all - they are hidden
+                                  return null;
+                                }
                                 
                                 return (
                                   <div className="space-y-2">
@@ -448,22 +466,6 @@ export default function DashboardPage() {
                                     </div>
                                   </div>
                                 );
-                              })()}
-                              {(() => {
-                                if (!game.contests || game.contests.length === 0) {
-                                  return <p className="text-gray-500 text-sm text-center py-2">No contests available</p>;
-                                }
-                                
-                                // Check if all contests are past deadline
-                                const now = new Date();
-                                const signupDeadline = new Date(game.signupDeadline);
-                                const availableContests = signupDeadline > now ? game.contests : [];
-                                
-                                if (availableContests.length === 0) {
-                                  return <p className="text-gray-500 text-sm text-center py-2">Signup deadline has passed</p>;
-                                }
-                                
-                                return null;
                               })()} 
                             </div>
                           ))

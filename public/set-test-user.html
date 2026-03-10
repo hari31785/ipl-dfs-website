@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set Test User</title>
+</head>
+<body>
+    <h1>Setting up test user...</h1>
+    <script>
+        // Set up a test user in localStorage
+        const testUser = {
+            id: 'test-user-123',
+            username: 'testuser',
+            email: 'test@example.com',
+            coins: 1000
+        };
+        
+        localStorage.setItem('currentUser', JSON.stringify(testUser));
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+    </script>
+</body>
+</html>

@@ -44,7 +44,13 @@ export async function GET() {
           orderBy: {
             gameDate: 'desc'
           },
-          include: {
+          select: {
+            id: true,
+            team1Id: true,
+            team2Id: true,
+            gameDate: true,
+            signupDeadline: true,
+            status: true,
             team1: true,
             team2: true,
             contests: {
