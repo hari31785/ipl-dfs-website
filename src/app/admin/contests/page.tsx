@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, ArrowLeft, Trophy, Trash2, Plus } from 'lucide-react';
+import { Home, ArrowLeft, Trophy, Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface IPLGame {
   id: string;
@@ -41,6 +41,156 @@ interface Contest {
   };
 }
 
+// Contest Card Component for Grouped View
+function ContestCard({ 
+  contest, 
+  isSelected, 
+  onToggleSelect, 
+  onCloseSignups, 
+  onReopenSignups, 
+  onOpenDrafting, 
+  onUpdateStatus, 
+  onEndContest,
+  getStatusColor,
+  getContestTypeDisplay
+}: {
+  contest: Contest;
+  isSelected: boolean;
+  onToggleSelect: (id: string) => void;
+  onCloseSignups: (id: string) => void;
+  onReopenSignups: (id: string) => void;
+  onOpenDrafting: (id: string) => void;
+  onUpdateStatus: (id: string, status: string) => void;
+  onEndContest: (id: string) => void;
+  getStatusColor: (status: string) => string;
+  getContestTypeDisplay: (type: string, value: number) => string;
+}) {
+  return (
+    <div className={`bg-white rounded-lg shadow-sm border-2 ${isSelected ? 'border-primary-500' : 'border-gray-200'} p-4 hover:shadow-md transition-shadow`}>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect(contest.id)}
+            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 mt-1"
+          />
+          <div>
+            <div className="font-bold text-lg text-blue-600">
+              {getContestTypeDisplay(contest.contestType, contest.coinValue)}
+            </div>
+            <div className="text-xs text-gray-500">
+              Max: {contest.maxParticipants} users
+            </div>
+          </div>
+        </div>
+        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(contest.status)}`}>
+          {contest.status.replace('_', ' ')}
+        </span>
+      </div>
+
+      {/* Stats */}
+      <div className="mb-3 pb-3 border-b border-gray-200">
+        <div className="text-sm text-gray-900 mb-1">
+          <strong>{contest._count.signups}</strong> signups • <strong>{contest._count.matchups}</strong> matchups
+        </div>
+        {contest.matchupStats && contest._count.matchups > 0 && (
+          <div className="text-xs text-gray-600 space-y-0.5">
+            {contest.matchupStats.waiting > 0 && (
+              <div className="text-yellow-600">⏳ {contest.matchupStats.waiting} waiting</div>
+            )}
+            {contest.matchupStats.drafting > 0 && (
+              <div className="text-blue-600">✍️ {contest.matchupStats.drafting} drafting</div>
+            )}
+            {contest.matchupStats.completed > 0 && (
+              <div className="text-green-600">✅ {contest.matchupStats.completed} complete</div>
+            )}
+            <div className="text-gray-500">
+              {contest.matchupStats.totalDraftPicks}/50 picks
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="space-y-2">
+        {/* View Matchups */}
+        {contest._count.matchups > 0 && (
+          <a
+            href={`/admin/contests/${contest.id}`}
+            className="block w-full px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-sm font-medium"
+          >
+            👁️ View Matchups ({contest._count.matchups})
+          </a>
+        )}
+        
+        {/* Close Signups */}
+        {contest.status === 'SIGNUP_OPEN' && contest._count.signups >= 1 && (
+          <button
+            onClick={() => onCloseSignups(contest.id)}
+            className="block w-full px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-sm font-medium"
+            title={contest._count.signups === 1
+              ? `Close signups (Admin will be added)` 
+              : contest._count.signups % 2 !== 0 
+              ? `Close signups (Admin will join: ${contest._count.signups})` 
+              : 'Close signups and generate matchups'}
+          >
+            🔒 Close Signups ({contest._count.signups})
+          </button>
+        )}
+        
+        {/* Reopen Signups */}
+        {(contest.status === 'SIGNUP_CLOSED' || contest.status === 'DRAFT_PHASE') && (
+          <button
+            onClick={() => onReopenSignups(contest.id)}
+            className="block w-full px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-sm font-medium"
+          >
+            🔓 Reopen Signups
+          </button>
+        )}
+        
+        {/* Open Drafting */}
+        {contest.status === 'DRAFT_PHASE' && (
+          <button
+            onClick={() => onOpenDrafting(contest.id)}
+            className="block w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-sm font-medium"
+          >
+            🎯 Open Draft
+          </button>
+        )}
+
+        {/* Start Contest */}
+        {contest.status === 'DRAFT_PHASE' && contest.matchupStats && contest.matchupStats.completed > 0 && (
+          <button
+            onClick={() => onUpdateStatus(contest.id, 'LIVE')}
+            className="block w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-sm font-medium"
+          >
+            ▶️ Start Contest
+          </button>
+        )}
+        
+        {/* End Contest */}
+        {contest.status === 'LIVE' && (
+          <button
+            onClick={() => onEndContest(contest.id)}
+            className="block w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-sm font-medium"
+          >
+            🏁 End Contest
+          </button>
+        )}
+        
+        {/* Info */}
+        {contest.status === 'SIGNUP_OPEN' && contest._count.signups % 2 !== 0 && contest._count.signups > 0 && (
+          <div className="text-xs text-blue-600 text-center">
+            ℹ️ Admin will join
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ContestsPage() {
   const [contests, setContests] = useState<Contest[]>([]);
   const [games, setGames] = useState<IPLGame[]>([]);
@@ -56,6 +206,8 @@ export default function ContestsPage() {
   });
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState('');
+  const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<'grouped' | 'table'>('grouped');
 
   useEffect(() => {
     // First run cleanup for past due contests
@@ -348,6 +500,41 @@ export default function ContestsPage() {
     ? contests 
     : contests.filter(contest => contest.status === statusFilter);
 
+  // Group contests by game
+  const contestsByGame = filteredContests.reduce((acc, contest) => {
+    const gameId = contest.iplGame.id;
+    if (!acc[gameId]) {
+      acc[gameId] = {
+        game: contest.iplGame,
+        contests: []
+      };
+    }
+    acc[gameId].contests.push(contest);
+    return acc;
+  }, {} as Record<string, { game: IPLGame; contests: Contest[] }>);
+
+  const gameGroups = Object.values(contestsByGame).sort((a, b) => 
+    new Date(a.game.gameDate).getTime() - new Date(b.game.gameDate).getTime()
+  );
+
+  const toggleGameExpanded = (gameId: string) => {
+    const newExpanded = new Set(expandedGames);
+    if (newExpanded.has(gameId)) {
+      newExpanded.delete(gameId);
+    } else {
+      newExpanded.add(gameId);
+    }
+    setExpandedGames(newExpanded);
+  };
+
+  const expandAll = () => {
+    setExpandedGames(new Set(gameGroups.map(g => g.game.id)));
+  };
+
+  const collapseAll = () => {
+    setExpandedGames(new Set());
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'SIGNUP_OPEN': return 'bg-green-100 text-green-800';
@@ -491,20 +678,66 @@ export default function ContestsPage() {
 
       {/* Status Filter and Bulk Actions */}
       <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div>
-          <label className="block text-sm font-medium mb-2">Filter by Status:</label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border rounded px-3 py-2 text-gray-900 bg-white"
-          >
-            <option value="ALL">All Contests</option>
-            <option value="SIGNUP_OPEN">Signup Open</option>
-            <option value="SIGNUP_CLOSED">Signup Closed</option>
-            <option value="DRAFT_PHASE">Draft Phase</option>
-            <option value="LIVE">Live</option>
-            <option value="COMPLETED">Completed</option>
-          </select>
+        <div className="flex items-center gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Filter by Status:</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border rounded px-3 py-2 text-gray-900 bg-white"
+            >
+              <option value="ALL">All Contests</option>
+              <option value="SIGNUP_OPEN">Signup Open</option>
+              <option value="SIGNUP_CLOSED">Signup Closed</option>
+              <option value="DRAFT_PHASE">Draft Phase</option>
+              <option value="LIVE">Live</option>
+              <option value="COMPLETED">Completed</option>
+            </select>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div>
+            <label className="block text-sm font-medium mb-2">View Mode:</label>
+            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grouped')}
+                className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
+                  viewMode === 'grouped' 
+                    ? 'bg-white text-primary-700 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📋 By Game
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
+                  viewMode === 'table' 
+                    ? 'bg-white text-primary-700 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📊 Table
+              </button>
+            </div>
+          </div>
+
+          {viewMode === 'grouped' && (
+            <div className="flex items-center gap-2 mt-7">
+              <button
+                onClick={expandAll}
+                className="text-sm px-3 py-2 text-primary-600 hover:text-primary-700 font-medium border border-primary-300 rounded"
+              >
+                Expand All
+              </button>
+              <button
+                onClick={collapseAll}
+                className="text-sm px-3 py-2 text-gray-600 hover:text-gray-700 font-medium border border-gray-300 rounded"
+              >
+                Collapse All
+              </button>
+            </div>
+          )}
         </div>
 
         {selectedContests.length > 0 && (
@@ -518,7 +751,96 @@ export default function ContestsPage() {
         )}
       </div>
 
-      {/* Contests List */}
+      {/* Grouped View by Game */}
+      {viewMode === 'grouped' && (
+        <div className="space-y-4">
+          {gameGroups.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
+              No contests found. Create an IPL game to automatically generate contests.
+            </div>
+          ) : (
+            gameGroups.map(({ game, contests: gameContests }) => {
+              const isExpanded = expandedGames.has(game.id);
+              const hasActiveContests = gameContests.some(c => c.status !== 'COMPLETED');
+              
+              return (
+                <div key={game.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                  {/* Game Header - Always Visible */}
+                  <div 
+                    className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      hasActiveContests ? 'bg-blue-50' : 'bg-gray-50'
+                    }`}
+                    onClick={() => toggleGameExpanded(game.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <button className="text-gray-600 hover:text-gray-900">
+                            {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                          </button>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900">{game.title}</h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: game.team1.color }}
+                              ></span>
+                              <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
+                              <span className="text-xs text-gray-400">vs</span>
+                              <span 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: game.team2.color }}
+                              ></span>
+                              <span className="text-sm font-medium text-gray-700">{game.team2.shortName}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-600">
+                          Game: {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Signup by: {new Date(game.signupDeadline).toLocaleDateString()} {new Date(game.signupDeadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contest Cards - Collapsible */}
+                  {isExpanded && (
+                    <div className="p-4 bg-gray-50 border-t border-gray-200">
+                      <div className="grid md:grid-cols-3 gap-4">
+                        {gameContests.map((contest) => (
+                          <ContestCard 
+                            key={contest.id}
+                            contest={contest}
+                            isSelected={selectedContests.includes(contest.id)}
+                            onToggleSelect={handleSelectContest}
+                            onCloseSignups={closeSignups}
+                            onReopenSignups={reopenSignups}
+                            onOpenDrafting={openDrafting}
+                            onUpdateStatus={updateContestStatus}
+                            onEndContest={endContest}
+                            getStatusColor={getStatusColor}
+                            getContestTypeDisplay={getContestTypeDisplay}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Table View - Original */}
+      {viewMode === 'table' && (
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -717,6 +1039,7 @@ export default function ContestsPage() {
           </div>
         )}
       </div>
+      )}
       
       {/* Instructions */}
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
