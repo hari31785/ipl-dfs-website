@@ -108,15 +108,17 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const checkDraftAccess = () => {
     if (!matchup) return false;
     
-    // Check if contest is in drafting phase
-    const contestStatus = matchup.contest.status;
-    const isDraftingStatus = contestStatus === 'DRAFTING';
+    // Check if matchup is in drafting phase or completed
+    const matchupStatus = matchup.status;
+    const isDraftingStatus = matchupStatus === 'DRAFTING' || matchupStatus === 'COMPLETED';
     
     // Additional check: draft should be accessible only after signup deadline
     const signupDeadline = new Date(matchup.contest.iplGame.signupDeadline);
     const now = new Date();
     const isPastSignupDeadline = now > signupDeadline;
     
+    // Allow if matchup is in DRAFTING status (admin opened draft window)
+    // OR if it's completed (for viewing)
     return isDraftingStatus && isPastSignupDeadline;
   };
 

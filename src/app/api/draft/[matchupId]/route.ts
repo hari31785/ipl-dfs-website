@@ -74,22 +74,35 @@ export async function GET(
     const signupDeadline = new Date(contest.iplGame.signupDeadline);
     const now = new Date();
     
-    // Draft should be accessible after signup deadline and if contest is in correct phase
-    // Also allow access for completed contests (for viewing scores)
-    const isDraftPhase = contest.status === 'DRAFTING' || contest.status === 'DRAFT_PHASE';
-    const isCompletedPhase = contest.status === 'COMPLETED' || contest.status === 'LIVE';
+    // Check both contest and matchup status for draft accessibility
+    // Contest can be in DRAFT_PHASE, LIVE, or COMPLETED
+    // Matchup should be in DRAFTING or COMPLETED status
+    const isDraftPhase = 
+      contest.status === 'DRAFT_PHASE' || 
+      contest.status === 'DRAFTING'; // Legacy support
+    const isMatchupDrafting = matchup.status === 'DRAFTING';
+    const isCompletedPhase = 
+      contest.status === 'COMPLETED' || 
+      contest.status === 'LIVE' ||
+      matchup.status === 'COMPLETED';
     const isPastDeadline = now > signupDeadline;
     
     // Allow access if:
-    // 1. Contest is completed/live (bypass deadline check for completed contests)
-    // 2. OR deadline has passed AND contest is in draft phase
-    if (!isCompletedPhase && (!isPastDeadline || !isDraftPhase)) {
+    // 1. Contest is completed/live (for viewing scores) OR matchup is completed
+    // 2. OR matchup is in DRAFTING status (regardless of deadline for active drafts)
+    // 3. OR deadline has passed AND contest is in draft phase
+    if (!isCompletedPhase && !isMatchupDrafting && (!isPastDeadline || !isDraftPhase)) {
       return NextResponse.json(
         { 
           message: 'Draft not accessible yet',
-          reason: !isPastDeadline ? 'Signup deadline not passed' : 'Contest not in accessible phase',
+          reason: !isPastDeadline 
+            ? 'Signup deadline not passed' 
+            : !isDraftPhase 
+            ? 'Contest not in draft phase' 
+            : 'Matchup not in drafting status',
           signupDeadline: signupDeadline.toISOString(),
-          currentStatus: contest.status
+          contestStatus: contest.status,
+          matchupStatus: matchup.status
         },
         { status: 403 }
       );
