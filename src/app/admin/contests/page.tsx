@@ -284,13 +284,17 @@ export default function ContestsPage() {
     }
   };
 
-  const endContest = async (contestId: string) => {
-    if (!confirm('Are you sure you want to end this contest? This will calculate winners/losers and update coin balances.')) {
+  const endContest = async (contestId: string, forceEnd: boolean = false) => {
+    if (!forceEnd && !confirm('Are you sure you want to end this contest? This will calculate winners/losers and update coin balances.')) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/admin/contests/${contestId}/end`, {
+      const url = forceEnd 
+        ? `/api/admin/contests/${contestId}/end?force=true`
+        : `/api/admin/contests/${contestId}/end`;
+        
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -303,7 +307,23 @@ export default function ContestsPage() {
         alert(`Contest ended successfully!\n\nResults:\n- Total Matchups: ${result.totalMatchups}\n- Winners Paid: ${result.winnersPaid}\n- Losers Charged: ${result.losersCharged}\n- Admin Fee Collected: ${result.adminFeeCollected} coins`);
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        
+        // Handle stats validation errors with force-end option
+        if (error.canForce && (error.error === 'NO_STATS' || error.error === 'INSUFFICIENT_STATS')) {
+          const forceConfirm = confirm(
+            `⚠️ WARNING: ${error.message}\n\n` +
+            `This could result in incorrect scores and coin transactions!\n\n` +
+            `${error.details ? `Details:\n- Total Players: ${error.details.totalPlayers}\n- Players with Stats: ${error.details.playersWithStats}\n- Coverage: ${error.details.percentage}%\n\n` : ''}` +
+            `Do you want to FORCE END anyway? (Not recommended)`
+          );
+          
+          if (forceConfirm) {
+            // Retry with force flag
+            endContest(contestId, true);
+          }
+        } else {
+          alert(`Error: ${error.message}`);
+        }
       }
     } catch (error) {
       console.error('Error ending contest:', error);

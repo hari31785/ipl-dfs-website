@@ -5,12 +5,15 @@ import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
 const prisma = new PrismaClient();
 
 // POST /api/admin/contests/[id]/end - End contest and settle coin transactions
+// Query params: ?force=true to bypass stats validation (use with caution)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: contestId } = await params;
+    const { searchParams } = new URL(request.url);
+    const forceEnd = searchParams.get('force') === 'true';
 
     // Get the contest with all matchups and their picks
     const contest = await prisma.contest.findUnique({
@@ -55,6 +58,60 @@ export async function POST(
         { message: 'Contest must be in LIVE status to end' },
         { status: 400 }
       );
+    }
+
+    // RISK MITIGATION: Check if player stats are populated for this game
+    const statsCount = await prisma.playerStat.count({
+      where: { iplGameId: contest.iplGameId }
+    });
+
+    if (statsCount === 0 && !forceEnd) {
+      return NextResponse.json(
+        { 
+          message: 'Cannot end contest: No player stats have been entered for this game yet. Please enter stats first.',
+          error: 'NO_STATS',
+          canForce: true
+        },
+        { status: 400 }
+      );
+    }
+
+    // Additional check: Verify that stats exist for players in the matchups
+    let totalPlayersInMatchups = 0;
+    let playersWithStats = 0;
+
+    for (const matchup of contest.matchups) {
+      const allPicks = matchup.draftPicks;
+      totalPlayersInMatchups += allPicks.length;
+      
+      for (const pick of allPicks) {
+        const hasStats = pick.player.stats.some(s => s.iplGameId === contest.iplGameId);
+        if (hasStats) playersWithStats++;
+      }
+    }
+
+    // If less than 50% of players have stats, warn the admin
+    const statsPercentage = totalPlayersInMatchups > 0 ? (playersWithStats / totalPlayersInMatchups) * 100 : 0;
+    
+    if (statsPercentage < 50 && !forceEnd) {
+      return NextResponse.json(
+        { 
+          message: `Cannot end contest: Only ${playersWithStats} out of ${totalPlayersInMatchups} players have stats entered (${statsPercentage.toFixed(1)}%). Please enter stats for all players before ending the contest.`,
+          error: 'INSUFFICIENT_STATS',
+          canForce: true,
+          details: {
+            totalPlayers: totalPlayersInMatchups,
+            playersWithStats,
+            percentage: statsPercentage.toFixed(1)
+          }
+        },
+        { status: 400 }
+      );
+    }
+
+    // Warning if force-ending with incomplete stats
+    if (forceEnd && (statsCount === 0 || statsPercentage < 50)) {
+      console.warn(`⚠️ FORCE ENDING contest ${contestId} with incomplete stats. Stats: ${playersWithStats}/${totalPlayersInMatchups} (${statsPercentage.toFixed(1)}%)`);
     }
 
     let winnersPaid = 0;
