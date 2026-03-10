@@ -5,6 +5,40 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
+    const now = new Date();
+    
+    // First, update any expired contests to close signups
+    await prisma.contest.updateMany({
+      where: {
+        status: 'SIGNUP_OPEN',
+        iplGame: {
+          signupDeadline: {
+            lte: now
+          }
+        }
+      },
+      data: {
+        status: 'SIGNUP_CLOSED'
+      }
+    });
+
+    // Also mark contests as completed if their game has already been played
+    await prisma.contest.updateMany({
+      where: {
+        status: {
+          not: 'COMPLETED'
+        },
+        iplGame: {
+          gameDate: {
+            lt: now
+          }
+        }
+      },
+      data: {
+        status: 'COMPLETED'
+      }
+    });
+
     const body = await request.json()
     const { contestId, userId } = body
 

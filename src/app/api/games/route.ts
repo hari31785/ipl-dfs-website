@@ -5,6 +5,39 @@ const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
+    // First, update any expired contests to close signups
+    const now = new Date();
+    await prisma.contest.updateMany({
+      where: {
+        status: 'SIGNUP_OPEN',
+        iplGame: {
+          signupDeadline: {
+            lte: now
+          }
+        }
+      },
+      data: {
+        status: 'SIGNUP_CLOSED'
+      }
+    });
+
+    // Also mark contests as completed if their game has already been played
+    await prisma.contest.updateMany({
+      where: {
+        status: {
+          not: 'COMPLETED'
+        },
+        iplGame: {
+          gameDate: {
+            lt: now
+          }
+        }
+      },
+      data: {
+        status: 'COMPLETED'
+      }
+    });
+
     const searchParams = request.nextUrl.searchParams
     const tournamentId = searchParams.get('tournamentId')
     const status = searchParams.get('status')
@@ -18,9 +51,12 @@ export async function GET(request: NextRequest) {
     if (status) {
       where.status = status
     } else {
-      // By default, show upcoming and open games
+      // By default, show upcoming and open games that haven't been played yet
       where.status = {
         in: ['UPCOMING', 'SIGNUP_OPEN']
+      }
+      where.gameDate = {
+        gt: new Date()
       }
     }
 
@@ -34,6 +70,9 @@ export async function GET(request: NextRequest) {
         team1: true,
         team2: true,
         contests: {
+          where: {
+            status: 'SIGNUP_OPEN'
+          },
           include: {
             _count: {
               select: {
