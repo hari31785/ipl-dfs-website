@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { ArrowLeft, Trophy } from 'lucide-react';
+import { calculateFinalLineup, calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
 
 interface Player {
   id: string;
@@ -12,7 +13,9 @@ interface Player {
     shortName: string;
     color: string;
   };
-  stats?: {
+  stats: {
+    iplGameId: string;
+    didNotPlay: boolean;
     points: number;
     runs: number;
     wickets: number;
@@ -24,9 +27,11 @@ interface Player {
 
 interface DraftPick {
   id: string;
+  playerId: string;
   pickOrder: number;
   player: Player;
   pickedByUserId: string;
+  isBench: boolean;
 }
 
 interface User {
@@ -52,6 +57,7 @@ interface Matchup {
     contestType: string;
     coinValue: number;
     iplGame: {
+      id: string;
       title: string;
       gameDate: string;
       team1: {
@@ -151,20 +157,102 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
   const myPicks = matchup.draftPicks.filter(p => p.pickedByUserId === mySignupId);
   const opponentPicks = matchup.draftPicks.filter(p => p.pickedByUserId === opponentSignupId);
 
-  // Calculate total points for each team
-  const myTotalPoints = myPicks.reduce((sum, pick) => {
-    const playerPoints = pick.player.stats && pick.player.stats.length > 0 ? pick.player.stats[0].points : 0;
-    return sum + playerPoints;
-  }, 0);
-  
-  const opponentTotalPoints = opponentPicks.reduce((sum, pick) => {
-    const playerPoints = pick.player.stats && pick.player.stats.length > 0 ? pick.player.stats[0].points : 0;
-    return sum + playerPoints;
-  }, 0);
+  // Calculate total points using bench swap logic
+  const gameId = matchup.contest.iplGame.id;
+  const myTotalPoints = calculateTotalPointsWithSwap(myPicks, gameId);
+  const opponentTotalPoints = calculateTotalPointsWithSwap(opponentPicks, gameId);
+
+  // Get final lineups with bench swaps applied
+  const myFinalLineup = calculateFinalLineup(myPicks, gameId);
+  const opponentFinalLineup = calculateFinalLineup(opponentPicks, gameId);
 
   const didIWin = myTotalPoints > opponentTotalPoints;
   const isTie = myTotalPoints === opponentTotalPoints;
   const hasScores = myTotalPoints > 0 || opponentTotalPoints > 0;
+
+  // Helper function to render a player card
+  const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean) => {
+    const gameId = matchup.contest.iplGame.id;
+    const playerStats = pick.player.stats.find((s: any) => s.iplGameId === gameId);
+    const playerPoints = playerStats?.points || 0;
+    const didNotPlay = playerStats?.didNotPlay || false;
+    
+    return (
+      <div 
+        key={pick.id} 
+        className={`group relative rounded-xl p-4 transition-all ${
+          isActive 
+            ? 'bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300' 
+            : 'bg-gradient-to-br from-gray-100 to-gray-50 border-2 border-gray-300 opacity-75'
+        }`}
+      >
+        {isSwapped && (
+          <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+            SWAPPED IN
+          </div>
+        )}
+        {didNotPlay && !isActive && (
+          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+            DNP
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-start gap-3 flex-1">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg ${
+              isActive ? 'bg-gradient-to-br from-cricket-600 to-green-800' : 'bg-gray-400'
+            }`}>
+              {pick.pickOrder}
+            </div>
+            <div className="flex-1">
+              <div className={`font-bold text-lg mb-1 ${isActive ? 'text-black' : 'text-gray-600'}`}>
+                {pick.player.name}
+                {isSwapped && swappedFor && (
+                  <span className="text-xs text-blue-600 block">
+                    (replacing {swappedFor})
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`text-xs font-bold px-2 py-1 rounded ${
+                  isActive ? 'bg-green-200 text-black' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {pick.player.role}
+                </span>
+                <span 
+                  className="text-xs font-bold px-2 py-1 rounded border-2" 
+                  style={{ 
+                    backgroundColor: pick.player.iplTeam.color + '15', 
+                    color: 'black',
+                    borderColor: pick.player.iplTeam.color + '60'
+                  }}
+                >
+                  {pick.player.iplTeam.shortName}
+                </span>
+                {pick.isBench && (
+                  <span className="text-xs font-bold bg-orange-200 text-orange-800 px-2 py-1 rounded">
+                    BENCH
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          {playerPoints > 0 && isActive && (
+            <button
+              onClick={() => setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
+              className="text-lg font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-2 rounded shadow-md border-2 border-green-700 hover:scale-105 transition-transform cursor-pointer"
+            >
+              ⭐ {playerPoints.toFixed(1)}
+            </button>
+          )}
+          {!isActive && playerPoints > 0 && (
+            <div className="text-sm font-bold text-gray-500 px-3 py-2">
+              {playerPoints.toFixed(1)} pts (not counted)
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
@@ -256,60 +344,49 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-xl text-green-800">Your Team</h3>
               <span className="bg-green-800 text-white px-3 py-1 rounded-full font-bold text-sm">
-                {myPicks.length}/5
+                5 Starters + 2 Bench
               </span>
             </div>
+            
             {myTotalPoints > 0 && (
               <div className="mb-4 p-4 bg-gradient-to-r from-cricket-500 to-green-600 rounded-xl">
                 <div className="text-center">
-                  <div className="text-black text-xs font-semibold uppercase tracking-wider opacity-90 mb-1">Total Score</div>
+                  <div className="text-black text-xs font-semibold uppercase tracking-wider opacity-90 mb-1">Total Score (Active Players Only)</div>
                   <div className="text-black font-black text-3xl">⭐ {myTotalPoints.toFixed(1)}</div>
                   <div className="text-black/90 text-xs mt-1">Fantasy Points</div>
                 </div>
               </div>
             )}
-            <div className="space-y-3">
-              {myPicks.map(pick => {
-                const playerPoints = pick.player.stats && pick.player.stats.length > 0 ? pick.player.stats[0].points : 0;
-                return (
-                <div key={pick.id} className="group relative bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300 rounded-xl p-5 hover:shadow-xl transition-all">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-start gap-4 flex-1 min-w-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-cricket-600 to-green-800 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shrink-0">
-                        {pick.pickOrder}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-bold text-black bg-green-200 px-2 py-1 rounded-md shadow-sm border border-green-400">
-                            {pick.player.role}
-                          </span>
-                          <span 
-                            className="text-xs font-bold px-2 py-1 rounded-md shadow-sm border-2" 
-                            style={{ 
-                              backgroundColor: pick.player.iplTeam.color + '15', 
-                              color: 'black',
-                              borderColor: pick.player.iplTeam.color + '60'
-                            }}
-                          >
-                            {pick.player.iplTeam.shortName}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    {playerPoints > 0 && (
-                      <div className="shrink-0">
-                        <button
-                          onClick={() => setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
-                          className="text-lg font-black text-black bg-gradient-to-r from-cricket-300 to-red-300 px-4 py-2 rounded-md shadow-md border-2 border-red-700 whitespace-nowrap hover:scale-105 transition-transform cursor-pointer"
-                        >
-                          ⭐ {playerPoints.toFixed(1)}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )})}
+
+            {/* Starting Lineup */}
+            <div className="mb-6">
+              <h4 className="font-bold text-lg text-green-800 mb-3 flex items-center gap-2">
+                🏏 Active Lineup
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                  Counts toward score
+                </span>
+              </h4>
+              <div className="space-y-3">
+                {myFinalLineup.map((player: any) => 
+                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped)
+                )}
+              </div>
+            </div>
+
+            {/* Bench Players */}
+            <div>
+              <h4 className="font-bold text-lg text-gray-600 mb-3 flex items-center gap-2">
+                🪑 Bench Players
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                  Backup only
+                </span>
+              </h4>
+              <div className="space-y-3">
+                {myPicks.filter(p => p.isBench).map((pick: any) => {
+                  const isUsed = myFinalLineup.some((fp: any) => fp.playerId === pick.playerId);
+                  return !isUsed ? renderPlayerCard(pick, false) : null;
+                })}
+              </div>
             </div>
           </div>
 
@@ -318,60 +395,49 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-xl text-red-800">Opponent Team</h3>
               <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold text-sm">
-                {opponentPicks.length}/5
+                5 Starters + 2 Bench
               </span>
             </div>
+            
             {opponentTotalPoints > 0 && (
-              <div className="mb-4 p-4 bg-gradient-to-r from-cricket-500 to-green-600 rounded-xl">
+              <div className="mb-4 p-4 bg-gradient-to-r from-cricket-500 to-red-600 rounded-xl">
                 <div className="text-center">
-                  <div className="text-black text-xs font-semibold uppercase tracking-wider opacity-90 mb-1">Total Score</div>
+                  <div className="text-black text-xs font-semibold uppercase tracking-wider opacity-90 mb-1">Total Score (Active Players Only)</div>
                   <div className="text-black font-black text-3xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
                   <div className="text-black/90 text-xs mt-1">Fantasy Points</div>
                 </div>
               </div>
             )}
-            <div className="space-y-3">
-              {opponentPicks.map(pick => {
-                const playerPoints = pick.player.stats && pick.player.stats.length > 0 ? pick.player.stats[0].points : 0;
-                return (
-                <div key={pick.id} className="group relative bg-gradient-to-br from-red-50 via-orange-50 to-white border-2 border-red-300 rounded-xl p-5 hover:shadow-xl transition-all">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-start gap-4 flex-1 min-w-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shrink-0">
-                        {pick.pickOrder}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-bold text-black bg-red-100 px-2 py-1 rounded-md shadow-sm border border-red-300">
-                            {pick.player.role}
-                          </span>
-                          <span 
-                            className="text-xs font-bold px-2 py-1 rounded-md shadow-sm border-2" 
-                            style={{ 
-                              backgroundColor: pick.player.iplTeam.color + '15', 
-                              color: 'black',
-                              borderColor: pick.player.iplTeam.color + '60'
-                            }}
-                          >
-                            {pick.player.iplTeam.shortName}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    {playerPoints > 0 && (
-                      <div className="shrink-0">
-                        <button
-                          onClick={() => setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
-                          className="text-lg font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-4 py-2 rounded-md shadow-md border-2 border-green-700 whitespace-nowrap hover:scale-105 transition-transform cursor-pointer"
-                        >
-                          ⭐ {playerPoints.toFixed(1)}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )})}
+
+            {/* Starting Lineup */}
+            <div className="mb-6">
+              <h4 className="font-bold text-lg text-red-800 mb-3 flex items-center gap-2">
+                🏏 Active Lineup
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                  Counts toward score
+                </span>
+              </h4>
+              <div className="space-y-3">
+                {opponentFinalLineup.map((player: any) => 
+                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped)
+                )}
+              </div>
+            </div>
+
+            {/* Bench Players */}
+            <div>
+              <h4 className="font-bold text-lg text-gray-600 mb-3 flex items-center gap-2">
+                🪑 Bench Players
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                  Backup only
+                </span>
+              </h4>
+              <div className="space-y-3">
+                {opponentPicks.filter(p => p.isBench).map((pick: any) => {
+                  const isUsed = opponentFinalLineup.some((fp: any) => fp.playerId === pick.playerId);
+                  return !isUsed ? renderPlayerCard(pick, false) : null;
+                })}
+              </div>
             </div>
           </div>
         </div>
