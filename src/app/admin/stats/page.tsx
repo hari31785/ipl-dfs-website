@@ -498,11 +498,11 @@ export default function BulkStatsPage() {
                                   {stat.player.iplTeam.shortName}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-center">{stat.runs}</td>
-                              <td className="px-4 py-3 text-center">{stat.wickets}</td>
-                              <td className="px-4 py-3 text-center">{stat.catches}</td>
-                              <td className="px-4 py-3 text-center">{stat.runOuts}</td>
-                              <td className="px-4 py-3 text-center">{stat.stumpings}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.runs}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.wickets}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.catches}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.runOuts}</td>
+                              <td className="px-4 py-3 text-center text-gray-900">{stat.stumpings}</td>
                               <td className="px-4 py-3 text-center">
                                 {stat.didNotPlay ? (
                                   <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span>
