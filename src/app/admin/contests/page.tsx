@@ -534,7 +534,7 @@ export default function ContestsPage() {
   }, {} as Record<string, { game: IPLGame; contests: Contest[] }>);
 
   const gameGroups = Object.values(contestsByGame).sort((a, b) => 
-    new Date(a.game.gameDate).getTime() - new Date(b.game.gameDate).getTime()
+    new Date(b.game.gameDate).getTime() - new Date(a.game.gameDate).getTime()
   );
 
   const toggleGameExpanded = (gameId: string) => {
