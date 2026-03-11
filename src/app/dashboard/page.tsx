@@ -261,6 +261,15 @@ export default function DashboardPage() {
                 <Coins className="h-5 w-5" />
                 Coin Vault
               </button>
+              {tournaments.length > 0 && tournaments[0]?.id && (
+                <button
+                  onClick={() => window.location.href = `/leaderboard/${tournaments[0].id}`}
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"
+                >
+                  <Trophy className="h-5 w-5" />
+                  Leaderboard
+                </button>
+              )}
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"

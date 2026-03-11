@@ -249,12 +249,25 @@ export default function BulkStatsPage() {
         fetchStats(selectedGame);
         setBulkStats({});
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
+        // Handle error response with better error display
+        let errorMessage = 'Unknown error occurred';
+        try {
+          const error = await response.json();
+          if (error.message) {
+            errorMessage = error.message;
+          } else if (error.error) {
+            errorMessage = error.error;
+          }
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        alert(`Error saving stats:\n\n${errorMessage}\n\nPlease check the details and try again.`);
+        console.error('Bulk save error:', errorMessage);
       }
     } catch (error) {
       console.error('Error saving bulk stats:', error);
-      alert('Error saving stats');
+      alert(`Network error saving stats:\n\n${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease check your connection and try again.`);
     } finally {
       setSaving(false);
     }
@@ -288,12 +301,19 @@ export default function BulkStatsPage() {
         setEditingStatId(null);
         setEditFormData({});
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
+        let errorMessage = 'Unknown error occurred';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || error.error || errorMessage;
+        } catch (e) {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        alert(`Error updating stats:\n\n${errorMessage}`);
+        console.error('Update stat error:', errorMessage);
       }
     } catch (error) {
       console.error('Error updating stat:', error);
-      alert('Error updating stat');
+      alert(`Network error:\n\n${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -311,12 +331,19 @@ export default function BulkStatsPage() {
         alert('Stats deleted successfully!');
         fetchStats(selectedGame);
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
+        let errorMessage = 'Unknown error occurred';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || error.error || errorMessage;
+        } catch (e) {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        alert(`Error deleting stats:\n\n${errorMessage}`);
+        console.error('Delete stat error:', errorMessage);
       }
     } catch (error) {
       console.error('Error deleting stat:', error);
-      alert('Error deleting stat');
+      alert(`Network error:\n\n${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -337,12 +364,19 @@ export default function BulkStatsPage() {
         alert(result.message);
         fetchStats(selectedGame);
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
+        let errorMessage = 'Unknown error occurred';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || error.error || errorMessage;
+        } catch (e) {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        alert(`Error deleting all stats:\n\n${errorMessage}`);
+        console.error('Delete all stats error:', errorMessage);
       }
     } catch (error) {
       console.error('Error deleting stats:', error);
-      alert('Error deleting stats');
+      alert(`Network error:\n\n${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
