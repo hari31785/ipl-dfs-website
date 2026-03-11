@@ -484,7 +484,7 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
                 </div>
                 <button
                   onClick={() => setSelectedPlayerStats(null)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
                 >
                   ×
                 </button>

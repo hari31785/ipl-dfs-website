@@ -95,7 +95,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
 
   const getRankDisplay = (rank: number) => {
     if (rank === 1) return <Trophy className="w-6 h-6 text-yellow-500" />
-    if (rank === 2) return <Medal className="w-6 h-6 text-gray-400" />
+    if (rank === 2) return <Medal className="w-6 h-6 text-gray-500" />
     if (rank === 3) return <Medal className="w-6 h-6 text-amber-600" />
     return <span className="text-gray-600 font-bold">#{rank}</span>
   }
@@ -236,7 +236,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 {leaderboard.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
-                      <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-lg">No completed contests yet</p>
                       <p className="text-sm">The leaderboard will populate as contests are completed</p>
                     </td>
@@ -261,7 +261,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                         <div>
                           <div className="text-sm font-bold text-gray-900">{entry.name}</div>
                           <div className="text-sm text-gray-500">@{entry.username}</div>
-                          <div className="text-xs text-gray-400">
+                          <div className="text-xs text-gray-500">
                             {entry.totalWins}/{entry.totalMatches} wins
                           </div>
                         </div>

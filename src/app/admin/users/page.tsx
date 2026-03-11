@@ -214,7 +214,7 @@ export default function AdminUsersPage() {
           <div className="flex flex-col gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <input
                   type="text"
                   placeholder="Search by username, name, or email..."
@@ -300,7 +300,7 @@ export default function AdminUsersPage() {
                             </div>
                           )}
                           {!user.email && !user.phone && (
-                            <span className="text-sm text-gray-400">No contact info</span>
+                            <span className="text-sm text-gray-500">No contact info</span>
                           )}
                         </div>
                       </td>

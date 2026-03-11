@@ -88,7 +88,7 @@ export default function AdminLoginPage() {
                 Admin Username
               </label>
               <div className="relative">
-                <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
                 <input
                   id="username"
                   name="username"

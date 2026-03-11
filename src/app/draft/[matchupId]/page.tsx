@@ -385,7 +385,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             )}
             <div className="space-y-3">
               {myPicks.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 italic">No picks yet</div>
+                <div className="text-center py-8 text-gray-500 italic">No picks yet</div>
               ) : (
                 <>
                   {/* Starting XI Section */}
@@ -546,7 +546,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               {(() => {
                 if (availablePlayers.length === 0) {
                   return (
-                    <div className="text-center py-8 text-gray-400 italic">
+                    <div className="text-center py-8 text-gray-500 italic">
                       No available players remaining
                     </div>
                   );
@@ -638,7 +638,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             )}
             <div className="space-y-3">
               {opponentPicks.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 italic">No picks yet</div>
+                <div className="text-center py-8 text-gray-500 italic">No picks yet</div>
               ) : (
                 opponentPicks.map(pick => (
                   <div key={pick.id} className="group relative bg-gradient-to-br from-red-50 via-orange-50 to-white border-2 border-red-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">

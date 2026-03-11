@@ -201,9 +201,9 @@ export default function CoinVaultPage() {
 
           {transactions.length === 0 ? (
             <div className="text-center py-12">
-              <Coins className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <Coins className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">No contest results yet</p>
-              <p className="text-gray-400 text-sm mt-2">
+              <p className="text-gray-500 text-sm mt-2">
                 Join contests and compete to earn coins!
               </p>
             </div>
@@ -303,7 +303,7 @@ export default function CoinVaultPage() {
                               +{coinsWon.toLocaleString()}
                             </span>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-gray-400">-</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -312,7 +312,7 @@ export default function CoinVaultPage() {
                               -{coinsLost.toLocaleString()}
                             </span>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-gray-400">-</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -329,7 +329,7 @@ export default function CoinVaultPage() {
                               </span>
                             </div>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-gray-400">-</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600">
@@ -338,7 +338,7 @@ export default function CoinVaultPage() {
                               {transaction.adminFee.toLocaleString()}
                             </span>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-gray-400">-</span>
                           )}
                         </td>
                       </tr>

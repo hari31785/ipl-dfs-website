@@ -684,7 +684,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
         {/* Matchups List */}
         {contest.matchups.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">No Matchups Yet</h3>
             <p className="text-gray-500">Close signups to generate matchups for this contest.</p>
           </div>
@@ -704,7 +704,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1">
-                        <div className="text-lg font-bold text-gray-400">#{index + 1}</div>
+                        <div className="text-lg font-bold text-gray-600">#{index + 1}</div>
                         
                         <div className="flex items-center gap-4 flex-1">
                           <div className="flex-1">
@@ -715,7 +715,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                             )}
                           </div>
                           
-                          <div className="text-2xl font-bold text-gray-300">VS</div>
+                          <div className="text-2xl font-bold text-gray-600">VS</div>
                           
                           <div className="flex-1">
                             <div className="font-semibold text-gray-900">{matchup.user2.user.name}</div>
@@ -747,7 +747,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                           <div className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(matchup.status)}`}>
                             {getStatusIcon(matchup.status)} {matchup.status.replace('_', ' ')}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-gray-600 mt-1">
                             {matchup.draftPicks.length}/10 picks
                           </div>
                         </div>

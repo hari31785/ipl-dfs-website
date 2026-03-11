@@ -52,6 +52,8 @@ export default function PlayersManagement() {
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
   const [isBulkAdding, setIsBulkAdding] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [deletingPlayerId, setDeletingPlayerId] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -155,6 +157,7 @@ export default function PlayersManagement() {
     e.preventDefault()
     setError("")
     setSuccess("")
+    setIsSaving(true)
 
     try {
       const url = editingPlayer ? `/api/admin/players/${editingPlayer.id}` : "/api/admin/players"
@@ -193,6 +196,8 @@ export default function PlayersManagement() {
       }
     } catch (error) {
       setError("Network error")
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -216,6 +221,7 @@ export default function PlayersManagement() {
       return
     }
 
+    setDeletingPlayerId(player.id)
     try {
       const response = await fetch(`/api/admin/players/${player.id}`, {
         method: "DELETE"
@@ -231,6 +237,8 @@ export default function PlayersManagement() {
       }
     } catch (error) {
       setError("Network error")
+    } finally {
+      setDeletingPlayerId(null)
     }
   }
 
@@ -621,14 +629,16 @@ export default function PlayersManagement() {
               <div className="md:col-span-2 flex gap-4">
                 <button
                   type="submit"
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                  disabled={isSaving}
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingPlayer ? "Update" : "Create"} Player
+                  {isSaving ? (editingPlayer ? 'Updating Player...' : 'Creating Player...') : (editingPlayer ? "Update" : "Create")} Player
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors"
+                  disabled={isSaving}
+                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -723,7 +733,7 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
 
           {filteredPlayers.length === 0 ? (
             <div className="p-8 text-center">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <Users className="h-12 w-12 text-gray-500 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">
                 {selectedTeam === "all" ? "No players created yet" : "No players in this team yet"}
               </p>
@@ -790,14 +800,16 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => handleEdit(player)}
-                            className="text-primary-600 hover:text-primary-800 p-2 transition-colors"
+                            disabled={deletingPlayerId === player.id}
+                            className="text-primary-600 hover:text-primary-800 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Edit player"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => handleDelete(player)}
-                            className="text-red-600 hover:text-red-800 p-2 transition-colors"
+                            disabled={deletingPlayerId === player.id}
+                            className="text-red-600 hover:text-red-800 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Delete player"
                           >
                             <Trash2 className="h-4 w-4" />

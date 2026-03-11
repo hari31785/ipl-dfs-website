@@ -398,7 +398,7 @@ export default function DashboardPage() {
                   if (availableTournaments.length === 0) {
                     return (
                       <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
-                        <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <Trophy className="h-12 w-12 text-gray-500 mx-auto mb-4" />
                         <p className="text-gray-600">No contests available for signup</p>
                         <p className="text-gray-500 text-sm mt-2">Check back later for new contests</p>
                       </div>
@@ -434,7 +434,7 @@ export default function DashboardPage() {
                                     <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team1.color }}></div>
                                     <span className="font-bold text-sm text-gray-900">{game.team1.shortName}</span>
                                   </div>
-                                  <span className="text-gray-400 text-sm font-bold">vs</span>
+                                  <span className="text-gray-600 text-sm font-bold">vs</span>
                                   <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
                                     <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team2.color }}></div>
                                     <span className="font-bold text-sm text-gray-900">{game.team2.shortName}</span>
@@ -624,9 +624,9 @@ export default function DashboardPage() {
                       return (
                         <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
                           <div className="h-12 w-12 mx-auto mb-4">
-                            {contestSubTab === 'upcoming' && <Clock className="h-12 w-12 text-gray-400" />}
-                            {contestSubTab === 'active' && <Zap className="h-12 w-12 text-gray-400" />}
-                            {contestSubTab === 'completed' && <Trophy className="h-12 w-12 text-gray-400" />}
+                            {contestSubTab === 'upcoming' && <Clock className="h-12 w-12 text-gray-500" />}
+                            {contestSubTab === 'active' && <Zap className="h-12 w-12 text-gray-500" />}
+                            {contestSubTab === 'completed' && <Trophy className="h-12 w-12 text-gray-500" />}
                           </div>
                           <p className="text-gray-600 mb-2">
                             {contestSubTab === 'upcoming' && 'No upcoming contests'}
@@ -664,7 +664,7 @@ export default function DashboardPage() {
                             <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team1.color }}></div>
                             <span className="font-bold text-sm text-gray-900">{signup.contest.iplGame.team1.shortName}</span>
                           </div>
-                          <span className="text-gray-400 text-sm font-bold">vs</span>
+                          <span className="text-gray-600 text-sm font-bold">vs</span>
                           <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                             <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team2.color }}></div>
                             <span className="font-bold text-sm text-gray-900">{signup.contest.iplGame.team2.shortName}</span>

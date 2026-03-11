@@ -832,7 +832,7 @@ export default function ContestsPage() {
                                 style={{ backgroundColor: game.team1.color }}
                               ></span>
                               <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
-                              <span className="text-xs text-gray-400">vs</span>
+                              <span className="text-xs text-gray-600">vs</span>
                               <span 
                                 className="w-3 h-3 rounded-full" 
                                 style={{ backgroundColor: game.team2.color }}

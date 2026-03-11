@@ -21,6 +21,8 @@ export default function TeamsManagement() {
   const [editingTeam, setEditingTeam] = useState<IPLTeam | null>(null)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -63,6 +65,7 @@ export default function TeamsManagement() {
     e.preventDefault()
     setError("")
     setSuccess("")
+    setIsSaving(true)
 
     try {
       const url = editingTeam ? `/api/admin/teams/${editingTeam.id}` : "/api/admin/teams"
@@ -95,6 +98,8 @@ export default function TeamsManagement() {
       }
     } catch (error) {
       setError("Network error")
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -117,6 +122,7 @@ export default function TeamsManagement() {
       return
     }
 
+    setDeletingTeamId(team.id)
     try {
       const response = await fetch(`/api/admin/teams/${team.id}`, {
         method: "DELETE"
@@ -132,6 +138,8 @@ export default function TeamsManagement() {
       }
     } catch (error) {
       setError("Network error")
+    } finally {
+      setDeletingTeamId(null)
     }
   }
 
@@ -310,14 +318,16 @@ export default function TeamsManagement() {
               <div className="md:col-span-2 flex gap-4">
                 <button
                   type="submit"
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                  disabled={isSaving}
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingTeam ? "Update" : "Create"} Team
+                  {isSaving ? (editingTeam ? 'Updating Team...' : 'Creating Team...') : (editingTeam ? "Update" : "Create")} Team
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors"
+                  disabled={isSaving}
+                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -379,14 +389,16 @@ export default function TeamsManagement() {
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => handleEdit(team)}
-                            className="text-primary-600 hover:text-primary-800 p-2 transition-colors"
+                            disabled={deletingTeamId === team.id}
+                            className="text-primary-600 hover:text-primary-800 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Edit team"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => handleDelete(team)}
-                            className="text-red-600 hover:text-red-800 p-2 transition-colors"
+                            disabled={deletingTeamId === team.id}
+                            className="text-red-600 hover:text-red-800 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Delete team"
                           >
                             <Trash2 className="h-4 w-4" />

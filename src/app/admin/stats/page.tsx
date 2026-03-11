@@ -67,6 +67,9 @@ export default function BulkStatsPage() {
   const [editingStatId, setEditingStatId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<PlayerStat>>({});
   const [draftedPlayerIds, setDraftedPlayerIds] = useState<Set<string>>(new Set());
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [deletingStatId, setDeletingStatId] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   useEffect(() => {
     fetchGames();
@@ -298,6 +301,7 @@ export default function BulkStatsPage() {
   };
 
   const handleUpdateStat = async (statId: string) => {
+    setIsUpdating(true);
     try {
       const response = await fetch(`/api/admin/stats/${statId}`, {
         method: 'PUT',
@@ -326,6 +330,8 @@ export default function BulkStatsPage() {
     } catch (error) {
       console.error('Error updating stat:', error);
       alert(`Network error:\n\n${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -334,6 +340,7 @@ export default function BulkStatsPage() {
       return;
     }
 
+    setDeletingStatId(statId);
     try {
       const response = await fetch(`/api/admin/stats/${statId}`, {
         method: 'DELETE',
@@ -356,6 +363,8 @@ export default function BulkStatsPage() {
     } catch (error) {
       console.error('Error deleting stat:', error);
       alert(`Network error:\n\n${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeletingStatId(null);
     }
   };
 
@@ -451,10 +460,11 @@ export default function BulkStatsPage() {
                   </h2>
                   <button
                     onClick={handleDeleteAllStats}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    disabled={isDeletingAll}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Delete All
+                    {isDeletingAll ? 'Deleting All...' : 'Delete All'}
                   </button>
                 </div>
                 <div className="overflow-x-auto">
@@ -579,7 +589,8 @@ export default function BulkStatsPage() {
                                 <div className="flex items-center justify-center gap-2">
                                   <button
                                     onClick={() => handleUpdateStat(stat.id)}
-                                    className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                    disabled={isUpdating}
+                                    className="p-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Save"
                                   >
                                     <Save className="h-4 w-4" />
@@ -589,7 +600,8 @@ export default function BulkStatsPage() {
                                       setEditingStatId(null);
                                       setEditFormData({});
                                     }}
-                                    className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    disabled={isUpdating}
+                                    className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Cancel"
                                   >
                                     <X className="h-4 w-4" />
@@ -628,14 +640,16 @@ export default function BulkStatsPage() {
                                 <div className="flex items-center justify-center gap-2">
                                   <button
                                     onClick={() => handleEditStat(stat)}
-                                    className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    disabled={deletingStatId === stat.id || isDeletingAll}
+                                    className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Edit"
                                   >
                                     <Edit className="h-4 w-4" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteStat(stat.id)}
-                                    className="p-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                    disabled={deletingStatId === stat.id || isDeletingAll}
+                                    className="p-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Delete"
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -795,7 +809,7 @@ export default function BulkStatsPage() {
 
         {!selectedGame && (
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-12 text-center">
-            <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <BarChart3 className="h-16 w-16 text-gray-500 mx-auto mb-4" />
             <p className="text-xl text-gray-600">Please select a game to manage player statistics</p>
           </div>
         )}
