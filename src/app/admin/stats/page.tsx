@@ -221,6 +221,12 @@ export default function BulkStatsPage() {
       hasAnyStats(stat.playerId)
     );
 
+    console.log('Stats to save:', statsToSave);
+    console.log('Request payload:', {
+      iplGameId: selectedGame,
+      stats: statsToSave
+    });
+
     if (statsToSave.length === 0) {
       alert('Please enter stats for at least one player');
       return;
@@ -243,6 +249,9 @@ export default function BulkStatsPage() {
         }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (response.ok) {
         const result = await response.json();
         alert(`Successfully saved stats for ${result.count} player(s)!`);
@@ -251,8 +260,11 @@ export default function BulkStatsPage() {
       } else {
         // Handle error response with better error display
         let errorMessage = 'Unknown error occurred';
+        const responseText = await response.text();
+        console.log('Error response text:', responseText);
+        
         try {
-          const error = await response.json();
+          const error = JSON.parse(responseText);
           if (error.message) {
             errorMessage = error.message;
           } else if (error.error) {
@@ -260,9 +272,9 @@ export default function BulkStatsPage() {
           }
         } catch (e) {
           // If response is not JSON, use status text
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+          errorMessage = `Server error: ${response.status} ${response.statusText}\n\nResponse: ${responseText}`;
         }
-        alert(`Error saving stats:\n\n${errorMessage}\n\nPlease check the details and try again.`);
+        alert(`Error saving stats:\n\n${errorMessage}\n\nPlease check the console for more details.`);
         console.error('Bulk save error:', errorMessage);
       }
     } catch (error) {

@@ -51,6 +51,7 @@ export default function PlayersManagement() {
   const [bulkData, setBulkData] = useState("")
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isBulkAdding, setIsBulkAdding] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -329,28 +330,44 @@ export default function PlayersManagement() {
     e.preventDefault()
     setError("")
     setSuccess("")
+    setIsBulkAdding(true)
 
     try {
       const lines = bulkData.trim().split('\n').filter(line => line.trim())
       const players = []
 
-      for (const line of lines) {
-        const parts = line.split(',').map(part => part.trim())
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        const lineNumber = i + 1
+        
+        // Split by comma and filter out empty parts (from trailing commas)
+        const parts = line.split(',').map(part => part.trim()).filter(part => part.length > 0)
+        
         if (parts.length < 3) {
-          setError(`Invalid line format: "${line}". Expected format: Name, Role, Team [, Jersey]`)
+          setError(`Line ${lineNumber}: Invalid format. Expected: Name, Role, Team [, Jersey]\nGot: "${line}"\nParts found: ${parts.length}`)
+          setIsBulkAdding(false)
           return
         }
 
         const [name, role, teamShort, jersey] = parts
+        
+        if (!name) {
+          setError(`Line ${lineNumber}: Player name is required`)
+          setIsBulkAdding(false)
+          return
+        }
+        
         const team = teams.find(t => t.shortName.toLowerCase() === teamShort.toLowerCase())
         
         if (!team) {
-          setError(`Invalid team "${teamShort}" for player "${name}". Use team abbreviations like MI, CSK, RCB, etc.`)
+          setError(`Line ${lineNumber}: Invalid team "${teamShort}" for player "${name}".\nUse team abbreviations like MI, CSK, RCB, etc.\nAvailable teams: ${teams.map(t => t.shortName).join(', ')}`)
+          setIsBulkAdding(false)
           return
         }
 
         if (!PLAYER_ROLES.find(r => r.value === role.toUpperCase())) {
-          setError(`Invalid role "${role}" for player "${name}". Use: BATSMAN, BOWLER, ALL_ROUNDER, WICKET_KEEPER`)
+          setError(`Line ${lineNumber}: Invalid role "${role}" for player "${name}".\nUse: BATSMAN, BOWLER, ALL_ROUNDER, WICKET_KEEPER`)
+          setIsBulkAdding(false)
           return
         }
 
@@ -375,17 +392,36 @@ export default function PlayersManagement() {
       })
 
       const data = await response.json()
+      
+      console.log('Response status:', response.status)
+      console.log('Response data:', data)
 
       if (response.ok) {
         setSuccess(`Successfully added ${data.created} players!`)
+        if (data.errors && data.errors.length > 0) {
+          console.warn('Some errors occurred:', data.errors)
+          setError(`Added ${data.created} players but with errors:\n${data.errors.join('\n')}`)
+        }
         setBulkData("")
         setShowBulkForm(false)
         fetchPlayers()
       } else {
-        setError(data.message || "Failed to add players")
+        // Display all validation errors
+        if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+          const errorMsg = data.errors.join('\n')
+          console.error('Validation errors:', data.errors)
+          setError(`Validation errors:\n\n${errorMsg}`)
+        } else {
+          const errorMsg = data.message || data.error || JSON.stringify(data)
+          console.error('Server error:', errorMsg)
+          setError(`Server error: ${errorMsg}`)
+        }
       }
     } catch (error) {
-      setError("Network error or invalid data format")
+      console.error('Bulk add error:', error)
+      setError(`Network error or invalid data format: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsBulkAdding(false)
     }
   }
 
@@ -654,14 +690,16 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                  disabled={isBulkAdding}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-colors"
                 >
-                  Add Players
+                  {isBulkAdding ? 'Adding Players...' : 'Add Players'}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors"
+                  disabled={isBulkAdding}
+                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-semibold transition-colors"
                 >
                   Cancel
                 </button>

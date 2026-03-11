@@ -67,18 +67,19 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      // Check for duplicate jersey numbers within the same team
+      // Check for duplicate jersey numbers within the same team AND tournament
       if (player.jerseyNumber) {
         const existingPlayer = await prisma.player.findFirst({
           where: {
             iplTeamId: player.iplTeamId,
             jerseyNumber: player.jerseyNumber,
+            tournamentId: tournamentId,
             isActive: true
           }
         })
 
         if (existingPlayer) {
-          errors.push(`Line ${lineNumber}: Jersey number ${player.jerseyNumber} already taken in ${team.shortName}`)
+          errors.push(`Line ${lineNumber}: Jersey number ${player.jerseyNumber} already taken in ${team.shortName} for this tournament`)
           continue
         }
 
@@ -92,17 +93,18 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Check for duplicate player names within the same team
+      // Check for duplicate player names within the same team AND tournament
       const existingPlayerName = await prisma.player.findFirst({
         where: {
           name: player.name,
           iplTeamId: player.iplTeamId,
+          tournamentId: tournamentId,
           isActive: true
         }
       })
 
       if (existingPlayerName) {
-        errors.push(`Line ${lineNumber}: Player "${player.name}" already exists in ${team.shortName}`)
+        errors.push(`Line ${lineNumber}: Player "${player.name}" already exists in ${team.shortName} for this tournament`)
         continue
       }
 
