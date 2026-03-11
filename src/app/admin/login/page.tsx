@@ -153,7 +153,7 @@ export default function AdminLoginPage() {
         <div className="mt-8 text-center">
           <a 
             href="/" 
-            className="inline-flex items-center gap-2 text-white bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg font-medium transition-colors border-2 border-white/40 hover:border-white/60 shadow-lg"
+            className="inline-flex items-center gap-2 text-gray-900 bg-white hover:bg-gray-50 dark:text-white dark:bg-white/20 dark:hover:bg-white/30 px-6 py-3 rounded-lg font-medium transition-colors border-2 border-gray-300 dark:border-white/40 hover:border-gray-400 dark:hover:border-white/60 shadow-lg"
           >
             <Home className="h-5 w-5" />
             Back to Main Application
