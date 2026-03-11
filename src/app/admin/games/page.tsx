@@ -45,6 +45,7 @@ export default function GamesPage() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [tournamentFilter, setTournamentFilter] = useState<string>('ALL');
   const [teamValidationError, setTeamValidationError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     tournamentId: '',
@@ -137,6 +138,7 @@ export default function GamesPage() {
       return;
     }
 
+    setIsSaving(true);
     try {
       const url = editingGame ? `/api/admin/games/${editingGame.id}` : '/api/admin/games';
       const method = editingGame ? 'PUT' : 'POST';
@@ -160,6 +162,8 @@ export default function GamesPage() {
     } catch (error) {
       console.error('Error saving game:', error);
       alert('Error saving game');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -552,15 +556,17 @@ export default function GamesPage() {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-6 py-3 text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                    disabled={isSaving}
+                    className="px-6 py-3 text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors"
+                    disabled={isSaving}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {editingGame ? 'Update Game' : 'Create Game'}
+                    {isSaving ? (editingGame ? 'Updating Game...' : 'Creating Game...') : (editingGame ? 'Update Game' : 'Create Game')}
                   </button>
                 </div>
               </form>
