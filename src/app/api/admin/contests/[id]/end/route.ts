@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
 
-const prisma = new PrismaClient();
 
 // POST /api/admin/contests/[id]/end - End contest and settle coin transactions
 // Query params: ?force=true to bypass stats validation (use with caution)
