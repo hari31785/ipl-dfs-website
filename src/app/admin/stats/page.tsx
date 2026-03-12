@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, BarChart3, Trash2, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, BarChart3, Trash2, Edit, Save, X, Download, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface IPLGame {
   id: string;
@@ -70,9 +70,14 @@ export default function BulkStatsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [deletingStatId, setDeletingStatId] = useState<string | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [isFetchingScores, setIsFetchingScores] = useState(false);
+  const [scoreProviderAvailable, setScoreProviderAvailable] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [fetchSuccess, setFetchSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchGames();
+    checkScoreProviderStatus();
   }, []);
 
   useEffect(() => {
@@ -401,6 +406,120 @@ export default function BulkStatsPage() {
     }
   };
 
+  const checkScoreProviderStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/fetch-scores');
+      if (response.ok) {
+        const data = await response.json();
+        setScoreProviderAvailable(data.available);
+      }
+    } catch (error) {
+      console.error('Error checking score provider status:', error);
+      setScoreProviderAvailable(false);
+    }
+  };
+
+  const handleFetchScores = async () => {
+    if (!selectedGame) {
+      alert('Please select a game first');
+      return;
+    }
+
+    // Clear previous messages
+    setFetchError(null);
+    setFetchSuccess(null);
+
+    const game = games.find(g => g.id === selectedGame);
+    if (!game) return;
+
+    // Prompt for external match ID (optional)
+    const externalMatchId = prompt(
+      `Fetch scores for: ${game.title}\n\n` +
+      `If your score provider uses a different match ID, enter it below.\n` +
+      `Otherwise, leave blank to use the game ID.`,
+      ''
+    );
+
+    if (externalMatchId === null) {
+      // User cancelled
+      return;
+    }
+
+    setIsFetchingScores(true);
+    try {
+      const response = await fetch('/api/admin/fetch-scores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          iplGameId: selectedGame,
+          externalMatchId: externalMatchId.trim() || undefined
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Auto-populate the bulk stats form with fetched data
+        const newBulkStats: Record<string, BulkStatEntry> = {};
+        
+        for (const stat of result.data.stats) {
+          newBulkStats[stat.playerId] = {
+            playerId: stat.playerId,
+            runs: stat.runs,
+            wickets: stat.wickets,
+            catches: stat.catches,
+            runOuts: stat.runOuts,
+            stumpings: stat.stumpings,
+            didNotPlay: stat.didNotPlay
+          };
+        }
+
+        setBulkStats(newBulkStats);
+        
+        let successMessage = `✅ Successfully fetched scores for ${result.data.stats.length} players!\n\n`;
+        successMessage += `Matched: ${result.data.summary.matchedPlayers}\n`;
+        if (result.data.summary.unmatchedPlayers > 0) {
+          successMessage += `Unmatched: ${result.data.summary.unmatchedPlayers}\n`;
+          successMessage += `⚠️ Unmatched players: ${result.data.unmatchedPlayers.join(', ')}\n\n`;
+        }
+        successMessage += `\n📝 Review the populated stats below and click "Save All Stats" when ready.`;
+        
+        setFetchSuccess(successMessage);
+        alert(successMessage);
+      } else {
+        const errorMsg = result.error || 'Failed to fetch scores';
+        setFetchError(errorMsg);
+        
+        if (!result.available) {
+          alert(
+            `❌ Score Provider Not Available\n\n` +
+            `${errorMsg}\n\n` +
+            `You can still enter scores manually below.`
+          );
+        } else {
+          alert(
+            `⚠️ Error Fetching Scores\n\n` +
+            `${errorMsg}\n\n` +
+            `Please enter scores manually or try again later.`
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching scores:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Network error';
+      setFetchError(errorMsg);
+      alert(
+        `❌ Network Error\n\n` +
+        `${errorMsg}\n\n` +
+        `Please check your connection and try again, or enter scores manually.`
+      );
+    } finally {
+      setIsFetchingScores(false);
+    }
+  };
+
   if (loading) return <div className="p-8">Loading...</div>;
 
   return (
@@ -435,18 +554,74 @@ export default function BulkStatsPage() {
           <label className="block text-sm font-bold text-gray-700 mb-2">
             Select Game
           </label>
-          <select
-            value={selectedGame}
-            onChange={(e) => setSelectedGame(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-medium text-gray-900"
-          >
-            <option value="" className="text-gray-900">-- Select a game --</option>
-            {games.map((game) => (
-              <option key={game.id} value={game.id} className="text-gray-900">
-                {game.title} - {new Date(game.gameDate).toLocaleDateString()}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <select
+                value={selectedGame}
+                onChange={(e) => setSelectedGame(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-medium text-gray-900"
+              >
+                <option value="" className="text-gray-900">-- Select a game --</option>
+                {games.map((game) => (
+                  <option key={game.id} value={game.id} className="text-gray-900">
+                    {game.title} - {new Date(game.gameDate).toLocaleDateString()}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedGame && (
+              <button
+                onClick={handleFetchScores}
+                disabled={isFetchingScores}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                <Download className="h-5 w-5" />
+                {isFetchingScores ? 'Fetching...' : 'Fetch Scores from API'}
+              </button>
+            )}
+          </div>
+          
+          {/* Status Messages */}
+          {selectedGame && (
+            <div className="mt-4 space-y-2">
+              {scoreProviderAvailable && (
+                <div className="flex items-start gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
+                  <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Score Provider is configured and available</p>
+                    <p className="text-xs mt-1">Click "Fetch Scores from API" to auto-populate player statistics, or enter manually below.</p>
+                  </div>
+                </div>
+              )}
+              {!scoreProviderAvailable && (
+                <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Score Provider not configured</p>
+                    <p className="text-xs mt-1">Enter scores manually below. To enable auto-fetch, set ENABLE_SCORE_API=true and SCORE_API_KEY in your environment.</p>
+                  </div>
+                </div>
+              )}
+              {fetchError && (
+                <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 p-3 rounded-lg border border-red-200">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Error fetching scores</p>
+                    <p className="text-xs mt-1">{fetchError}</p>
+                  </div>
+                </div>
+              )}
+              {fetchSuccess && (
+                <div className="flex items-start gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
+                  <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Scores fetched successfully!</p>
+                    <p className="text-xs mt-1 whitespace-pre-line">{fetchSuccess}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {selectedGame && (
