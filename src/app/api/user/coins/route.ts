@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
+    const tournamentId = searchParams.get("tournamentId")
 
     if (!userId) {
       return NextResponse.json(
@@ -13,22 +14,45 @@ export async function GET(request: Request) {
       )
     }
 
-    // Get user's current coin balance
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { coins: true, name: true },
-    })
-
-    if (!user) {
+    if (!tournamentId) {
       return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
+        { error: "Tournament ID is required" },
+        { status: 400 }
       )
     }
 
-    // Get all coin transactions with contest and game details
+    // Get user's tournament-specific balance
+    const tournamentBalance = await prisma.tournamentBalance.findUnique({
+      where: {
+        userId_tournamentId: {
+          userId,
+          tournamentId
+        }
+      }
+    })
+
+    if (!tournamentBalance) {
+      // Create initial balance if it doesn't exist
+      const newBalance = await prisma.tournamentBalance.create({
+        data: {
+          userId,
+          tournamentId,
+          balance: 1000 // Starting balance
+        }
+      })
+      
+      return NextResponse.json({
+        balance: newBalance.balance,
+        transactions: [],
+      })
+    }
+
+    // Get all coin transactions for this tournament
     const transactions = await prisma.coinTransaction.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        tournamentId
+      },
       orderBy: { createdAt: "desc" },
       take: 50, // Last 50 transactions
       include: {
@@ -42,6 +66,12 @@ export async function GET(request: Request) {
             },
           },
         },
+        tournament: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       },
     })
 
@@ -84,7 +114,7 @@ export async function GET(request: Request) {
     )
 
     return NextResponse.json({
-      balance: user.coins,
+      balance: tournamentBalance.balance,
       transactions: enrichedTransactions,
     })
   } catch (error) {

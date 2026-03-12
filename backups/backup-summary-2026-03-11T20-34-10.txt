@@ -1,0 +1,22 @@
+
+Database Backup Summary
+=======================
+Timestamp: 2026-03-11T20:34:10.463Z
+Backup File: backup-2026-03-11T20-34-10.json
+
+Records Backed Up:
+- Users: 7
+- Tournaments: 2
+- IPL Teams: 10
+- Players: 365
+- Games: 6
+- Contests: 15
+- Matchups: 8
+- Player Stats: 8
+- Coin Transactions: 2
+- Admin Coins: 1
+- Admins: 1
+
+Total Records: 425
+
+This backup was created before migrating to tournament-specific coin vaults.

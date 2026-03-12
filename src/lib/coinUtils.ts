@@ -7,6 +7,7 @@ interface RecordMatchResultParams {
   matchupId: string
   pointDifference: number
   contestCoinValue: number // 25, 50, or 100
+  tournamentId: string // Add tournament ID
 }
 
 export async function recordMatchResult({
@@ -16,6 +17,7 @@ export async function recordMatchResult({
   matchupId,
   pointDifference,
   contestCoinValue,
+  tournamentId,
 }: RecordMatchResultParams) {
   // Calculate gross winnings (before admin fee)
   const grossWinnings = contestCoinValue * pointDifference
@@ -51,6 +53,7 @@ export async function recordMatchResult({
   await prisma.coinTransaction.create({
     data: {
       userId: winnerId,
+      tournamentId,
       amount: netWinnings,
       balance: newWinnerBalance,
       type: "WIN",
@@ -74,6 +77,7 @@ export async function recordMatchResult({
   await prisma.coinTransaction.create({
     data: {
       userId: loserId,
+      tournamentId,
       amount: lossAmount,
       balance: newLoserBalance,
       type: "LOSS",

@@ -42,7 +42,11 @@ export async function POST(
             }
           }
         },
-        iplGame: true
+        iplGame: {
+          include: {
+            tournament: true
+          }
+        }
       }
     });
 
@@ -190,12 +194,41 @@ export async function POST(
         }
       });
 
+      // Update winner's tournament balance
+      const winnerTournamentBalance = await prisma.tournamentBalance.findUnique({
+        where: {
+          userId_tournamentId: {
+            userId: winnerUserId,
+            tournamentId: contest.iplGame.tournamentId
+          }
+        }
+      });
+
+      const newWinnerTournamentBalance = (winnerTournamentBalance?.balance || 1000) + winnerNetWinnings;
+      await prisma.tournamentBalance.upsert({
+        where: {
+          userId_tournamentId: {
+            userId: winnerUserId,
+            tournamentId: contest.iplGame.tournamentId
+          }
+        },
+        update: {
+          balance: newWinnerTournamentBalance
+        },
+        create: {
+          userId: winnerUserId,
+          tournamentId: contest.iplGame.tournamentId,
+          balance: newWinnerTournamentBalance
+        }
+      });
+
       // Create winner transaction
       await prisma.coinTransaction.create({
         data: {
           userId: winnerUserId,
+          tournamentId: contest.iplGame.tournamentId,
           amount: winnerNetWinnings,
-          balance: newWinnerBalance,
+          balance: newWinnerTournamentBalance,
           type: 'WIN',
           description: `Won contest (${contest.iplGame.title})`,
           matchupId: matchup.id,
@@ -214,12 +247,41 @@ export async function POST(
         }
       });
 
+      // Update loser's tournament balance
+      const loserTournamentBalance = await prisma.tournamentBalance.findUnique({
+        where: {
+          userId_tournamentId: {
+            userId: loserUserId,
+            tournamentId: contest.iplGame.tournamentId
+          }
+        }
+      });
+
+      const newLoserTournamentBalance = (loserTournamentBalance?.balance || 1000) + loserAmount;
+      await prisma.tournamentBalance.upsert({
+        where: {
+          userId_tournamentId: {
+            userId: loserUserId,
+            tournamentId: contest.iplGame.tournamentId
+          }
+        },
+        update: {
+          balance: newLoserTournamentBalance
+        },
+        create: {
+          userId: loserUserId,
+          tournamentId: contest.iplGame.tournamentId,
+          balance: newLoserTournamentBalance
+        }
+      });
+
       // Create loser transaction
       await prisma.coinTransaction.create({
         data: {
           userId: loserUserId,
+          tournamentId: contest.iplGame.tournamentId,
           amount: loserAmount, // Already negative
-          balance: newLoserBalance,
+          balance: newLoserTournamentBalance,
           type: 'LOSS',
           description: `Lost contest (${contest.iplGame.title})`,
           matchupId: matchup.id,

@@ -30,6 +30,7 @@ model User {
   contestEntries  ContestEntry[]
   contestSignups  ContestSignup[]
   coinTransactions CoinTransaction[]
+  tournamentBalances TournamentBalance[]
   
   @@map("users")
 }
@@ -38,8 +39,9 @@ model User {
 model CoinTransaction {
   id              String   @id @default(cuid())
   userId          String
+  tournamentId    String   // Link to tournament
   amount          Int      // Positive for winnings, negative for losses
-  balance         Int      // Balance after transaction
+  balance         Int      // Balance after transaction (tournament-specific)
   type            String   // "WIN", "LOSS"
   description     String
   matchupId       String?  // Related matchup if applicable
@@ -49,6 +51,7 @@ model CoinTransaction {
   
   // Relations
   user            User      @relation(fields: [userId], references: [id])
+  tournament      Tournament @relation(fields: [tournamentId], references: [id])
   contest         Contest?  @relation(fields: [contestId], references: [id])
   
   @@map("coin_transactions")
@@ -61,6 +64,23 @@ model AdminCoins {
   updatedAt       DateTime @updatedAt
   
   @@map("admin_coins")
+}
+
+// Tournament-specific coin balance for each user
+model TournamentBalance {
+  id            String   @id @default(cuid())
+  userId        String
+  tournamentId  String
+  balance       Int      @default(1000) // Starting balance per tournament
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, tournamentId])
+  @@map("tournament_balances")
 }
 
 // Admin Management - Separate from User login
@@ -90,6 +110,8 @@ model Tournament {
   // Relations
   games       IPLGame[]
   players     Player[]  // Players in this tournament
+  tournamentBalances TournamentBalance[]
+  coinTransactions CoinTransaction[]
   
   @@map("tournaments")
 }

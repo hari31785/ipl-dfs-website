@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client"
 
 const prisma = new PrismaClient()
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // First, update any expired contests to close signups
     const now = new Date();
@@ -38,8 +38,17 @@ export async function GET() {
       }
     });
 
+    // Check if this is for coin vault (show all active tournaments)
+    const { searchParams } = new URL(request.url);
+    const forCoinVault = searchParams.get('forCoinVault') === 'true';
+
     const tournaments = await prisma.tournament.findMany({
-      where: {
+      where: forCoinVault ? {
+        // For coin vault, show all active tournaments
+        isActive: true,
+        status: 'ACTIVE'
+      } : {
+        // For dashboard, show tournaments with open signups
         isActive: true,
         status: {
           in: ['ACTIVE', 'UPCOMING']
@@ -63,7 +72,14 @@ export async function GET() {
       orderBy: {
         startDate: 'asc'
       },
-      include: {
+      include: forCoinVault ? {
+        // For coin vault, no need to include games
+        _count: {
+          select: {
+            games: true
+          }
+        }
+      } : {
         games: {
           where: {
             status: {

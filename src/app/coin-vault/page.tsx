@@ -34,6 +34,12 @@ interface CoinTransaction {
   }
 }
 
+interface Tournament {
+  id: string
+  name: string
+  status: string
+}
+
 interface UserData {
   id: string
   name: string
@@ -42,6 +48,8 @@ interface UserData {
 export default function CoinVaultPage() {
   const router = useRouter()
   const [user, setUser] = useState<UserData | null>(null)
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [selectedTournament, setSelectedTournament] = useState<string>('')
   const [balance, setBalance] = useState(0)
   const [transactions, setTransactions] = useState<CoinTransaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,12 +65,47 @@ export default function CoinVaultPage() {
     
     const parsedUser = JSON.parse(userData)
     setUser(parsedUser)
-    fetchCoinData(parsedUser.id)
+    fetchTournaments()
   }, [router])
 
-  const fetchCoinData = async (userId: string) => {
+  useEffect(() => {
+    console.log('Coin data effect triggered:', { user: user?.id, selectedTournament })
+    if (user && selectedTournament) {
+      fetchCoinData(user.id, selectedTournament)
+    }
+  }, [user, selectedTournament])
+
+  const fetchTournaments = async () => {
     try {
-      const response = await fetch(`/api/user/coins?userId=${userId}`)
+      const response = await fetch('/api/tournaments?forCoinVault=true')
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Tournaments fetched:', data)
+        setTournaments(data)
+        // Auto-select first active tournament
+        const activeTournament = data.find((t: Tournament) => t.status === 'ACTIVE') || data[0]
+        console.log('Selected tournament:', activeTournament)
+        if (activeTournament) {
+          setSelectedTournament(activeTournament.id)
+        } else {
+          // No tournaments found, stop loading
+          console.log('No tournaments found')
+          setLoading(false)
+        }
+      } else {
+        console.log('Failed to fetch tournaments:', response.status)
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error('Error fetching tournaments:', error)
+      setLoading(false)
+    }
+  }
+
+  const fetchCoinData = async (userId: string, tournamentId: string) => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/user/coins?userId=${userId}&tournamentId=${tournamentId}`)
       const data = await response.json()
       
       if (response.ok) {
@@ -104,6 +147,46 @@ export default function CoinVaultPage() {
     return null
   }
 
+  // Show message if no tournaments exist
+  if (!loading && tournaments.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        <div className="bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-secondary-500 rounded-full flex items-center justify-center">
+                  <Trophy className="h-6 w-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold text-white">IPL DFS</h1>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-md"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-2 text-primary-700 hover:text-primary-800 font-medium mb-6"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            Back to Dashboard
+          </button>
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
+            <Coins className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Tournaments Available</h3>
+            <p className="text-gray-500">There are currently no tournaments set up. Please contact the administrator.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
       {/* Header */}
@@ -137,13 +220,39 @@ export default function CoinVaultPage() {
           Back to Dashboard
         </button>
 
+        {/* Tournament Selector */}
+        {tournaments.length > 0 && (
+          <div className="mb-6 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <label htmlFor="tournament" className="block text-sm font-medium text-gray-700 mb-2">
+              Select Tournament
+            </label>
+            <select
+              id="tournament"
+              value={selectedTournament}
+              onChange={(e) => setSelectedTournament(e.target.value)}
+              className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-gray-900"
+            >
+              {tournaments.map((tournament) => (
+                <option key={tournament.id} value={tournament.id}>
+                  {tournament.name} {tournament.status === 'ACTIVE' && '(Active)'}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-2">
+              💡 Each tournament has a separate coin balance that doesn't carry over
+            </p>
+          </div>
+        )}
+
         {/* Balance Card */}
         <div className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl shadow-2xl p-8 mb-8">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 text-yellow-100 mb-2">
                 <Coins className="h-6 w-6" />
-                <span className="text-lg font-medium">Your Net Balance</span>
+                <span className="text-lg font-medium">
+                  {tournaments.find(t => t.id === selectedTournament)?.name || 'Tournament'} Balance
+                </span>
               </div>
               <div className="text-6xl font-bold text-white mb-2">
                 V̶₵{(balance / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
