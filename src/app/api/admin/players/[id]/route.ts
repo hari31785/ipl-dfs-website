@@ -49,7 +49,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -166,7 +165,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -219,6 +217,5 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }

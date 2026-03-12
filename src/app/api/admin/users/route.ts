@@ -42,7 +42,6 @@ export async function GET() {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -99,7 +98,6 @@ export async function DELETE(request: Request) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -145,6 +143,5 @@ export async function PUT(request: Request) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }

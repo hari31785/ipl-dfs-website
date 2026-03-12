@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { scoreProvider } from '@/lib/scoreProvider'
-
-const prisma = new PrismaClient()
 
 /**
  * POST /api/admin/fetch-scores
@@ -158,7 +156,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }
 
