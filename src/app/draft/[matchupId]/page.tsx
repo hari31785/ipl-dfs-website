@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { ArrowLeft, Users, Trophy, Clock, Target } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Clock, Target, Coins } from 'lucide-react';
 import { useLoading } from '@/contexts/LoadingContext';
 
 interface Player {
@@ -87,6 +87,15 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [searchName, setSearchName] = useState<string>('');
   const [playerStats, setPlayerStats] = useState<Record<string, number>>({});
   const [isDraftingPhase, setIsDraftingPhase] = useState(false);
+  
+  // Toss states
+  const [showToss, setShowToss] = useState(false);
+  const [tossPhase, setTossPhase] = useState<'calling' | 'flipping' | 'result' | 'complete'>('calling');
+  const [callingUser, setCallingUser] = useState<string | null>(null);
+  const [userCall, setUserCall] = useState<'HEADS' | 'TAILS' | null>(null);
+  const [coinResult, setCoinResult] = useState<'HEADS' | 'TAILS' | null>(null);
+  const [tossWinner, setTossWinner] = useState<string | null>(null);
+  const [isFlipping, setIsFlipping] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
@@ -95,6 +104,14 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     }
     fetchMatchupDetails();
   }, [matchupId]);
+
+  // Check if we need to show the toss
+  useEffect(() => {
+    if (matchup && currentUser && matchup.status === 'DRAFTING' && !matchup.firstPickUser) {
+      // Toss hasn't been done yet, show toss interface
+      initiateToss();
+    }
+  }, [matchup, currentUser]);
 
   // Real-time polling for turn updates
   useEffect(() => {
@@ -174,6 +191,66 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     } finally {
       setMakingPick(false);
     }
+  };
+
+  const initiateToss = () => {
+    if (!matchup || !currentUser) return;
+    
+    // Randomly select which user gets to call the toss
+    const users = [matchup.user1.user, matchup.user2.user];
+    const randomIndex = Math.floor(Math.random() * 2);
+    const selectedCaller = users[randomIndex];
+    
+    setCallingUser(selectedCaller.id);
+    setShowToss(true);
+    setTossPhase('calling');
+  };
+
+  const handleTossCall = async (call: 'HEADS' | 'TAILS') => {
+    setUserCall(call);
+    setTossPhase('flipping');
+    setIsFlipping(true);
+
+    // Simulate coin flip animation (3 seconds)
+    setTimeout(async () => {
+      // Generate random result
+      const result: 'HEADS' | 'TAILS' = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
+      setCoinResult(result);
+      setIsFlipping(false);
+      
+      // Determine winner
+      const won = call === result;
+      const winnerId = won ? callingUser : (callingUser === matchup!.user1.user.id ? matchup!.user2.user.id : matchup!.user1.user.id);
+      setTossWinner(winnerId);
+      setTossPhase('result');
+
+      // Send result to backend to update firstPickUser
+      try {
+        const firstPickUserValue = winnerId === matchup!.user1.user.id ? 'user1' : 'user2';
+        
+        const response = await fetch(`/api/draft/${matchupId}/toss`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstPickUser: firstPickUserValue,
+            tossWinner: winnerId
+          })
+        });
+
+        if (response.ok) {
+          // Refresh matchup data
+          await fetchMatchupDetails();
+          
+          // Auto-close toss modal after showing result
+          setTimeout(() => {
+            setShowToss(false);
+            setTossPhase('complete');
+          }, 4000);
+        }
+      } catch (error) {
+        console.error('Error saving toss result:', error);
+      }
+    }, 3000);
   };
 
   if (loading) {
@@ -288,6 +365,86 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      {/* Toss Modal */}
+      {showToss && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border-4 border-cricket-600">
+            {tossPhase === 'calling' && (
+              <div className="text-center">
+                <div className="mb-6">
+                  <Coins className="h-20 w-20 text-yellow-500 mx-auto mb-4" />
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">🏏 Toss Time!</h2>
+                  <p className="text-gray-600">
+                    {callingUser === currentUser.id ? (
+                      <span className="font-bold text-cricket-700">You get to call the toss!</span>
+                    ) : (
+                      <span>Waiting for <span className="font-bold">{callingUser === matchup?.user1.user.id ? matchup.user1.user.name : matchup?.user2.user.name}</span> to call...</span>
+                    )}
+                  </p>
+                </div>
+                
+                {callingUser === currentUser.id && (
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-700 mb-4">Choose heads or tails:</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => handleTossCall('HEADS')}
+                        className="bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold py-6 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all border-2 border-yellow-700"
+                      >
+                        <div className="text-3xl mb-2">🪙</div>
+                        <div className="text-lg">HEADS</div>
+                      </button>
+                      <button
+                        onClick={() => handleTossCall('TAILS')}
+                        className="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-bold py-6 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all border-2 border-orange-700"
+                      >
+                        <div className="text-3xl mb-2">🪙</div>
+                        <div className="text-lg">TAILS</div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {tossPhase === 'flipping' && (
+              <div className="text-center">
+                <div className={`mb-6 ${isFlipping ? 'animate-spin' : ''}`}>
+                  <Coins className="h-24 w-24 text-yellow-500 mx-auto" style={{ animationDuration: '0.3s' }} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Flipping the coin...</h2>
+                <p className="text-gray-600">
+                  Called: <span className="font-bold text-cricket-700">{userCall}</span>
+                </p>
+              </div>
+            )}
+            
+            {tossPhase === 'result' && (
+              <div className="text-center">
+                <div className="mb-6">
+                  <div className={`inline-block p-6 rounded-full mb-4 ${coinResult === 'HEADS' ? 'bg-yellow-100' : 'bg-orange-100'}`}>
+                    <Coins className={`h-20 w-20 ${coinResult === 'HEADS' ? 'text-yellow-600' : 'text-orange-600'}`} />
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    It's {coinResult}!
+                  </h2>
+                  <div className="mt-4 p-4 bg-cricket-50 rounded-lg border-2 border-cricket-200">
+                    <p className="text-lg font-bold text-cricket-800">
+                      {tossWinner === currentUser.id ? (
+                        <>🎉 You won the toss! You pick first!</>
+                      ) : (
+                        <>{opponent.name} won the toss. They pick first.</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">Starting draft in a moment...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white border-b-4 border-cricket-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
