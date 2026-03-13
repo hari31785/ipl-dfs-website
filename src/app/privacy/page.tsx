@@ -274,7 +274,7 @@ export default function PrivacyPolicyPage() {
 
               <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-800">
-                  <strong>To exercise your rights:</strong> Email us at privacy@ipldfs.com or contact us through 
+                  <strong>To exercise your rights:</strong> Email us at lansingipldfs@gmail.com or contact us through 
                   our support channel. We will respond within 30 days of receiving your request.
                 </p>
               </div>
@@ -294,7 +294,7 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <p>
                   If you are a parent or guardian and believe your child has provided personal information 
-                  to us, please contact us at privacy@ipldfs.com.
+                  to us, please contact us at lansingipldfs@gmail.com.
                 </p>
               </div>
             </div>
@@ -344,7 +344,7 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <div className="bg-white/10 rounded-lg p-4">
                   <div className="space-y-2">
-                    <div><strong>Email:</strong> privacy@ipldfs.com</div>
+                    <div><strong>Email:</strong> lansingipldfs@gmail.com</div>
                     <div><strong>Subject Line:</strong> Privacy Policy Question</div>
                     <div><strong>Response Time:</strong> Within 48 hours</div>
                   </div>

@@ -3,18 +3,20 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, MessageSquare, Clock, Send } from "lucide-react"
+import { ArrowLeft, MessageSquare, Clock, Send, Mail, Phone, X } from "lucide-react"
 
 export default function ContactPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     subject: '',
     message: ''
   })
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [showForm, setShowForm] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,7 +31,7 @@ export default function ContactPage() {
 
       if (response.ok) {
         setSuccess(true)
-        setFormData({ name: '', email: '', subject: '', message: '' })
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
         setTimeout(() => {
           setSuccess(false)
         }, 5000)
@@ -75,94 +77,168 @@ export default function ContactPage() {
           </div>
 
           <div className="space-y-8">
-            {/* Contact Form */}
+            {/* Contact Information */}
             <div className="bg-white rounded-2xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-primary-800 mb-6 flex items-center">
-                <Send className="h-6 w-6 mr-3 text-secondary-500" />
-                Send Us a Message
+                <MessageSquare className="h-6 w-6 mr-3 text-secondary-500" />
+                Contact Information
               </h2>
               
-              {success && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-800 font-semibold">
-                    ✓ Message sent successfully! We'll get back to you soon.
-                  </p>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-primary-800 mb-2">
-                      Your Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
-                      placeholder="Enter your name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-primary-800 mb-2">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
-                      placeholder="your.email@example.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-primary-800 mb-2">
-                    Subject *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
-                    placeholder="Brief description of your issue"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-primary-800 mb-2">
-                    Message *
-                  </label>
-                  <textarea
-                    required
-                    rows={6}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none resize-none"
-                    placeholder="Please describe your issue or question in detail..."
-                  />
-                </div>
-
+              <div className="space-y-4">
                 <button
-                  type="submit"
-                  disabled={submitting}
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setShowForm(true)}
+                  className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-secondary-50 to-orange-50 rounded-lg border-2 border-secondary-300 hover:border-secondary-500 transition-all hover:shadow-md"
                 >
-                  {submitting ? 'Sending...' : 'Send Message'}
+                  <div className="w-12 h-12 bg-secondary-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Send className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-sm font-semibold text-gray-600 mb-1">Send us a Message <span className="text-secondary-600">(Preferred)</span></div>
+                    <div className="text-lg font-bold text-gray-900">Click to open contact form</div>
+                  </div>
                 </button>
-              </form>
 
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">
-                  <strong>Note:</strong> Messages are reviewed by our admin team. We'll respond as soon as possible.
-                </p>
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Mail className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-gray-600 mb-1">Email Support</div>
+                    <a href="mailto:lansingipldfs@gmail.com" className="text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors">
+                      lansingipldfs@gmail.com
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Phone className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-gray-600 mb-1">Phone Support</div>
+                    <a href="tel:+15177219013" className="text-lg font-bold text-gray-900 hover:text-green-600 transition-colors">
+                      517-721-9013
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* Modal for Contact Form */}
+            {showForm && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+                <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                  <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between rounded-t-2xl">
+                    <h2 className="text-2xl font-bold text-primary-800 flex items-center">
+                      <Send className="h-6 w-6 mr-3 text-secondary-500" />
+                      Send Us a Message
+                    </h2>
+                    <button
+                      onClick={() => setShowForm(false)}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <X className="h-6 w-6 text-gray-600" />
+                    </button>
+                  </div>
+                  
+                  <div className="p-8">
+                    {success && (
+                      <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-green-800 font-semibold">
+                          ✓ Message sent successfully! We'll get back to you soon.
+                        </p>
+                      </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-semibold text-primary-800 mb-2">
+                            Your Name *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none text-gray-900"
+                            placeholder="Enter your name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-primary-800 mb-2">
+                            Email Address *
+                          </label>
+                          <input
+                            type="email"
+                            required
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none text-gray-900"
+                            placeholder="your.email@example.com"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-primary-800 mb-2">
+                          Mobile Number <span className="text-gray-600 font-normal">(Providing this will speed up the process of attending to your issue)</span>
+                        </label>
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none text-gray-900"
+                          placeholder="Enter your mobile number"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-primary-800 mb-2">
+                          Subject *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.subject}
+                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none text-gray-900"
+                          placeholder="Brief description of your issue"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-primary-800 mb-2">
+                          Message *
+                        </label>
+                        <textarea
+                          required
+                          rows={6}
+                          value={formData.message}
+                          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none resize-none text-gray-900"
+                          placeholder="Please describe your issue or question in detail..."
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {submitting ? 'Sending...' : 'Send Message'}
+                      </button>
+                    </form>
+
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">
+                        <strong>Note:</strong> Messages are reviewed by our admin team. We'll respond as soon as possible.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Support Hours */}
             <div className="bg-white rounded-2xl p-8 shadow-xl">
@@ -177,11 +253,11 @@ export default function ContactPage() {
                   <div className="space-y-2 text-gray-700">
                     <div className="flex justify-between">
                       <span>Monday - Friday</span>
-                      <span className="font-semibold">9:00 AM - 6:00 PM IST</span>
+                      <span className="font-semibold">9:00 AM - 6:00 PM EST</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Saturday - Sunday</span>
-                      <span className="font-semibold">10:00 AM - 4:00 PM IST</span>
+                      <span className="font-semibold">10:00 AM - 4:00 PM EST</span>
                     </div>
                   </div>
                 </div>
@@ -191,7 +267,7 @@ export default function ContactPage() {
                   <div className="space-y-2 text-gray-700">
                     <div className="flex justify-between">
                       <span>All Days</span>
-                      <span className="font-semibold">8:00 AM - 11:00 PM IST</span>
+                      <span className="font-semibold">8:00 AM - 11:00 PM EST</span>
                     </div>
                     <div className="text-sm text-gray-600 mt-2">
                       Extended hours during match days for draft and scoring support

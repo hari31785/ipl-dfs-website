@@ -21,6 +21,7 @@ interface Message {
 
 export default function AdminMessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
@@ -33,12 +34,22 @@ export default function AdminMessagesPage() {
 
   const fetchMessages = async () => {
     try {
+      // Fetch filtered messages for display
       const url = filterStatus 
         ? `/api/messages?status=${filterStatus}`
         : '/api/messages';
       const response = await fetch(url);
       const data = await response.json();
       setMessages(data.messages || []);
+      
+      // Also fetch all messages for stats if we're filtering
+      if (filterStatus) {
+        const allResponse = await fetch('/api/messages');
+        const allData = await allResponse.json();
+        setAllMessages(allData.messages || []);
+      } else {
+        setAllMessages(data.messages || []);
+      }
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
@@ -128,10 +139,10 @@ export default function AdminMessagesPage() {
   };
 
   const stats = {
-    total: messages.length,
-    pending: messages.filter(m => m.status === 'PENDING').length,
-    reviewed: messages.filter(m => m.status === 'REVIEWED').length,
-    resolved: messages.filter(m => m.status === 'RESOLVED').length
+    total: allMessages.length,
+    pending: allMessages.filter(m => m.status === 'PENDING').length,
+    reviewed: allMessages.filter(m => m.status === 'REVIEWED').length,
+    resolved: allMessages.filter(m => m.status === 'RESOLVED').length
   };
 
   return (

@@ -418,9 +418,9 @@ export default function TermsOfServicePage() {
                 </p>
                 <div className="bg-white/10 rounded-lg p-4">
                   <div className="space-y-2">
-                    <div><strong>Email:</strong> legal@ipldfs.com</div>
+                    <div><strong>Email:</strong> lansingipldfs@gmail.com</div>
                     <div><strong>Subject Line:</strong> Terms of Service Question</div>
-                    <div><strong>General Support:</strong> support@ipldfs.com</div>
+                    <div><strong>General Support:</strong> lansingipldfs@gmail.com</div>
                   </div>
                 </div>
                 <p className="text-sm">
