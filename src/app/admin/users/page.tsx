@@ -130,38 +130,39 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-200 p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-red-50 flex items-center justify-center">
+        <div className="text-center text-gray-800 text-xl">Loading users...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-red-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Link href="/admin/dashboard" className="text-gray-600 hover:text-gray-800 transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <div className="flex items-center gap-3">
-              <Users className="h-6 w-6 text-blue-600" />
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">User Management</h1>
+      <div className="bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center gap-4">
+              <Link
+                href="/admin/dashboard"
+                className="flex items-center gap-2 text-white hover:text-indigo-200 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                Back to Dashboard
+              </Link>
+              <div className="text-white">
+                <div className="flex items-center gap-3">
+                  <Users className="h-6 w-6" />
+                  <h1 className="text-2xl font-bold">User Management</h1>
+                </div>
+                <p className="text-indigo-100 text-sm">Manage registered users and their accounts</p>
+              </div>
             </div>
           </div>
-          <Link href="/admin/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors text-sm">
-            <Home className="h-4 w-4" />
-            Dashboard
-          </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -220,7 +221,7 @@ export default function AdminUsersPage() {
                   placeholder="Search by username, name, or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
                 />
               </div>
             </div>
@@ -229,7 +230,7 @@ export default function AdminUsersPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
-                className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
               >
                 <option value="all">All Users</option>
                 <option value="active">Active Only</option>
@@ -239,7 +240,7 @@ export default function AdminUsersPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "newest" | "oldest" | "name" | "coins")}
-                className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>

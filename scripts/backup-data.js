@@ -25,7 +25,7 @@ async function createDataBackup() {
     backup.data.players = await prisma.player.findMany()
     
     console.log('📦 Backing up games...')
-    backup.data.games = await prisma.iplGame.findMany()
+    backup.data.games = await prisma.iPLGame.findMany()
     
     console.log('📦 Backing up contests...')
     backup.data.contests = await prisma.contest.findMany()

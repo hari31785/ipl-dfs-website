@@ -59,6 +59,7 @@ export default function VCManagementPage() {
   const [adminUsername, setAdminUsername] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [settlementHistory, setSettlementHistory] = useState<any[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'winners' | 'losers' | 'breakeven'>('all');
 
   useEffect(() => {
     // Get admin username from localStorage
@@ -157,45 +158,59 @@ export default function VCManagementPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 p-8">
-        <div className="text-center text-white text-xl">Loading VC Management...</div>
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-red-50 flex items-center justify-center">
+        <div className="text-center text-gray-800 text-xl">Loading VC Management...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-white">💰 VC Settlement Management</h1>
-          <div className="flex gap-4">
-            <button
-              onClick={() => {
-                setShowHistory(!showHistory);
-                if (!showHistory) fetchSettlementHistory();
-              }}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg"
-            >
-              {showHistory ? '📊 Show Balances' : '📜 View History'}
-            </button>
-            <button
-              onClick={() => router.push('/admin/dashboard')}
-              className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg"
-            >
-              ← Back to Dashboard
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-red-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/admin/dashboard')}
+                className="flex items-center gap-2 text-white hover:text-emerald-200 transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Dashboard
+              </button>
+              <div className="text-white">
+                <h1 className="text-2xl font-bold">💰 VC Settlement Management</h1>
+                <p className="text-emerald-100 text-sm">Manage user coin balances and settlements</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowHistory(!showHistory);
+                  if (!showHistory) fetchSettlementHistory();
+                }}
+                className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <span>{showHistory ? '📊' : '📜'}</span>
+                {showHistory ? 'Show Balances' : 'View History'}
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tournament Filter */}
         {!showHistory && (
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8">
-            <label className="text-white font-semibold mr-4">Filter by Tournament:</label>
+          <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
+            <label className="text-sm font-medium text-gray-700 mr-4">Filter by Tournament:</label>
             <select
               value={selectedTournament}
               onChange={(e) => setSelectedTournament(e.target.value)}
-              className="bg-white/20 text-white border border-white/30 rounded-lg px-4 py-2"
+              className="bg-white text-gray-800 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
               <option value="all">All Tournaments</option>
               {Object.entries(tournamentGroups).map(([id, group]) => (
@@ -209,14 +224,14 @@ export default function VCManagementPage() {
 
         {/* Settlement History View */}
         {showHistory && (
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8">
-            <h2 className="text-3xl font-bold text-white mb-6">📜 Settlement History</h2>
+          <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
+            <h2 className="text-3xl font-bold text-gray-800 mb-6">📜 Settlement History</h2>
             {settlementHistory.length === 0 ? (
-              <div className="text-white text-center py-8">No settlement history found</div>
+              <div className="text-gray-600 text-center py-8">No settlement history found</div>
             ) : (
-              <div className="bg-black/30 rounded-lg overflow-hidden">
-                <table className="w-full text-white">
-                  <thead className="bg-white/10">
+              <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                <table className="w-full text-gray-800">
+                  <thead className="bg-gray-100">
                     <tr>
                       <th className="px-4 py-3 text-left">Date</th>
                       <th className="px-4 py-3 text-left">User</th>
@@ -273,39 +288,54 @@ export default function VCManagementPage() {
 
         {/* Tournament Groups */}
         {!showHistory && Object.entries(filteredGroups).map(([tournamentId, group]) => (
-          <div key={tournamentId} className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8">
-            <h2 className="text-3xl font-bold text-white mb-4">{group.tournament.name}</h2>
+          <div key={tournamentId} className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">{group.tournament.name}</h2>
             
             {/* Summary */}
             <div className="grid grid-cols-4 gap-4 mb-6">
-              <div className="bg-green-500/20 border border-green-500 rounded-lg p-4">
-                <div className="text-green-300 text-sm">Winners</div>
-                <div className="text-white text-2xl font-bold">{group.winners.length}</div>
-                <div className="text-green-400 text-sm">+{group.totalWinnings} VCs</div>
-              </div>
-              <div className="bg-red-500/20 border border-red-500 rounded-lg p-4">
-                <div className="text-red-300 text-sm">Losers</div>
-                <div className="text-white text-2xl font-bold">{group.losers.length}</div>
-                <div className="text-red-400 text-sm">-{group.totalLosses} VCs</div>
-              </div>
-              <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4">
-                <div className="text-yellow-300 text-sm">Break Even</div>
-                <div className="text-white text-2xl font-bold">{group.breakEven.length}</div>
-                <div className="text-yellow-400 text-sm">0 VCs</div>
-              </div>
-              <div className={`${group.netBalance >= 0 ? 'bg-green-500/20 border-green-500' : 'bg-red-500/20 border-red-500'} border rounded-lg p-4`}>
-                <div className="text-white/70 text-sm">Net Balance</div>
-                <div className="text-white text-2xl font-bold">{group.netBalance > 0 ? '+' : ''}{group.netBalance} VCs</div>
+              <button
+                onClick={() => setCategoryFilter(categoryFilter === 'winners' ? 'all' : 'winners')}
+                className={`bg-green-50 border-2 rounded-lg p-4 text-left hover:shadow-lg transition-all ${
+                  categoryFilter === 'winners' ? 'border-green-950 ring-2 ring-green-800' : 'border-green-950'
+                }`}
+              >
+                <div className="text-green-700 text-sm font-semibold">Winners</div>
+                <div className="text-gray-800 text-2xl font-bold">{group.winners.length}</div>
+                <div className="text-green-600 text-sm">+{group.totalWinnings} VCs</div>
+              </button>
+              <button
+                onClick={() => setCategoryFilter(categoryFilter === 'losers' ? 'all' : 'losers')}
+                className={`bg-red-50 border-2 rounded-lg p-4 text-left hover:shadow-lg transition-all ${
+                  categoryFilter === 'losers' ? 'border-red-950 ring-2 ring-red-800' : 'border-red-950'
+                }`}
+              >
+                <div className="text-red-700 text-sm font-semibold">Losers</div>
+                <div className="text-gray-800 text-2xl font-bold">{group.losers.length}</div>
+                <div className="text-red-600 text-sm">-{group.totalLosses} VCs</div>
+              </button>
+              <button
+                onClick={() => setCategoryFilter(categoryFilter === 'breakeven' ? 'all' : 'breakeven')}
+                className={`bg-yellow-50 border-2 rounded-lg p-4 text-left hover:shadow-lg transition-all ${
+                  categoryFilter === 'breakeven' ? 'border-yellow-950 ring-2 ring-yellow-800' : 'border-yellow-950'
+                }`}
+              >
+                <div className="text-yellow-700 text-sm font-semibold">Break Even</div>
+                <div className="text-gray-800 text-2xl font-bold">{group.breakEven.length}</div>
+                <div className="text-yellow-600 text-sm">0 VCs</div>
+              </button>
+              <div className={`${group.netBalance >= 0 ? 'bg-green-50 border-green-950' : 'bg-red-50 border-red-950'} border-2 rounded-lg p-4`}>
+                <div className="text-gray-600 text-sm font-semibold">Net Balance</div>
+                <div className="text-gray-800 text-2xl font-bold">{group.netBalance > 0 ? '+' : ''}{group.netBalance} VCs</div>
               </div>
             </div>
 
             {/* Winners Table */}
-            {group.winners.length > 0 && (
+            {group.winners.length > 0 && (categoryFilter === 'all' || categoryFilter === 'winners') && (
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-green-400 mb-3">✅ Winners (Positive Balance)</h3>
-                <div className="bg-black/30 rounded-lg overflow-hidden">
-                  <table className="w-full text-white">
-                    <thead className="bg-green-900/50">
+                <h3 className="text-2xl font-bold text-green-700 mb-3">✅ Winners (Positive Balance)</h3>
+                <div className="bg-white rounded-lg overflow-hidden border border-green-200">
+                  <table className="w-full text-gray-800">
+                    <thead className="bg-green-100">
                       <tr>
                         <th className="px-4 py-3 text-left">User</th>
                         <th className="px-4 py-3 text-right">Current Balance</th>
@@ -316,13 +346,13 @@ export default function VCManagementPage() {
                     </thead>
                     <tbody>
                       {group.winners.map((balance) => (
-                        <tr key={balance.id} className="border-t border-white/10">
+                        <tr key={balance.id} className="border-t border-gray-200">
                           <td className="px-4 py-3">
                             <div className="font-semibold">{balance.user.name}</div>
-                            <div className="text-sm text-gray-400">{balance.user.username}</div>
+                            <div className="text-sm text-gray-500">{balance.user.username}</div>
                           </td>
                           <td className="px-4 py-3 text-right font-mono">{balance.balance} VCs</td>
-                          <td className="px-4 py-3 text-right font-mono text-green-400">+{balance.netBalance} VCs</td>
+                          <td className="px-4 py-3 text-right font-mono text-green-600">+{balance.netBalance} VCs</td>
                           <td className="px-4 py-3 text-right font-mono">{balance.totalSettled} VCs</td>
                           <td className="px-4 py-3 text-center">
                             {settlingUser === balance.id ? (
@@ -332,7 +362,7 @@ export default function VCManagementPage() {
                                   placeholder="Amount"
                                   value={settleAmount}
                                   onChange={(e) => setSettleAmount(e.target.value)}
-                                  className="bg-white/20 text-white border border-white/30 rounded px-2 py-1 w-24"
+                                  className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-24"
                                   max={balance.netBalance}
                                 />
                                 <button
@@ -370,12 +400,12 @@ export default function VCManagementPage() {
             )}
 
             {/* Losers Table */}
-            {group.losers.length > 0 && (
+            {group.losers.length > 0 && (categoryFilter === 'all' || categoryFilter === 'losers') && (
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-red-400 mb-3">📉 Losers (Negative Balance)</h3>
-                <div className="bg-black/30 rounded-lg overflow-hidden">
-                  <table className="w-full text-white">
-                    <thead className="bg-red-900/50">
+                <h3 className="text-2xl font-bold text-red-700 mb-3">📉 Losers (Negative Balance)</h3>
+                <div className="bg-white rounded-lg overflow-hidden border border-red-200">
+                  <table className="w-full text-gray-800">
+                    <thead className="bg-red-100">
                       <tr>
                         <th className="px-4 py-3 text-left">User</th>
                         <th className="px-4 py-3 text-right">Current Balance</th>
@@ -386,13 +416,13 @@ export default function VCManagementPage() {
                     </thead>
                     <tbody>
                       {group.losers.map((balance) => (
-                        <tr key={balance.id} className="border-t border-white/10">
+                        <tr key={balance.id} className="border-t border-gray-200">
                           <td className="px-4 py-3">
                             <div className="font-semibold">{balance.user.name}</div>
-                            <div className="text-sm text-gray-400">{balance.user.username}</div>
+                            <div className="text-sm text-gray-500">{balance.user.username}</div>
                           </td>
                           <td className="px-4 py-3 text-right font-mono">{balance.balance} VCs</td>
-                          <td className="px-4 py-3 text-right font-mono text-red-400">{balance.netBalance} VCs</td>
+                          <td className="px-4 py-3 text-right font-mono text-red-600">{balance.netBalance} VCs</td>
                           <td className="px-4 py-3 text-right font-mono">{balance.totalSettled} VCs</td>
                           <td className="px-4 py-3 text-center">
                             {settlingUser === balance.id ? (
@@ -402,7 +432,7 @@ export default function VCManagementPage() {
                                   placeholder="Amount"
                                   value={settleAmount}
                                   onChange={(e) => setSettleAmount(e.target.value)}
-                                  className="bg-white/20 text-white border border-white/30 rounded px-2 py-1 w-24"
+                                  className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-24"
                                   max={Math.abs(balance.netBalance)}
                                 />
                                 <button
@@ -440,12 +470,12 @@ export default function VCManagementPage() {
             )}
 
             {/* Break Even */}
-            {group.breakEven.length > 0 && (
+            {group.breakEven.length > 0 && (categoryFilter === 'all' || categoryFilter === 'breakeven') && (
               <div>
-                <h3 className="text-2xl font-bold text-yellow-400 mb-3">⚖️ Break Even</h3>
-                <div className="bg-black/30 rounded-lg overflow-hidden">
-                  <table className="w-full text-white">
-                    <thead className="bg-yellow-900/50">
+                <h3 className="text-2xl font-bold text-yellow-700 mb-3">⚖️ Break Even</h3>
+                <div className="bg-white rounded-lg overflow-hidden border border-yellow-200">
+                  <table className="w-full text-gray-800">
+                    <thead className="bg-yellow-100">
                       <tr>
                         <th className="px-4 py-3 text-left">User</th>
                         <th className="px-4 py-3 text-right">Current Balance</th>
@@ -454,13 +484,13 @@ export default function VCManagementPage() {
                     </thead>
                     <tbody>
                       {group.breakEven.map((balance) => (
-                        <tr key={balance.id} className="border-t border-white/10">
+                        <tr key={balance.id} className="border-t border-gray-200">
                           <td className="px-4 py-3">
                             <div className="font-semibold">{balance.user.name}</div>
-                            <div className="text-sm text-gray-400">{balance.user.username}</div>
+                            <div className="text-sm text-gray-500">{balance.user.username}</div>
                           </td>
                           <td className="px-4 py-3 text-right font-mono">{balance.balance} VCs</td>
-                          <td className="px-4 py-3 text-right font-mono text-yellow-400">0 VCs</td>
+                          <td className="px-4 py-3 text-right font-mono text-yellow-600">0 VCs</td>
                         </tr>
                       ))}
                     </tbody>
@@ -473,12 +503,12 @@ export default function VCManagementPage() {
 
         {/* Notes Input (shown when settling) */}
         {!showHistory && settlingUser && (
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8">
-            <label className="text-white font-semibold block mb-2">Settlement Notes (Optional):</label>
+          <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
+            <label className="text-gray-700 font-semibold block mb-2">Settlement Notes (Optional):</label>
             <textarea
               value={settleNotes}
               onChange={(e) => setSettleNotes(e.target.value)}
-              className="w-full bg-white/20 text-white border border-white/30 rounded-lg px-4 py-2"
+              className="w-full bg-white text-gray-800 border border-gray-300 rounded-lg px-4 py-2"
               rows={3}
               placeholder="Add any notes about this settlement..."
             />
