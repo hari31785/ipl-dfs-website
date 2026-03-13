@@ -472,30 +472,50 @@ export default function DashboardPage() {
                                         ? 'grid-cols-2' 
                                         : 'grid-cols-3'
                                     }`}>
-                                      {availableContests.map((contest) => (
-                                        <button 
-                                          key={contest.id}
-                                          onClick={() => handleJoinContest(contest.id, game.id)}
-                                          disabled={joiningContest === contest.id}
-                                          className="flex flex-col items-center justify-center gap-1 px-4 py-3 bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 border-2 border-yellow-600 text-gray-900 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                          <span className="font-bold text-base text-gray-900">
-                                            {(() => {
-                                              const type = contest.contestType;
-                                              return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
-                                                     type === 'REGULAR' ? 'Regular (50)' : 
-                                                     type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
-                                                     `${contest.coinValue} Coins`;
-                                            })()} 
-                                          </span>
-                                          <span className="text-xs text-gray-800">{contest._count.signups}/{contest.maxParticipants} joined</span>
-                                          {joiningContest === contest.id ? (
-                                            <span className="text-xs text-gray-900 font-medium">Joining...</span>
-                                          ) : (
-                                            <span className="text-xs font-bold text-gray-900">JOIN NOW</span>
-                                          )}
-                                        </button>
-                                      ))}
+                                      {availableContests.map((contest) => {
+                                        // Check if user has already joined this contest
+                                        const hasJoined = userContests.some(
+                                          uc => uc.contest.id === contest.id
+                                        );
+                                        
+                                        return (
+                                          <button 
+                                            key={contest.id}
+                                            onClick={() => !hasJoined && handleJoinContest(contest.id, game.id)}
+                                            disabled={joiningContest === contest.id || hasJoined}
+                                            className={`flex flex-col items-center justify-center gap-1 px-4 py-3 border-2 rounded-lg transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed ${
+                                              hasJoined
+                                                ? 'bg-gradient-to-br from-green-400 to-green-500 border-green-600 text-white cursor-default'
+                                                : 'bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 border-yellow-600 text-gray-900'
+                                            }`}
+                                          >
+                                            <span className={`font-bold text-base ${hasJoined ? 'text-white' : 'text-gray-900'}`}>
+                                              {(() => {
+                                                const type = contest.contestType;
+                                                return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
+                                                       type === 'REGULAR' ? 'Regular (50)' : 
+                                                       type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
+                                                       `${contest.coinValue} Coins`;
+                                              })()} 
+                                            </span>
+                                            <span className={`text-xs ${hasJoined ? 'text-green-100' : 'text-gray-800'}`}>
+                                              {contest._count.signups}/{contest.maxParticipants} joined
+                                            </span>
+                                            {joiningContest === contest.id ? (
+                                              <span className="text-xs text-gray-900 font-medium">Joining...</span>
+                                            ) : hasJoined ? (
+                                              <span className="text-xs font-bold text-white flex items-center gap-1">
+                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                                JOINED
+                                              </span>
+                                            ) : (
+                                              <span className="text-xs font-bold text-gray-900">JOIN NOW</span>
+                                            )}
+                                          </button>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 );
