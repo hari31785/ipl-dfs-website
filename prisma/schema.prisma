@@ -40,6 +40,7 @@ model User {
   contestSignups  ContestSignup[]
   coinTransactions CoinTransaction[]
   tournamentBalances TournamentBalance[]
+  messages        Message[]
   
   @@map("users")
 }
@@ -368,4 +369,25 @@ model TeamPlayer {
   
   @@unique([teamId, playerId])
   @@map("team_players")
+}
+
+// User messages/support tickets
+model Message {
+  id          String   @id @default(cuid())
+  userId      String?  // Optional - user may not be logged in
+  name        String   // User's name
+  email       String   // User's email
+  subject     String   // Message subject
+  message     String   @db.Text // Message content
+  status      String   @default("PENDING") // PENDING, REVIEWED, RESOLVED
+  adminNotes  String?  @db.Text // Admin's notes on the message
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  @@index([status])
+  @@index([createdAt])
+  @@map("messages")
 }

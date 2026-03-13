@@ -139,23 +139,23 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-red-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 shadow-lg">
+      <div className="bg-gradient-to-r from-cyan-500 via-cyan-600 to-cyan-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center gap-4">
               <Link
                 href="/admin/dashboard"
-                className="flex items-center gap-2 text-white hover:text-indigo-200 transition-colors"
+                className="flex items-center gap-2 text-white hover:text-cyan-200 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
                 Back to Dashboard
               </Link>
-              <div className="text-white">
-                <div className="flex items-center gap-3">
-                  <Users className="h-6 w-6" />
-                  <h1 className="text-2xl font-bold">User Management</h1>
+              <div className="w-px h-6 bg-white/30"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center">
+                  <Users className="h-6 w-6 text-white" />
                 </div>
-                <p className="text-indigo-100 text-sm">Manage registered users and their accounts</p>
+                <h1 className="text-2xl font-bold text-white">User Management</h1>
               </div>
             </div>
           </div>
@@ -163,8 +163,15 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Action Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <p className="text-gray-900 font-medium">View and manage all registered users</p>
+          </div>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -210,37 +217,39 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-8">
-          <div className="flex flex-col gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Search by username, name, or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-                />
-              </div>
-            </div>
+        {/* Filters and Search */}
+        <div className="mb-4 flex flex-col gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search by username, name, or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-gray-900 bg-white"
+            />
+          </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div>
+              <label className="block text-sm font-medium mb-2">Filter by Status:</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
-                className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-gray-900 bg-white"
               >
                 <option value="all">All Users</option>
                 <option value="active">Active Only</option>
                 <option value="inactive">Inactive Only</option>
               </select>
+            </div>
 
+            <div>
+              <label className="block text-sm font-medium mb-2">Sort by:</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "newest" | "oldest" | "name" | "coins")}
-                className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-gray-900 bg-white"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>

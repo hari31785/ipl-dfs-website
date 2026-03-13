@@ -220,6 +220,22 @@ export default function AdminDashboard() {
                   <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
+              
+              <Link
+                href="/admin/messages"
+                className="block w-full p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">💬</span>
+                    <div>
+                      <div className="font-semibold">User Messages</div>
+                      <div className="text-sm opacity-90">View support messages from users</div>
+                    </div>
+                  </div>
+                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
             </div>
           </div>
 

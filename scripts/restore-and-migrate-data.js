@@ -116,7 +116,7 @@ async function restoreAndMigrate() {
 
     // 6. Restore IPL Games
     console.log('🎮 Restoring IPL games...');
-    for (const game of backup.data.games) {
+    for (const game of backup.data.iplGames || []) {
       await prisma.iPLGame.create({
         data: {
           id: game.id,
@@ -132,7 +132,7 @@ async function restoreAndMigrate() {
         }
       });
     }
-    console.log(`   ✓ ${backup.data.games.length} IPL games restored\n`);
+    console.log(`   ✓ ${(backup.data.iplGames || []).length} IPL games restored\n`);
 
     // 7. Restore Users (without coin transactions for now)
     console.log('👨‍👩‍👧‍👦 Restoring users...');
@@ -215,7 +215,7 @@ async function restoreAndMigrate() {
 
     // 11. Restore Matchups
     console.log('⚔️ Restoring matchups...');
-    for (const matchup of backup.data.matchups) {
+    for (const matchup of backup.data.h2hMatchups || []) {
       await prisma.headToHeadMatchup.create({
         data: {
           id: matchup.id,
@@ -232,12 +232,12 @@ async function restoreAndMigrate() {
         }
       });
     }
-    console.log(`   ✓ ${backup.data.matchups.length} matchups restored\n`);
+    console.log(`   ✓ ${(backup.data.h2hMatchups || []).length} matchups restored\n`);
 
     // 12. Restore Draft Picks
     console.log('🎯 Restoring draft picks...');
     let pickCount = 0;
-    for (const matchup of backup.data.matchups) {
+    for (const matchup of backup.data.h2hMatchups || []) {
       for (const pick of matchup.draftPicks || []) {
         await prisma.draftPick.create({
           data: {
@@ -310,8 +310,8 @@ async function restoreAndMigrate() {
     console.log(`   - ${backup.data.users.length} users with ${balanceCount} tournament balances`);
     console.log(`   - ${backup.data.tournaments.length} tournaments`);
     console.log(`   - ${backup.data.contests.length} contests`);
-    console.log(`   - ${backup.data.matchups.length} matchups with ${pickCount} picks`);
-    console.log(`   - ${backup.data.coinTransactions.length} coin transactions (now tournament-specific)`);
+    console.log(`   - ${(backup.data.h2hMatchups || []).length} matchups with ${pickCount} picks`);
+    console.log(`   - ${(backup.data.coinTransactions || []).length} coin transactions (now tournament-specific)`);
     
   } catch (error) {
     console.error('❌ Error during restoration:', error);

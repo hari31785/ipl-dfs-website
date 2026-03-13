@@ -139,13 +139,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Forgot Password */}
-            <div className="text-right">
-              <Link href="/forgot-password" className="text-sm text-blue-900 hover:text-blue-950 font-semibold underline">
-                Forgot your password?
-              </Link>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"
@@ -211,6 +204,17 @@ export default function LoginPage() {
               Create one here
             </Link>
           </p>
+
+          {/* Back to Home */}
+          <div className="text-center mt-4">
+            <Link 
+              href="/"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <ArrowRight className="h-4 w-4 rotate-180" />
+              Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

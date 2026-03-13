@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { ArrowLeft, Users, Trophy, Search, Edit } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Search, Edit, UserPlus } from 'lucide-react';
 
 interface Player {
   id: string;
   name: string;
   role: string;
+  iplTeam?: {
+    name: string;
+    shortName: string;
+  };
 }
 
 interface DraftPick {
@@ -92,6 +96,14 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   const [editingMatchup, setEditingMatchup] = useState<Matchup | null>(null);
   const [updatingMatchup, setUpdatingMatchup] = useState(false);
   const [updateError, setUpdateError] = useState('');
+  
+  // Manual draft pick states
+  const [showAddPick, setShowAddPick] = useState<string | null>(null); // matchupId
+  const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
+  const [loadingPlayers, setLoadingPlayers] = useState(false);
+  const [playerSearchQuery, setPlayerSearchQuery] = useState('');
+  const [addingPick, setAddingPick] = useState(false);
+  const [addPickError, setAddPickError] = useState('');
 
   useEffect(() => {
     fetchContestDetails();
@@ -153,6 +165,70 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
     return matchup.draftPicks
       .filter(pick => pick.pickOrder % 2 === (matchup.user1.id === userSignupId ? 1 : 0))
       .sort((a, b) => a.pickOrder - b.pickOrder);
+  };
+
+  const fetchAvailablePlayers = async (matchupId: string) => {
+    setLoadingPlayers(true);
+    setAddPickError('');
+    try {
+      const response = await fetch(`/api/admin/matchups/${matchupId}/available-players`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailablePlayers(data.players);
+      } else {
+        setAddPickError('Failed to load available players');
+      }
+    } catch (error) {
+      console.error('Error fetching available players:', error);
+      setAddPickError('Network error while loading players');
+    } finally {
+      setLoadingPlayers(false);
+    }
+  };
+
+  const handleAddPick = async (matchupId: string, playerId: string, userSignupId: string) => {
+    setAddingPick(true);
+    setAddPickError('');
+    
+    try {
+      const response = await fetch(`/api/admin/matchups/${matchupId}/add-pick`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId, userSignupId })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ ${data.message}\n\nPlayer: ${data.pick.player.name}\nPicked by: ${data.pick.pickedByUsername}\nPick Order: ${data.pick.pickOrder}`);
+        setShowAddPick(null);
+        setPlayerSearchQuery('');
+        fetchContestDetails(); // Refresh matchups
+      } else {
+        setAddPickError(data.error || 'Failed to add pick');
+      }
+    } catch (error) {
+      console.error('Error adding pick:', error);
+      setAddPickError('Network error occurred');
+    } finally {
+      setAddingPick(false);
+    }
+  };
+
+  const getNextPickInfo = (matchup: Matchup) => {
+    const nextPickOrder = matchup.draftPicks.length + 1;
+    if (nextPickOrder > 10) return null;
+    
+    const isUser1Turn = matchup.firstPickUser === 'user1' 
+      ? nextPickOrder % 2 === 1 
+      : nextPickOrder % 2 === 0;
+    
+    return {
+      pickOrder: nextPickOrder,
+      userSignupId: isUser1Turn ? matchup.user1.id : matchup.user2.id,
+      username: isUser1Turn ? matchup.user1.user.username : matchup.user2.user.username,
+      name: isUser1Turn ? matchup.user1.user.name : matchup.user2.user.name
+    };
   };
 
   const handleCreateMatchup = async (e: React.FormEvent) => {
@@ -681,6 +757,118 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
           </div>
         )}
 
+        {/* Add Player Pick Modal */}
+        {showAddPick && (() => {
+          const matchup = contest?.matchups.find(m => m.id === showAddPick);
+          if (!matchup) return null;
+          
+          const nextPick = getNextPickInfo(matchup);
+          if (!nextPick) return null;
+
+          const filteredPlayers = playerSearchQuery.length >= 2
+            ? availablePlayers.filter(p => 
+                p.name.toLowerCase().includes(playerSearchQuery.toLowerCase()) ||
+                p.role.toLowerCase().includes(playerSearchQuery.toLowerCase()) ||
+                p.iplTeam?.name.toLowerCase().includes(playerSearchQuery.toLowerCase())
+              )
+            : availablePlayers;
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Add Player Pick</h3>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <div className="text-sm text-gray-700">
+                    <strong>Pick #{nextPick.pickOrder}</strong> - {nextPick.name}'s turn
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    {matchup.draftPicks.length}/10 picks completed
+                  </div>
+                </div>
+
+                {loadingPlayers ? (
+                  <div className="text-center py-8 text-gray-600">Loading available players...</div>
+                ) : (
+                  <>
+                    {/* Player Search */}
+                    <div className="mb-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={playerSearchQuery}
+                          onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                          placeholder="Search players by name, role, or team..."
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {filteredPlayers.length} of {availablePlayers.length} players available
+                      </div>
+                    </div>
+
+                    {/* Player List */}
+                    <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+                      {filteredPlayers.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          {availablePlayers.length === 0 
+                            ? 'All players have been picked' 
+                            : 'No players match your search'}
+                        </div>
+                      ) : (
+                        filteredPlayers.map(player => (
+                          <button
+                            key={player.id}
+                            onClick={() => handleAddPick(matchup.id, player.id, nextPick.userSignupId)}
+                            disabled={addingPick}
+                            className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b last:border-b-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{player.name}</div>
+                                <div className="text-sm text-gray-600 flex items-center gap-2">
+                                  <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{player.role}</span>
+                                  {player.iplTeam && (
+                                    <span className="text-xs text-gray-500">{player.iplTeam.shortName || player.iplTeam.name}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-blue-600 font-semibold text-sm">
+                                Select →
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+
+                    {addPickError && (
+                      <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">
+                        {addPickError}
+                      </div>
+                    )}
+
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddPick(null);
+                          setPlayerSearchQuery('');
+                          setAddPickError('');
+                        }}
+                        disabled={addingPick}
+                        className="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                      >
+                        {addingPick ? 'Adding...' : 'Cancel'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Matchups List */}
         {contest.matchups.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -816,6 +1004,32 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                           </div>
                         </div>
                       </div>
+
+                      {/* Manual Draft Pick Button */}
+                      {matchup.draftPicks.length < 10 && (
+                        <div className="mt-6">
+                          <button
+                            onClick={() => {
+                              setShowAddPick(matchup.id);
+                              fetchAvailablePlayers(matchup.id);
+                              setPlayerSearchQuery('');
+                              setAddPickError('');
+                            }}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors shadow-md flex items-center justify-center gap-2"
+                          >
+                            <UserPlus className="h-5 w-5" />
+                            Manually Add Player Pick
+                          </button>
+                          {(() => {
+                            const nextPick = getNextPickInfo(matchup);
+                            return nextPick && (
+                              <div className="mt-2 text-center text-sm text-gray-600">
+                                Next pick (#{nextPick.pickOrder}): <span className="font-semibold text-gray-900">{nextPick.name}</span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

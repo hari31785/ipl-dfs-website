@@ -1,9 +1,49 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Mail, MessageSquare, Phone, MapPin, Clock, Send } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, MessageSquare, Clock, Send } from "lucide-react"
 
 export default function ContactPage() {
+  const router = useRouter()
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [success, setSuccess] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (response.ok) {
+        setSuccess(true)
+        setFormData({ name: '', email: '', subject: '', message: '' })
+        setTimeout(() => {
+          setSuccess(false)
+        }, 5000)
+      } else {
+        alert('Failed to send message. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      alert('An error occurred. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700">
       {/* Header */}
@@ -35,42 +75,92 @@ export default function ContactPage() {
           </div>
 
           <div className="space-y-8">
-            {/* Contact Methods */}
+            {/* Contact Form */}
             <div className="bg-white rounded-2xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-primary-800 mb-6 flex items-center">
-                <MessageSquare className="h-6 w-6 mr-3 text-secondary-500" />
-                How to Reach Us
+                <Send className="h-6 w-6 mr-3 text-secondary-500" />
+                Send Us a Message
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-br from-primary-50 to-blue-50 rounded-xl p-6 border border-primary-200">
-                  <div className="flex items-center mb-4">
-                    <Mail className="h-8 w-8 text-primary-600 mr-3" />
-                    <h3 className="text-xl font-bold text-primary-800">Email Support</h3>
-                  </div>
-                  <p className="text-gray-700 mb-4">
-                    For general inquiries, technical support, and account issues
+              {success && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-green-800 font-semibold">
+                    ✓ Message sent successfully! We'll get back to you soon.
                   </p>
-                  <a 
-                    href="mailto:support@ipldfs.com" 
-                    className="text-primary-600 hover:text-primary-700 font-semibold"
-                  >
-                    support@ipldfs.com
-                  </a>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-primary-800 mb-2">
+                      Your Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
+                      placeholder="Enter your name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-primary-800 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
+                      placeholder="your.email@example.com"
+                    />
+                  </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-secondary-50 to-orange-50 rounded-xl p-6 border border-secondary-200">
-                  <div className="flex items-center mb-4">
-                    <MessageSquare className="h-8 w-8 text-secondary-600 mr-3" />
-                    <h3 className="text-xl font-bold text-primary-800">Live Chat</h3>
-                  </div>
-                  <p className="text-gray-700 mb-4">
-                    Available during IPL season for real-time assistance
-                  </p>
-                  <span className="text-secondary-600 font-semibold">
-                    Coming Soon
-                  </span>
+                <div>
+                  <label className="block text-sm font-semibold text-primary-800 mb-2">
+                    Subject *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
+                    placeholder="Brief description of your issue"
+                  />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-primary-800 mb-2">
+                    Message *
+                  </label>
+                  <textarea
+                    required
+                    rows={6}
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none resize-none"
+                    placeholder="Please describe your issue or question in detail..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Sending...' : 'Send Message'}
+                </button>
+              </form>
+
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Note:</strong> Messages are reviewed by our admin team. We'll respond as soon as possible.
+                </p>
               </div>
             </div>
 
@@ -121,7 +211,7 @@ export default function ContactPage() {
                 <div className="border-l-4 border-primary-500 pl-6">
                   <h3 className="font-bold text-primary-800 mb-2">How do I report a scoring issue?</h3>
                   <p className="text-gray-700">
-                    Email us at support@ipldfs.com with your contest details and the specific player(s) in question. 
+                    Send us a message using the form above with your contest details and the specific player(s) in question. 
                     Include your username and contest ID for faster resolution.
                   </p>
                 </div>
@@ -146,100 +236,9 @@ export default function ContactPage() {
                   <h3 className="font-bold text-primary-800 mb-2">Can I suggest new features?</h3>
                   <p className="text-gray-700">
                     Absolutely! We welcome feedback and feature suggestions. 
-                    Send your ideas to support@ipldfs.com with "Feature Request" in the subject line.
+                    Send us a message using the form above with "Feature Request" in the subject line.
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Contact Form */}
-            <div className="bg-white rounded-2xl p-8 shadow-xl">
-              <h2 className="text-2xl font-bold text-primary-800 mb-6 flex items-center">
-                <Send className="h-6 w-6 mr-3 text-secondary-500" />
-                Send Us a Message
-              </h2>
-              
-              <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-primary-800 mb-2">
-                      Your Name
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
-                      placeholder="Enter your name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-primary-800 mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
-                      placeholder="your.email@example.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-primary-800 mb-2">
-                    Subject
-                  </label>
-                  <select className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none">
-                    <option>Select a topic</option>
-                    <option>Technical Support</option>
-                    <option>Scoring Issue</option>
-                    <option>Account Problem</option>
-                    <option>Feature Request</option>
-                    <option>General Inquiry</option>
-                    <option>Billing Question</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-primary-800 mb-2">
-                    Username (if applicable)
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
-                    placeholder="Your IPL DFS username"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-primary-800 mb-2">
-                    Message
-                  </label>
-                  <textarea
-                    rows={6}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none resize-none"
-                    placeholder="Please describe your issue or question in detail..."
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <input type="checkbox" id="terms" className="w-4 h-4" />
-                  <label htmlFor="terms" className="text-sm text-gray-700">
-                    I agree to the <Link href="/privacy" className="text-primary-600 hover:text-primary-700">Privacy Policy</Link> and 
-                    <Link href="/terms" className="text-primary-600 hover:text-primary-700 ml-1">Terms of Service</Link>
-                  </label>
-                </div>
-
-                <button
-                  type="submit"
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl"
-                >
-                  Send Message
-                </button>
-              </form>
-
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">
-                  <strong>Note:</strong> This is a demo contact form. For actual support, please email support@ipldfs.com directly.
-                </p>
               </div>
             </div>
 
