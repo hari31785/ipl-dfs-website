@@ -22,6 +22,15 @@ model User {
   totalMatches    Int      @default(0)
   winPercentage   Float    @default(0)
   coins           Int      @default(0) // User's current coin balance
+  
+  // Security Questions for Password Reset
+  securityQuestion1 String?
+  securityAnswer1   String?
+  securityQuestion2 String?
+  securityAnswer2   String?
+  securityQuestion3 String?
+  securityAnswer3   String?
+  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

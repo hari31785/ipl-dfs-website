@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Mail, Lock, User, Trophy, Phone } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, User, Trophy, Phone, ShieldQuestion } from "lucide-react"
+import { SECURITY_QUESTIONS } from "@/lib/securityQuestions"
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -14,6 +15,12 @@ export default function SignUpPage() {
     phone: "",
     password: "",
     confirmPassword: "",
+    securityQuestion1: "",
+    securityAnswer1: "",
+    securityQuestion2: "",
+    securityAnswer2: "",
+    securityQuestion3: "",
+    securityAnswer3: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -21,7 +28,7 @@ export default function SignUpPage() {
   const [error, setError] = useState("")
   const [usernameError, setUsernameError] = useState("")
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let value = e.target.value
 
     // Format phone number automatically
@@ -111,6 +118,33 @@ export default function SignUpPage() {
       return
     }
 
+    // Validate security questions
+    if (!formData.securityQuestion1 || !formData.securityAnswer1) {
+      setError("Please select and answer security question 1")
+      setIsLoading(false)
+      return
+    }
+
+    if (!formData.securityQuestion2 || !formData.securityAnswer2) {
+      setError("Please select and answer security question 2")
+      setIsLoading(false)
+      return
+    }
+
+    if (!formData.securityQuestion3 || !formData.securityAnswer3) {
+      setError("Please select and answer security question 3")
+      setIsLoading(false)
+      return
+    }
+
+    // Check for duplicate questions
+    const questions = [formData.securityQuestion1, formData.securityQuestion2, formData.securityQuestion3]
+    if (new Set(questions).size !== questions.length) {
+      setError("Please select three different security questions")
+      setIsLoading(false)
+      return
+    }
+
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -123,6 +157,12 @@ export default function SignUpPage() {
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
+          securityQuestion1: formData.securityQuestion1,
+          securityAnswer1: formData.securityAnswer1,
+          securityQuestion2: formData.securityQuestion2,
+          securityAnswer2: formData.securityAnswer2,
+          securityQuestion3: formData.securityQuestion3,
+          securityAnswer3: formData.securityAnswer3,
         }),
       })
 
@@ -248,6 +288,7 @@ export default function SignUpPage() {
                   id="phone"
                   name="phone"
                   type="tel"
+                  required
                   value={formData.phone}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-colors text-gray-900 bg-white placeholder-gray-500"
@@ -315,14 +356,134 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-secondary-500 hover:bg-secondary-600 disabled:bg-secondary-300 text-white py-3 px-4 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 outline-none"
-            >
-              {isLoading ? "Creating Account..." : "Create Account"}
-            </button>
+            {/* Security Questions Section */}
+            <div className="pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldQuestion className="h-5 w-5 text-secondary-600" />
+                <h3 className="text-sm font-semibold text-primary-800">
+                  Security Questions for Password Recovery
+                </h3>
+              </div>
+              <p className="text-xs text-gray-600 mb-4">
+                Select and answer 3 security questions. You'll need to answer one correctly to reset your password.
+              </p>
+
+              {/* Security Question 1 */}
+              <div className="mb-4">
+                <label htmlFor="securityQuestion1" className="block text-sm font-medium text-primary-800 mb-2">
+                  Security Question 1
+                </label>
+                <select
+                  id="securityQuestion1"
+                  name="securityQuestion1"
+                  required
+                  value={formData.securityQuestion1}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-colors text-gray-900 bg-white mb-2"
+                >
+                  <option value="">Select a question...</option>
+                  {SECURITY_QUESTIONS.map((question, index) => (
+                    <option key={index} value={question} disabled={question === formData.securityQuestion2 || question === formData.securityQuestion3}>
+                      {question}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  name="securityAnswer1"
+                  required
+                  value={formData.securityAnswer1}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-colors text-gray-900 bg-white placeholder-gray-500"
+                  placeholder="Your answer"
+                  style={{ color: '#1f2937', backgroundColor: '#ffffff' }}
+                  disabled={!formData.securityQuestion1}
+                />
+              </div>
+
+              {/* Security Question 2 */}
+              <div className="mb-4">
+                <label htmlFor="securityQuestion2" className="block text-sm font-medium text-primary-800 mb-2">
+                  Security Question 2
+                </label>
+                <select
+                  id="securityQuestion2"
+                  name="securityQuestion2"
+                  required
+                  value={formData.securityQuestion2}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-colors text-gray-900 bg-white mb-2"
+                >
+                  <option value="">Select a question...</option>
+                  {SECURITY_QUESTIONS.map((question, index) => (
+                    <option key={index} value={question} disabled={question === formData.securityQuestion1 || question === formData.securityQuestion3}>
+                      {question}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  name="securityAnswer2"
+                  required
+                  value={formData.securityAnswer2}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-colors text-gray-900 bg-white placeholder-gray-500"
+                  placeholder="Your answer"
+                  style={{ color: '#1f2937', backgroundColor: '#ffffff' }}
+                  disabled={!formData.securityQuestion2}
+                />
+              </div>
+
+              {/* Security Question 3 */}
+              <div className="mb-4">
+                <label htmlFor="securityQuestion3" className="block text-sm font-medium text-primary-800 mb-2">
+                  Security Question 3
+                </label>
+                <select
+                  id="securityQuestion3"
+                  name="securityQuestion3"
+                  required
+                  value={formData.securityQuestion3}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-colors text-gray-900 bg-white mb-2"
+                >
+                  <option value="">Select a question...</option>
+                  {SECURITY_QUESTIONS.map((question, index) => (
+                    <option key={index} value={question} disabled={question === formData.securityQuestion1 || question === formData.securityQuestion2}>
+                      {question}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  name="securityAnswer3"
+                  required
+                  value={formData.securityAnswer3}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-colors text-gray-900 bg-white placeholder-gray-500"
+                  placeholder="Your answer"
+                  style={{ color: '#1f2937', backgroundColor: '#ffffff' }}
+                  disabled={!formData.securityQuestion3}
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <Link
+                href="/"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-4 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 outline-none text-center"
+              >
+                Cancel
+              </Link>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 bg-secondary-500 hover:bg-secondary-600 disabled:bg-secondary-300 text-white py-3 px-4 rounded-lg font-semibold transition-colors focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 outline-none"
+              >
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </button>
+            </div>
           </form>
 
           {/* Divider */}

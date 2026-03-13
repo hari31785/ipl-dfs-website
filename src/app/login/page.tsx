@@ -141,7 +141,7 @@ export default function LoginPage() {
 
             {/* Forgot Password */}
             <div className="text-right">
-              <Link href="/forgot-password" className="text-sm text-secondary-600 hover:text-secondary-700 font-medium">
+              <Link href="/forgot-password" className="text-sm text-blue-900 hover:text-blue-950 font-semibold underline">
                 Forgot your password?
               </Link>
             </div>
@@ -170,7 +170,7 @@ export default function LoginPage() {
             <div className="text-center mt-4">
               <Link 
                 href="/forgot-password"
-                className="text-sm text-secondary-600 hover:text-secondary-800 transition-colors"
+                className="text-sm text-blue-900 hover:text-blue-950 font-semibold underline transition-colors"
               >
                 Forgot your password?
               </Link>
@@ -211,13 +211,6 @@ export default function LoginPage() {
               Create one here
             </Link>
           </p>
-        </div>
-
-        {/* Demo Info */}
-        <div className="mt-8 text-center">
-          <div className="bg-cricket-500/10 border border-cricket-500/20 text-cricket-700 px-4 py-3 rounded-lg text-sm">
-            <strong>Demo Mode:</strong> Use any email/password to test the interface
-          </div>
         </div>
       </div>
     </div>

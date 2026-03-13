@@ -5,7 +5,19 @@ import bcrypt from "bcryptjs"
 export async function POST(request: NextRequest) {
   
   try {
-    const { name, username, email, phone, password } = await request.json()
+    const { 
+      name, 
+      username, 
+      email, 
+      phone, 
+      password,
+      securityQuestion1,
+      securityAnswer1,
+      securityQuestion2,
+      securityAnswer2,
+      securityQuestion3,
+      securityAnswer3
+    } = await request.json()
 
     console.log('Registration attempt for:', { username, email, name })
 
@@ -27,6 +39,14 @@ export async function POST(request: NextRequest) {
     if (username.length < 3) {
       return NextResponse.json(
         { message: "Username must be at least 3 characters" },
+        { status: 400 }
+      )
+    }
+
+    // Validate security questions
+    if (!securityQuestion1 || !securityAnswer1 || !securityQuestion2 || !securityAnswer2 || !securityQuestion3 || !securityAnswer3) {
+      return NextResponse.json(
+        { message: "All security questions and answers are required" },
         { status: 400 }
       )
     }
@@ -76,8 +96,11 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating new user...')
 
-    // Hash password
+    // Hash password and security answers
     const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedAnswer1 = await bcrypt.hash(securityAnswer1.toLowerCase().trim(), 12)
+    const hashedAnswer2 = await bcrypt.hash(securityAnswer2.toLowerCase().trim(), 12)
+    const hashedAnswer3 = await bcrypt.hash(securityAnswer3.toLowerCase().trim(), 12)
 
     // Create user - explicitly exclude isActive field to avoid database column error
     const user = await prisma.user.create({
@@ -87,6 +110,12 @@ export async function POST(request: NextRequest) {
         email,
         phone: phone || null,
         password: hashedPassword,
+        securityQuestion1,
+        securityAnswer1: hashedAnswer1,
+        securityQuestion2,
+        securityAnswer2: hashedAnswer2,
+        securityQuestion3,
+        securityAnswer3: hashedAnswer3,
         // Don't include isActive until the database column exists
       },
       select: {
