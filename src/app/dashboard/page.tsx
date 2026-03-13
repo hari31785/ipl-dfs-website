@@ -102,6 +102,7 @@ export default function DashboardPage() {
   const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'active' | 'completed'>('upcoming')
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
+  const [unjoiningContest, setUnjoiningContest] = useState<string | null>(null)
 
   useEffect(() => {
     // Get user data from localStorage (simple auth for now)
@@ -226,6 +227,45 @@ export default function DashboardPage() {
       alert('Failed to leave contest')
     } finally {
       setLeavingContest(null)
+    }
+  }
+
+  const handleUnjoinContest = async (contestId: string) => {
+    if (!user) return
+
+    if (!confirm('Are you sure you want to unjoin from this contest? You can join again before the signup deadline.')) {
+      return
+    }
+
+    setUnjoiningContest(contestId)
+    setGlobalLoading(true, 'Leaving contest...')
+
+    try {
+      const response = await fetch(`/api/contests/${contestId}/unjoin`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-email': user.email,
+        },
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Refresh data
+        await fetchTournaments()
+        await fetchUserContests(user.id)
+        setGlobalLoading(false)
+        alert('✓ ' + data.message)
+      } else {
+        setGlobalLoading(false)
+        alert('Error: ' + data.error)
+      }
+    } catch (error) {
+      console.error('Error unjoining contest:', error)
+      setGlobalLoading(false)
+      alert('Failed to unjoin contest')
+    } finally {
+      setUnjoiningContest(null)
     }
   }
 
@@ -479,41 +519,55 @@ export default function DashboardPage() {
                                         );
                                         
                                         return (
-                                          <button 
-                                            key={contest.id}
-                                            onClick={() => !hasJoined && handleJoinContest(contest.id, game.id)}
-                                            disabled={joiningContest === contest.id || hasJoined}
-                                            className={`flex flex-col items-center justify-center gap-1 px-4 py-3 border-2 rounded-lg transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed ${
-                                              hasJoined
-                                                ? 'bg-gradient-to-br from-green-400 to-green-500 border-green-600 text-white cursor-default'
-                                                : 'bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 border-yellow-600 text-gray-900'
-                                            }`}
-                                          >
-                                            <span className={`font-bold text-base ${hasJoined ? 'text-white' : 'text-gray-900'}`}>
-                                              {(() => {
-                                                const type = contest.contestType;
-                                                return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
-                                                       type === 'REGULAR' ? 'Regular (50)' : 
-                                                       type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
-                                                       `${contest.coinValue} Coins`;
-                                              })()} 
-                                            </span>
-                                            <span className={`text-xs ${hasJoined ? 'text-green-100' : 'text-gray-800'}`}>
-                                              {contest._count.signups}/{contest.maxParticipants} joined
-                                            </span>
-                                            {joiningContest === contest.id ? (
-                                              <span className="text-xs text-gray-900 font-medium">Joining...</span>
-                                            ) : hasJoined ? (
-                                              <span className="text-xs font-bold text-white flex items-center gap-1">
-                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                </svg>
-                                                JOINED
+                                          <div key={contest.id} className="relative">
+                                            <button 
+                                              onClick={() => !hasJoined && handleJoinContest(contest.id, game.id)}
+                                              disabled={joiningContest === contest.id || hasJoined || unjoiningContest === contest.id}
+                                              className={`w-full flex flex-col items-center justify-center gap-1 px-4 py-3 border-2 rounded-lg transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed ${
+                                                hasJoined
+                                                  ? 'bg-gradient-to-br from-green-400 to-green-500 border-green-600 text-white cursor-default'
+                                                  : 'bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 border-yellow-600 text-gray-900'
+                                              }`}
+                                            >
+                                              <span className={`font-bold text-base ${hasJoined ? 'text-white' : 'text-gray-900'}`}>
+                                                {(() => {
+                                                  const type = contest.contestType;
+                                                  return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
+                                                         type === 'REGULAR' ? 'Regular (50)' : 
+                                                         type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
+                                                         `${contest.coinValue} Coins`;
+                                                })()} 
                                               </span>
-                                            ) : (
-                                              <span className="text-xs font-bold text-gray-900">JOIN NOW</span>
+                                              <span className={`text-xs ${hasJoined ? 'text-green-100' : 'text-gray-800'}`}>
+                                                {contest._count.signups}/{contest.maxParticipants} joined
+                                              </span>
+                                              {joiningContest === contest.id ? (
+                                                <span className="text-xs text-gray-900 font-medium">Joining...</span>
+                                              ) : unjoiningContest === contest.id ? (
+                                                <span className="text-xs text-white font-medium">Leaving...</span>
+                                              ) : hasJoined ? (
+                                                <span className="text-xs font-bold text-white flex items-center gap-1">
+                                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                  </svg>
+                                                  JOINED
+                                                </span>
+                                              ) : (
+                                                <span className="text-xs font-bold text-gray-900">JOIN NOW</span>
+                                              )}
+                                            </button>
+                                            {hasJoined && unjoiningContest !== contest.id && (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleUnjoinContest(contest.id);
+                                                }}
+                                                className="mt-1 w-full px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded border border-red-600 transition-colors"
+                                              >
+                                                ✕ Unjoin
+                                              </button>
                                             )}
-                                          </button>
+                                          </div>
                                         );
                                       })}
                                     </div>
