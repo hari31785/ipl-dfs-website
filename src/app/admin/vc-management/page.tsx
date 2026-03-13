@@ -62,7 +62,7 @@ export default function VCManagementPage() {
 
   useEffect(() => {
     // Get admin username from localStorage
-    const storedAdmin = localStorage.getItem('adminUser');
+    const storedAdmin = localStorage.getItem('currentAdmin');
     if (storedAdmin) {
       setAdminUsername(JSON.parse(storedAdmin).username);
     } else {
