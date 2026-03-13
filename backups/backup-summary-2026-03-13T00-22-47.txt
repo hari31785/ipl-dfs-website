@@ -1,0 +1,82 @@
+
+═══════════════════════════════════════════════════════════
+  PRODUCTION DATA BACKUP SUMMARY
+  Before Settlement Tracking Migration
+═══════════════════════════════════════════════════════════
+
+Backup Date: 3/12/2026, 8:22:52 PM
+Backup File: backup-before-settlement-2026-03-13T00-22-47.json
+
+───────────────────────────────────────────────────────────
+  DATA COUNTS
+───────────────────────────────────────────────────────────
+
+Users:                 9
+Admins:                1
+Tournaments:           2
+IPL Teams:             10
+Players:               246
+Player Stats:          0
+IPL Games:             2
+Contests:              6
+Contest Signups:       0
+H2H Matchups:          0
+Draft Picks:           0
+User Teams:            0
+Team Players:          0
+Contest Entries:       0
+Tournament Balances:   7
+Coin Transactions:     0
+Admin Coins:           1
+
+───────────────────────────────────────────────────────────
+  TOURNAMENT BALANCE DETAILS
+───────────────────────────────────────────────────────────
+
+1. RakeshV | IPL 2026 | Balance: 1000 VCs | Net: 0 | BREAK EVEN
+2. Test Success | IPL 2026 | Balance: 1000 VCs | Net: 0 | BREAK EVEN
+3. Admin User | IPL 2026 | Balance: 1000 VCs | Net: 0 | BREAK EVEN
+4. Srikanth Beri | IPL 2026 | Balance: 1000 VCs | Net: 0 | BREAK EVEN
+5. Rahul Gollapudi | IPL 2026 | Balance: 1000 VCs | Net: 0 | BREAK EVEN
+6. Hari Kurada | IPL 2026 | Balance: 1000 VCs | Net: 0 | BREAK EVEN
+7. Hareesh Atluri | IPL 2026 | Balance: 1000 VCs | Net: 0 | BREAK EVEN
+
+───────────────────────────────────────────────────────────
+  MIGRATION INFORMATION
+───────────────────────────────────────────────────────────
+
+Migration: add_settlement_tracking
+New Table: settlements
+Purpose: Track VC encashments and refills
+
+Changes:
+- Adds Settlement model to schema
+- Tracks ENCASH (payouts) and REFILL (deposits)
+- Links to TournamentBalance via tournamentBalanceId
+- Records admin username, amounts, notes
+- Maintains complete audit trail
+
+IMPORTANT: This migration only ADDS a new table.
+           Existing data is NOT modified or deleted.
+
+───────────────────────────────────────────────────────────
+  BACKUP FILES
+───────────────────────────────────────────────────────────
+
+JSON Backup:  /Users/harikurada/Desktop/ipl-dfs-website/backups/backup-before-settlement-2026-03-13T00-22-47.json
+Summary File: /Users/harikurada/Desktop/ipl-dfs-website/backups/backup-summary-2026-03-13T00-22-47.txt
+
+To restore from this backup, use:
+  node scripts/restore-data.js backup-before-settlement-2026-03-13T00-22-47.json
+
+───────────────────────────────────────────────────────────
+  NEXT STEPS
+───────────────────────────────────────────────────────────
+
+1. Review this summary
+2. Verify backup file exists and is readable
+3. Run migration: npx prisma migrate dev --name add_settlement_tracking
+4. Test the VC Settlement Management page
+5. Keep this backup safe
+
+═══════════════════════════════════════════════════════════

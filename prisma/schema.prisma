@@ -71,16 +71,39 @@ model TournamentBalance {
   id            String   @id @default(cuid())
   userId        String
   tournamentId  String
-  balance       Int      @default(1000) // Starting balance per tournament
+  balance       Int      @default(0) // Starting balance: 0 VCs (wins/losses from contests)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
   // Relations
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  settlements   Settlement[]
   
   @@unique([userId, tournamentId])
   @@map("tournament_balances")
+}
+
+// VC Settlement Tracking - Admin encashments and refills
+model Settlement {
+  id                    String   @id @default(cuid())
+  tournamentBalanceId   String
+  userId                String   // Denormalized for easy querying
+  tournamentId          String   // Denormalized for easy querying
+  type                  String   // "ENCASH" (for winners) or "REFILL" (for losers)
+  amount                Int      // Amount settled (always positive number)
+  balanceBefore         Int      // Balance before settlement
+  balanceAfter          Int      // Balance after settlement
+  adminUsername         String   // Admin who performed the settlement
+  notes                 String?  // Optional notes from admin
+  createdAt             DateTime @default(now())
+  
+  // Relations
+  tournamentBalance     TournamentBalance @relation(fields: [tournamentBalanceId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, tournamentId])
+  @@index([tournamentId])
+  @@map("settlements")
 }
 
 // Admin Management - Separate from User login

@@ -186,7 +186,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <h3 className="text-xl font-bold text-primary-800 mb-6 flex items-center gap-2">
               <Users className="h-6 w-6" />
-              User Management
+              User & Coin Management
             </h3>
             <div className="space-y-4">
               <Link
@@ -199,6 +199,22 @@ export default function AdminDashboard() {
                     <div>
                       <div className="font-semibold">Manage Users</div>
                       <div className="text-sm opacity-90">View and manage registered users</div>
+                    </div>
+                  </div>
+                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+              
+              <Link
+                href="/admin/vc-management"
+                className="block w-full p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition-colors group shadow-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">💰</span>
+                    <div>
+                      <div className="font-semibold">VC Settlement</div>
+                      <div className="text-sm opacity-90">Encash winners & refill losers</div>
                     </div>
                   </div>
                   <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
