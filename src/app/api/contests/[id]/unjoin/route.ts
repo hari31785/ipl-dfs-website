@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const contestId = params.id;
+    const { id: contestId } = await params;
 
     // Get user from request (you'll need to implement proper auth)
     const userEmail = request.headers.get('x-user-email');
