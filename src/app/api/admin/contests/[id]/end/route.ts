@@ -203,7 +203,7 @@ export async function POST(
         }
       });
 
-      const newWinnerTournamentBalance = (winnerTournamentBalance?.balance || 1000) + winnerNetWinnings;
+      const newWinnerTournamentBalance = (winnerTournamentBalance?.balance || 0) + winnerNetWinnings;
       await prisma.tournamentBalance.upsert({
         where: {
           userId_tournamentId: {
@@ -256,7 +256,7 @@ export async function POST(
         }
       });
 
-      const newLoserTournamentBalance = (loserTournamentBalance?.balance || 1000) + loserAmount;
+      const newLoserTournamentBalance = (loserTournamentBalance?.balance || 0) + loserAmount;
       await prisma.tournamentBalance.upsert({
         where: {
           userId_tournamentId: {

@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         data: {
           userId,
           tournamentId,
-          balance: 1000 // Starting balance
+          balance: 0 // Starting balance
         }
       })
       
