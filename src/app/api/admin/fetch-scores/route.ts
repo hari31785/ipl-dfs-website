@@ -1,30 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { scoreProvider } from '@/lib/scoreProvider'
+import { scoreDB } from '@/lib/scoreDatabase'
 
 /**
  * POST /api/admin/fetch-scores
- * Fetch scores from external API for a specific IPL game
+ * Fetch scores from external database or API for a specific IPL game
  */
 export async function POST(request: NextRequest) {
   try {
-    const { iplGameId, externalMatchId } = await request.json()
+    const { iplGameId, externalMatchId, source = 'database' } = await request.json()
 
     if (!iplGameId) {
       return NextResponse.json(
         { error: 'IPL Game ID is required' },
         { status: 400 }
-      )
-    }
-
-    // Check if score provider is available
-    if (!scoreProvider.isAvailable()) {
-      return NextResponse.json(
-        { 
-          error: 'Score provider is not configured. Please set ENABLE_SCORE_API=true and SCORE_API_KEY in your environment variables.',
-          available: false
-        },
-        { status: 503 }
       )
     }
 
@@ -45,9 +35,71 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Fetch scores from external API
-    const matchIdToUse = externalMatchId || iplGameId
-    const scoreData = await scoreProvider.fetchMatchScores(matchIdToUse)
+    let scoreData: any;
+
+    // Use database if configured and requested
+    if (source === 'database' && scoreDB.isConfigured()) {
+      console.log(`Fetching scores from database for game ${externalMatchId || iplGameId}`);
+      
+      const isConnected = await scoreDB.testConnection();
+      if (!isConnected) {
+        return NextResponse.json(
+          { error: 'Failed to connect to external score database' },
+          { status: 503 }
+        );
+      }
+
+      const gameData = await scoreDB.getGameData(externalMatchId || iplGameId);
+      
+      if (!gameData) {
+        return NextResponse.json(
+          { error: `No data found for external game ID ${externalMatchId || iplGameId}` },
+          { status: 404 }
+        );
+      }
+
+      // Transform to expected format
+      // Calculate points using OUR scoring system:
+      // Runs: 1 point per run
+      // Wickets: 20 points per wicket
+      // Catches/Run Outs/Stumpings: 5 points each
+      scoreData = {
+        matchId: gameData.gameId,
+        date: gameData.dateScheduled,
+        homeTeam: gameData.homeTeam,
+        awayTeam: gameData.visitingTeam,
+        status: gameData.status === '44' ? 'completed' : 'scheduled',
+        players: gameData.players.map(p => {
+          const points = (p.runs * 1) + (p.wickets * 20) + ((p.catches + p.runOuts + p.stumpings) * 5);
+          return {
+            playerName: p.playerName,
+            teamName: p.teamName,
+            runs: p.runs,
+            wickets: p.wickets,
+            catches: p.catches,
+            runOuts: p.runOuts,
+            stumpings: p.stumpings,
+            didNotPlay: p.didNotPlay,
+            points: points,
+          };
+        }),
+      };
+    } else {
+      // Fall back to API if available
+      if (!scoreProvider.isAvailable()) {
+        return NextResponse.json(
+          { 
+            error: 'Neither score database nor score API is configured',
+            available: false
+          },
+          { status: 503 }
+        )
+      }
+
+      // Fetch scores from external API
+      const matchIdToUse = externalMatchId || iplGameId
+      scoreData = await scoreProvider.fetchMatchScores(matchIdToUse)
+    }
 
     if (!scoreData) {
       return NextResponse.json(
@@ -105,9 +157,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark players who didn't appear in API response as DNP
-    const apiPlayerNames = scoreData.players.map(p => p.playerName.toLowerCase())
+    const apiPlayerNames = scoreData.players.map((p: any) => p.playerName.toLowerCase())
     const dnpPlayers = players
-      .filter(p => !apiPlayerNames.some(name => 
+      .filter(p => !apiPlayerNames.some((name: string) => 
         name.includes(p.name.toLowerCase()) || 
         p.name.toLowerCase().includes(name)
       ))
@@ -164,9 +216,28 @@ export async function POST(request: NextRequest) {
  * Check if score provider is available
  */
 export async function GET() {
+  const databaseConfigured = scoreDB.isConfigured();
+  const apiConfigured = scoreProvider.isAvailable();
+  
+  let databaseConnected = false;
+  if (databaseConfigured) {
+    try {
+      databaseConnected = await scoreDB.testConnection();
+    } catch (error) {
+      console.error('Database connection test failed:', error);
+    }
+  }
+
   return NextResponse.json({
-    available: scoreProvider.isAvailable(),
-    configured: !!process.env.SCORE_API_KEY,
-    enabled: process.env.ENABLE_SCORE_API === 'true'
+    database: {
+      configured: databaseConfigured,
+      connected: databaseConnected,
+      enabled: process.env.ENABLE_SCORE_DB === 'true',
+    },
+    api: {
+      configured: apiConfigured,
+      enabled: process.env.ENABLE_SCORE_API === 'true',
+    },
+    available: databaseConnected || apiConfigured,
   })
 }

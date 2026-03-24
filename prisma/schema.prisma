@@ -137,6 +137,7 @@ model Tournament {
   endDate     DateTime
   isActive    Boolean  @default(true)
   status      String   @default("UPCOMING") // UPCOMING, ACTIVE, COMPLETED
+  externalSeriesId Int?  // Maps to Buddykhel DB series_id (e.g., 12 for IPL 2026)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

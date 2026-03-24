@@ -1,0 +1,43 @@
+=================================================================
+DATABASE BACKUP SUMMARY
+Created: $(date)
+=================================================================
+
+BACKUP FILES CREATED:
+1. data_backup_2026-03-16T23-49-21-771Z.json (105K)
+   - Standard backup with core tables
+   
+2. complete_backup_2026-03-16T23-49-48-763Z.json (111K)
+   - Complete backup with ALL tables including:
+     * Tournament balances
+     * Coin transactions  
+     * Settlements
+     * Messages
+
+DATA SUMMARY:
+✓ Users: 10 records
+✓ Teams: 10 records (IPL teams)
+✓ Tournaments: 2 records
+✓ Players: 246 records
+✓ Games: 2 records
+✓ Contests: 6 records
+✓ Signups: 0 records
+✓ Matchups: 0 records
+✓ Draft Picks: 0 records
+✓ Player Stats: 0 records
+✓ Tournament Balances: 19 records
+✓ Coin Transactions: 0 records
+✓ Settlements: 0 records
+✓ Messages: 2 records
+
+RECENT CHANGES BACKED UP:
+- Starting balance changed from 1000 to 0 coins per tournament
+- Users now start with 0 VCs instead of 10 VCs
+- Net winnings will accurately reflect wins/losses from 0 baseline
+
+NOTES:
+- Backups are in JSON format for easy restoration
+- All user data, tournament data, and configurations preserved
+- No active contests or matchups at backup time
+- Tournament balances exist for 19 user-tournament combinations
+=================================================================
