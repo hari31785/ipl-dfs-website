@@ -167,6 +167,17 @@ export default function GamesPage() {
     }
   };
 
+  // Helper function to convert UTC date to local datetime string for input
+  const toLocalDateTimeString = (date: string) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const handleEdit = (game: IPLGame) => {
     setEditingGame(game);
     setFormData({
@@ -175,8 +186,8 @@ export default function GamesPage() {
       description: game.description || '',
       team1Id: game.team1.id,
       team2Id: game.team2.id,
-      gameDate: new Date(game.gameDate).toISOString().slice(0, 16),
-      signupDeadline: new Date(game.signupDeadline).toISOString().slice(0, 16)
+      gameDate: toLocalDateTimeString(game.gameDate),
+      signupDeadline: toLocalDateTimeString(game.signupDeadline)
     });
     setShowForm(true);
   };
@@ -373,10 +384,24 @@ export default function GamesPage() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {new Date(game.gameDate).toLocaleString()}
+                  {new Date(game.gameDate).toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true
+                  })}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {new Date(game.signupDeadline).toLocaleString()}
+                  {new Date(game.signupDeadline).toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true
+                  })}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(game.status)}`}>
@@ -532,7 +557,7 @@ export default function GamesPage() {
                     required
                   />
                   <p className="text-xs text-gray-600 mt-1">
-                    Select the date and time when the match will be played
+                    Enter the match time in your local timezone. It will be displayed correctly in the list.
                   </p>
                 </div>
 
