@@ -143,12 +143,19 @@ export default function GamesPage() {
       const url = editingGame ? `/api/admin/games/${editingGame.id}` : '/api/admin/games';
       const method = editingGame ? 'PUT' : 'POST';
       
+      // Convert local datetime strings to ISO format (which preserves timezone)
+      const dataToSend = {
+        ...formData,
+        gameDate: new Date(formData.gameDate).toISOString(),
+        signupDeadline: new Date(formData.signupDeadline).toISOString()
+      };
+      
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (response.ok) {
