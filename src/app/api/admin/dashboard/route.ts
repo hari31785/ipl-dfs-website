@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
       totalUsers,
       totalPlayers,
       totalTeams,
-      activeContests
+      activeContests,
+      pendingMessages
     ] = await Promise.all([
       prisma.user.count(),
       prisma.player.count(),
@@ -21,6 +22,11 @@ export async function GET(request: NextRequest) {
             in: ['UPCOMING', 'LIVE', 'SIGNUP_OPEN', 'SIGNUP_CLOSED', 'DRAFTING']
           }
         }
+      }),
+      prisma.message.count({
+        where: {
+          status: 'PENDING'
+        }
       })
     ]);
 
@@ -28,7 +34,8 @@ export async function GET(request: NextRequest) {
       totalUsers,
       totalPlayers,
       totalTeams,
-      activeContests
+      activeContests,
+      pendingMessages
     };
 
     return NextResponse.json(stats);

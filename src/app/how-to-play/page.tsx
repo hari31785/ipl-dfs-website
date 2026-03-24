@@ -75,8 +75,8 @@ export default function HowToPlayPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-primary-800 mb-1">Select 5 Players</h4>
-                    <p className="text-gray-600">Choose your best 5 players from the teams playing in the upcoming IPL match.</p>
+                    <h4 className="font-semibold text-primary-800 mb-1">Select 5 Players and 2 Substitutes</h4>
+                    <p className="text-gray-600">Pick 5 players and 2 substitutes who will replace the main players in case they do not play.</p>
                   </div>
                 </div>
                 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Shield, Users, Trophy, Target, Database, BarChart3, LogOut, Plus } from "lucide-react"
+import { Shield, Users, Trophy, Target, Database, BarChart3, LogOut, Plus, MessageSquare } from "lucide-react"
 
 interface AdminData {
   id: string
@@ -18,7 +18,8 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalPlayers: 0,
     totalTeams: 0,
-    activeContests: 0
+    activeContests: 0,
+    pendingMessages: 0
   })
 
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Admin Dashboard - Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Link href="/admin/users" className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
             <div className="flex items-center justify-between">
               <div>
@@ -153,6 +154,16 @@ export default function AdminDashboard() {
               <Trophy className="h-8 w-8 text-red-500" />
             </div>
           </div>
+
+          <Link href="/admin/messages" className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 group-hover:text-purple-600 transition-colors">Pending Messages</p>
+                <p className="text-3xl font-bold text-purple-600 group-hover:text-purple-700 transition-colors">{stats.pendingMessages}</p>
+              </div>
+              <MessageSquare className="h-8 w-8 text-purple-500 group-hover:text-purple-600 transition-colors" />
+            </div>
+          </Link>
         </div>
 
         {/* Admin Actions */}

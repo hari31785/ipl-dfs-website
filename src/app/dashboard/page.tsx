@@ -483,7 +483,14 @@ export default function DashboardPage() {
                                 <div className="text-right">
                                   <div className="flex items-center gap-1 text-xs text-gray-600">
                                     <Clock className="h-3 w-3" />
-                                    <span className="font-medium">{new Date(game.gameDate).toLocaleDateString()}</span>
+                                    <span className="font-medium">{new Date(game.gameDate).toLocaleString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric', 
+                                      year: 'numeric',
+                                      hour: 'numeric', 
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })}</span>
                                   </div>
                                 </div>
                               </div>
