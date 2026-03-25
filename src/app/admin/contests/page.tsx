@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, ArrowLeft, Trophy, Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Home, ArrowLeft, Trophy, Trash2, Plus, ChevronDown, ChevronUp, Users, Filter } from 'lucide-react';
 import { useLoading } from '@/contexts/LoadingContext';
 
 interface IPLGame {
@@ -19,6 +19,10 @@ interface IPLGame {
     name: string;
     shortName: string;
     color: string;
+  };
+  tournament: {
+    id: string;
+    name: string;
   };
 }
 
@@ -52,6 +56,7 @@ function ContestCard({
   onOpenDrafting, 
   onUpdateStatus, 
   onEndContest,
+  onViewSignups,
   getStatusColor,
   getContestTypeDisplay
 }: {
@@ -63,6 +68,7 @@ function ContestCard({
   onOpenDrafting: (id: string) => void;
   onUpdateStatus: (id: string, status: string) => void;
   onEndContest: (id: string) => void;
+  onViewSignups: (id: string) => void;
   getStatusColor: (status: string) => string;
   getContestTypeDisplay: (type: string, value: number) => string;
 }) {
@@ -116,6 +122,16 @@ function ContestCard({
 
       {/* Actions */}
       <div className="space-y-2">
+        {/* View Signups */}
+        {contest._count.signups > 0 && (
+          <button
+            onClick={() => onViewSignups(contest.id)}
+            className="block w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center text-sm font-medium"
+          >
+            <Users className="inline-block h-4 w-4 mr-1" /> View Signups ({contest._count.signups})
+          </button>
+        )}
+        
         {/* View Matchups */}
         {contest._count.matchups > 0 && (
           <a
@@ -198,6 +214,8 @@ export default function ContestsPage() {
   const [games, setGames] = useState<IPLGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [tournamentFilter, setTournamentFilter] = useState<string>('ALL');
+  const [tournaments, setTournaments] = useState<Array<{id: string, name: string}>>([]);
   const [selectedContests, setSelectedContests] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -210,6 +228,9 @@ export default function ContestsPage() {
   const [createError, setCreateError] = useState('');
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'grouped' | 'table'>('grouped');
+  const [showSignupsModal, setShowSignupsModal] = useState(false);
+  const [selectedContestSignups, setSelectedContestSignups] = useState<any>(null);
+  const [loadingSignups, setLoadingSignups] = useState(false);
 
   useEffect(() => {
     // First run cleanup for past due contests
@@ -217,6 +238,7 @@ export default function ContestsPage() {
       // Then fetch the updated contests
       fetchContests();
       fetchGames();
+      fetchTournaments();
     });
   }, []);
 
@@ -260,6 +282,35 @@ export default function ContestsPage() {
       }
     } catch (error) {
       console.error('Error fetching games:', error);
+    }
+  };
+
+  const fetchTournaments = async () => {
+    try {
+      const response = await fetch('/api/admin/tournaments');
+      if (response.ok) {
+        const data = await response.json();
+        setTournaments(data);
+      }
+    } catch (error) {
+      console.error('Error fetching tournaments:', error);
+    }
+  };
+
+  const fetchContestSignups = async (contestId: string) => {
+    setLoadingSignups(true);
+    try {
+      const response = await fetch(`/api/admin/contests/${contestId}/signups`);
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedContestSignups(data);
+        setShowSignupsModal(true);
+      }
+    } catch (error) {
+      console.error('Error fetching signups:', error);
+      alert('Failed to load signups');
+    } finally {
+      setLoadingSignups(false);
     }
   };
 
@@ -542,9 +593,9 @@ export default function ContestsPage() {
     }
   }
 
-  const filteredContests = statusFilter === 'ALL' 
-    ? contests 
-    : contests.filter(contest => contest.status === statusFilter);
+  const filteredContests = contests
+    .filter(contest => statusFilter === 'ALL' || contest.status === statusFilter)
+    .filter(contest => tournamentFilter === 'ALL' || contest.iplGame.tournament.id === tournamentFilter);
 
   // Group contests by game
   const contestsByGame = filteredContests.reduce((acc, contest) => {
@@ -724,7 +775,7 @@ export default function ContestsPage() {
 
       {/* Status Filter and Bulk Actions */}
       <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <div>
             <label className="block text-sm font-medium mb-2">Filter by Status:</label>
             <select
@@ -738,6 +789,20 @@ export default function ContestsPage() {
               <option value="DRAFT_PHASE">Draft Phase</option>
               <option value="LIVE">Live</option>
               <option value="COMPLETED">Completed</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Filter by Tournament:</label>
+            <select
+              value={tournamentFilter}
+              onChange={(e) => setTournamentFilter(e.target.value)}
+              className="border rounded px-3 py-2 text-gray-900 bg-white"
+            >
+              <option value="ALL">All Tournaments</option>
+              {tournaments.map(tournament => (
+                <option key={tournament.id} value={tournament.id}>{tournament.name}</option>
+              ))}
             </select>
           </div>
 
@@ -871,6 +936,7 @@ export default function ContestsPage() {
                             onOpenDrafting={openDrafting}
                             onUpdateStatus={updateContestStatus}
                             onEndContest={endContest}
+                            onViewSignups={fetchContestSignups}
                             getStatusColor={getStatusColor}
                             getContestTypeDisplay={getContestTypeDisplay}
                           />
@@ -992,6 +1058,17 @@ export default function ContestsPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-y-2">
+                  {/* View Signups Button */}
+                  {contest._count.signups > 0 && (
+                    <button
+                      onClick={() => fetchContestSignups(contest.id)}
+                      className="block w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center"
+                      title="View users who signed up"
+                    >
+                      <Users className="inline-block h-4 w-4 mr-1" /> Signups ({contest._count.signups})
+                    </button>
+                  )}
+                  
                   {/* View Matchups Button */}
                   {contest._count.matchups > 0 && (
                     <a
@@ -1128,6 +1205,117 @@ export default function ContestsPage() {
         </div>
       </div>
       </div>
+
+      {/* Signups Modal */}
+      {showSignupsModal && selectedContestSignups && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Users className="h-6 w-6" />
+                Contest Signups ({selectedContestSignups.signups.length})
+              </h3>
+              <button
+                onClick={() => {
+                  setShowSignupsModal(false);
+                  setSelectedContestSignups(null);
+                }}
+                className="text-white hover:text-teal-100 transition"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="overflow-auto flex-1 p-6">
+              {loadingSignups ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading signups...</p>
+                </div>
+              ) : selectedContestSignups.signups.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No signups yet for this contest.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          #
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Email
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Coin Balance
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Matchup Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {selectedContestSignups.signups.map((signup: any, index: number) => {
+                        const matchup = signup.matchup1 || signup.matchup2;
+                        return (
+                          <tr key={signup.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {index + 1}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{signup.user.name}</div>
+                              <div className="text-xs text-gray-500">@{signup.user.username}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              {signup.user.email}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <span className="font-semibold text-yellow-600">{signup.user.coins}</span> coins
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {matchup ? (
+                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                  matchup.status === 'WAITING_DRAFT' ? 'bg-yellow-100 text-yellow-800' :
+                                  matchup.status === 'DRAFTING' ? 'bg-blue-100 text-blue-800' :
+                                  matchup.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {matchup.status === 'WAITING_DRAFT' ? '⏳ Waiting' :
+                                   matchup.status === 'DRAFTING' ? '✍️ Drafting' :
+                                   matchup.status === 'COMPLETED' ? '✅ Completed' :
+                                   matchup.status}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-400 italic">No matchup</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-gray-50 px-6 py-4 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowSignupsModal(false);
+                  setSelectedContestSignups(null);
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

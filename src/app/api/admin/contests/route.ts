@@ -10,7 +10,8 @@ export async function GET() {
         iplGame: {
           include: {
             team1: true,
-            team2: true
+            team2: true,
+            tournament: true
           }
         },
         matchups: {
