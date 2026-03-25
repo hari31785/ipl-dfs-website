@@ -9,6 +9,27 @@ export async function GET(
   try {
     const { id } = await params;
     
+    // Get contest details with game info
+    const contest = await prisma.contest.findUnique({
+      where: { id },
+      include: {
+        iplGame: {
+          include: {
+            team1: true,
+            team2: true,
+            tournament: true
+          }
+        }
+      }
+    });
+
+    if (!contest) {
+      return NextResponse.json(
+        { message: 'Contest not found' },
+        { status: 404 }
+      );
+    }
+    
     const signups = await prisma.contestSignup.findMany({
       where: {
         contestId: id
@@ -23,7 +44,7 @@ export async function GET(
             coins: true
           }
         },
-        matchup1: {
+        matchupsAsUser1: {
           select: {
             id: true,
             status: true,
@@ -32,7 +53,7 @@ export async function GET(
             winnerId: true
           }
         },
-        matchup2: {
+        matchupsAsUser2: {
           select: {
             id: true,
             status: true,
@@ -47,7 +68,16 @@ export async function GET(
       }
     });
 
-    return NextResponse.json({ signups });
+    return NextResponse.json({ 
+      signups,
+      contest: {
+        id: contest.id,
+        contestType: contest.contestType,
+        coinValue: contest.coinValue,
+        status: contest.status
+      },
+      game: contest.iplGame
+    });
   } catch (error) {
     console.error('Error fetching contest signups:', error);
     return NextResponse.json(

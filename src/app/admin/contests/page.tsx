@@ -298,19 +298,56 @@ export default function ContestsPage() {
   };
 
   const fetchContestSignups = async (contestId: string) => {
+    console.log('fetchContestSignups called with ID:', contestId);
     setLoadingSignups(true);
     try {
+      console.log('Fetching from:', `/api/admin/contests/${contestId}/signups`);
       const response = await fetch(`/api/admin/contests/${contestId}/signups`);
+      console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('Received signups data:', data);
         setSelectedContestSignups(data);
         setShowSignupsModal(true);
+      } else {
+        console.error('Response not OK:', response.status, response.statusText);
+        alert(`Failed to load signups: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error fetching signups:', error);
       alert('Failed to load signups');
     } finally {
       setLoadingSignups(false);
+    }
+  };
+
+  const removeUserFromContest = async (contestId: string, signupId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to remove ${userName} from this contest?`)) {
+      return;
+    }
+
+    setGlobalLoading(true, 'Removing user...');
+    try {
+      const response = await fetch(`/api/admin/contests/${contestId}/signups/${signupId}`, {
+        method: 'DELETE'
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Refresh the signups data
+        await fetchContestSignups(contestId);
+        // Refresh the contests list to update signup counts
+        await fetchContests();
+        setGlobalLoading(false);
+      } else {
+        setGlobalLoading(false);
+        alert(result.message || 'Failed to remove user');
+      }
+    } catch (error) {
+      console.error('Error removing user:', error);
+      setGlobalLoading(false);
+      alert('Failed to remove user from contest');
     }
   };
 
@@ -1211,10 +1248,17 @@ export default function ContestsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <Users className="h-6 w-6" />
-                Contest Signups ({selectedContestSignups.signups.length})
-              </h3>
+              <div>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Users className="h-6 w-6" />
+                  Contest Signups ({selectedContestSignups.signups.length})
+                </h3>
+                {selectedContestSignups.game && (
+                  <p className="text-sm text-teal-50 mt-1">
+                    {selectedContestSignups.game.title} • {selectedContestSignups.contest.contestType.replace('_', ' ')} ({selectedContestSignups.contest.coinValue} coins/point)
+                  </p>
+                )}
+              </div>
               <button
                 onClick={() => {
                   setShowSignupsModal(false);
@@ -1251,16 +1295,17 @@ export default function ContestsPage() {
                           Email
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Coin Balance
+                          Matchup Status
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Matchup Status
+                          Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {selectedContestSignups.signups.map((signup: any, index: number) => {
-                        const matchup = signup.matchup1 || signup.matchup2;
+                        // Get the first matchup (user could be user1 or user2 in matchups)
+                        const matchup = signup.matchupsAsUser1?.[0] || signup.matchupsAsUser2?.[0];
                         return (
                           <tr key={signup.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -1272,9 +1317,6 @@ export default function ContestsPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                               {signup.user.email}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <span className="font-semibold text-yellow-600">{signup.user.coins}</span> coins
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               {matchup ? (
@@ -1292,6 +1334,22 @@ export default function ContestsPage() {
                               ) : (
                                 <span className="text-xs text-gray-400 italic">No matchup</span>
                               )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <button
+                                onClick={() => removeUserFromContest(
+                                  selectedContestSignups.contest.id,
+                                  signup.id,
+                                  signup.user.name
+                                )}
+                                disabled={matchup !== undefined && matchup !== null}
+                                className={`px-3 py-1 rounded text-xs font-medium transition ${
+                                  matchup ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'
+                                }`}
+                                title={matchup ? 'Cannot remove user with active matchup' : 'Remove user from contest'}
+                              >
+                                Remove
+                              </button>
                             </td>
                           </tr>
                         );
