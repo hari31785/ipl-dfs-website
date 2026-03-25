@@ -103,6 +103,12 @@ export default function DashboardPage() {
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
   const [unjoiningContest, setUnjoiningContest] = useState<string | null>(null)
+  const [showEditProfile, setShowEditProfile] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: ''
+  })
+  const [savingProfile, setSavingProfile] = useState(false)
 
   useEffect(() => {
     // Get user data from localStorage (simple auth for now)
@@ -146,6 +152,63 @@ export default function DashboardPage() {
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
     window.location.href = '/'
+  }
+
+  const openEditProfile = () => {
+    if (user) {
+      setEditForm({
+        name: user.name,
+        phone: user.phone || ''
+      })
+      setShowEditProfile(true)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    if (!user) return
+
+    if (!editForm.name.trim()) {
+      alert('Name is required')
+      return
+    }
+
+    setSavingProfile(true)
+    setGlobalLoading(true, 'Saving profile...')
+
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          name: editForm.name.trim(),
+          phone: editForm.phone.trim() || null
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Update local user data
+        const updatedUser = { ...user, name: data.user.name, phone: data.user.phone }
+        setUser(updatedUser)
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser))
+        setShowEditProfile(false)
+        setGlobalLoading(false)
+        alert('Profile updated successfully!')
+      } else {
+        setGlobalLoading(false)
+        alert(data.error || 'Failed to update profile')
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      setGlobalLoading(false)
+      alert('Failed to update profile. Please try again.')
+    } finally {
+      setSavingProfile(false)
+    }
   }
 
   const handleJoinContest = async (contestId: string, gameId: string) => {
@@ -353,7 +416,10 @@ export default function DashboardPage() {
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <button className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                <button 
+                  onClick={openEditProfile}
+                  className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors"
+                >
                   <Settings className="h-4 w-4" />
                   Edit Profile
                 </button>
@@ -966,6 +1032,89 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center justify-between rounded-t-lg">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Settings className="h-6 w-6" />
+                Edit Profile
+              </h3>
+              <button
+                onClick={() => setShowEditProfile(false)}
+                className="text-white hover:text-primary-100 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 flex-1 overflow-auto">
+              <div className="space-y-4">
+                {/* Name Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Enter your name"
+                    required
+                  />
+                </div>
+
+                {/* Phone Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                {/* Read-only fields info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 mb-2">
+                    <strong>Note:</strong> Username and email cannot be changed.
+                  </p>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <div><strong>Username:</strong> {user?.username}</div>
+                    <div><strong>Email:</strong> {user?.email}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-4 flex gap-3 rounded-b-lg">
+              <button
+                onClick={() => setShowEditProfile(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveProfile}
+                disabled={savingProfile || !editForm.name.trim()}
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingProfile ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
