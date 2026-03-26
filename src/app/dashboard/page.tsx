@@ -104,6 +104,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'available' | 'my-contests'>('available')
   const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'active' | 'completed'>('upcoming')
+  const [myContestsTournamentFilter, setMyContestsTournamentFilter] = useState<string>('all')
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
   const [unjoiningContest, setUnjoiningContest] = useState<string | null>(null)
@@ -935,13 +936,43 @@ export default function DashboardPage() {
                   </button>
                 </div>
 
+                {/* Tournament Filter */}
+                <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Filter by Tournament</label>
+                  <select
+                    value={myContestsTournamentFilter}
+                    onChange={(e) => setMyContestsTournamentFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  >
+                    <option value="all">All Tournaments</option>
+                    {/* Show unique tournaments from user's contests */}
+                    {Array.from(new Set(userContests.map(uc => uc.contest.iplGame.tournament.id)))
+                      .map(tournamentId => {
+                        const tournament = userContests.find(uc => uc.contest.iplGame.tournament.id === tournamentId)?.contest.iplGame.tournament;
+                        return tournament ? (
+                          <option key={tournament.id} value={tournament.id}>
+                            {tournament.name}
+                          </option>
+                        ) : null;
+                      })}
+                  </select>
+                </div>
+
                 {/* Contest Content based on sub-tab */}
                 <div className="space-y-4">
                   {(() => {
                     let filteredContests = userContests
                     
+                    // Filter by tournament first
+                    if (myContestsTournamentFilter !== 'all') {
+                      filteredContests = filteredContests.filter(contest => 
+                        contest.contest.iplGame.tournament.id === myContestsTournamentFilter
+                      )
+                    }
+                    
+                    // Then filter by status based on sub-tab
                     if (contestSubTab === 'upcoming') {
-                      filteredContests = userContests.filter(contest => 
+                      filteredContests = filteredContests.filter(contest => 
                         // Upcoming: Contests not yet started by admin (includes signup, drafting phases)
                         contest.contest.status === 'SIGNUP_OPEN' || 
                         contest.contest.status === 'SIGNUP_CLOSED' ||
@@ -949,12 +980,12 @@ export default function DashboardPage() {
                         contest.contest.status === 'DRAFT_PHASE'
                       )
                     } else if (contestSubTab === 'active') {
-                      filteredContests = userContests.filter(contest => 
+                      filteredContests = filteredContests.filter(contest => 
                         // Active: Contest has been started by admin
                         contest.contest.status === 'LIVE'
                       )
                     } else if (contestSubTab === 'completed') {
-                      filteredContests = userContests.filter(contest => 
+                      filteredContests = filteredContests.filter(contest => 
                         // Completed: Contest has been ended by admin
                         contest.contest.status === 'COMPLETED'
                       )

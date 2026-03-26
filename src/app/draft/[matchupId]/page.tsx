@@ -193,17 +193,49 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     }
   };
 
-  const initiateToss = () => {
+  const initiateToss = async () => {
     if (!matchup || !currentUser) return;
     
-    // Randomly select which user gets to call the toss
-    const users = [matchup.user1.user, matchup.user2.user];
-    const randomIndex = Math.floor(Math.random() * 2);
-    const selectedCaller = users[randomIndex];
-    
-    setCallingUser(selectedCaller.id);
-    setShowToss(true);
-    setTossPhase('calling');
+    // Fetch the designated caller from the server (to ensure both users see the same caller)
+    try {
+      const response = await fetch(`/api/draft/${matchupId}/toss-caller`);
+      if (response.ok) {
+        const data = await response.json();
+        setCallingUser(data.callingUserId);
+        setShowToss(true);
+        setTossPhase('calling');
+        
+        // If this user is not the caller, start polling for toss result
+        if (data.callingUserId !== currentUser.id) {
+          startPollingForTossResult();
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching toss caller:', error);
+    }
+  };
+
+  const startPollingForTossResult = () => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/draft/${matchupId}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Check if firstPickUser has been set (toss completed)
+          if (data.firstPickUser) {
+            clearInterval(pollInterval);
+            await fetchMatchupDetails();
+            setShowToss(false);
+            setTossPhase('complete');
+          }
+        }
+      } catch (error) {
+        console.error('Error polling for toss result:', error);
+      }
+    }, 1000); // Poll every second
+
+    // Clean up after 60 seconds
+    setTimeout(() => clearInterval(pollInterval), 60000);
   };
 
   const handleTossCall = async (call: 'HEADS' | 'TAILS') => {

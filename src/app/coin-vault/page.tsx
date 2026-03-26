@@ -405,6 +405,13 @@ export default function CoinVaultPage() {
                           }`}>
                             {scoreInfo}
                           </div>
+                          {(coinsWon > 0 || coinsLost > 0) && (
+                            <div className={`text-xs font-semibold mt-1 ${
+                              coinsWon > 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {coinsWon > 0 ? `+${coinsWon.toLocaleString()} coins` : `-${coinsLost.toLocaleString()} coins`}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           {coinsWon > 0 ? (
