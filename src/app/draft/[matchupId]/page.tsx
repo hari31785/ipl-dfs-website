@@ -669,10 +669,10 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none bg-white text-black"
                   >
                     <option value="all">All Roles</option>
-                    <option value="Batsman">Batsman</option>
-                    <option value="Bowler">Bowler</option>
-                    <option value="All-Rounder">All-Rounder</option>
-                    <option value="Wicket-Keeper">Wicket-Keeper</option>
+                    <option value="BATSMAN">Batsman</option>
+                    <option value="BOWLER">Bowler</option>
+                    <option value="ALL_ROUNDER">All-Rounder</option>
+                    <option value="WICKET_KEEPER">Wicket-Keeper</option>
                   </select>
                 </div>
               </div>
