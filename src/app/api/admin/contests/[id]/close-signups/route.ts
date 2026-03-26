@@ -129,15 +129,12 @@ export async function POST(
         const user1 = shuffledSignups[i];
         const user2 = shuffledSignups[i + 1];
         
-        // Randomly decide who picks first
-        const firstPickUser = Math.random() < 0.5 ? 'user1' : 'user2';
-        
         const matchup = await prisma.headToHeadMatchup.create({
           data: {
             contestId: updatedContest.id,
             user1Id: user1.id,
             user2Id: user2.id,
-            firstPickUser: firstPickUser,
+            firstPickUser: null,
             status: 'WAITING_DRAFT'
           },
           include: {

@@ -302,7 +302,7 @@ model HeadToHeadMatchup {
   contestId       String
   user1Id         String   // ContestSignup ID
   user2Id         String   // ContestSignup ID
-  firstPickUser   String   // "user1" or "user2" - randomized
+  firstPickUser   String?  // "user1" or "user2" - determined by coin toss
   status          String   @default("WAITING_DRAFT") // WAITING_DRAFT, DRAFTING, COMPLETED
   user1Score      Float    @default(0)
   user2Score      Float    @default(0)

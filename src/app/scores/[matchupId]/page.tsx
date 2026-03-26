@@ -168,7 +168,13 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
 
   const didIWin = myTotalPoints > opponentTotalPoints;
   const isTie = myTotalPoints === opponentTotalPoints;
-  const hasScores = myTotalPoints > 0 || opponentTotalPoints > 0;
+  
+  // Check if any player has stats entered (not just if scores > 0)
+  const hasAnyStats = matchup.draftPicks.some(pick => {
+    const playerStats = pick.player.stats.find((s: any) => s.iplGameId === gameId);
+    return playerStats !== undefined;
+  });
+  const hasScores = hasAnyStats; // Show scores as soon as any stats are entered
 
   // Helper function to render a player card
   const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean, swappedOut?: boolean, replacedBy?: string) => {
@@ -322,18 +328,26 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
             'bg-gradient-to-r from-red-500 to-red-600'
           }`}>
             <div className="text-center">
-              <p className="text-white font-bold text-2xl mb-2 flex items-center justify-center gap-2">
+              <p className="text-white font-bold text-3xl mb-3 flex items-center justify-center gap-2">
                 {isTie ? '🤝 Tie Game!' : didIWin ? '🎉 You Won!' : '😔 You Lost'}
               </p>
-              <div className="flex items-center justify-center gap-8 mt-4">
+              {!isTie && (
+                <div className="mb-4">
+                  <div className="text-white/90 text-sm mb-1">Victory Margin</div>
+                  <div className="text-white font-black text-5xl">
+                    {didIWin ? '+' : ''}{(myTotalPoints - opponentTotalPoints).toFixed(1)}
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center justify-center gap-8 mt-4 pt-4 border-t border-white/30">
                 <div className="text-center">
                   <div className="text-white/90 text-sm mb-1">Your Score</div>
-                  <div className="text-white font-black text-4xl">⭐ {myTotalPoints.toFixed(1)}</div>
+                  <div className="text-white font-black text-3xl">⭐ {myTotalPoints.toFixed(1)}</div>
                 </div>
-                <div className="text-white text-3xl font-bold">-</div>
+                <div className="text-white text-2xl font-bold">vs</div>
                 <div className="text-center">
                   <div className="text-white/90 text-sm mb-1">Opponent Score</div>
-                  <div className="text-white font-black text-4xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
+                  <div className="text-white font-black text-3xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
                 </div>
               </div>
             </div>

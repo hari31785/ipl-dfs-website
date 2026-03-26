@@ -88,6 +88,19 @@ export default function BulkStatsPage() {
     checkScoreProviderStatus();
   }, []);
 
+  // Handle gameId query parameter after games are loaded
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('gameId');
+    if (gameId && games.length > 0 && !selectedGame) {
+      const game = games.find(g => g.id === gameId);
+      if (game) {
+        setSelectedTournament(game.tournamentId);
+        setSelectedGame(gameId);
+      }
+    }
+  }, [games, selectedGame]);
+
   useEffect(() => {
     if (selectedGame) {
       fetchStats(selectedGame);
@@ -178,12 +191,8 @@ export default function BulkStatsPage() {
       player.iplTeam.id === game.team2.id
     );
     
-    // Further filter to only players who have been drafted by users
-    if (draftedPlayerIds.size === 0) {
-      return teamPlayers; // Show all if no draft data yet
-    }
-    
-    return teamPlayers.filter(player => draftedPlayerIds.has(player.id));
+    // Show ALL team players for stats entry (admin needs to enter stats for everyone)
+    return teamPlayers;
   };
 
   const calculatePoints = (runs: number, wickets: number, catches: number, runOuts: number, stumpings: number) => {
@@ -688,20 +697,20 @@ export default function BulkStatsPage() {
                     {isDeletingAll ? 'Deleting All...' : 'Delete All'}
                   </button>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Player</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Team</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Runs</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Wickets</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Catches</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Run Outs</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Stumpings</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">DNP</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Points</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Actions</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Player</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Team</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Runs</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Wickets</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Catches</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Run Outs</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Stumpings</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">DNP</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Points</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -910,19 +919,19 @@ export default function BulkStatsPage() {
                 </p>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Player</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Team</th>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Runs</th>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Wickets</th>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Catches</th>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Run Outs</th>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Stumpings</th>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">DNP</th>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Points</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Player</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Team</th>
+                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Runs</th>
+                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Wickets</th>
+                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Catches</th>
+                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Run Outs</th>
+                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Stumpings</th>
+                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">DNP</th>
+                      <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-50 border-b-2 border-gray-200">Points</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">

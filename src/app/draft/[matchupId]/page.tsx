@@ -834,6 +834,79 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           </div>
         </div>
       </div>
+
+      {/* Toss Modal */}
+      {showToss && matchup && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            {tossPhase === 'calling' && (
+              <div className="text-center">
+                <div className="mb-6">
+                  <div className="text-6xl mb-4">🪙</div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Coin Toss</h2>
+                  <p className="text-gray-600">
+                    {callingUser === currentUser?.id 
+                      ? "You get to call the toss!" 
+                      : `${callingUser === matchup.user1.user.id ? matchup.user1.user.name : matchup.user2.user.name} is calling the toss...`}
+                  </p>
+                </div>
+                
+                {callingUser === currentUser?.id && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-gray-700 mb-4">Choose Heads or Tails:</p>
+                    <button
+                      onClick={() => handleTossCall('HEADS')}
+                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg"
+                    >
+                      👑 HEADS
+                    </button>
+                    <button
+                      onClick={() => handleTossCall('TAILS')}
+                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg"
+                    >
+                      🎯 TAILS
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tossPhase === 'flipping' && (
+              <div className="text-center">
+                <div className="mb-6">
+                  <div className={`text-8xl mb-4 ${isFlipping ? 'animate-spin' : ''}`}>
+                    🪙
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Flipping...</h2>
+                  <p className="text-gray-600">
+                    Called: <span className="font-bold text-primary-600">{userCall}</span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {tossPhase === 'result' && (
+              <div className="text-center">
+                <div className="mb-6">
+                  <div className="text-8xl mb-4">{coinResult === 'HEADS' ? '👑' : '🎯'}</div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    {coinResult}!
+                  </h2>
+                  <div className={`text-xl font-bold mb-4 ${tossWinner === currentUser?.id ? 'text-green-600' : 'text-red-600'}`}>
+                    {tossWinner === currentUser?.id ? '🎉 You Won the Toss!' : '😔 You Lost the Toss'}
+                  </div>
+                  <p className="text-gray-700">
+                    <span className="font-bold">
+                      {tossWinner === matchup.user1.user.id ? matchup.user1.user.name : matchup.user2.user.name}
+                    </span>
+                    {' '}will pick first
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

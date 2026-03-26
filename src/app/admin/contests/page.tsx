@@ -921,29 +921,36 @@ export default function ContestsPage() {
                     onClick={() => toggleGameExpanded(game.id)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <button className="text-gray-600 hover:text-gray-900">
-                            {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                          </button>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900">{game.title}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span 
-                                className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: game.team1.color }}
-                              ></span>
-                              <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
-                              <span className="text-xs text-gray-600">vs</span>
-                              <span 
-                                className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: game.team2.color }}
-                              ></span>
-                              <span className="text-sm font-medium text-gray-700">{game.team2.shortName}</span>
-                            </div>
+                      <div className="flex items-center gap-3">
+                        <button className="text-gray-600 hover:text-gray-900">
+                          {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                        </button>
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">{game.title}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: game.team1.color }}
+                            ></span>
+                            <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
+                            <span className="text-xs text-gray-600">vs</span>
+                            <span 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: game.team2.color }}
+                            ></span>
+                            <span className="text-sm font-medium text-gray-700">{game.team2.shortName}</span>
                           </div>
                         </div>
                       </div>
+                      
+                      <a
+                        href={`/admin/stats?gameId=${game.id}`}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-md whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        📊 Player Stats
+                      </a>
+                      
                       <div className="text-right">
                         <div className="text-sm text-gray-600">
                           Game: {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

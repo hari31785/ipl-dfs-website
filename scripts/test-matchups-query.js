@@ -1,14 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-
-// GET /api/admin/contests/[id]/matchups
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+async function testMatchupsQuery() {
   try {
-    const { id } = await params;
+    const id = 'cmn6t9sfi0005si8pw4tt0qmw';
+    
+    console.log(`Testing query for contest: ${id}\n`);
     
     const contest = await prisma.contest.findUnique({
       where: { id },
@@ -70,19 +67,25 @@ export async function GET(
     });
 
     if (!contest) {
-      return NextResponse.json(
-        { message: 'Contest not found' },
-        { status: 404 }
-      );
+      console.log('Contest not found!');
+      return;
     }
 
-    return NextResponse.json(contest);
+    console.log('✅ Query successful!');
+    console.log(`Game: ${contest.iplGame.title}`);
+    console.log(`Team1: ${contest.iplGame.team1?.shortName}`);
+    console.log(`Team2: ${contest.iplGame.team2?.shortName}`);
+    console.log(`Status: ${contest.status}`);
+    console.log(`Matchups: ${contest.matchups.length}`);
+    console.log(`Signups: ${contest._count.signups}`);
 
   } catch (error) {
-    console.error('Error fetching contest matchups:', error);
-    return NextResponse.json(
-      { message: 'Failed to fetch contest matchups' },
-      { status: 500 }
-    );
+    console.error('❌ Error:', error.message);
+    console.error('\nFull error:');
+    console.error(error);
+  } finally {
+    await prisma.$disconnect();
   }
 }
+
+testMatchupsQuery();

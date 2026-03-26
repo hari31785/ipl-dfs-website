@@ -109,16 +109,13 @@ export async function POST(
       matchupStatus = 'DRAFTING';
     }
 
-    // Randomly determine who gets first pick
-    const firstPickUser = Math.random() < 0.5 ? signup1.id : signup2.id;
-
     // Create the matchup
     const matchup = await prisma.headToHeadMatchup.create({
       data: {
         contestId: contest.id,
         user1Id: signup1.id,
         user2Id: signup2.id,
-        firstPickUser: firstPickUser,
+        firstPickUser: null,
         status: matchupStatus,
         user1Score: 0,
         user2Score: 0
