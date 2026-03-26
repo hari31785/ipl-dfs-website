@@ -115,11 +115,17 @@ export async function POST(
       }
     });
 
-    // If draft is complete, update matchup status
+    // If draft is complete, update matchup status and contest status
     if (currentPickOrder === 14) {
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
         data: { status: 'COMPLETED' }
+      });
+      
+      // Update contest status to ACTIVE
+      await prisma.contest.update({
+        where: { id: matchup.contestId },
+        data: { status: 'ACTIVE' }
       });
     }
 

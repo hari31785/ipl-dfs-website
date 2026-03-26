@@ -119,15 +119,17 @@ export async function GET(
       }))
     };
 
-    // Get all players from both teams
+    // Get all players from both teams for the specific tournament
     const team1Id = matchup.contest.iplGame.team1Id;
     const team2Id = matchup.contest.iplGame.team2Id;
+    const tournamentId = matchup.contest.iplGame.tournamentId;
     
     const allPlayers = await prisma.player.findMany({
       where: {
         iplTeamId: {
           in: [team1Id, team2Id]
         },
+        tournamentId: tournamentId, // Ensure players are from correct tournament
         isActive: true
       },
       include: {

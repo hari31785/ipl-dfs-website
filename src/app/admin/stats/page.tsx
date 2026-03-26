@@ -56,7 +56,14 @@ interface BulkStatEntry {
   didNotPlay: boolean;
 }
 
+interface Tournament {
+  id: string;
+  name: string;
+}
+
 export default function BulkStatsPage() {
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [selectedTournament, setSelectedTournament] = useState<string>('all');
   const [games, setGames] = useState<IPLGame[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [existingStats, setExistingStats] = useState<PlayerStat[]>([]);
@@ -76,6 +83,7 @@ export default function BulkStatsPage() {
   const [fetchSuccess, setFetchSuccess] = useState<string | null>(null);
 
   useEffect(() => {
+    fetchTournaments();
     fetchGames();
     checkScoreProviderStatus();
   }, []);
@@ -95,6 +103,18 @@ export default function BulkStatsPage() {
       setDraftedPlayerIds(new Set());
     }
   }, [selectedGame, games]);
+
+  const fetchTournaments = async () => {
+    try {
+      const response = await fetch('/api/admin/tournaments');
+      if (response.ok) {
+        const data = await response.json();
+        setTournaments(data);
+      }
+    } catch (error) {
+      console.error('Error fetching tournaments:', error);
+    }
+  };
 
   const fetchGames = async () => {
     try {
@@ -549,6 +569,30 @@ export default function BulkStatsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tournament Filter */}
+        {tournaments.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Filter by Tournament
+            </label>
+            <select
+              value={selectedTournament}
+              onChange={(e) => {
+                setSelectedTournament(e.target.value);
+                setSelectedGame(''); // Clear game selection when tournament changes
+              }}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-medium text-gray-900"
+            >
+              <option value="all" className="text-gray-900">All Tournaments</option>
+              {tournaments.map((tournament) => (
+                <option key={tournament.id} value={tournament.id} className="text-gray-900">
+                  {tournament.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Game Selection */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
           <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -562,11 +606,13 @@ export default function BulkStatsPage() {
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-medium text-gray-900"
               >
                 <option value="" className="text-gray-900">-- Select a game --</option>
-                {games.map((game) => (
-                  <option key={game.id} value={game.id} className="text-gray-900">
-                    {game.title} - {new Date(game.gameDate).toLocaleDateString()}
-                  </option>
-                ))}
+                {games
+                  .filter(game => selectedTournament === 'all' || game.tournamentId === selectedTournament)
+                  .map((game) => (
+                    <option key={game.id} value={game.id} className="text-gray-900">
+                      {game.title} - {new Date(game.gameDate).toLocaleDateString()}
+                    </option>
+                  ))}
               </select>
             </div>
             {selectedGame && (

@@ -716,9 +716,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     return player.iplTeam.id === filterTeam;
                   })
                   .filter(player => {
-                    // Role filter  
+                    // Role filter (case-insensitive)
                     if (filterRole === 'all') return true;
-                    return player.role === filterRole;
+                    return player.role.toUpperCase() === filterRole.toUpperCase();
                   })
                   .filter(player => {
                     // Name search filter
