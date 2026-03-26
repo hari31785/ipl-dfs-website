@@ -184,12 +184,17 @@ export async function POST(
 
       // Update winner's balance
       const newWinnerBalance = winner.coins + winnerNetWinnings;
+      const newWinnerTotalWins = winner.totalWins + 1;
+      const newWinnerTotalMatches = winner.totalMatches + 1;
+      const newWinnerWinPercentage = newWinnerTotalMatches > 0 ? (newWinnerTotalWins / newWinnerTotalMatches) * 100 : 0;
+      
       await prisma.user.update({
         where: { id: winnerUserId },
         data: { 
           coins: newWinnerBalance,
-          totalWins: { increment: 1 },
-          totalMatches: { increment: 1 }
+          totalWins: newWinnerTotalWins,
+          totalMatches: newWinnerTotalMatches,
+          winPercentage: newWinnerWinPercentage
         }
       });
 
@@ -238,11 +243,15 @@ export async function POST(
 
       // Update loser's balance (loses based on score difference formula)
       const newLoserBalance = loser.coins + loserAmount; // loserAmount is already negative
+      const newLoserTotalMatches = loser.totalMatches + 1;
+      const newLoserWinPercentage = newLoserTotalMatches > 0 ? (loser.totalWins / newLoserTotalMatches) * 100 : 0;
+      
       await prisma.user.update({
         where: { id: loserUserId },
         data: { 
           coins: newLoserBalance,
-          totalMatches: { increment: 1 }
+          totalMatches: newLoserTotalMatches,
+          winPercentage: newLoserWinPercentage
         }
       });
 

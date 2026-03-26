@@ -594,11 +594,11 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-600">Matches</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-cricket-600">{user.totalWins}</p>
+                  <p className="text-2xl font-bold text-gray-900">{user.totalWins}</p>
                   <p className="text-xs text-gray-600">Wins</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-secondary-600">{user.winPercentage.toFixed(0)}%</p>
+                  <p className="text-2xl font-bold text-gray-900">{user.winPercentage.toFixed(0)}%</p>
                   <p className="text-xs text-gray-600">Win Rate</p>
                 </div>
               </div>
@@ -711,13 +711,14 @@ export default function DashboardPage() {
                                 <div className="text-right">
                                   <div className="flex items-center gap-1 text-xs text-gray-600">
                                     <Clock className="h-3 w-3" />
-                                    <span className="font-medium">{new Date(game.gameDate).toLocaleString('en-US', { 
+                                    <span className="font-medium">Match Start: {new Date(game.gameDate).toLocaleString('en-US', { 
                                       month: 'short', 
                                       day: 'numeric', 
                                       year: 'numeric',
                                       hour: 'numeric', 
                                       minute: '2-digit',
-                                      hour12: true
+                                      hour12: true,
+                                      timeZoneName: 'short'
                                     })}</span>
                                   </div>
                                   <div className="flex items-center gap-1 text-xs text-orange-600 mt-1">
@@ -727,9 +728,11 @@ export default function DashboardPage() {
                                     <span className="font-medium">Signups close: {new Date(game.signupDeadline).toLocaleString('en-US', { 
                                       month: 'short', 
                                       day: 'numeric',
+                                      year: 'numeric',
                                       hour: 'numeric', 
                                       minute: '2-digit',
-                                      hour12: true
+                                      hour12: true,
+                                      timeZoneName: 'short'
                                     })}</span>
                                   </div>
                                 </div>
