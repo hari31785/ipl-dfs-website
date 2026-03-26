@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import crypto from 'crypto';
 
+// Helper function for cryptographically secure random shuffling
+function secureShuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    // Use crypto.randomInt for true randomization
+    const j = crypto.randomInt(0, i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  return shuffled;
+}
 
 // POST /api/admin/contests/[id]/generate-matchups
 export async function POST(
@@ -16,6 +29,10 @@ export async function POST(
         signups: {
           include: {
             user: true
+          },
+          // Get signups in consistent order before shuffling
+          orderBy: {
+            signupAt: 'asc'
           }
         },
         _count: {
@@ -63,18 +80,22 @@ export async function POST(
       );
     }
 
-    // Shuffle signups using Fisher-Yates algorithm for true randomization
-    const shuffledSignups = [...signups];
-    for (let i = shuffledSignups.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledSignups[i], shuffledSignups[j]] = [shuffledSignups[j], shuffledSignups[i]];
-    }
+    console.log(`🔀 Generating matchups for contest ${contest.id}...`);
+    console.log(`   Players: ${signups.map(s => s.user.username).join(', ')}`);
+    
+    // Use cryptographically secure shuffling for TRUE randomization
+    // This ensures different matchups even if same players join multiple contests
+    const shuffledSignups = secureShuffleArray(signups);
+    
+    console.log(`   Shuffled order: ${shuffledSignups.map(s => s.user.username).join(', ')}`);
     
     // Create head-to-head matchups
     const matchups = [];
     for (let i = 0; i < shuffledSignups.length; i += 2) {
       const user1 = shuffledSignups[i];
       const user2 = shuffledSignups[i + 1];
+      
+      console.log(`   Creating matchup ${(i/2) + 1}: ${user1.user.username} vs ${user2.user.username}`);
       
       const matchup = await prisma.headToHeadMatchup.create({
         data: {
