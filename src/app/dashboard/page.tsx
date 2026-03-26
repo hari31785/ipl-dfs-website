@@ -136,6 +136,8 @@ export default function DashboardPage() {
     if (userData) {
       const parsedUser = JSON.parse(userData)
       setUser(parsedUser)
+      // Fetch fresh user data from database to get latest stats
+      fetchUserData(parsedUser.id)
       fetchTournaments()
       fetchUserContests(parsedUser.id)
     } else {
@@ -144,6 +146,20 @@ export default function DashboardPage() {
     }
     setLoading(false)
   }, [])
+
+  const fetchUserData = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/user?id=${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        // Update both state and localStorage with fresh data
+        setUser(data.user)
+        localStorage.setItem('currentUser', JSON.stringify(data.user))
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+    }
+  }
 
   const fetchTournaments = async () => {
     try {
