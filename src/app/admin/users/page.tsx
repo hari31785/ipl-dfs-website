@@ -28,6 +28,11 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all")
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name" | "coins">("newest")
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [temporaryPassword, setTemporaryPassword] = useState("")
+  const [generatedPassword, setGeneratedPassword] = useState("")
+  const [resetting, setResetting] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -113,9 +118,50 @@ export default function AdminUsersPage() {
     }
   }
 
-  const copyPassword = (password: string, username: string) => {
-    navigator.clipboard.writeText(password)
-    alert(`Password for ${username} copied to clipboard`)
+  const openResetPasswordModal = (user: User) => {
+    setSelectedUser(user)
+    // Generate a random simple password
+    const randomPassword = `IPL${Math.floor(1000 + Math.random() * 9000)}`
+    setTemporaryPassword(randomPassword)
+    setGeneratedPassword("")
+    setShowResetModal(true)
+  }
+
+  const resetPassword = async () => {
+    if (!selectedUser || !temporaryPassword) return
+
+    if (temporaryPassword.length < 6) {
+      alert('Password must be at least 6 characters')
+      return
+    }
+
+    setResetting(true)
+    try {
+      const response = await fetch(`/api/admin/users/${selectedUser.id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temporaryPassword })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setGeneratedPassword(data.temporaryPassword)
+        alert(`Password reset successfully for ${selectedUser.username}`)
+      } else {
+        const error = await response.json()
+        alert(`Failed to reset password: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error)
+      alert('Network error while resetting password')
+    } finally {
+      setResetting(false)
+    }
+  }
+
+  const copyTemporaryPassword = () => {
+    navigator.clipboard.writeText(generatedPassword)
+    alert('Temporary password copied to clipboard!')
   }
 
   const formatDate = (dateString: string) => {
@@ -277,7 +323,6 @@ export default function AdminUsersPage() {
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">User</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Password</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Coins</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
@@ -315,20 +360,6 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                            {user.password}
-                          </span>
-                          <button
-                            onClick={() => copyPassword(user.password, user.username)}
-                            className="text-blue-600 hover:text-blue-800 text-xs"
-                            title="Copy password"
-                          >
-                            Copy
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <Coins className="h-4 w-4 text-yellow-500" />
                           <span className="font-medium text-gray-900">{user.coins.toLocaleString()}</span>
@@ -351,12 +382,20 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => deleteUser(user.id, user.username)}
-                          className="px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
-                        >
-                          Delete User
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openResetPasswordModal(user)}
+                            className="px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
+                          >
+                            Reset Password
+                          </button>
+                          <button
+                            onClick={() => deleteUser(user.id, user.username)}
+                            className="px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -399,22 +438,6 @@ export default function AdminUsersPage() {
                     )}
                   </div>
                   
-                  {/* Password Section */}
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Password</p>
-                        <span className="font-mono text-sm text-gray-800">{user.password}</span>
-                      </div>
-                      <button
-                        onClick={() => copyPassword(user.password, user.username)}
-                        className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-50 rounded"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-                  
                   {/* Stats Row */}
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
                     <div>
@@ -431,12 +454,18 @@ export default function AdminUsersPage() {
                   </div>
                   
                   {/* Action Button */}
-                  <div className="pt-2">
+                  <div className="pt-2 flex gap-2">
+                    <button
+                      onClick={() => openResetPasswordModal(user)}
+                      className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
+                    >
+                      Reset Password
+                    </button>
                     <button
                       onClick={() => deleteUser(user.id, user.username)}
-                      className="w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+                      className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
                     >
-                      Delete User
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -451,6 +480,104 @@ export default function AdminUsersPage() {
           Showing {filteredUsers.length} of {users.length} users
         </div>
       </div>
+
+      {/* Reset Password Modal */}
+      {showResetModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Reset Password
+            </h2>
+            
+            <div className="mb-4">
+              <p className="text-gray-600 mb-2">
+                Resetting password for:
+              </p>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="font-medium text-gray-900">{selectedUser.name || selectedUser.username}</p>
+                <p className="text-sm text-gray-600">@{selectedUser.username}</p>
+                {selectedUser.email && <p className="text-sm text-gray-600">{selectedUser.email}</p>}
+              </div>
+            </div>
+
+            {!generatedPassword ? (
+              <>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Temporary Password
+                  </label>
+                  <input
+                    type="text"
+                    value={temporaryPassword}
+                    onChange={(e) => setTemporaryPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter temporary password"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Minimum 6 characters. A random password has been generated, or you can enter your own.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowResetModal(false)
+                      setSelectedUser(null)
+                      setTemporaryPassword("")
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    disabled={resetting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={resetPassword}
+                    disabled={resetting}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+                  >
+                    {resetting ? 'Resetting...' : 'Reset Password'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-green-800 font-medium mb-2">✅ Password Reset Successful!</p>
+                  <p className="text-sm text-green-700 mb-3">
+                    The temporary password for this user is:
+                  </p>
+                  <div className="flex items-center gap-2 bg-white p-3 rounded border border-green-200">
+                    <code className="flex-1 text-lg font-mono font-bold text-green-900">
+                      {generatedPassword}
+                    </code>
+                    <button
+                      onClick={copyTemporaryPassword}
+                      className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <p className="text-xs text-green-700 mt-2">
+                    📋 Give this password to the user. They can use it to login and should change it after logging in.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowResetModal(false)
+                    setSelectedUser(null)
+                    setTemporaryPassword("")
+                    setGeneratedPassword("")
+                  }}
+                  className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Close
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

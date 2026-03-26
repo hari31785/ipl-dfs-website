@@ -14,6 +14,10 @@ interface UserData {
   totalMatches: number
   winPercentage: number
   createdAt: string
+  coins?: number
+  securityQuestion1?: string
+  securityQuestion2?: string
+  securityQuestion3?: string
 }
 
 interface IPLTeam {
@@ -109,6 +113,22 @@ export default function DashboardPage() {
     phone: ''
   })
   const [savingProfile, setSavingProfile] = useState(false)
+  const [showPasswordSection, setShowPasswordSection] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [showSecuritySection, setShowSecuritySection] = useState(false)
+  const [securityForm, setSecurityForm] = useState({
+    securityQuestion1: '',
+    securityAnswer1: '',
+    securityQuestion2: '',
+    securityAnswer2: '',
+    securityQuestion3: '',
+    securityAnswer3: '',
+    password: ''
+  })
 
   useEffect(() => {
     // Get user data from localStorage (simple auth for now)
@@ -160,7 +180,149 @@ export default function DashboardPage() {
         name: user.name,
         phone: user.phone || ''
       })
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
+      setSecurityForm({
+        securityQuestion1: user.securityQuestion1 || '',
+        securityAnswer1: '',
+        securityQuestion2: user.securityQuestion2 || '',
+        securityAnswer2: '',
+        securityQuestion3: user.securityQuestion3 || '',
+        securityAnswer3: '',
+        password: ''
+      })
+      setShowPasswordSection(false)
+      setShowSecuritySection(false)
       setShowEditProfile(true)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (!user) return
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      alert('Please fill in all password fields')
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('New passwords do not match')
+      return
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      alert('New password must be at least 6 characters long')
+      return
+    }
+
+    setSavingProfile(true)
+    setGlobalLoading(true, 'Changing password...')
+
+    try {
+      const response = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        })
+        setShowPasswordSection(false)
+        setGlobalLoading(false)
+        alert('Password changed successfully!')
+      } else {
+        setGlobalLoading(false)
+        alert(data.error || 'Failed to change password')
+      }
+    } catch (error) {
+      console.error('Error changing password:', error)
+      setGlobalLoading(false)
+      alert('Failed to change password. Please try again.')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  const handleUpdateSecurityQuestions = async () => {
+    if (!user) return
+
+    if (!securityForm.securityQuestion1 || !securityForm.securityAnswer1 ||
+        !securityForm.securityQuestion2 || !securityForm.securityAnswer2 ||
+        !securityForm.securityQuestion3 || !securityForm.securityAnswer3 ||
+        !securityForm.password) {
+      alert('Please fill in all security questions, answers, and your password')
+      return
+    }
+
+    setSavingProfile(true)
+    setGlobalLoading(true, 'Updating security questions...')
+
+    try {
+      const response = await fetch('/api/user/security-questions', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          securityQuestion1: securityForm.securityQuestion1,
+          securityAnswer1: securityForm.securityAnswer1,
+          securityQuestion2: securityForm.securityQuestion2,
+          securityAnswer2: securityForm.securityAnswer2,
+          securityQuestion3: securityForm.securityQuestion3,
+          securityAnswer3: securityForm.securityAnswer3,
+          password: securityForm.password
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Update local user data
+        const updatedUser = {
+          ...user,
+          securityQuestion1: data.user.securityQuestion1,
+          securityQuestion2: data.user.securityQuestion2,
+          securityQuestion3: data.user.securityQuestion3
+        }
+        setUser(updatedUser)
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser))
+        
+        setSecurityForm({
+          ...securityForm,
+          securityAnswer1: '',
+          securityAnswer2: '',
+          securityAnswer3: '',
+          password: ''
+        })
+        setShowSecuritySection(false)
+        setGlobalLoading(false)
+        alert('Security questions updated successfully!')
+      } else {
+        setGlobalLoading(false)
+        alert(data.error || 'Failed to update security questions')
+      }
+    } catch (error) {
+      console.error('Error updating security questions:', error)
+      setGlobalLoading(false)
+      alert('Failed to update security questions. Please try again.')
+    } finally {
+      setSavingProfile(false)
     }
   }
 
@@ -1036,7 +1198,7 @@ export default function DashboardPage() {
       {/* Edit Profile Modal */}
       {showEditProfile && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center justify-between rounded-t-lg">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -1053,45 +1215,225 @@ export default function DashboardPage() {
 
             {/* Content */}
             <div className="p-6 flex-1 overflow-auto">
-              <div className="space-y-4">
-                {/* Name Field */}
+              <div className="space-y-6">
+                {/* Basic Information Section */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Enter your name"
-                    required
-                  />
-                </div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h4>
+                  <div className="space-y-4">
+                    {/* Name Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="Enter your name"
+                        required
+                      />
+                    </div>
 
-                {/* Phone Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={editForm.phone}
-                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
+                    {/* Phone Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
 
-                {/* Read-only fields info */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800 mb-2">
-                    <strong>Note:</strong> Username and email cannot be changed.
-                  </p>
-                  <div className="text-sm text-blue-700 space-y-1">
-                    <div><strong>Username:</strong> {user?.username}</div>
-                    <div><strong>Email:</strong> {user?.email}</div>
+                    {/* Read-only fields info */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-800 mb-2">
+                        <strong>Note:</strong> Username and email cannot be changed.
+                      </p>
+                      <div className="text-sm text-blue-700 space-y-1">
+                        <div><strong>Username:</strong> {user?.username}</div>
+                        <div><strong>Email:</strong> {user?.email}</div>
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200"></div>
+
+                {/* Change Password Section */}
+                <div>
+                  <button
+                    onClick={() => setShowPasswordSection(!showPasswordSection)}
+                    className="w-full flex items-center justify-between text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                  >
+                    <span className="text-lg font-semibold text-gray-800">Change Password</span>
+                    <span className="text-gray-600">{showPasswordSection ? '▲' : '▼'}</span>
+                  </button>
+                  
+                  {showPasswordSection && (
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Current Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Enter current password"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          New Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={passwordForm.newPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Enter new password (min 6 characters)"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Confirm New Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={passwordForm.confirmPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={savingProfile}
+                        className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {savingProfile ? 'Updating...' : 'Update Password'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200"></div>
+
+                {/* Update Security Questions Section */}
+                <div>
+                  <button
+                    onClick={() => setShowSecuritySection(!showSecuritySection)}
+                    className="w-full flex items-center justify-between text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                  >
+                    <span className="text-lg font-semibold text-gray-800">Update Security Questions</span>
+                    <span className="text-gray-600">{showSecuritySection ? '▲' : '▼'}</span>
+                  </button>
+                  
+                  {showSecuritySection && (
+                    <div className="mt-4 space-y-4">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Important:</strong> These questions are used for password recovery. Make sure to remember your answers!
+                        </p>
+                      </div>
+
+                      {/* Question 1 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Security Question 1 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={securityForm.securityQuestion1}
+                          onChange={(e) => setSecurityForm({ ...securityForm, securityQuestion1: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent mb-2"
+                          placeholder="e.g., What is your favorite color?"
+                        />
+                        <input
+                          type="text"
+                          value={securityForm.securityAnswer1}
+                          onChange={(e) => setSecurityForm({ ...securityForm, securityAnswer1: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Your answer"
+                        />
+                      </div>
+
+                      {/* Question 2 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Security Question 2 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={securityForm.securityQuestion2}
+                          onChange={(e) => setSecurityForm({ ...securityForm, securityQuestion2: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent mb-2"
+                          placeholder="e.g., What is your favorite sport?"
+                        />
+                        <input
+                          type="text"
+                          value={securityForm.securityAnswer2}
+                          onChange={(e) => setSecurityForm({ ...securityForm, securityAnswer2: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Your answer"
+                        />
+                      </div>
+
+                      {/* Question 3 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Security Question 3 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={securityForm.securityQuestion3}
+                          onChange={(e) => setSecurityForm({ ...securityForm, securityQuestion3: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent mb-2"
+                          placeholder="e.g., What is your favorite team?"
+                        />
+                        <input
+                          type="text"
+                          value={securityForm.securityAnswer3}
+                          onChange={(e) => setSecurityForm({ ...securityForm, securityAnswer3: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Your answer"
+                        />
+                      </div>
+
+                      {/* Password confirmation */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Confirm Your Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={securityForm.password}
+                          onChange={(e) => setSecurityForm({ ...securityForm, password: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Enter your password to confirm"
+                        />
+                      </div>
+
+                      <button
+                        onClick={handleUpdateSecurityQuestions}
+                        disabled={savingProfile}
+                        className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {savingProfile ? 'Updating...' : 'Update Security Questions'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1102,14 +1444,14 @@ export default function DashboardPage() {
                 onClick={() => setShowEditProfile(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
               >
-                Cancel
+                Close
               </button>
               <button
                 onClick={handleSaveProfile}
                 disabled={savingProfile || !editForm.name.trim()}
                 className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {savingProfile ? 'Saving...' : 'Save Changes'}
+                {savingProfile ? 'Saving...' : 'Save Basic Info'}
               </button>
             </div>
           </div>
