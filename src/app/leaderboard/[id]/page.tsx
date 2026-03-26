@@ -125,22 +125,22 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
           </button>
           
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <div className="flex items-center gap-3">
                 <Trophy className="w-8 h-8 text-yellow-500" />
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {tournament?.name || "Tournament"} Leaderboard
+                  Leaderboard
                 </h1>
               </div>
               
               {/* Tournament Selector */}
-              {tournaments.length > 1 && (
+              {tournaments.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600">Tournament:</label>
+                  <label className="text-sm font-medium text-gray-700">Tournament:</label>
                   <select
                     value={tournamentId}
                     onChange={(e) => router.push(`/leaderboard/${e.target.value}`)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 font-medium"
                   >
                     {tournaments.map((t) => (
                       <option key={t.id} value={t.id}>
