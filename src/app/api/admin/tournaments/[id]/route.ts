@@ -113,12 +113,13 @@ export async function DELETE(
     ])
 
     // Force delete with cascading - delete all child tables
-    console.log(`Deleting test tournament "${tournament.name}" with ${gamesCount} games, ${playersCount} players, ${contestsCount} contests`)
+    console.log(`\nDeleting test tournament "${tournament.name}" with ${gamesCount} games, ${playersCount} players, ${contestsCount} contests`)
+    console.log('Starting cascading deletion...\n')
     
     // Delete in proper order to avoid foreign key constraints
     await prisma.$transaction(async (tx) => {
       // 1. Delete draft picks for matchups in this tournament
-      await tx.draftPick.deleteMany({
+      const deletedDraftPicks = await tx.draftPick.deleteMany({
         where: {
           matchup: {
             contest: {
@@ -127,79 +128,97 @@ export async function DELETE(
           }
         }
       })
+      console.log(`  ✓ Deleted ${deletedDraftPicks.count} draft picks`)
 
       // 2. Delete head-to-head matchups
-      await tx.headToHeadMatchup.deleteMany({
+      const deletedMatchups = await tx.headToHeadMatchup.deleteMany({
         where: {
           contest: {
             iplGame: { tournamentId: id }
           }
         }
       })
+      console.log(`  ✓ Deleted ${deletedMatchups.count} matchups`)
 
       // 3. Delete contest entries
-      await tx.contestEntry.deleteMany({
+      const deletedEntries = await tx.contestEntry.deleteMany({
         where: {
           contest: {
             iplGame: { tournamentId: id }
           }
         }
       })
+      console.log(`  ✓ Deleted ${deletedEntries.count} contest entries`)
 
       // 4. Delete contest signups
-      await tx.contestSignup.deleteMany({
+      const deletedSignups = await tx.contestSignup.deleteMany({
         where: {
           contest: {
             iplGame: { tournamentId: id }
           }
         }
       })
+      console.log(`  ✓ Deleted ${deletedSignups.count} contest signups`)
 
-      // 5. Delete coin transactions for this tournament
-      await tx.coinTransaction.deleteMany({
+      // 5. Delete coin transactions (VCs won/lost) for this tournament
+      const deletedTransactions = await tx.coinTransaction.deleteMany({
         where: { tournamentId: id }
       })
+      console.log(`  ✓ Deleted ${deletedTransactions.count} coin transactions`)
 
-      // 6. Delete tournament balances
-      await tx.tournamentBalance.deleteMany({
+      // 6. Delete settlements (VC encashments/refills) for this tournament
+      const deletedSettlements = await tx.settlement.deleteMany({
         where: { tournamentId: id }
       })
+      console.log(`  ✓ Deleted ${deletedSettlements.count} settlements`)
 
-      // 7. Delete contests for games in this tournament  
-      await tx.contest.deleteMany({
+      // 7. Delete tournament balances
+      const deletedBalances = await tx.tournamentBalance.deleteMany({
+        where: { tournamentId: id }
+      })
+      console.log(`  ✓ Deleted ${deletedBalances.count} tournament balances`)
+
+      // 8. Delete contests for games in this tournament  
+      const deletedContests = await tx.contest.deleteMany({
         where: {
           iplGame: { tournamentId: id }
         }
       })
+      console.log(`  ✓ Deleted ${deletedContests.count} contests`)
 
-      // 8. Delete player stats for this tournament
-      await tx.playerStat.deleteMany({
+      // 9. Delete player stats for this tournament
+      const deletedStats = await tx.playerStat.deleteMany({
         where: {
           player: { tournamentId: id }
         }
       })
+      console.log(`  ✓ Deleted ${deletedStats.count} player stats`)
 
-      // 9. Delete team players (fantasy teams) for this tournament
-      await tx.teamPlayer.deleteMany({
+      // 10. Delete team players (fantasy teams) for this tournament
+      const deletedTeamPlayers = await tx.teamPlayer.deleteMany({
         where: {
           player: { tournamentId: id }
         }
       })
+      console.log(`  ✓ Deleted ${deletedTeamPlayers.count} team players`)
 
-      // 10. Delete players in this tournament
-      await tx.player.deleteMany({
+      // 11. Delete players in this tournament
+      const deletedPlayers = await tx.player.deleteMany({
         where: { tournamentId: id }
       })
+      console.log(`  ✓ Deleted ${deletedPlayers.count} players`)
 
-      // 11. Delete games in this tournament
-      await tx.iPLGame.deleteMany({
+      // 12. Delete games in this tournament
+      const deletedGames = await tx.iPLGame.deleteMany({
         where: { tournamentId: id }
       })
+      console.log(`  ✓ Deleted ${deletedGames.count} games`)
 
-      // 12. Finally delete the tournament
+      // 13. Finally delete the tournament
       await tx.tournament.delete({
         where: { id }
       })
+      console.log(`  ✓ Deleted tournament "${tournament.name}"`)
     })
 
     return NextResponse.json({ 
