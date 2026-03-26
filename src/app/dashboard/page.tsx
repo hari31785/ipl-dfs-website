@@ -79,6 +79,7 @@ interface UserContest {
       team1: IPLTeam
       team2: IPLTeam
       tournament: {
+        id: string
         name: string
       }
     }
