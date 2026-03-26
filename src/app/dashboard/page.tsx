@@ -720,6 +720,18 @@ export default function DashboardPage() {
                                       hour12: true
                                     })}</span>
                                   </div>
+                                  <div className="flex items-center gap-1 text-xs text-orange-600 mt-1">
+                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="font-medium">Signups close: {new Date(game.signupDeadline).toLocaleString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      hour: 'numeric', 
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })}</span>
+                                  </div>
                                 </div>
                               </div>
 
@@ -1001,7 +1013,24 @@ export default function DashboardPage() {
                           </span>
                           <span className="text-xs text-gray-600">{signup.contest.coinValue} coins/pt</span>
                         </div>
-                        <span className="text-xs text-gray-500">{new Date(signup.contest.iplGame.gameDate).toLocaleDateString()}</span>
+                        <div className="text-right text-xs text-gray-500">
+                          <div>{new Date(signup.contest.iplGame.gameDate).toLocaleString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true
+                          })}</div>
+                          <div className="text-orange-600 text-[10px]">
+                            Signup: {new Date(signup.contest.iplGame.signupDeadline).toLocaleString('en-US', { 
+                              month: 'numeric', 
+                              day: 'numeric',
+                              hour: 'numeric', 
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Status */}

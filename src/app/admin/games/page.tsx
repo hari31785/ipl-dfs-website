@@ -60,13 +60,22 @@ export default function GamesPage() {
   // Auto-calculate signup deadline when game date changes
   useEffect(() => {
     if (formData.gameDate) {
+      // formData.gameDate is in format "2026-03-27T20:00" (local time)
       const gameDate = new Date(formData.gameDate);
-      // Set to 8 PM EST (20:00) the day before
+      
+      // Set to 8 PM local time the day before
       const signupDate = new Date(gameDate);
       signupDate.setDate(signupDate.getDate() - 1);
-      signupDate.setHours(20, 0, 0, 0); // 8 PM
+      signupDate.setHours(20, 0, 0, 0); // 8 PM local time
       
-      const signupDeadline = signupDate.toISOString().slice(0, 16);
+      // Convert to datetime-local format (YYYY-MM-DDTHH:MM)
+      const year = signupDate.getFullYear();
+      const month = String(signupDate.getMonth() + 1).padStart(2, '0');
+      const day = String(signupDate.getDate()).padStart(2, '0');
+      const hours = String(signupDate.getHours()).padStart(2, '0');
+      const minutes = String(signupDate.getMinutes()).padStart(2, '0');
+      const signupDeadline = `${year}-${month}-${day}T${hours}:${minutes}`;
+      
       setFormData(prev => ({ ...prev, signupDeadline }));
     }
   }, [formData.gameDate]);
@@ -143,7 +152,9 @@ export default function GamesPage() {
       const url = editingGame ? `/api/admin/games/${editingGame.id}` : '/api/admin/games';
       const method = editingGame ? 'PUT' : 'POST';
       
-      // Convert local datetime strings to ISO format (which preserves timezone)
+      // datetime-local input gives us strings like "2026-03-27T20:00" (local time, no timezone)
+      // new Date() with this format interprets it as local time
+      // toISOString() then converts it to UTC for storage
       const dataToSend = {
         ...formData,
         gameDate: new Date(formData.gameDate).toISOString(),
