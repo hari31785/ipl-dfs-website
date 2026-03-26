@@ -48,6 +48,7 @@ interface IPLGame {
   team1: IPLTeam
   team2: IPLTeam
   tournament: {
+    id: string
     name: string
   }
   contests: Contest[]
