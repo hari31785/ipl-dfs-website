@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { ArrowLeft, Users, Trophy, Search, Edit, UserPlus } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Search, Edit, UserPlus, Trash2 } from 'lucide-react';
 
 interface Player {
   id: string;
@@ -105,6 +105,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   const [playerSearchQuery, setPlayerSearchQuery] = useState('');
   const [addingPick, setAddingPick] = useState(false);
   const [addPickError, setAddPickError] = useState('');
+  const [deletingMatchup, setDeletingMatchup] = useState<string | null>(null);
 
   useEffect(() => {
     fetchContestDetails();
@@ -323,6 +324,34 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
       setUpdateError('Network error occurred');
     } finally {
       setUpdatingMatchup(false);
+    }
+  };
+
+  const handleDeleteMatchup = async (matchupId: string, matchupDetails: string) => {
+    if (!confirm(`⚠️ DELETE MATCHUP?\n\n${matchupDetails}\n\nThis will delete the matchup and all draft picks.\n\nAre you sure?`)) {
+      return;
+    }
+
+    setDeletingMatchup(matchupId);
+
+    try {
+      const response = await fetch(`/api/admin/matchups/${matchupId}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ ${data.message}${data.draftPicksDeleted > 0 ? `\n${data.draftPicksDeleted} draft picks deleted` : ''}`);
+        fetchContestDetails(); // Refresh the list
+      } else {
+        alert(`❌ Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error deleting matchup:', error);
+      alert('❌ Network error occurred');
+    } finally {
+      setDeletingMatchup(null);
     }
   };
 
@@ -932,6 +961,22 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                         >
                           <Edit className="h-4 w-4" />
                         </button>
+                        {matchup.status !== 'COMPLETED' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMatchup(
+                                matchup.id,
+                                `${matchup.user1.user.name} vs ${matchup.user2.user.name}\nStatus: ${matchup.status}\nPicks: ${matchup.draftPicks.length}/14`
+                              );
+                            }}
+                            disabled={deletingMatchup === matchup.id}
+                            className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Delete matchup"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                         <div className="text-right">
                           <div className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(matchup.status)}`}>
                             {getStatusIcon(matchup.status)} {matchup.status.replace('_', ' ')}
