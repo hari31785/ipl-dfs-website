@@ -662,8 +662,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">🔄 2. Snake Draft</h4>
                   <ul className="text-sm space-y-1 text-green-700">
-                    <li>• 7 total picks per player (5 starters + 2 substitutes)</li>
-                    <li>• Alternating picks: 1-2-3-4-5-6-7... then 7-6-5-4-3-2-1</li>
+                    <li>• Each player drafts 7 players total: 5 main players + 2 substitutes</li>
+                    <li>• First picker gets picks: 1st, 4th, 5th, 8th, 9th, 12th, 13th</li>
+                    <li>• Second picker gets picks: 2nd, 3rd, 6th, 7th, 10th, 11th, 14th</li>
                     <li>• Real-time turns with auto-refresh</li>
                   </ul>
                 </div>

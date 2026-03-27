@@ -87,7 +87,7 @@ export default function RulesPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
-                      <span>First pick is randomly determined for each contest</span>
+                      <span>First pick is decided based on a coin flip</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
@@ -121,7 +121,7 @@ export default function RulesPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
-                      <span>Winner takes the agreed coin value</span>
+                      <span>Winner gets points-based rewards</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
