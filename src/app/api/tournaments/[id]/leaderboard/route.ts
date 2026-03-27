@@ -59,6 +59,9 @@ export async function GET(
       totalCoinsWon: number
       totalCoinsLost: number
       netCoins: number
+      totalPointsWon: number
+      totalPointsLost: number
+      netPoints: number
       contestsPlayed: number
     }>()
 
@@ -78,6 +81,9 @@ export async function GET(
         totalCoinsWon: 0,
         totalCoinsLost: 0,
         netCoins: 0,
+        totalPointsWon: 0,
+        totalPointsLost: 0,
+        netPoints: 0,
         contestsPlayed: 0,
       }
 
@@ -87,13 +93,16 @@ export async function GET(
       if (transaction.type === 'WIN') {
         existing.totalVCWon += vcAmount
         existing.totalCoinsWon += coinAmount
+        existing.totalPointsWon += vcAmount // VC directly represents points
       } else if (transaction.type === 'LOSS') {
         existing.totalVCLost += Math.abs(vcAmount)
         existing.totalCoinsLost += Math.abs(coinAmount)
+        existing.totalPointsLost += Math.abs(vcAmount) // VC directly represents points
       }
 
       existing.netVC = existing.totalVCWon - existing.totalVCLost
       existing.netCoins = existing.totalCoinsWon - existing.totalCoinsLost
+      existing.netPoints = existing.totalPointsWon - existing.totalPointsLost
 
       userStatsMap.set(transaction.userId, existing)
     })

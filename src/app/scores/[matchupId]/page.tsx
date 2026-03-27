@@ -332,12 +332,28 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
                 {isTie ? '🤝 Tie Game!' : didIWin ? '🎉 You Won!' : '😔 You Lost'}
               </p>
               {!isTie && (
-                <div className="mb-4">
-                  <div className="text-white/90 text-sm mb-1">Victory Margin</div>
-                  <div className="text-white font-black text-5xl">
-                    {didIWin ? '+' : ''}{(myTotalPoints - opponentTotalPoints).toFixed(1)}
+                <>
+                  <div className="mb-4">
+                    <div className="text-white/90 text-sm mb-1">Victory Margin</div>
+                    <div className="text-white font-black text-5xl">
+                      {didIWin ? '+' : ''}{(myTotalPoints - opponentTotalPoints).toFixed(1)}
+                    </div>
+                    <div className="text-white/90 text-xs mt-1">Fantasy Points</div>
                   </div>
-                </div>
+                  {/* Coins Won/Lost */}
+                  <div className="mb-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border-2 border-white/30">
+                    <div className="text-white/90 text-sm mb-2">Coins Impact</div>
+                    <div className={`text-white font-black text-4xl ${
+                      didIWin ? 'drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : ''
+                    }`}>
+                      {didIWin ? '+' : '-'}{Math.abs((myTotalPoints - opponentTotalPoints) * matchup.contest.coinValue).toFixed(0)}
+                      <span className="text-2xl ml-2">🪙</span>
+                    </div>
+                    <div className="text-white/90 text-xs mt-2">
+                      {Math.abs(myTotalPoints - opponentTotalPoints).toFixed(1)} points × {matchup.contest.coinValue} coins/point
+                    </div>
+                  </div>
+                </>
               )}
               <div className="flex items-center justify-center gap-8 mt-4 pt-4 border-t border-white/30">
                 <div className="text-center">
