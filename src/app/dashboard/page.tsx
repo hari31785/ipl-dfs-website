@@ -105,7 +105,7 @@ export default function DashboardPage() {
   const [userContests, setUserContests] = useState<UserContest[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'available' | 'my-contests'>('available')
-  const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'active' | 'completed'>('upcoming')
+  const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'drafted' | 'active' | 'completed'>('upcoming')
   const [myContestsTournamentFilter, setMyContestsTournamentFilter] = useState<string>('all')
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
@@ -870,19 +870,64 @@ export default function DashboardPage() {
                       <Clock className="h-4 w-4" />
                       Upcoming
                       {userContests.filter(contest => 
-                        // Upcoming: Contests that are not yet started by admin
-                        // Includes: SIGNUP_OPEN, SIGNUP_CLOSED, DRAFTING states
+                        // Upcoming: Contests in signup and draft phase (not drafted yet)
                         contest.contest.status === 'SIGNUP_OPEN' || 
                         contest.contest.status === 'SIGNUP_CLOSED' ||
-                        contest.contest.status === 'DRAFTING' ||
                         contest.contest.status === 'DRAFT_PHASE'
                       ).length > 0 && (
                         <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
                           {userContests.filter(contest => 
                             contest.contest.status === 'SIGNUP_OPEN' || 
                             contest.contest.status === 'SIGNUP_CLOSED' ||
-                            contest.contest.status === 'DRAFTING' ||
                             contest.contest.status === 'DRAFT_PHASE'
+                          ).length}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setContestSubTab('drafted')}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      contestSubTab === 'drafted'
+                        ? 'bg-white text-blue-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Drafted
+                      {userContests.filter(contest => 
+                        // Drafted: Draft is complete but contest not yet started
+                        contest.contest.status === 'DRAFTING'
+                      ).length > 0 && (
+                        <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full">
+                          {userContests.filter(contest => 
+                            contest.contest.status === 'DRAFTING'
+                          ).length}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setContestSubTab('drafted')}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      contestSubTab === 'drafted'
+                        ? 'bg-white text-blue-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Drafted
+                      {userContests.filter(contest => 
+                        // Drafted: Draft is complete but contest not yet started
+                        contest.contest.status === 'DRAFTING'
+                      ).length > 0 && (
+                        <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full">
+                          {userContests.filter(contest => 
+                            contest.contest.status === 'DRAFTING'
                           ).length}
                         </span>
                       )}
@@ -975,11 +1020,15 @@ export default function DashboardPage() {
                     // Then filter by status based on sub-tab
                     if (contestSubTab === 'upcoming') {
                       filteredContests = filteredContests.filter(contest => 
-                        // Upcoming: Contests not yet started by admin (includes signup, drafting phases)
+                        // Upcoming: Contests not yet started by admin (signup and draft phase)
                         contest.contest.status === 'SIGNUP_OPEN' || 
                         contest.contest.status === 'SIGNUP_CLOSED' ||
-                        contest.contest.status === 'DRAFTING' ||
                         contest.contest.status === 'DRAFT_PHASE'
+                      )
+                    } else if (contestSubTab === 'drafted') {
+                      filteredContests = filteredContests.filter(contest => 
+                        // Drafted: Draft complete, waiting for admin to activate
+                        contest.contest.status === 'DRAFTING'
                       )
                     } else if (contestSubTab === 'active') {
                       filteredContests = filteredContests.filter(contest => 
@@ -998,11 +1047,13 @@ export default function DashboardPage() {
                         <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
                           <div className="h-12 w-12 mx-auto mb-4">
                             {contestSubTab === 'upcoming' && <Clock className="h-12 w-12 text-gray-500" />}
+                            {contestSubTab === 'drafted' && <Users className="h-12 w-12 text-gray-500" />}
                             {contestSubTab === 'active' && <Zap className="h-12 w-12 text-gray-500" />}
                             {contestSubTab === 'completed' && <Trophy className="h-12 w-12 text-gray-500" />}
                           </div>
                           <p className="text-gray-600 mb-2">
                             {contestSubTab === 'upcoming' && 'No upcoming contests'}
+                            {contestSubTab === 'drafted' && 'No drafted contests'}
                             {contestSubTab === 'active' && 'No active contests'}
                             {contestSubTab === 'completed' && 'No completed contests yet'}
                           </p>
