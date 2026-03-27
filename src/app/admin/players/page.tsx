@@ -54,6 +54,15 @@ export default function PlayersManagement() {
   const [isBulkAdding, setIsBulkAdding] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [deletingPlayerId, setDeletingPlayerId] = useState<string | null>(null)
+  
+  // Copy players state
+  const [showCopyModal, setShowCopyModal] = useState(false)
+  const [sourceTournament, setSourceTournament] = useState<string>("")
+  const [sourcePlayers, setSourcePlayers] = useState<Player[]>([])
+  const [copyFilterTeam, setCopyFilterTeam] = useState<string>("all")
+  const [selectedCopyPlayers, setSelectedCopyPlayers] = useState<string[]>([])
+  const [isCopying, setIsCopying] = useState(false)
+  const [loadingSourcePlayers, setLoadingSourcePlayers] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -324,6 +333,122 @@ export default function PlayersManagement() {
     setBulkData("")
   }
 
+  // Copy players functionality
+  const handleOpenCopyModal = () => {
+    setShowCopyModal(true)
+    setSourceTournament("")
+    setSourcePlayers([])
+    setSelectedCopyPlayers([])
+    setCopyFilterTeam("all")
+    setError("")
+    setSuccess("")
+  }
+
+  const fetchSourcePlayers = async (tournamentId: string) => {
+    setLoadingSourcePlayers(true)
+    try {
+      const response = await fetch(`/api/admin/players?tournamentId=${tournamentId}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setSourcePlayers(Array.isArray(data.players) ? data.players : [])
+      } else {
+        setError("Failed to fetch source players")
+        setSourcePlayers([])
+      }
+    } catch (error) {
+      setError("Network error fetching source players")
+      setSourcePlayers([])
+    } finally {
+      setLoadingSourcePlayers(false)
+    }
+  }
+
+  const handleSourceTournamentChange = (tournamentId: string) => {
+    setSourceTournament(tournamentId)
+    setSelectedCopyPlayers([])
+    if (tournamentId) {
+      fetchSourcePlayers(tournamentId)
+    } else {
+      setSourcePlayers([])
+    }
+  }
+
+  const handleSelectCopyPlayer = (playerId: string) => {
+    setSelectedCopyPlayers(prev =>
+      prev.includes(playerId)
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    )
+  }
+
+  const handleSelectAllCopyPlayers = () => {
+    const filteredIds = filteredCopyPlayers.map(p => p.id)
+    if (selectedCopyPlayers.length === filteredIds.length) {
+      setSelectedCopyPlayers([])
+    } else {
+      setSelectedCopyPlayers(filteredIds)
+    }
+  }
+
+  const handleCopyPlayers = async () => {
+    if (selectedCopyPlayers.length === 0) {
+      setError("Please select players to copy")
+      return
+    }
+
+    if (!selectedTournament) {
+      setError("Please select a destination tournament")
+      return
+    }
+
+    setIsCopying(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const playersToCopy = sourcePlayers
+        .filter(p => selectedCopyPlayers.includes(p.id))
+        .map(p => ({
+          name: p.name,
+          role: p.role,
+          price: p.price,
+          jerseyNumber: p.jerseyNumber,
+          iplTeamId: p.iplTeamId
+        }))
+
+      const response = await fetch("/api/admin/players/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          players: playersToCopy,
+          tournamentId: selectedTournament
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess(`Successfully copied ${data.created} player(s) to the current tournament!`)
+        setShowCopyModal(false)
+        setSelectedCopyPlayers([])
+        fetchPlayers()
+      } else {
+        setError(data.message || "Failed to copy players")
+      }
+    } catch (error) {
+      setError("Network error during copy")
+    } finally {
+      setIsCopying(false)
+    }
+  }
+
+  const filteredCopyPlayers = copyFilterTeam === "all"
+    ? sourcePlayers
+    : sourcePlayers.filter(player => player.iplTeamId === copyFilterTeam)
+
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "BATSMAN": return "🏏"
@@ -516,6 +641,14 @@ export default function PlayersManagement() {
             >
               <Users className="h-5 w-5" />
               Bulk Add Players
+            </button>
+            <button
+              onClick={handleOpenCopyModal}
+              disabled={!selectedTournament}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            >
+              <Users className="h-5 w-5" />
+              Copy Players
             </button>
             {selectedPlayers.length > 0 && (
               <button
@@ -824,6 +957,195 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
           )}
         </div>
       </div>
+
+      {/* Copy Players Modal */}
+      {showCopyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Users className="h-6 w-6 text-blue-600" />
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Copy Players from Another Tournament
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowCopyModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <span className="text-2xl">&times;</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Source Tournament Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Source Tournament *
+                </label>
+                <select
+                  value={sourceTournament}
+                  onChange={(e) => handleSourceTournamentChange(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                >
+                  <option value="">Choose tournament to copy from...</option>
+                  {tournaments
+                    .filter(t => t.id !== selectedTournament)
+                    .map((tournament) => (
+                      <option key={tournament.id} value={tournament.id}>
+                        {tournament.name}
+                      </option>
+                    ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Players will be copied TO: <strong>{tournaments.find(t => t.id === selectedTournament)?.name}</strong>
+                </p>
+              </div>
+
+              {/* Team Filter */}
+              {sourceTournament && sourcePlayers.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700">Filter by Team:</label>
+                    <select
+                      value={copyFilterTeam}
+                      onChange={(e) => setCopyFilterTeam(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    >
+                      <option value="all">All Teams</option>
+                      {teams.map(team => (
+                        <option key={team.id} value={team.id}>{team.shortName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={handleSelectAllCopyPlayers}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {selectedCopyPlayers.length === filteredCopyPlayers.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+              )}
+
+              {/* Loading State */}
+              {loadingSourcePlayers && (
+                <div className="text-center py-8">
+                  <div className="text-gray-600">Loading players...</div>
+                </div>
+              )}
+
+              {/* Players List */}
+              {sourceTournament && !loadingSourcePlayers && sourcePlayers.length === 0 && (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <p className="text-gray-600">No players found in selected tournament</p>
+                </div>
+              )}
+
+              {sourceTournament && !loadingSourcePlayers && filteredCopyPlayers.length > 0 && (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="max-h-96 overflow-y-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-3 text-left">
+                            <input
+                              type="checkbox"
+                              checked={selectedCopyPlayers.length === filteredCopyPlayers.length && filteredCopyPlayers.length > 0}
+                              onChange={handleSelectAllCopyPlayers}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Player
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Team
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Role
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Jersey
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredCopyPlayers.map((player) => (
+                          <tr
+                            key={player.id}
+                            className={`hover:bg-blue-50 cursor-pointer ${selectedCopyPlayers.includes(player.id) ? 'bg-blue-50' : ''}`}
+                            onClick={() => handleSelectCopyPlayer(player.id)}
+                          >
+                            <td className="px-4 py-3">
+                              <input
+                                type="checkbox"
+                                checked={selectedCopyPlayers.includes(player.id)}
+                                onChange={() => handleSelectCopyPlayer(player.id)}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">{getRoleIcon(player.role)}</span>
+                                <span className="font-medium text-gray-900">{player.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: player.iplTeam.color }}
+                                ></div>
+                                <span className="text-gray-600">{player.iplTeam.shortName}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-600 text-sm">
+                              {PLAYER_ROLES.find(r => r.value === player.role)?.label}
+                            </td>
+                            <td className="px-4 py-3 text-gray-600 text-sm">
+                              {player.jerseyNumber ? `#${player.jerseyNumber}` : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Selected Count */}
+              {selectedCopyPlayers.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>{selectedCopyPlayers.length}</strong> player(s) selected for copying
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setShowCopyModal(false)}
+                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCopyPlayers}
+                  disabled={selectedCopyPlayers.length === 0 || isCopying}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                >
+                  {isCopying ? "Copying..." : `Copy ${selectedCopyPlayers.length} Player(s)`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
