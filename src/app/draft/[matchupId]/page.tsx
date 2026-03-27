@@ -53,6 +53,7 @@ interface Matchup {
     coinValue: number;
     status: string;
     iplGame: {
+      id: string;
       title: string;
       gameDate: string;
       signupDeadline: string;
@@ -84,9 +85,13 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [makingPick, setMakingPick] = useState(false);
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterRole, setFilterRole] = useState<string>('all');
+  const [filterGrade, setFilterGrade] = useState<string>('all');
   const [searchName, setSearchName] = useState<string>('');
   const [playerStats, setPlayerStats] = useState<Record<string, number>>({});
   const [isDraftingPhase, setIsDraftingPhase] = useState(false);
+  const [playerGrades, setPlayerGrades] = useState<Record<string, { grade: string; weightedScore: number; matchesPlayed: number }>>({});
+  const [showGrades, setShowGrades] = useState(false);
+  const [loadingGrades, setLoadingGrades] = useState(false);
   
   // Toss states
   const [showToss, setShowToss] = useState(false);
@@ -170,6 +175,56 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       console.error('Error fetching matchup:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPlayerGrades = async () => {
+    if (!matchup?.contest?.iplGame?.id) return;
+    
+    setLoadingGrades(true);
+    try {
+      const response = await fetch(`/api/grades/calculate?iplGameId=${matchup.contest.iplGame.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Convert grades array to object keyed by playerId
+        const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number }> = {};
+        data.grades.forEach((g: any) => {
+          gradesMap[g.playerId] = {
+            grade: g.grade,
+            weightedScore: g.weightedScore,
+            matchesPlayed: g.matchesPlayed
+          };
+        });
+        setPlayerGrades(gradesMap);
+        setShowGrades(true);
+      } else {
+        console.error('Failed to fetch grades');
+        alert('Failed to calculate grades. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error fetching grades:', error);
+      alert('Error calculating grades. Please try again.');
+    } finally {
+      setLoadingGrades(false);
+    }
+  };
+
+  const getGradeStyle = (grade: string) => {
+    switch (grade) {
+      case 'A+':
+        return { bg: 'bg-green-600', text: 'text-white', border: 'border-green-700' };
+      case 'A':
+        return { bg: 'bg-green-500', text: 'text-white', border: 'border-green-600' };
+      case 'B':
+        return { bg: 'bg-blue-500', text: 'text-white', border: 'border-blue-600' };
+      case 'C':
+        return { bg: 'bg-yellow-500', text: 'text-black', border: 'border-yellow-600' };
+      case 'D':
+        return { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-600' };
+      case 'E':
+        return { bg: 'bg-red-500', text: 'text-white', border: 'border-red-600' };
+      default:
+        return { bg: 'bg-gray-400', text: 'text-white', border: 'border-gray-500' };
     }
   };
 
@@ -724,6 +779,31 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <h3 className="font-bold text-xl text-primary-800 mb-4">Available Players</h3>
             
+            {/* Calculate Grades Button */}
+            <div className="mb-4">
+              <button
+                onClick={fetchPlayerGrades}
+                disabled={loadingGrades || !matchup}
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-4 py-3 rounded-lg font-bold text-sm shadow-lg transition-all transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loadingGrades ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Calculating Grades...
+                  </>
+                ) : (
+                  <>
+                    🏆 Calculate & Publish Grades
+                  </>
+                )}
+              </button>
+              {showGrades && (
+                <div className="mt-2 text-center text-sm text-green-600 font-medium">
+                  ✅ Player grades calculated and displayed below
+                </div>
+              )}
+            </div>
+            
             {/* Filters */}
             <div className="mb-4">
               <div className="grid grid-cols-2 gap-3 mb-2">
@@ -760,6 +840,30 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 </div>
               </div>
               
+              {/* Grade Filter Row */}
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Filter by Grade</label>
+                <select
+                  value={filterGrade}
+                  onChange={(e) => setFilterGrade(e.target.value)}
+                  disabled={!showGrades}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none bg-white text-black disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  <option value="all">{showGrades ? 'All Grades' : 'Calculate grades first'}</option>
+                  {showGrades && (
+                    <>
+                      <option value="A+">A+ (Excellent)</option>
+                      <option value="A">A (Very Good)</option>
+                      <option value="B">B (Good)</option>
+                      <option value="C">C (Average)</option>
+                      <option value="D">D (Below Average)</option>
+                      <option value="E">E (Poor)</option>
+                      <option value="No Data">No Data</option>
+                    </>
+                  )}
+                </select>
+              </div>
+              
               {/* Search by Name */}
               <div className="mt-3">
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">Search by Name</label>
@@ -772,9 +876,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 />
               </div>
               
-              {(filterTeam !== 'all' || filterRole !== 'all' || searchName) && (
+              {(filterTeam !== 'all' || filterRole !== 'all' || filterGrade !== 'all' || searchName) && (
                 <button
-                  onClick={() => { setFilterTeam('all'); setFilterRole('all'); setSearchName(''); }}
+                  onClick={() => { setFilterTeam('all'); setFilterRole('all'); setFilterGrade('all'); setSearchName(''); }}
                   className="text-xs font-semibold text-secondary-500 hover:text-secondary-600 underline mt-2"
                 >
                   Clear All Filters
@@ -804,6 +908,17 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     return player.role.toUpperCase() === filterRole.toUpperCase();
                   })
                   .filter(player => {
+                    // Grade filter
+                    if (filterGrade === 'all') return true;
+                    if (!showGrades) return true; // If grades not shown, don't filter
+                    
+                    const playerGrade = playerGrades[player.id];
+                    if (filterGrade === 'No Data') {
+                      return !playerGrade || playerGrade.matchesPlayed === 0;
+                    }
+                    return playerGrade && playerGrade.matchesPlayed > 0 && playerGrade.grade === filterGrade;
+                  })
+                  .filter(player => {
                     // Name search filter
                     if (!searchName) return true;
                     return player.name.toLowerCase().includes(searchName.toLowerCase());
@@ -813,12 +928,16 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   return (
                     <div className="text-center py-8 text-gray-500">
                       <div className="text-lg mb-2">No players match your filters</div>
-                      <div className="text-sm">Try adjusting your team, role, or name filters</div>
+                      <div className="text-sm">Try adjusting your team, role, grade, or name filters</div>
                     </div>
                   );
                 }
                 
-                return filteredPlayers.map(player => (
+                return filteredPlayers.map(player => {
+                  const playerGrade = playerGrades[player.id];
+                  const gradeStyle = playerGrade ? getGradeStyle(playerGrade.grade) : null;
+                  
+                  return (
                 <div
                   key={player.id}
                   onClick={() => isMyTurn && !isDraftComplete && setSelectedPlayer(player.id)}
@@ -829,7 +948,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   } ${!isMyTurn || isDraftComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="font-bold text-base text-black">{player.name}</div>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span className="text-xs font-semibold text-gray-700 bg-white px-2 py-1 rounded border border-gray-300">
                       {player.role}
                     </span>
@@ -843,9 +962,23 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     >
                       {player.iplTeam.shortName}
                     </span>
+                    {showGrades && playerGrade && (
+                      <span 
+                        className={`text-xs font-bold px-2 py-1 rounded border-2 ${gradeStyle?.bg} ${gradeStyle?.text} ${gradeStyle?.border}`}
+                        title={`Grade: ${playerGrade.grade} | Score: ${playerGrade.weightedScore} | Matches: ${playerGrade.matchesPlayed}`}
+                      >
+                        📊 {playerGrade.grade}
+                      </span>
+                    )}
+                    {showGrades && (!playerGrade || playerGrade.matchesPlayed === 0) && (
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-300">
+                        No Data
+                      </span>
+                    )}
                   </div>
                 </div>
-                ));
+                  );
+                });
               })()}
             </div>
             {isMyTurn && !isDraftComplete && (
