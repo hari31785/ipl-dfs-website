@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Shield, Plus, Edit, Trash2, ArrowLeft, Users, TrendingUp, Star } from "lucide-react"
 
 interface Tournament {
@@ -55,6 +55,10 @@ export default function PlayersManagement() {
   const [isSaving, setIsSaving] = useState(false)
   const [deletingPlayerId, setDeletingPlayerId] = useState<string | null>(null)
   
+  // Scroll position tracking
+  const scrollPositionRef = useRef<number>(0)
+  const shouldRestoreScrollRef = useRef<boolean>(false)
+  
   // Copy players state
   const [showCopyModal, setShowCopyModal] = useState(false)
   const [sourceTournament, setSourceTournament] = useState<string>("")
@@ -72,6 +76,14 @@ export default function PlayersManagement() {
     iplTeamId: "",
     tournamentId: ""
   })
+
+  // Restore scroll position after players update
+  useEffect(() => {
+    if (shouldRestoreScrollRef.current && players.length > 0) {
+      window.scrollTo(0, scrollPositionRef.current)
+      shouldRestoreScrollRef.current = false
+    }
+  }, [players])
 
   useEffect(() => {
     // Check admin authentication
@@ -168,6 +180,10 @@ export default function PlayersManagement() {
     setSuccess("")
     setIsSaving(true)
 
+    // Save current scroll position
+    scrollPositionRef.current = window.scrollY
+    shouldRestoreScrollRef.current = true
+
     try {
       const url = editingPlayer ? `/api/admin/players/${editingPlayer.id}` : "/api/admin/players"
       const method = editingPlayer ? "PUT" : "POST"
@@ -176,6 +192,9 @@ export default function PlayersManagement() {
         ...formData,
         jerseyNumber: formData.jerseyNumber ? parseInt(formData.jerseyNumber) : null
       }
+
+      console.log('Submitting player data:', requestData)
+      console.log('URL:', url, 'Method:', method)
 
       const response = await fetch(url, {
         method,
@@ -186,6 +205,7 @@ export default function PlayersManagement() {
       })
 
       const data = await response.json()
+      console.log('Response:', response.status, data)
 
       if (response.ok) {
         setSuccess(editingPlayer ? "Player updated successfully!" : "Player created successfully!")
@@ -199,12 +219,15 @@ export default function PlayersManagement() {
         })
         setShowForm(false)
         setEditingPlayer(null)
-        fetchPlayers()
+        await fetchPlayers()
       } else {
         setError(data.message || `Failed to ${editingPlayer ? 'update' : 'create'} player`)
+        shouldRestoreScrollRef.current = false
       }
     } catch (error) {
+      console.error('Submit error:', error)
       setError("Network error")
+      shouldRestoreScrollRef.current = false
     } finally {
       setIsSaving(false)
     }
@@ -230,6 +253,10 @@ export default function PlayersManagement() {
       return
     }
 
+    // Save current scroll position
+    scrollPositionRef.current = window.scrollY
+    shouldRestoreScrollRef.current = true
+
     setDeletingPlayerId(player.id)
     try {
       const response = await fetch(`/api/admin/players/${player.id}`, {
@@ -240,12 +267,14 @@ export default function PlayersManagement() {
 
       if (response.ok) {
         setSuccess("Player deleted successfully!")
-        fetchPlayers()
+        await fetchPlayers()
       } else {
         setError(data.message || "Failed to delete player")
+        shouldRestoreScrollRef.current = false
       }
     } catch (error) {
       setError("Network error")
+      shouldRestoreScrollRef.current = false
     } finally {
       setDeletingPlayerId(null)
     }
@@ -283,6 +312,10 @@ export default function PlayersManagement() {
       return
     }
 
+    // Save current scroll position
+    scrollPositionRef.current = window.scrollY
+    shouldRestoreScrollRef.current = true
+
     setIsDeleting(true)
     try {
       const deletePromises = selectedPlayers.map(playerId =>
@@ -296,14 +329,16 @@ export default function PlayersManagement() {
       if (successCount > 0) {
         setSuccess(`Successfully deleted ${successCount} player(s)`)
         setSelectedPlayers([])
-        fetchPlayers()
+        await fetchPlayers()
       }
       
       if (failCount > 0) {
         setError(`Failed to delete ${failCount} player(s)`)
+        shouldRestoreScrollRef.current = false
       }
     } catch (error) {
       setError("Network error during bulk delete")
+      shouldRestoreScrollRef.current = false
     } finally {
       setIsDeleting(false)
     }
@@ -678,105 +713,132 @@ export default function PlayersManagement() {
           </div>
         </div>
 
-        {/* Add/Edit Player Form */}
+        {/* Add/Edit Player Modal */}
         {showForm && (
-          <div className="mb-8 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center gap-2 mb-6">
-              <Users className="h-6 w-6 text-primary-600" />
-              <h3 className="text-xl font-bold text-primary-800">
-                {editingPlayer ? "Edit" : "Add New"} Player
-              </h3>
-            </div>
-
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Player Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
-                  placeholder="e.g., Virat Kohli"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  IPL Team *
-                </label>
-                <select
-                  name="iplTeamId"
-                  required
-                  value={formData.iplTeamId}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
-                >
-                  <option value="">Select Team</option>
-                  {teams.map(team => (
-                    <option key={team.id} value={team.id}>
-                      {team.shortName} - {team.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Role *
-                </label>
-                <select
-                  name="role"
-                  required
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
-                >
-                  {PLAYER_ROLES.map(role => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Jersey Number (Optional)
-                </label>
-                <input
-                  type="number"
-                  name="jerseyNumber"
-                  min="1"
-                  max="99"
-                  value={formData.jerseyNumber}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
-                  placeholder="18"
-                />
-              </div>
-
-              <div className="md:col-span-2 flex gap-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-6 w-6 text-primary-600" />
+                  <h3 className="text-xl font-bold text-primary-800">
+                    {editingPlayer ? "Edit" : "Add New"} Player
+                  </h3>
+                </div>
                 <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSaving ? (editingPlayer ? 'Updating Player...' : 'Creating Player...') : (editingPlayer ? "Update" : "Create")} Player
-                </button>
-                <button
-                  type="button"
                   onClick={resetForm}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
                   disabled={isSaving}
-                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Cancel
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
-            </form>
+
+              <div className="p-6">
+                {error && (
+                  <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    {error}
+                  </div>
+                )}
+                
+                {success && (
+                  <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                    {success}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Player Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
+                      placeholder="e.g., Virat Kohli"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      IPL Team *
+                    </label>
+                    <select
+                      name="iplTeamId"
+                      required
+                      value={formData.iplTeamId}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
+                    >
+                      <option value="">Select Team</option>
+                      {teams.map(team => (
+                        <option key={team.id} value={team.id}>
+                          {team.shortName} - {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Role *
+                    </label>
+                    <select
+                      name="role"
+                      required
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
+                    >
+                      {PLAYER_ROLES.map(role => (
+                        <option key={role.value} value={role.value}>
+                          {role.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Jersey Number (Optional)
+                    </label>
+                    <input
+                      type="number"
+                      name="jerseyNumber"
+                      min="1"
+                      max="99"
+                      value={formData.jerseyNumber}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
+                      placeholder="18"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 flex gap-4 pt-4 border-t border-gray-200">
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSaving ? (editingPlayer ? 'Updating Player...' : 'Creating Player...') : (editingPlayer ? "Update" : "Create")} Player
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      disabled={isSaving}
+                      className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         )}
 

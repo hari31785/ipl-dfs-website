@@ -56,9 +56,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params
     const { name, role, price, jerseyNumber, iplTeamId } = await request.json()
 
-    if (!name || !role || !price || !iplTeamId) {
+    if (!name || !role || !iplTeamId) {
       return NextResponse.json(
-        { message: "Name, role, price, and team are required" },
+        { message: "Name, role, and team are required" },
         { status: 400 }
       )
     }
@@ -72,8 +72,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       )
     }
 
-    // Validate price range
-    if (price < 5 || price > 15) {
+    // Validate price range only if price is provided
+    if (price !== undefined && price !== null && (price < 5 || price > 15)) {
       return NextResponse.json(
         { message: "Price must be between 5 and 15 credits" },
         { status: 400 }
@@ -132,14 +132,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       )
     }
 
+    // Build update data - only include price if it's provided
+    const updateData: any = {
+      name,
+      role,
+      jerseyNumber: jerseyNumber ? parseInt(jerseyNumber) : null,
+      iplTeamId
+    }
+    
+    if (price !== undefined && price !== null) {
+      updateData.price = price
+    }
+
     const player = await prisma.player.update({
       where: { id },
-      data: {
-        name,
-        role,
-        jerseyNumber: jerseyNumber ? parseInt(jerseyNumber) : null,
-        iplTeamId
-      },
+      data: updateData,
       include: {
         iplTeam: {
           select: {
