@@ -944,12 +944,12 @@ export default function DashboardPage() {
                       <Zap className="h-4 w-4" />
                       Active
                       {userContests.filter(contest => 
-                        // Active: Contest has been started by admin (status is LIVE)
-                        contest.contest.status === 'LIVE'
+                        // Active: Contest has been started by admin (status is LIVE or ACTIVE)
+                        contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE'
                       ).length > 0 && (
                         <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
                           {userContests.filter(contest => 
-                            contest.contest.status === 'LIVE'
+                            contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE'
                           ).length}
                         </span>
                       )}
@@ -1033,8 +1033,8 @@ export default function DashboardPage() {
                       )
                     } else if (contestSubTab === 'active') {
                       filteredContests = filteredContests.filter(contest => 
-                        // Active: Contest has been started by admin
-                        contest.contest.status === 'LIVE'
+                        // Active: Contest has been started by admin (LIVE or ACTIVE status)
+                        contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE'
                       )
                     } else if (contestSubTab === 'completed') {
                       filteredContests = filteredContests.filter(contest => 

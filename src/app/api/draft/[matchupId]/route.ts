@@ -73,7 +73,7 @@ export async function GET(
     const now = new Date();
     
     // Check both contest and matchup status for draft accessibility
-    // Contest can be in DRAFT_PHASE, LIVE, or COMPLETED
+    // Contest can be in DRAFT_PHASE, LIVE, ACTIVE, or COMPLETED
     // Matchup should be in DRAFTING or COMPLETED status
     const isDraftPhase = 
       contest.status === 'DRAFT_PHASE' || 
@@ -82,6 +82,7 @@ export async function GET(
     const isCompletedPhase = 
       contest.status === 'COMPLETED' || 
       contest.status === 'LIVE' ||
+      contest.status === 'ACTIVE' ||
       matchup.status === 'COMPLETED';
     const isPastDeadline = now > signupDeadline;
     

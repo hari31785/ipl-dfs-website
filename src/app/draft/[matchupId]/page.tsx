@@ -251,8 +251,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         if (response.ok) {
           const data = await response.json();
           // Check if firstPickUser has been set (toss completed)
-          if (data.firstPickUser) {
-            console.log('✅ Toss result found! Winner picks first:', data.firstPickUser);
+          if (data.matchup && data.matchup.firstPickUser) {
+            console.log('✅ Toss result found! Winner picks first:', data.matchup.firstPickUser);
             
             // Clear the polling interval
             if (tossPollingIntervalRef.current) {

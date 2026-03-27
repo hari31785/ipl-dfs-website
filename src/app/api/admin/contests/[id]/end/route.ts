@@ -56,9 +56,9 @@ export async function POST(
       );
     }
 
-    if (contest.status !== 'LIVE') {
+    if (contest.status !== 'LIVE' && contest.status !== 'ACTIVE') {
       return NextResponse.json(
-        { message: 'Contest must be in LIVE status to end' },
+        { message: 'Contest must be in LIVE or ACTIVE status to end' },
         { status: 400 }
       );
     }
