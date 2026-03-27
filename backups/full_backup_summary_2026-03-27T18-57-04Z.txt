@@ -1,0 +1,35 @@
+═══════════════════════════════════════
+      FULL DATABASE BACKUP SUMMARY      
+═══════════════════════════════════════
+
+Date: 3/27/2026, 2:57:04 PM
+Timestamp: 2026-03-27T18:57:00.598Z
+Version: 1.0.0
+
+───────────────────────────────────────
+               STATISTICS               
+───────────────────────────────────────
+
+users                    :     25 records
+teams                    :     10 records
+tournaments              :      1 records
+players                  :    246 records
+games                    :      2 records
+contests                 :      6 records
+signups                  :     41 records
+matchups                 :      0 records
+draftPicks               :      0 records
+playerStats              :      0 records
+coinTransactions         :      0 records
+tournamentBalances       :      4 records
+adminCoins               :      1 records
+
+───────────────────────────────────────
+TOTAL RECORDS           :    336
+───────────────────────────────────────
+
+FILES:
+  Data    : full_backup_2026-03-27T18-57-04Z.json
+  Summary : full_backup_summary_2026-03-27T18-57-04Z.txt
+
+═══════════════════════════════════════
