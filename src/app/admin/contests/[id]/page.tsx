@@ -17,6 +17,7 @@ interface DraftPick {
   id: string;
   pickOrder: number;
   pickTimestamp: string;
+  pickedByUserId: string;
   player: Player;
 }
 
@@ -163,7 +164,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
 
   const getUserPicks = (matchup: Matchup, userSignupId: string) => {
     return matchup.draftPicks
-      .filter(pick => pick.pickOrder % 2 === (matchup.user1.id === userSignupId ? 1 : 0))
+      .filter(pick => pick.pickedByUserId === userSignupId)
       .sort((a, b) => a.pickOrder - b.pickOrder);
   };
 
@@ -958,23 +959,52 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                             </div>
                             {matchup.user1.user.name}
                           </h3>
-                          <div className="space-y-2">
-                            {user1Picks.length === 0 ? (
-                              <div className="text-sm text-gray-500 italic">No picks yet</div>
-                            ) : (
-                              user1Picks.map(pick => (
-                                <div key={pick.id} className="flex items-center gap-3 p-2 bg-blue-50 rounded">
-                                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                    {pick.pickOrder}
+                          {user1Picks.length === 0 ? (
+                            <div className="text-sm text-gray-500 italic">No picks yet</div>
+                          ) : (
+                            <>
+                              {/* Starting 5 */}
+                              <div className="mb-4">
+                                <div className="text-xs font-semibold text-gray-600 uppercase mb-2 flex items-center gap-1">
+                                  ⭐ Starting 5
+                                </div>
+                                <div className="space-y-2">
+                                  {user1Picks.slice(0, 5).map(pick => (
+                                    <div key={pick.id} className="flex items-center gap-3 p-2 bg-blue-50 rounded">
+                                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                        {pick.pickOrder}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="font-medium text-sm text-gray-900">{pick.player.name}</div>
+                                        <div className="text-xs text-gray-600">{pick.player.role}</div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              {/* Bench */}
+                              {user1Picks.length > 5 && (
+                                <div>
+                                  <div className="text-xs font-semibold text-gray-600 uppercase mb-2 flex items-center gap-1">
+                                    🪑 Bench
                                   </div>
-                                  <div className="flex-1">
-                                    <div className="font-medium text-sm text-gray-900">{pick.player.name}</div>
-                                    <div className="text-xs text-gray-600">{pick.player.role}</div>
+                                  <div className="space-y-2">
+                                    {user1Picks.slice(5).map(pick => (
+                                      <div key={pick.id} className="flex items-center gap-3 p-2 bg-gray-100 rounded">
+                                        <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                          {pick.pickOrder}
+                                        </div>
+                                        <div className="flex-1">
+                                          <div className="font-medium text-sm text-gray-700">{pick.player.name}</div>
+                                          <div className="text-xs text-gray-500">{pick.player.role}</div>
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
-                              ))
-                            )}
-                          </div>
+                              )}
+                            </>
+                          )}
                         </div>
 
                         {/* User 2 Picks */}
@@ -985,23 +1015,52 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                             </div>
                             {matchup.user2.user.name}
                           </h3>
-                          <div className="space-y-2">
-                            {user2Picks.length === 0 ? (
-                              <div className="text-sm text-gray-500 italic">No picks yet</div>
-                            ) : (
-                              user2Picks.map(pick => (
-                                <div key={pick.id} className="flex items-center gap-3 p-2 bg-purple-50 rounded">
-                                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                    {pick.pickOrder}
+                          {user2Picks.length === 0 ? (
+                            <div className="text-sm text-gray-500 italic">No picks yet</div>
+                          ) : (
+                            <>
+                              {/* Starting 5 */}
+                              <div className="mb-4">
+                                <div className="text-xs font-semibold text-gray-600 uppercase mb-2 flex items-center gap-1">
+                                  ⭐ Starting 5
+                                </div>
+                                <div className="space-y-2">
+                                  {user2Picks.slice(0, 5).map(pick => (
+                                    <div key={pick.id} className="flex items-center gap-3 p-2 bg-purple-50 rounded">
+                                      <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                        {pick.pickOrder}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="font-medium text-sm text-gray-900">{pick.player.name}</div>
+                                        <div className="text-xs text-gray-600">{pick.player.role}</div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              {/* Bench */}
+                              {user2Picks.length > 5 && (
+                                <div>
+                                  <div className="text-xs font-semibold text-gray-600 uppercase mb-2 flex items-center gap-1">
+                                    🪑 Bench
                                   </div>
-                                  <div className="flex-1">
-                                    <div className="font-medium text-sm text-gray-900">{pick.player.name}</div>
-                                    <div className="text-xs text-gray-600">{pick.player.role}</div>
+                                  <div className="space-y-2">
+                                    {user2Picks.slice(5).map(pick => (
+                                      <div key={pick.id} className="flex items-center gap-3 p-2 bg-gray-100 rounded">
+                                        <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                          {pick.pickOrder}
+                                        </div>
+                                        <div className="flex-1">
+                                          <div className="font-medium text-sm text-gray-700">{pick.player.name}</div>
+                                          <div className="text-xs text-gray-500">{pick.player.role}</div>
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
-                              ))
-                            )}
-                          </div>
+                              )}
+                            </>
+                          )}
                         </div>
                       </div>
 
