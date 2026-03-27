@@ -168,7 +168,7 @@ function ContestCard({
         )}
         
         {/* Open Drafting */}
-        {contest.status === 'DRAFT_PHASE' && (
+        {contest.status === 'DRAFT_PHASE' && (!contest.matchupStats || contest.matchupStats.drafting === 0) && (
           <button
             onClick={() => onOpenDrafting(contest.id)}
             className="block w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-sm font-medium"
@@ -177,8 +177,10 @@ function ContestCard({
           </button>
         )}
 
-        {/* Start Contest */}
-        {contest.status === 'DRAFT_PHASE' && contest.matchupStats && contest.matchupStats.completed > 0 && (
+        {/* Start Contest - Show when drafting is open and at least one draft is complete */}
+        {contest.status === 'DRAFT_PHASE' && contest.matchupStats && (
+          contest.matchupStats.drafting > 0 || contest.matchupStats.completed > 0
+        ) && contest.matchupStats.completed > 0 && (
           <button
             onClick={() => onUpdateStatus(contest.id, 'LIVE')}
             className="block w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-sm font-medium"
@@ -1152,7 +1154,7 @@ export default function ContestsPage() {
                   )}
                   
                   {/* Open Drafting Button (for DRAFT_PHASE status) */}
-                  {contest.status === 'DRAFT_PHASE' && (
+                  {contest.status === 'DRAFT_PHASE' && (!contest.matchupStats || contest.matchupStats.drafting === 0) && (
                     <button
                       onClick={() => openDrafting(contest.id)}
                       className="block w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
@@ -1163,7 +1165,9 @@ export default function ContestsPage() {
                   )}
 
                   {/* Start Contest Button - transitions to LIVE */}
-                  {contest.status === 'DRAFT_PHASE' && contest.matchupStats && contest.matchupStats.completed > 0 && (
+                  {contest.status === 'DRAFT_PHASE' && contest.matchupStats && (
+                    contest.matchupStats.drafting > 0 || contest.matchupStats.completed > 0
+                  ) && contest.matchupStats.completed > 0 && (
                     <button
                       onClick={() => updateContestStatus(contest.id, 'LIVE')}
                       className="block w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition mt-2"
