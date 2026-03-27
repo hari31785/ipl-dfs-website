@@ -934,18 +934,20 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
                           <button 
                             onClick={() => handleEdit(player)}
                             disabled={deletingPlayerId === player.id}
-                            className="text-primary-600 hover:text-primary-800 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                             title="Edit player"
                           >
                             <Edit className="h-4 w-4" />
+                            <span>Edit</span>
                           </button>
                           <button 
                             onClick={() => handleDelete(player)}
                             disabled={deletingPlayerId === player.id}
-                            className="text-red-600 hover:text-red-800 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                             title="Delete player"
                           >
                             <Trash2 className="h-4 w-4" />
+                            <span>Delete</span>
                           </button>
                         </div>
                       </td>
