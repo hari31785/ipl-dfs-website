@@ -71,6 +71,119 @@ export default function HowToPlayPage() {
             </div>
           </div>
 
+          {/* Contest Flow */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-12 border border-white/20">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center">
+              <Trophy className="h-6 w-6 mr-3 text-secondary-400" />
+              Contest Flow: Join → Win
+            </h2>
+            
+            {/* Visual Flowchart */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              {/* Step 1 */}
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2">1</div>
+                <div className="text-xl mb-1">🎯</div>
+                <h3 className="font-bold text-white text-xs mb-1">Join Contest</h3>
+                <p className="text-blue-200 text-xs">Browse & join from dashboard</p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2">2</div>
+                <div className="text-xl mb-1">📱</div>
+                <h3 className="font-bold text-white text-xs mb-1">Draft Opens</h3>
+                <p className="text-blue-200 text-xs">After signups close - check "Your Contests"</p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2">3</div>
+                <div className="text-xl mb-1">🪙</div>
+                <h3 className="font-bold text-white text-xs mb-1">Coin Toss</h3>
+                <p className="text-blue-200 text-xs">Real time flip on draft page</p>
+              </div>
+
+              {/* Step 4 */}
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2">4</div>
+                <div className="text-xl mb-1">🔄</div>
+                <h3 className="font-bold text-white text-xs mb-1">Snake Draft</h3>
+                <p className="text-blue-200 text-xs">Pick 7 players each</p>
+              </div>
+
+              {/* Step 5 */}
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2">5</div>
+                <div className="text-xl mb-1">✅</div>
+                <h3 className="font-bold text-white text-xs mb-1">Draft Complete</h3>
+                <p className="text-blue-200 text-xs">Teams finalized, wait for match</p>
+              </div>
+
+              {/* Step 6 */}
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="w-8 h-8 bg-yellow-600 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2">6</div>
+                <div className="text-xl mb-1">🏏</div>
+                <h3 className="font-bold text-white text-xs mb-1">Live Match</h3>
+                <p className="text-blue-200 text-xs">Players score points</p>
+              </div>
+
+              {/* Step 7 */}
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="w-8 h-8 bg-yellow-500 text-black rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2">7</div>
+                <div className="text-xl mb-1">📈</div>
+                <h3 className="font-bold text-white text-xs mb-1">Live Scoring</h3>
+                <p className="text-blue-200 text-xs">Track real-time progress</p>
+              </div>
+
+              {/* Step 8 */}
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2">8</div>
+                <div className="text-xl mb-1">🏆</div>
+                <h3 className="font-bold text-white text-xs mb-1">Final Results</h3>
+                <p className="text-blue-200 text-xs">Winner gets coins</p>
+              </div>
+            </div>
+
+            {/* Flow Arrows */}
+            <div className="hidden md:block mb-4">
+              <div className="flex items-center justify-center space-x-6 mb-2">
+                <span className="text-secondary-400 text-sm">→</span>
+                <span className="text-secondary-400 text-sm">→</span>
+                <span className="text-secondary-400 text-sm">→</span>
+                <span className="text-secondary-400 text-sm">→</span>
+              </div>
+              <div className="flex items-center justify-center space-x-6">
+                <span className="text-secondary-400 text-sm">→</span>
+                <span className="text-secondary-400 text-sm">→</span>
+                <span className="text-secondary-400 text-sm">→</span>
+                <span className="text-secondary-400 text-sm">🏁</span>
+              </div>
+            </div>
+
+            {/* Quick Summary */}
+            <div className="bg-gradient-to-r from-secondary-500/20 to-orange-500/20 rounded-lg p-4 border border-secondary-400/30">
+              <div className="grid md:grid-cols-4 gap-3 text-center">
+                <div>
+                  <div className="font-bold text-white text-xs">⏰ Total Time</div>
+                  <div className="text-blue-100 text-xs">~3-4 hours</div>
+                </div>
+                <div>
+                  <div className="font-bold text-white text-xs">🎮 Draft Window</div>
+                  <div className="text-blue-100 text-xs">Opens after signups close</div>
+                </div>
+                <div>
+                  <div className="font-bold text-white text-xs">⚡ Draft Duration</div>
+                  <div className="text-blue-100 text-xs">15-30 mins</div>
+                </div>
+                <div>
+                  <div className="font-bold text-white text-xs">💰 Rewards</div>
+                  <div className="text-blue-100 text-xs">Coins & leaderboard</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Detailed Rules */}
           <div className="space-y-8">
             {/* Team Building */}
