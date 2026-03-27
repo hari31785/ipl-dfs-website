@@ -56,10 +56,12 @@ interface Matchup {
     id: string;
     contestType: string;
     coinValue: number;
+    status: string;
     iplGame: {
       id: string;
       title: string;
       gameDate: string;
+      status: string;
       team1: {
         id: string;
         name: string;
@@ -321,49 +323,47 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
           </div>
         </div>
 
-        {hasScores && (
-          <div className={`rounded-xl p-6 mb-6 shadow-lg ${
+        {/* Victory/Result Banner - Only show for completed games, not for live/active games */}
+        {hasScores && matchup.contest.status === 'COMPLETED' && (
+          <div className={`rounded-lg p-4 mb-4 shadow-md ${
             isTie ? 'bg-gradient-to-r from-gray-500 to-gray-600' :
             didIWin ? 'bg-gradient-to-r from-green-500 to-green-600' :
             'bg-gradient-to-r from-red-500 to-red-600'
           }`}>
             <div className="text-center">
-              <p className="text-white font-bold text-3xl mb-3 flex items-center justify-center gap-2">
+              <p className="text-white font-bold text-xl mb-2 flex items-center justify-center gap-1">
                 {isTie ? '🤝 Tie Game!' : didIWin ? '🎉 You Won!' : '😔 You Lost'}
               </p>
               {!isTie && (
-                <>
-                  <div className="mb-4">
-                    <div className="text-white/90 text-sm mb-1">Victory Margin</div>
-                    <div className="text-white font-black text-5xl">
+                <div className="flex items-center justify-center gap-6 mb-2">
+                  {/* Victory Margin */}
+                  <div>
+                    <div className="text-white/80 text-xs">Victory Margin</div>
+                    <div className="text-white font-black text-2xl">
                       {didIWin ? '+' : ''}{(myTotalPoints - opponentTotalPoints).toFixed(1)}
                     </div>
-                    <div className="text-white/90 text-xs mt-1">Fantasy Points</div>
                   </div>
                   {/* Coins Won/Lost */}
-                  <div className="mb-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border-2 border-white/30">
-                    <div className="text-white/90 text-sm mb-2">Coins Impact</div>
-                    <div className={`text-white font-black text-4xl ${
-                      didIWin ? 'drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : ''
+                  <div className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded border border-white/30">
+                    <div className="text-white/80 text-xs">Coins Impact</div>
+                    <div className={`text-white font-black text-2xl ${
+                      didIWin ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]' : ''
                     }`}>
                       {didIWin ? '+' : '-'}{Math.abs((myTotalPoints - opponentTotalPoints) * matchup.contest.coinValue).toFixed(0)}
-                      <span className="text-2xl ml-2">🪙</span>
-                    </div>
-                    <div className="text-white/90 text-xs mt-2">
-                      {Math.abs(myTotalPoints - opponentTotalPoints).toFixed(1)} points × {matchup.contest.coinValue} coins/point
+                      <span className="text-base ml-1">🪙</span>
                     </div>
                   </div>
-                </>
-              )}
-              <div className="flex items-center justify-center gap-8 mt-4 pt-4 border-t border-white/30">
-                <div className="text-center">
-                  <div className="text-white/90 text-sm mb-1">Your Score</div>
-                  <div className="text-white font-black text-3xl">⭐ {myTotalPoints.toFixed(1)}</div>
                 </div>
-                <div className="text-white text-2xl font-bold">vs</div>
+              )}
+              <div className="flex items-center justify-center gap-6 pt-2 border-t border-white/30">
                 <div className="text-center">
-                  <div className="text-white/90 text-sm mb-1">Opponent Score</div>
-                  <div className="text-white font-black text-3xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
+                  <div className="text-white/80 text-xs mb-0.5">Your Score</div>
+                  <div className="text-white font-black text-xl">⭐ {myTotalPoints.toFixed(1)}</div>
+                </div>
+                <div className="text-white text-lg font-bold">vs</div>
+                <div className="text-center">
+                  <div className="text-white/80 text-xs mb-0.5">Opponent Score</div>
+                  <div className="text-white font-black text-xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
                 </div>
               </div>
             </div>

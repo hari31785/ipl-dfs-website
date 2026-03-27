@@ -1138,36 +1138,38 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Status */}
-                      <div className={`border rounded p-2 mb-2 ${
-                        signup.matchup 
-                          ? signup.matchup.status === 'DRAFTING' 
-                            ? 'bg-blue-50 border-blue-200' 
-                            : 'bg-green-50 border-green-200'
-                          : 'bg-yellow-50 border-yellow-200'
-                      }`}>
-                        <p className="text-xs font-medium">
-                          {signup.matchup ? (
-                            signup.matchup.status === 'DRAFTING' ? (
-                              <span className="text-blue-800">
-                                ✍️ Drafting vs {signup.matchup.opponent.name}
-                              </span>
-                            ) : signup.matchup.status === 'COMPLETED' ? (
-                              <span className="text-green-800">
-                                ✅ Draft Complete - Ready for game
-                              </span>
+                      {/* Status - Only show for upcoming/drafted tabs, not active/completed */}
+                      {contestSubTab !== 'active' && contestSubTab !== 'completed' && (
+                        <div className={`border rounded p-2 mb-2 ${
+                          signup.matchup 
+                            ? signup.matchup.status === 'DRAFTING' 
+                              ? 'bg-blue-50 border-blue-200' 
+                              : 'bg-green-50 border-green-200'
+                            : 'bg-yellow-50 border-yellow-200'
+                        }`}>
+                          <p className="text-xs font-medium">
+                            {signup.matchup ? (
+                              signup.matchup.status === 'DRAFTING' ? (
+                                <span className="text-blue-800">
+                                  ✍️ Drafting vs {signup.matchup.opponent.name}
+                                </span>
+                              ) : signup.matchup.status === 'COMPLETED' ? (
+                                <span className="text-green-800">
+                                  ✅ Draft Complete - Ready for game
+                                </span>
+                              ) : (
+                                <span className="text-yellow-800">
+                                  ⏳ Matched with {signup.matchup.opponent.name} - Draft starting soon
+                                </span>
+                              )
                             ) : (
                               <span className="text-yellow-800">
-                                ⏳ Matched with {signup.matchup.opponent.name} - Draft starting soon
+                                ⏳ Waiting for matchup assignment
                               </span>
-                            )
-                          ) : (
-                            <span className="text-yellow-800">
-                              ⏳ Waiting for matchup assignment
-                            </span>
-                          )}
-                        </p>
-                      </div>
+                            )}
+                          </p>
+                        </div>
+                      )}
 
                       {/* Scores - Only show if draft is complete and game has stats */}
                       {signup.matchup?.status === 'COMPLETED' && signup.matchup.myScore !== undefined && (
@@ -1201,7 +1203,8 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           </div>
-                          {signup.matchup.myScore !== signup.matchup.opponentScore && (
+                          {/* Only show won/lost status in completed tab, not in active tab where scores can still change */}
+                          {contestSubTab === 'completed' && signup.matchup.myScore !== signup.matchup.opponentScore && (
                             <div className="mt-2 text-center">
                               <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
                                 signup.matchup.myScore > signup.matchup.opponentScore!

@@ -216,15 +216,6 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     Contests
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                    Points Won
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                    Points Lost
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                    Net Points
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                     V̶₵ Won
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
@@ -247,7 +238,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
               <tbody className="bg-white divide-y divide-gray-200">
                 {leaderboard.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-lg">No completed contests yet</p>
                       <p className="text-sm">The leaderboard will populate as contests are completed</p>
@@ -286,23 +277,6 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                         >
                           {entry.contestsPlayed}
                         </a>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-sm font-bold text-green-600">
-                          +{entry.totalPointsWon.toFixed(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-sm font-bold text-red-600">
-                          {entry.totalPointsLost.toFixed(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className={`text-sm font-bold ${
-                          entry.netPoints > 0 ? 'text-green-600' : entry.netPoints < 0 ? 'text-red-600' : 'text-gray-600'
-                        }`}>
-                          {entry.netPoints > 0 ? '+' : ''}{entry.netPoints.toFixed(1)}
-                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-1">
