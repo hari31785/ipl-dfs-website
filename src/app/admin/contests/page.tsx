@@ -225,7 +225,8 @@ export default function ContestsPage() {
   const [createForm, setCreateForm] = useState({
     contestType: '',
     maxParticipants: 10,
-    iplGameId: ''
+    iplGameId: '',
+    customCoinValue: ''
   });
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState('');
@@ -633,12 +634,23 @@ export default function ContestsPage() {
     setCreateError('');
     
     try {
+      const requestBody: any = {
+        contestType: createForm.contestType,
+        maxParticipants: createForm.maxParticipants,
+        iplGameId: createForm.iplGameId
+      };
+      
+      // If custom contest type, include the custom coin value
+      if (createForm.contestType === 'CUSTOM') {
+        requestBody.customCoinValue = parseInt(createForm.customCoinValue);
+      }
+      
       const response = await fetch('/api/admin/contests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(createForm),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -647,7 +659,8 @@ export default function ContestsPage() {
         setCreateForm({
           contestType: '',
           maxParticipants: 10,
-          iplGameId: ''
+          iplGameId: '',
+          customCoinValue: ''
         });
         alert('Contest created successfully!');
       } else {
@@ -765,8 +778,24 @@ export default function ContestsPage() {
                   <option value="HIGH_ROLLER">High Roller (100 coins)</option>
                   <option value="REGULAR">Regular (50 coins)</option>
                   <option value="LOW_STAKES">Low Stakes (25 coins)</option>
+                  <option value="CUSTOM">Custom</option>
                 </select>
               </div>
+              
+              {createForm.contestType === 'CUSTOM' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Custom Coin Value</label>
+                  <input
+                    type="number"
+                    value={createForm.customCoinValue}
+                    onChange={(e) => setCreateForm({...createForm, customCoinValue: e.target.value})}
+                    required
+                    min="1"
+                    placeholder="Enter coin value"
+                    className="w-full border rounded px-3 py-2 text-gray-900 bg-white"
+                  />
+                </div>
+              )}
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Max Participants</label>
@@ -817,7 +846,8 @@ export default function ContestsPage() {
                     setCreateForm({
                       contestType: '',
                       maxParticipants: 10,
-                      iplGameId: ''
+                      iplGameId: '',
+                      customCoinValue: ''
                     });
                   }}
                   className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded font-semibold"

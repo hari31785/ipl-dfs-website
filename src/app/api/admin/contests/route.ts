@@ -67,7 +67,7 @@ export async function GET() {
 // POST /api/admin/contests - Create new contest
 export async function POST(request: NextRequest) {
   try {
-    const { contestType, maxParticipants, iplGameId } = await request.json();
+    const { contestType, maxParticipants, iplGameId, customCoinValue } = await request.json();
 
     // Validation
     if (!contestType || !maxParticipants || !iplGameId) {
@@ -77,16 +77,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Set coinValue based on contest type (not used for entry fee)
-    const coinValue = contestType === 'HIGH_ROLLER' ? 100 : contestType === 'REGULAR' ? 50 : 25;
-
     // Validate contest type
-    const validContestTypes = ['HIGH_ROLLER', 'REGULAR', 'LOW_STAKES'];
+    const validContestTypes = ['HIGH_ROLLER', 'REGULAR', 'LOW_STAKES', 'CUSTOM'];
     if (!validContestTypes.includes(contestType)) {
       return NextResponse.json(
         { message: 'Invalid contest type' },
         { status: 400 }
       );
+    }
+
+    // Set coinValue based on contest type (not used for entry fee)
+    let coinValue: number;
+    if (contestType === 'CUSTOM') {
+      if (!customCoinValue || isNaN(customCoinValue) || customCoinValue <= 0) {
+        return NextResponse.json(
+          { message: 'Valid custom coin value is required for CUSTOM contest type' },
+          { status: 400 }
+        );
+      }
+      coinValue = customCoinValue;
+    } else {
+      coinValue = contestType === 'HIGH_ROLLER' ? 100 : contestType === 'REGULAR' ? 50 : 25;
     }
 
     // Check if game exists and is valid for contest creation
