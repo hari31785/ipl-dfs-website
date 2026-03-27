@@ -95,6 +95,7 @@ interface UserContest {
     draftPicks: {
       id: string
       pickOrder: number
+      pickedByUserId: string
       player: {
         id: string
         name: string
@@ -1641,11 +1642,7 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     {(() => {
                       const myPicks = selectedDraftedContest.matchup!.draftPicks
-                        .filter(pick => {
-                          const isUser1 = selectedDraftedContest.matchup!.user1Id === selectedDraftedContest.id
-                          const pickIsUser1 = pick.pickOrder % 2 === (selectedDraftedContest.matchup!.firstPickUser === 'user1' ? 1 : 0)
-                          return isUser1 ? pickIsUser1 : !pickIsUser1
-                        })
+                        .filter(pick => pick.pickedByUserId === selectedDraftedContest.id)
                         .sort((a, b) => a.pickOrder - b.pickOrder)
                       
                       if (myPicks.length === 0) {
@@ -1719,11 +1716,7 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     {(() => {
                       const opponentPicks = selectedDraftedContest.matchup!.draftPicks
-                        .filter(pick => {
-                          const isUser1 = selectedDraftedContest.matchup!.user1Id === selectedDraftedContest.id
-                          const pickIsUser1 = pick.pickOrder % 2 === (selectedDraftedContest.matchup!.firstPickUser === 'user1' ? 1 : 0)
-                          return isUser1 ? !pickIsUser1 : pickIsUser1
-                        })
+                        .filter(pick => pick.pickedByUserId !== selectedDraftedContest.id)
                         .sort((a, b) => a.pickOrder - b.pickOrder)
                       
                       if (opponentPicks.length === 0) {

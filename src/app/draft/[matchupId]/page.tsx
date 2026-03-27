@@ -622,16 +622,16 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <div className="text-center py-8 text-gray-500 italic">No picks yet</div>
               ) : (
                 <>
-                  {/* Starting XI Section */}
+                  {/* Starting 5 Section */}
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b-2 border-green-600">
                       <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">XI</span>
+                        <span className="text-white font-bold text-sm">5</span>
                       </div>
-                      <h4 className="font-bold text-green-800 text-lg">Starting XI</h4>
-                      <span className="text-sm text-green-600">({Math.min(myPicks.length, 11)}/11)</span>
+                      <h4 className="font-bold text-green-800 text-lg">Starting 5</h4>
+                      <span className="text-sm text-green-600">({Math.min(myPicks.length, 5)}/5)</span>
                     </div>
-                    {myPicks.slice(0, 11).map(pick => (
+                    {myPicks.slice(0, 5).map(pick => (
                       <div key={pick.id} className="mb-3 group relative bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
                         <div className="flex items-start gap-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-cricket-600 to-green-800 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shrink-0">
@@ -666,16 +666,16 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   </div>
 
                   {/* Substitutes Section */}
-                  {myPicks.length > 11 && (
+                  {myPicks.length > 5 && (
                     <div>
                       <div className="flex items-center gap-2 mb-3 pb-2 border-b-2 border-orange-500">
                         <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
                           <span className="text-white font-bold text-sm">SUB</span>
                         </div>
                         <h4 className="font-bold text-orange-700 text-lg">Substitutes</h4>
-                        <span className="text-sm text-orange-600">({myPicks.length - 11}/3)</span>
+                        <span className="text-sm text-orange-600">({myPicks.length - 5}/2)</span>
                       </div>
-                      {myPicks.slice(11).map(pick => (
+                      {myPicks.slice(5).map(pick => (
                         <div key={pick.id} className="mb-3 group relative bg-gradient-to-br from-orange-50 via-amber-50 to-white border-2 border-orange-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
                           <div className="flex items-start gap-4">
                             <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">
