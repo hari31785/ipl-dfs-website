@@ -88,11 +88,25 @@ interface UserContest {
   matchup?: {
     id: string
     status: string
+    draftPicksCount: number
+    user1Id: string
+    user2Id: string
+    firstPickUser: string
+    draftPicks: {
+      id: string
+      pickOrder: number
+      player: {
+        id: string
+        name: string
+        role: string
+      }
+    }[]
     opponent: {
       id: string
       name: string
       username: string
     }
+    opponentUsername: string
     myScore?: number
     opponentScore?: number
   } | null
@@ -132,6 +146,8 @@ export default function DashboardPage() {
     securityAnswer3: '',
     password: ''
   })
+  const [showDraftedTeamsModal, setShowDraftedTeamsModal] = useState(false)
+  const [selectedDraftedContest, setSelectedDraftedContest] = useState<UserContest | null>(null)
 
   useEffect(() => {
     // Get user data from localStorage (simple auth for now)
@@ -898,36 +914,18 @@ export default function DashboardPage() {
                       <Users className="h-4 w-4" />
                       Drafted
                       {userContests.filter(contest => 
-                        // Drafted: Draft is complete but contest not yet started
-                        contest.contest.status === 'DRAFTING'
+                        // Drafted: Draft is complete (14 picks) but contest not yet started
+                        (contest.contest.status === 'DRAFT_PHASE' || contest.contest.status === 'ACTIVE') && 
+                        contest.matchup && 
+                        contest.matchup.status === 'COMPLETED' &&
+                        contest.matchup.draftPicksCount === 14
                       ).length > 0 && (
                         <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full">
                           {userContests.filter(contest => 
-                            contest.contest.status === 'DRAFTING'
-                          ).length}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setContestSubTab('drafted')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      contestSubTab === 'drafted'
-                        ? 'bg-white text-blue-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Drafted
-                      {userContests.filter(contest => 
-                        // Drafted: Draft is complete but contest not yet started
-                        contest.contest.status === 'DRAFTING'
-                      ).length > 0 && (
-                        <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full">
-                          {userContests.filter(contest => 
-                            contest.contest.status === 'DRAFTING'
+                            (contest.contest.status === 'DRAFT_PHASE' || contest.contest.status === 'ACTIVE') && 
+                            contest.matchup && 
+                            contest.matchup.status === 'COMPLETED' &&
+                            contest.matchup.draftPicksCount === 14
                           ).length}
                         </span>
                       )}
@@ -1027,8 +1025,11 @@ export default function DashboardPage() {
                       )
                     } else if (contestSubTab === 'drafted') {
                       filteredContests = filteredContests.filter(contest => 
-                        // Drafted: Draft complete, waiting for admin to activate
-                        contest.contest.status === 'DRAFTING'
+                        // Drafted: Draft complete (both teams finished 14 picks), waiting for admin to activate
+                        (contest.contest.status === 'DRAFT_PHASE' || contest.contest.status === 'ACTIVE') && 
+                        contest.matchup && 
+                        contest.matchup.status === 'COMPLETED' &&
+                        contest.matchup.draftPicksCount === 14
                       )
                     } else if (contestSubTab === 'active') {
                       filteredContests = filteredContests.filter(contest => 
@@ -1216,12 +1217,24 @@ export default function DashboardPage() {
                       {/* Actions */}
                       <div className="flex gap-2">
                         {signup.matchup?.status === 'COMPLETED' ? (
-                          <button 
-                            onClick={() => window.location.href = `/scores/${signup.matchup?.id}`}
-                            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
-                          >
-                            View Scores
-                          </button>
+                          contestSubTab === 'drafted' ? (
+                            <button 
+                              onClick={() => {
+                                setSelectedDraftedContest(signup)
+                                setShowDraftedTeamsModal(true)
+                              }}
+                              className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                            >
+                              View Drafted Teams
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => window.location.href = `/scores/${signup.matchup?.id}`}
+                              className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                            >
+                              View Scores
+                            </button>
+                          )
                         ) : (
                           <button 
                             disabled={
@@ -1584,6 +1597,127 @@ export default function DashboardPage() {
                 className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {savingProfile ? 'Saving...' : 'Save Basic Info'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drafted Teams Modal */}
+      {showDraftedTeamsModal && selectedDraftedContest && selectedDraftedContest.matchup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Users className="h-6 w-6" />
+                  Drafted Teams
+                </h3>
+                <p className="text-sm text-indigo-50 mt-1">
+                  {selectedDraftedContest.contest.iplGame.title} • {selectedDraftedContest.contest.contestType.replace('_', ' ')}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDraftedTeamsModal(false)
+                  setSelectedDraftedContest(null)
+                }}
+                className="text-white hover:text-indigo-100 transition text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="overflow-auto flex-1 p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* My Team */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-2 border-blue-200">
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-gray-900">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
+                      👤
+                    </div>
+                    Your Team
+                  </h3>
+                  <div className="space-y-2">
+                    {(() => {
+                      const myPicks = selectedDraftedContest.matchup!.draftPicks
+                        .filter(pick => {
+                          const isUser1 = selectedDraftedContest.matchup!.user1Id === selectedDraftedContest.id
+                          const pickIsUser1 = pick.pickOrder % 2 === (selectedDraftedContest.matchup!.firstPickUser === 'user1' ? 1 : 0)
+                          return isUser1 ? pickIsUser1 : !pickIsUser1
+                        })
+                        .sort((a, b) => a.pickOrder - b.pickOrder)
+                      
+                      return myPicks.length === 0 ? (
+                        <div className="text-sm text-gray-500 italic">No picks yet</div>
+                      ) : (
+                        myPicks.map(pick => (
+                          <div key={pick.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm border border-blue-200">
+                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                              {pick.pickOrder}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">{pick.player.name}</div>
+                              <div className="text-sm text-gray-600">{pick.player.role}</div>
+                            </div>
+                          </div>
+                        ))
+                      )
+                    })()}
+                  </div>
+                </div>
+
+                {/* Opponent Team */}
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border-2 border-purple-200">
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-gray-900">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">
+                      🎯
+                    </div>
+                    {selectedDraftedContest.matchup!.opponentUsername || 'Opponent'}'s Team
+                  </h3>
+                  <div className="space-y-2">
+                    {(() => {
+                      const opponentPicks = selectedDraftedContest.matchup!.draftPicks
+                        .filter(pick => {
+                          const isUser1 = selectedDraftedContest.matchup!.user1Id === selectedDraftedContest.id
+                          const pickIsUser1 = pick.pickOrder % 2 === (selectedDraftedContest.matchup!.firstPickUser === 'user1' ? 1 : 0)
+                          return isUser1 ? !pickIsUser1 : pickIsUser1
+                        })
+                        .sort((a, b) => a.pickOrder - b.pickOrder)
+                      
+                      return opponentPicks.length === 0 ? (
+                        <div className="text-sm text-gray-500 italic">No picks yet</div>
+                      ) : (
+                        opponentPicks.map(pick => (
+                          <div key={pick.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm border border-purple-200">
+                            <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                              {pick.pickOrder}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">{pick.player.name}</div>
+                              <div className="text-sm text-gray-600">{pick.player.role}</div>
+                            </div>
+                          </div>
+                        ))
+                      )
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 px-6 py-4 flex justify-between items-center rounded-b-lg">
+              <div className="text-sm text-gray-600">
+                Draft completed with {selectedDraftedContest.matchup!.draftPicksCount} picks
+              </div>
+              <button
+                onClick={() => {
+                  setShowDraftedTeamsModal(false)
+                  setSelectedDraftedContest(null)
+                }}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition"
+              >
+                Close
               </button>
             </div>
           </div>

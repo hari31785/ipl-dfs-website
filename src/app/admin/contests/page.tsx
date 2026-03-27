@@ -188,7 +188,7 @@ function ContestCard({
         )}
         
         {/* End Contest */}
-        {contest.status === 'LIVE' && (
+        {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
           <button
             onClick={() => onEndContest(contest.id)}
             className="block w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-sm font-medium"
@@ -675,6 +675,7 @@ export default function ContestsPage() {
       case 'SIGNUP_CLOSED': return 'bg-yellow-100 text-yellow-800';
       case 'DRAFT_PHASE': return 'bg-blue-100 text-blue-800';
       case 'LIVE': return 'bg-purple-100 text-purple-800';
+      case 'ACTIVE': return 'bg-purple-100 text-purple-800'; // Legacy status, treat as LIVE
       case 'COMPLETED': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -1172,8 +1173,8 @@ export default function ContestsPage() {
                     </button>
                   )}
                   
-                  {/* End Contest Button (when live) */}
-                  {contest.status === 'LIVE' && (
+                  {/* End Contest Button (when live or active) */}
+                  {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
                     <button
                       onClick={() => endContest(contest.id)}
                       className="block w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
