@@ -114,10 +114,27 @@ export async function POST(
 
     console.log(`✅ Closed signups for contest ${contest.id} with ${updatedContest._count.signups} participants`);
 
-    // Automatically generate matchups
+    // Automatically generate matchups (only if none exist)
     const signups = updatedContest.signups;
     
     if (signups.length >= 2 && signups.length % 2 === 0) {
+      // Check if matchups already exist
+      if (updatedContest._count.matchups > 0) {
+        console.log(`⚠️ Matchups already exist (${updatedContest._count.matchups}). Skipping generation.`);
+        
+        // Just update status to DRAFT_PHASE
+        await prisma.contest.update({
+          where: { id: updatedContest.id },
+          data: { status: 'DRAFT_PHASE' }
+        });
+        
+        return NextResponse.json({
+          message: `Signups closed successfully. Existing ${updatedContest._count.matchups} matchups preserved.`,
+          contest: updatedContest,
+          matchupsGenerated: 0
+        });
+      }
+      
       console.log('🎲 Auto-generating matchups...');
       
       // Shuffle signups randomly

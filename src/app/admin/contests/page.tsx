@@ -168,7 +168,8 @@ function ContestCard({
         )}
         
         {/* Open Drafting */}
-        {contest.status === 'DRAFT_PHASE' && (!contest.matchupStats || contest.matchupStats.drafting === 0) && (
+        {contest.status === 'DRAFT_PHASE' && contest.matchupStats && 
+         contest.matchupStats.drafting === 0 && contest.matchupStats.completed === 0 && (
           <button
             onClick={() => onOpenDrafting(contest.id)}
             className="block w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-sm font-medium"
