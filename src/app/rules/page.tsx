@@ -1,9 +1,18 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Shield, Users, Trophy, AlertCircle, CheckCircle, Scale, Clock, Target } from "lucide-react"
 
 export default function RulesPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    // Check if user is logged in
+    const userData = localStorage.getItem('currentUser')
+    setIsLoggedIn(!!userData)
+  }, [])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700">
       {/* Header */}
@@ -11,11 +20,11 @@ export default function RulesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <Link 
-              href="/" 
+              href={isLoggedIn ? "/dashboard" : "/"}
               className="inline-flex items-center text-white hover:text-secondary-400 transition-colors"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              Back to Home
+              {isLoggedIn ? "Back to Dashboard" : "Back to Home"}
             </Link>
           </div>
         </div>
@@ -410,15 +419,17 @@ export default function RulesPage() {
                 </p>
               </div>
 
-              <div className="mt-8 text-center">
-                <Link 
-                  href="/login" 
-                  className="bg-secondary-500 hover:bg-secondary-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-xl inline-flex items-center"
-                >
-                  Accept Rules & Start Playing
-                  <ArrowLeft className="ml-2 h-5 w-5 rotate-180" />
-                </Link>
-              </div>
+              {!isLoggedIn && (
+                <div className="mt-8 text-center">
+                  <Link 
+                    href="/login" 
+                    className="bg-secondary-500 hover:bg-secondary-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-xl inline-flex items-center"
+                  >
+                    Accept Rules & Start Playing
+                    <ArrowLeft className="ml-2 h-5 w-5 rotate-180" />
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

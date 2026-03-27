@@ -182,7 +182,7 @@ function ContestCard({
           contest.matchupStats.drafting > 0 || contest.matchupStats.completed > 0
         ) && contest.matchupStats.completed > 0 && (
           <button
-            onClick={() => onUpdateStatus(contest.id, 'LIVE')}
+            onClick={() => onUpdateStatus(contest.id, 'START_CONTEST')}
             className="block w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-sm font-medium"
           >
             ▶️ Start Contest
@@ -351,6 +351,35 @@ export default function ContestsPage() {
       setGlobalLoading(false);
       alert('Failed to remove user from contest');
     }
+  };
+
+  const startContest = async (contestId: string) => {
+    // Find the contest to check matchup stats
+    const contest = contests.find(c => c.id === contestId);
+    
+    if (contest?.matchupStats) {
+      const incompleteDrafts = contest.matchupStats.waiting + contest.matchupStats.drafting;
+      
+      if (incompleteDrafts > 0) {
+        const confirmMessage = [
+          '⚠️ WARNING: Not all matchups have completed drafting!\n',
+          `Status:`,
+          `• ✅ Completed: ${contest.matchupStats.completed}`,
+          `• ✍️ Drafting: ${contest.matchupStats.drafting}`,
+          `• ⏳ Waiting: ${contest.matchupStats.waiting}`,
+          `\nTotal Incomplete: ${incompleteDrafts} matchup(s)`,
+          `\nStarting the contest now may affect users who haven't finished drafting.`,
+          `\nDo you want to proceed anyway?`
+        ].join('\n');
+        
+        if (!confirm(confirmMessage)) {
+          return; // Cancel the start
+        }
+      }
+    }
+    
+    // Proceed with starting the contest
+    updateContestStatus(contestId, 'LIVE');
   };
 
   const updateContestStatus = async (contestId: string, newStatus: string) => {
@@ -981,7 +1010,13 @@ export default function ContestsPage() {
                             onCloseSignups={closeSignups}
                             onReopenSignups={reopenSignups}
                             onOpenDrafting={openDrafting}
-                            onUpdateStatus={updateContestStatus}
+                            onUpdateStatus={(id, status) => {
+                              if (status === 'START_CONTEST') {
+                                startContest(id);
+                              } else {
+                                updateContestStatus(id, status);
+                              }
+                            }}
                             onEndContest={endContest}
                             onViewSignups={fetchContestSignups}
                             getStatusColor={getStatusColor}

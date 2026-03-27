@@ -1638,7 +1638,7 @@ export default function DashboardPage() {
                     </div>
                     Your Team
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     {(() => {
                       const myPicks = selectedDraftedContest.matchup!.draftPicks
                         .filter(pick => {
@@ -1648,20 +1648,61 @@ export default function DashboardPage() {
                         })
                         .sort((a, b) => a.pickOrder - b.pickOrder)
                       
-                      return myPicks.length === 0 ? (
-                        <div className="text-sm text-gray-500 italic">No picks yet</div>
-                      ) : (
-                        myPicks.map(pick => (
-                          <div key={pick.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm border border-blue-200">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              {pick.pickOrder}
+                      if (myPicks.length === 0) {
+                        return <div className="text-sm text-gray-500 italic">No picks yet</div>
+                      }
+                      
+                      const startingPlayers = myPicks.slice(0, 5)
+                      const benchPlayers = myPicks.slice(5)
+                      
+                      return (
+                        <>
+                          {/* Starting 5 */}
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="text-sm font-semibold text-blue-700 uppercase tracking-wide">⭐ Starting 5</div>
+                              <div className="flex-1 h-px bg-blue-300"></div>
                             </div>
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900">{pick.player.name}</div>
-                              <div className="text-sm text-gray-600">{pick.player.role}</div>
+                            <div className="space-y-2">
+                              {startingPlayers.map((pick, idx) => (
+                                <div key={pick.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm border border-blue-200">
+                                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                    {idx + 1}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="font-medium text-gray-900">{pick.player.name}</div>
+                                    <div className="text-sm text-gray-600">{pick.player.role}</div>
+                                  </div>
+                                  <div className="text-xs text-blue-600 font-medium">Pick #{pick.pickOrder}</div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))
+                          
+                          {/* Bench Players */}
+                          {benchPlayers.length > 0 && (
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">🪑 Bench</div>
+                                <div className="flex-1 h-px bg-gray-300"></div>
+                              </div>
+                              <div className="space-y-2">
+                                {benchPlayers.map((pick, idx) => (
+                                  <div key={pick.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-300">
+                                    <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                      {idx + 6}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="font-medium text-gray-800">{pick.player.name}</div>
+                                      <div className="text-sm text-gray-500">{pick.player.role}</div>
+                                    </div>
+                                    <div className="text-xs text-gray-500 font-medium">Pick #{pick.pickOrder}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )
                     })()}
                   </div>
@@ -1675,7 +1716,7 @@ export default function DashboardPage() {
                     </div>
                     {selectedDraftedContest.matchup!.opponentUsername || 'Opponent'}'s Team
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     {(() => {
                       const opponentPicks = selectedDraftedContest.matchup!.draftPicks
                         .filter(pick => {
@@ -1685,20 +1726,61 @@ export default function DashboardPage() {
                         })
                         .sort((a, b) => a.pickOrder - b.pickOrder)
                       
-                      return opponentPicks.length === 0 ? (
-                        <div className="text-sm text-gray-500 italic">No picks yet</div>
-                      ) : (
-                        opponentPicks.map(pick => (
-                          <div key={pick.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm border border-purple-200">
-                            <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              {pick.pickOrder}
+                      if (opponentPicks.length === 0) {
+                        return <div className="text-sm text-gray-500 italic">No picks yet</div>
+                      }
+                      
+                      const startingPlayers = opponentPicks.slice(0, 5)
+                      const benchPlayers = opponentPicks.slice(5)
+                      
+                      return (
+                        <>
+                          {/* Starting 5 */}
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="text-sm font-semibold text-purple-700 uppercase tracking-wide">⭐ Starting 5</div>
+                              <div className="flex-1 h-px bg-purple-300"></div>
                             </div>
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900">{pick.player.name}</div>
-                              <div className="text-sm text-gray-600">{pick.player.role}</div>
+                            <div className="space-y-2">
+                              {startingPlayers.map((pick, idx) => (
+                                <div key={pick.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm border border-purple-200">
+                                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                    {idx + 1}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="font-medium text-gray-900">{pick.player.name}</div>
+                                    <div className="text-sm text-gray-600">{pick.player.role}</div>
+                                  </div>
+                                  <div className="text-xs text-purple-600 font-medium">Pick #{pick.pickOrder}</div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))
+                          
+                          {/* Bench Players */}
+                          {benchPlayers.length > 0 && (
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">🪑 Bench</div>
+                                <div className="flex-1 h-px bg-gray-300"></div>
+                              </div>
+                              <div className="space-y-2">
+                                {benchPlayers.map((pick, idx) => (
+                                  <div key={pick.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-300">
+                                    <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                      {idx + 6}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="font-medium text-gray-800">{pick.player.name}</div>
+                                      <div className="text-sm text-gray-500">{pick.player.role}</div>
+                                    </div>
+                                    <div className="text-xs text-gray-500 font-medium">Pick #{pick.pickOrder}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )
                     })()}
                   </div>
