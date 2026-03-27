@@ -110,7 +110,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   // Check if we need to show the toss
   useEffect(() => {
-    if (matchup && currentUser && matchup.status === 'DRAFTING' && !matchup.firstPickUser) {
+    if (matchup && currentUser && matchup.status === 'DRAFTING' && !matchup.firstPickUser && tossPhase !== 'complete') {
       // Toss hasn't been done yet, show toss interface
       initiateToss();
     }
@@ -208,6 +208,12 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   const initiateToss = async () => {
     if (!matchup || !currentUser) return;
+    
+    // Don't initiate if toss is already in progress, complete, or if firstPickUser is already set
+    if (showToss || tossPhase === 'complete' || matchup.firstPickUser) {
+      console.log('⚠️ Toss already initiated, complete, or firstPickUser already set, skipping...');
+      return;
+    }
     
     console.log('🎲 Initiating toss...');
     
