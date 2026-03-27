@@ -92,6 +92,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [playerGrades, setPlayerGrades] = useState<Record<string, { grade: string; weightedScore: number; matchesPlayed: number }>>({});
   const [showGrades, setShowGrades] = useState(false);
   const [loadingGrades, setLoadingGrades] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   
   // Toss states
   const [showToss, setShowToss] = useState(false);
@@ -586,7 +587,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       {/* Header */}
       <div className="bg-white border-b-4 border-cricket-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
+          <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-4">
               <a
                 href="/dashboard"
@@ -597,14 +598,14 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               </a>
               <div className="w-px h-8 bg-black/30"></div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-black">🏏 Snake Draft</h1>
-                <div className="text-gray-800 text-sm mt-1">{matchup.contest.iplGame.title}</div>
+                <h1 className="text-xl md:text-2xl font-bold text-black">🏏 Snake Draft</h1>
+                <div className="text-gray-800 text-xs mt-1">{matchup.contest.iplGame.title}</div>
               </div>
             </div>
-            <div className="hidden md:flex flex-col items-end gap-2">
-              <div className="bg-gradient-to-r from-secondary-500 to-orange-600 px-6 py-3 rounded-xl shadow-lg border-2 border-black/30">
+            <div className="hidden md:flex flex-col items-end gap-1">
+              <div className="bg-gradient-to-r from-secondary-500 to-orange-600 px-4 py-2 rounded-lg shadow-md border border-black/30">
                 <div className="text-primary-800 text-xs font-semibold uppercase tracking-wider">Contest Type</div>
-                <div className="text-primary-800 font-black text-2xl">{matchup.contest.coinValue} COINS</div>
+                <div className="text-primary-800 font-black text-lg">{matchup.contest.coinValue} COINS</div>
               </div>
               <div className="text-black text-xs font-medium">Head-to-Head</div>
             </div>
@@ -612,37 +613,122 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Matchup Info */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
-              <div className="text-sm font-semibold text-black uppercase tracking-wide mb-2">Your Team</div>
-              <div className="text-xl font-bold text-black">{currentUser.name}</div>
-              <div className="text-sm text-black mt-1">@{currentUser.username}</div>
+        <div className="bg-white rounded-lg shadow border border-gray-200 p-3 mb-4">
+          <div className="grid md:grid-cols-3 gap-3">
+            <div className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
+              <div className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Your Team</div>
+              <div className="text-lg font-bold text-black">{currentUser.name}</div>
+              <div className="text-xs text-black mt-1">@{currentUser.username}</div>
             </div>
             <div className="text-center flex items-center justify-center">
-              <div className="text-4xl font-bold text-secondary-400">VS</div>
+              <div className="text-2xl font-bold text-secondary-400">VS</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
-              <div className="text-sm font-semibold text-black uppercase tracking-wide mb-2">Opponent</div>
-              <div className="text-xl font-bold text-black">{opponent.name}</div>
-              <div className="text-sm text-black mt-1">@{opponent.username}</div>
+            <div className="text-center p-3 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
+              <div className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Opponent</div>
+              <div className="text-lg font-bold text-black">{opponent.name}</div>
+              <div className="text-xs text-black mt-1">@{opponent.username}</div>
             </div>
           </div>
         </div>
 
+        {/* How To Play Section */}
+        <div className="bg-white rounded-lg shadow border border-gray-200 mb-4">
+          <div 
+            onClick={() => setShowHowToPlay(!showHowToPlay)}
+            className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors rounded-lg"
+          >
+            <h3 className="text-lg font-bold text-primary-800 flex items-center gap-2">
+              📚 Draft FAQs
+            </h3>
+            <div className="text-gray-500 text-sm">
+              {showHowToPlay ? '▲' : '▼'}
+            </div>
+          </div>
+          
+          {showHowToPlay && (
+            <div className="space-y-4 text-gray-700 p-3 border-t border-gray-200">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2">🪙 1. Toss Phase</h4>
+                  <ul className="text-sm space-y-1 text-blue-700">
+                    <li>• One player gets to call the toss (Heads or Tails)</li>
+                    <li>• Winner of the toss picks first in the draft</li>
+                    <li>• Toss happens automatically before draft begins</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">🔄 2. Snake Draft</h4>
+                  <ul className="text-sm space-y-1 text-green-700">
+                    <li>• 7 total picks per player (5 starters + 2 substitutes)</li>
+                    <li>• Alternating picks: 1-2-3-4-5-6-7... then 7-6-5-4-3-2-1</li>
+                    <li>• Real-time turns with auto-refresh</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <h4 className="font-bold text-orange-800 mb-2 flex items-center gap-2">👥 3. Player Selection</h4>
+                  <ul className="text-sm space-y-1 text-orange-700">
+                    <li>• Filter by Team, Role, Grade, or search by name</li>
+                    <li>• Click to select, then confirm your pick</li>
+                    <li>• Can only pick from available players</li>
+                    <li>• Consider role balance: Batsmen, Bowlers, All-rounders, Keepers</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h4 className="font-bold text-purple-800 mb-2 flex items-center gap-2">📊 4. Player Grades</h4>
+                  <ul className="text-sm space-y-1 text-purple-700">
+                    <li>• Click "Calculate & Publish Grades" to see player performance</li>
+                    <li>• Grades based on last 5 matches (A+ to E)</li>
+                    <li>• Filter by grade to find top performers</li>
+                    <li>• Hover over grades for detailed stats</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-cricket-50 to-green-50 border border-cricket-200 rounded-lg p-4">
+                <h4 className="font-bold text-cricket-800 mb-2 flex items-center gap-2">🏆 5. Winning Strategy</h4>
+                <div className="grid md:grid-cols-2 gap-3 text-sm text-cricket-700">
+                  <div>
+                    <p className="font-medium mb-1">Team Composition:</p>
+                    <ul className="space-y-1">
+                      <li>• Balance batsmen and bowlers</li>
+                      <li>• Include 1-2 all-rounders</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="font-medium mb-1">Player Performance:</p>
+                    <ul className="space-y-1">
+                      <li>• Higher grades = better recent form</li>
+                      <li>• Consider both teams in the match</li>
+                      <li>• Check player roles and specialties</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center text-sm text-gray-600 bg-gray-50 rounded p-3">
+                💡 <strong>Pro Tip:</strong> Use the grade filter to quickly find A+ and A grade players for your starting 5, 
+                then fill substitutes with good value picks!
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Draft Status */}
         {isDraftComplete ? (
-          <div className="bg-gradient-to-r from-cricket-500 to-green-600 text-black rounded-xl p-6 mb-6 shadow-lg">
-            <p className="text-center font-bold text-lg flex items-center justify-center gap-2">
-              <Trophy className="h-6 w-6" />
+          <div className="bg-gradient-to-r from-cricket-500 to-green-600 text-black rounded-lg p-4 mb-4 shadow-md">
+            <p className="text-center font-bold text-base flex items-center justify-center gap-2">
+              <Trophy className="h-5 w-5" />
               Draft Complete! Good luck in the game!
             </p>
           </div>
         ) : (
-          <div className={`border-2 rounded-xl p-6 mb-6 shadow-md ${isMyTurn ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-cricket-600' : 'bg-gray-50 border-gray-300'}`}>
-            <p className={`text-center font-bold text-lg flex items-center justify-center gap-2 ${isMyTurn ? 'text-orange-700' : 'text-gray-600'}`}>
+          <div className={`border-2 rounded-lg p-4 mb-4 shadow-sm ${isMyTurn ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-cricket-600' : 'bg-gray-50 border-gray-300'}`}>
+            <p className={`text-center font-bold text-base flex items-center justify-center gap-2 ${isMyTurn ? 'text-orange-700' : 'text-gray-600'}`}>
               {isMyTurn ? (
                 <>
                   <Target className="h-6 w-6 text-secondary-400" />
