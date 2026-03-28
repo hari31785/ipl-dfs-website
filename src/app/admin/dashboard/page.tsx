@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Shield, Users, Trophy, Target, Database, BarChart3, LogOut, Plus, MessageSquare } from "lucide-react"
+import { Shield, Users, Trophy, Target, Database, BarChart3, LogOut, Plus, MessageSquare, Bell, Send } from "lucide-react"
 
 interface AdminData {
   id: string
@@ -21,6 +21,9 @@ export default function AdminDashboard() {
     activeContests: 0,
     pendingMessages: 0
   })
+  const [pushForm, setPushForm] = useState({ title: '', body: '', url: '' })
+  const [pushSending, setPushSending] = useState(false)
+  const [pushResult, setPushResult] = useState<{ sent: number; failed: number; message?: string } | null>(null)
 
   useEffect(() => {
     // Get admin data from localStorage
@@ -66,6 +69,26 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
+    }
+  }
+
+  const sendBroadcast = async () => {
+    if (!pushForm.title.trim() || !pushForm.body.trim()) return
+    setPushSending(true)
+    setPushResult(null)
+    try {
+      const res = await fetch('/api/admin/push/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: pushForm.title, body: pushForm.body, url: pushForm.url || '/dashboard' }),
+      })
+      const data = await res.json()
+      setPushResult(data)
+      if (res.ok) setPushForm({ title: '', body: '', url: '' })
+    } catch {
+      setPushResult({ sent: 0, failed: 0, message: 'Network error' })
+    } finally {
+      setPushSending(false)
     }
   }
 
@@ -361,6 +384,74 @@ export default function AdminDashboard() {
                   <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Push Notifications Broadcast */}
+        <div className="mt-8">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <h3 className="text-xl font-bold text-primary-800 mb-1 flex items-center gap-2">
+              <Bell className="h-6 w-6 text-indigo-500" />
+              Push Notifications
+            </h3>
+            <p className="text-gray-500 text-sm mb-5">Send a custom notification to all subscribed users.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  placeholder="e.g. 🏏 Draft opens in 1 hour!"
+                  value={pushForm.title}
+                  onChange={e => setPushForm(f => ({ ...f, title: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  maxLength={60}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Link (optional)</label>
+                <input
+                  type="text"
+                  placeholder="/dashboard  or  /how-to-play"
+                  value={pushForm.url}
+                  onChange={e => setPushForm(f => ({ ...f, url: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Message <span className="text-red-500">*</span></label>
+              <textarea
+                placeholder="e.g. Head to your dashboard to lock in your picks before the draft closes."
+                value={pushForm.body}
+                onChange={e => setPushForm(f => ({ ...f, body: e.target.value }))}
+                rows={3}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+                maxLength={150}
+              />
+              <p className="text-xs text-gray-400 text-right mt-0.5">{pushForm.body.length}/150</p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={sendBroadcast}
+                disabled={pushSending || !pushForm.title.trim() || !pushForm.body.trim()}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors"
+              >
+                <Send className="h-4 w-4" />
+                {pushSending ? 'Sending…' : 'Send to All Users'}
+              </button>
+
+              {pushResult && (
+                <span className={`text-sm font-medium ${ pushResult.sent > 0 ? 'text-green-600' : 'text-red-500' }`}>
+                  {pushResult.message && pushResult.message !== 'Broadcast sent'
+                    ? `❌ ${pushResult.message}`
+                    : `✅ Sent to ${pushResult.sent} user${pushResult.sent !== 1 ? 's' : ''}${pushResult.failed ? ` (${pushResult.failed} failed)` : ''}`
+                  }
+                </span>
+              )}
             </div>
           </div>
         </div>

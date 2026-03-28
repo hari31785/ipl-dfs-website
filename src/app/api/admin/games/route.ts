@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendToAll } from '@/lib/pushNotifications';
 
 
 // GET /api/admin/games - List all IPL games
@@ -121,6 +122,18 @@ export async function POST(request: NextRequest) {
         })
       )
     );
+
+    // Notify all subscribed users that contests are open for this game
+    const matchupLabel = `${game.team1.shortName || game.team1.name} v ${game.team2.shortName || game.team2.name}`;
+    const gameDay = new Date(game.gameDate).toLocaleDateString('en-IN', {
+      weekday: 'short', month: 'short', day: 'numeric'
+    });
+    sendToAll({
+      title: `🏏 Contests open: ${matchupLabel}`,
+      body: `Sign up now for ${matchupLabel} on ${gameDay}. Pick your wager and compete head-to-head!`,
+      icon: '/icon-192.png',
+      url: '/dashboard?tab=join',
+    }).catch(err => console.error('Push broadcast error (new game):', err));
 
     return NextResponse.json(game, { status: 201 });
   } catch (error) {
