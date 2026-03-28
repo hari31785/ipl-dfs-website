@@ -109,12 +109,26 @@ export async function GET(request: NextRequest) {
             return sum + points;
           }, 0);
       }
+
+      // Derive winnerId from stored DB scores for legacy records
+      // (settled before winnerId column was being written — user1Score/user2Score are always correct)
+      let effectiveWinnerId = matchup?.winnerId ?? null;
+      if (!effectiveWinnerId && matchup?.status === 'COMPLETED') {
+        const u1Score = (matchup as any).user1Score as number | null | undefined;
+        const u2Score = (matchup as any).user2Score as number | null | undefined;
+        if (u1Score != null && u2Score != null) {
+          if (u1Score > u2Score) effectiveWinnerId = matchup.user1Id;
+          else if (u2Score > u1Score) effectiveWinnerId = matchup.user2Id;
+          // equal → stays null (genuine tie)
+        }
+      }
       
       return {
         ...signup,
         matchup: matchup ? {
           id: matchup.id,
           status: matchup.status,
+          winnerId: effectiveWinnerId,
           draftPicksCount: matchup.draftPicks.length,
           user1Id: matchup.user1Id,
           user2Id: matchup.user2Id,

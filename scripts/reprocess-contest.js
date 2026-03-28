@@ -19,26 +19,32 @@ function calculateFinalLineup(userPicks, gameId) {
   const finalLineup = starters.map(starter => {
     const starterStats = starter.player.stats.find(s => s.iplGameId === gameId);
     
-    if (starterStats?.didNotPlay && benchIndex < bench.length) {
-      const benchPlayer = bench[benchIndex];
-      benchIndex++;
-      usedBenchPlayerIds.add(benchPlayer.playerId);
-      
-      const benchStats = benchPlayer.player.stats.find(s => s.iplGameId === gameId);
-      
-      swappedOutPlayers.push({
-        ...starter,
-        swappedOut: true,
-        replacedBy: benchPlayer.player.name,
-        points: starterStats?.points || 0
-      });
-      
-      return {
-        ...benchPlayer,
-        swappedFor: starter.player.name,
-        isSwapped: true,
-        points: benchStats?.points || 0
-      };
+    if (starterStats?.didNotPlay) {
+      while (benchIndex < bench.length) {
+        const benchPlayer = bench[benchIndex];
+        benchIndex++;
+        const benchStats = benchPlayer.player.stats.find(s => s.iplGameId === gameId);
+        
+        if (!benchStats?.didNotPlay) {
+          usedBenchPlayerIds.add(benchPlayer.playerId);
+          swappedOutPlayers.push({
+            ...starter,
+            swappedOut: true,
+            replacedBy: benchPlayer.player.name,
+            points: starterStats?.points || 0
+          });
+          return {
+            ...benchPlayer,
+            swappedFor: starter.player.name,
+            isSwapped: true,
+            points: benchStats?.points || 0
+          };
+        }
+        // bench player is also DNP — skip and try next
+      }
+      // no available bench player
+      swappedOutPlayers.push({ ...starter, swappedOut: true, replacedBy: null, points: 0 });
+      return { ...starter, isSwapped: false, points: 0 };
     }
     
     return {

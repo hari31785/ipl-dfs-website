@@ -45,27 +45,45 @@ export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
   const finalLineup = starters.map(starter => {
     const starterStats = starter.player.stats.find(s => s.iplGameId === gameId);
     
-    // If starter did not play and we have bench players available
-    if (starterStats?.didNotPlay && benchIndex < bench.length) {
-      const benchPlayer = bench[benchIndex];
-      benchIndex++;
-      usedBenchPlayerIds.add(benchPlayer.playerId);
+    // If starter did not play, cascade through bench to find a player who actually played
+    if (starterStats?.didNotPlay) {
+      while (benchIndex < bench.length) {
+        const benchPlayer = bench[benchIndex];
+        benchIndex++;
+        const benchStats = benchPlayer.player.stats.find(s => s.iplGameId === gameId);
+        
+        if (!benchStats?.didNotPlay) {
+          // Found a bench player who played — use them
+          usedBenchPlayerIds.add(benchPlayer.playerId);
+          
+          swappedOutPlayers.push({
+            ...starter,
+            swappedOut: true,
+            replacedBy: benchPlayer.player.name,
+            points: starterStats?.points || 0
+          });
+          
+          return {
+            ...benchPlayer,
+            swappedFor: starter.player.name,
+            isSwapped: true,
+            points: benchStats?.points || 0
+          };
+        }
+        // else: this bench player is also DNP — skip and try next bench player
+      }
       
-      const benchStats = benchPlayer.player.stats.find(s => s.iplGameId === gameId);
-      
-      // Track the swapped-out starter
+      // All bench players exhausted or all DNP — starter stays with 0 points
       swappedOutPlayers.push({
         ...starter,
         swappedOut: true,
-        replacedBy: benchPlayer.player.name,
-        points: starterStats?.points || 0
+        replacedBy: null,
+        points: 0
       });
-      
       return {
-        ...benchPlayer,
-        swappedFor: starter.player.name,
-        isSwapped: true,
-        points: benchStats?.points || 0
+        ...starter,
+        isSwapped: false,
+        points: 0
       };
     }
     

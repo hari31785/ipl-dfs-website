@@ -123,6 +123,7 @@ export async function POST(
     let winnersPaid = 0;
     let losersCharged = 0;
     let adminFeeCollected = 0;
+    const computedWinnerIds = new Map<string, string | null>(); // matchupId -> winnerId (ContestSignup ID)
 
     // Process each matchup
     for (const matchup of contest.matchups) {
@@ -161,9 +162,17 @@ export async function POST(
         winnerUserId = matchup.user2.user.id;
         loserUserId = matchup.user1.user.id;
       } else {
-        // Tie - no coin transactions
+        // Tie - no coin transactions, winnerId stays null
+        computedWinnerIds.set(matchup.id, null);
         continue;
       }
+
+      // Save winnerId to the matchup record
+      await prisma.headToHeadMatchup.update({
+        where: { id: matchup.id },
+        data: { winnerId }
+      });
+      computedWinnerIds.set(matchup.id, winnerId);
 
       const coinValue = contest.coinValue;
       const winnerScore = user1Score > user2Score ? user1Score : user2Score;
@@ -331,7 +340,8 @@ export async function POST(
       const u2 = matchup.user2.user;
       const gameTitle = `${contest.iplGame.team1?.shortName ?? ''} vs ${contest.iplGame.team2?.shortName ?? ''}`;
       const coinLabel = `${contest.coinValue}-coin`;
-      const isTie = matchup.winnerId === null;
+      const resolvedWinnerId = computedWinnerIds.has(matchup.id) ? computedWinnerIds.get(matchup.id) : null;
+      const isTie = resolvedWinnerId === undefined || resolvedWinnerId === null;
 
       const getTitle = (won: boolean) => {
         if (isTie) return '🤝 It\'s a tie!';
@@ -345,14 +355,14 @@ export async function POST(
       };
 
       await sendToUser(u1.id, {
-        title: getTitle(matchup.winnerId === matchup.user1Id),
-        body: getBody(matchup.winnerId === matchup.user1Id, u2.username),
+        title: getTitle(resolvedWinnerId === matchup.user1Id),
+        body: getBody(resolvedWinnerId === matchup.user1Id, u2.username),
         icon: '/icon-192.png',
         url: `/scores/${matchup.id}?from=completed`,
       });
       await sendToUser(u2.id, {
-        title: getTitle(matchup.winnerId === matchup.user2Id),
-        body: getBody(matchup.winnerId === matchup.user2Id, u1.username),
+        title: getTitle(resolvedWinnerId === matchup.user2Id),
+        body: getBody(resolvedWinnerId === matchup.user2Id, u1.username),
         icon: '/icon-192.png',
         url: `/scores/${matchup.id}?from=completed`,
       });

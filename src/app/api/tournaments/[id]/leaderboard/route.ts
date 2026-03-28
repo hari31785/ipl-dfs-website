@@ -113,6 +113,18 @@ export async function GET(
         contestId: {
           in: contestIds,
         },
+        OR: [
+          {
+            matchupsAsUser1: {
+              some: { status: 'COMPLETED' },
+            },
+          },
+          {
+            matchupsAsUser2: {
+              some: { status: 'COMPLETED' },
+            },
+          },
+        ],
       },
       select: {
         userId: true,
