@@ -330,15 +330,29 @@ export async function POST(
       const u1 = matchup.user1.user;
       const u2 = matchup.user2.user;
       const gameTitle = `${contest.iplGame.team1?.shortName ?? ''} vs ${contest.iplGame.team2?.shortName ?? ''}`;
+      const coinLabel = `${contest.coinValue}-coin`;
+      const isTie = matchup.winnerId === null;
+
+      const getTitle = (won: boolean) => {
+        if (isTie) return '🤝 It\'s a tie!';
+        return won ? '🏆 You won!' : '😔 Better luck next time';
+      };
+      const getBody = (won: boolean, opponent: string) => {
+        const contestLabel = `${gameTitle} ${coinLabel} contest`;
+        if (isTie) return `You tied with ${opponent} in the ${contestLabel}. Log in to check your scores.`;
+        if (won) return `You beat ${opponent} in the ${contestLabel}. Log in to check your scores!`;
+        return `You lost to ${opponent} in the ${contestLabel}. Log in to check your scores.`;
+      };
+
       await sendToUser(u1.id, {
-        title: matchup.winnerId === matchup.user1Id ? '🏆 You won!' : '😔 Better luck next time',
-        body: `Results are in for ${gameTitle}. Check your scores now.`,
+        title: getTitle(matchup.winnerId === matchup.user1Id),
+        body: getBody(matchup.winnerId === matchup.user1Id, u2.username),
         icon: '/icon-192.png',
         url: `/scores/${matchup.id}?from=completed`,
       });
       await sendToUser(u2.id, {
-        title: matchup.winnerId === matchup.user2Id ? '🏆 You won!' : '😔 Better luck next time',
-        body: `Results are in for ${gameTitle}. Check your scores now.`,
+        title: getTitle(matchup.winnerId === matchup.user2Id),
+        body: getBody(matchup.winnerId === matchup.user2Id, u1.username),
         icon: '/icon-192.png',
         url: `/scores/${matchup.id}?from=completed`,
       });
