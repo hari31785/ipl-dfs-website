@@ -675,10 +675,7 @@ export default function DashboardPage() {
                     </div>
                     {(alert.type === 'started' || alert.type === 'open') && (
                       <button
-                        onClick={() => {
-                          setActiveTab('my-contests')
-                          setContestSubTab('upcoming')
-                        }}
+                        onClick={() => window.location.href = `/draft/${alert.matchupId}`}
                         className={`shrink-0 text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors ${
                           alert.type === 'started'
                             ? 'bg-red-600 hover:bg-red-700 text-white'
