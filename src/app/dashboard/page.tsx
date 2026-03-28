@@ -905,15 +905,17 @@ export default function DashboardPage() {
                       Upcoming
                       {userContests.filter(contest => 
                         // Upcoming: Contests in signup and draft phase (not drafted yet)
-                        contest.contest.status === 'SIGNUP_OPEN' || 
+                        (contest.contest.status === 'SIGNUP_OPEN' || 
                         contest.contest.status === 'SIGNUP_CLOSED' ||
-                        contest.contest.status === 'DRAFT_PHASE'
+                        contest.contest.status === 'DRAFT_PHASE') &&
+                        !(contest.matchup && contest.matchup.status === 'COMPLETED' && contest.matchup.draftPicksCount === 14)
                       ).length > 0 && (
                         <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
                           {userContests.filter(contest => 
-                            contest.contest.status === 'SIGNUP_OPEN' || 
+                            (contest.contest.status === 'SIGNUP_OPEN' || 
                             contest.contest.status === 'SIGNUP_CLOSED' ||
-                            contest.contest.status === 'DRAFT_PHASE'
+                            contest.contest.status === 'DRAFT_PHASE') &&
+                            !(contest.matchup && contest.matchup.status === 'COMPLETED' && contest.matchup.draftPicksCount === 14)
                           ).length}
                         </span>
                       )}
@@ -1037,9 +1039,11 @@ export default function DashboardPage() {
                     if (contestSubTab === 'upcoming') {
                       filteredContests = filteredContests.filter(contest => 
                         // Upcoming: Contests not yet started by admin (signup and draft phase)
-                        contest.contest.status === 'SIGNUP_OPEN' || 
+                        // Exclude contests where draft is already complete
+                        (contest.contest.status === 'SIGNUP_OPEN' || 
                         contest.contest.status === 'SIGNUP_CLOSED' ||
-                        contest.contest.status === 'DRAFT_PHASE'
+                        contest.contest.status === 'DRAFT_PHASE') &&
+                        !(contest.matchup && contest.matchup.status === 'COMPLETED' && contest.matchup.draftPicksCount === 14)
                       )
                     } else if (contestSubTab === 'drafted') {
                       filteredContests = filteredContests.filter(contest => 
