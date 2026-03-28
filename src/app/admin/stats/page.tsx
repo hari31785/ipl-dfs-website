@@ -594,7 +594,8 @@ export default function BulkStatsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           iplGameId: selectedGame,
-          rawPlayers: bridgeResult.data.players
+          rawPlayers: bridgeResult.data.players,
+          gameStatus: bridgeResult.data.status  // '43' = live, '44' = completed
         }),
       });
 

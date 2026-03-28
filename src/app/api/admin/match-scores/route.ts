@@ -11,7 +11,8 @@ import { prisma } from '@/lib/prisma'
  */
 export async function POST(request: NextRequest) {
   try {
-    const { iplGameId, rawPlayers } = await request.json()
+    const { iplGameId, rawPlayers, gameStatus } = await request.json()
+    const isCompleted = gameStatus === '44' // only mark DNP for completed games
 
     if (!iplGameId || !rawPlayers || !Array.isArray(rawPlayers)) {
       return NextResponse.json(
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
           catches: rawPlayer.catches,
           runOuts: rawPlayer.runOuts,
           stumpings: rawPlayer.stumpings,
-          didNotPlay: rawPlayer.didNotPlay,
+          didNotPlay: isCompleted ? rawPlayer.didNotPlay : false, // never DNP during live game
           points,
         })
       } else {
@@ -90,25 +91,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Players in our DB not found in the raw data — mark as DNP
+    // Players in our DB not found in the raw data — only mark DNP for completed games
     const rawPlayerNames = rawPlayers.map((p: any) => p.playerName.toLowerCase())
-    const dnpPlayers = players
-      .filter(p => !rawPlayerNames.some((name: string) =>
-        name.includes(p.name.toLowerCase()) ||
-        p.name.toLowerCase().includes(name)
-      ))
-      .map(p => ({
-        playerId: p.id,
-        playerName: p.name,
-        teamName: p.iplTeam.shortName,
-        runs: 0,
-        wickets: 0,
-        catches: 0,
-        runOuts: 0,
-        stumpings: 0,
-        didNotPlay: true,
-        points: 0,
-      }))
+    const dnpPlayers = isCompleted
+      ? players
+          .filter(p => !rawPlayerNames.some((name: string) =>
+            name.includes(p.name.toLowerCase()) ||
+            p.name.toLowerCase().includes(name)
+          ))
+          .map(p => ({
+            playerId: p.id,
+            playerName: p.name,
+            teamName: p.iplTeam.shortName,
+            runs: 0,
+            wickets: 0,
+            catches: 0,
+            runOuts: 0,
+            stumpings: 0,
+            didNotPlay: true,
+            points: 0,
+          }))
+      : [] // live game — don't pre-emptively mark anyone as DNP
 
     return NextResponse.json({
       success: true,
