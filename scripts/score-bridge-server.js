@@ -136,6 +136,37 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Fetch available games list
+  if (req.method === 'GET' && parsedUrl.pathname === '/games') {
+    try {
+      const client = await pool.connect();
+      const result = await client.query(`
+        SELECT g.game_id, g.date_scheduled, g.status_id,
+          ht.name as home_team, vt.name as visiting_team
+        FROM game g
+        LEFT JOIN team ht ON g.home_team_id = ht.team_id
+        LEFT JOIN team vt ON g.visiting_team_id = vt.team_id
+        WHERE g.is_active = true
+        ORDER BY g.date_scheduled DESC
+        LIMIT 50
+      `);
+      client.release();
+      const games = result.rows.map(r => ({
+        gameId: r.game_id,
+        date: r.date_scheduled?.toISOString().split('T')[0],
+        homeTeam: r.home_team,
+        visitingTeam: r.visiting_team,
+        statusId: r.status_id
+      }));
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true, games }));
+    } catch (err) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   // Fetch scores endpoint
   if (req.method === 'POST' && parsedUrl.pathname === '/fetch-scores') {
     let body = '';

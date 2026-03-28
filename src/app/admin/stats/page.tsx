@@ -61,6 +61,14 @@ interface Tournament {
   name: string;
 }
 
+interface ScoreDbGame {
+  gameId: number;
+  date: string;
+  homeTeam: string | null;
+  visitingTeam: string | null;
+  statusId: number;
+}
+
 export default function BulkStatsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournament, setSelectedTournament] = useState<string>('all');
@@ -81,6 +89,10 @@ export default function BulkStatsPage() {
   const [scoreProviderAvailable, setScoreProviderAvailable] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [fetchSuccess, setFetchSuccess] = useState<string | null>(null);
+  const [scoreDbGames, setScoreDbGames] = useState<ScoreDbGame[]>([]);
+  const [showGamePicker, setShowGamePicker] = useState(false);
+  const [selectedScoreDbGameId, setSelectedScoreDbGameId] = useState<number | null>(null);
+  const [loadingScoreDbGames, setLoadingScoreDbGames] = useState(false);
 
   useEffect(() => {
     fetchTournaments();
@@ -448,31 +460,65 @@ export default function BulkStatsPage() {
     }
   };
 
-  const handleFetchScores = async () => {
+  // Called when button is clicked — loads game list from bridge or falls back
+  const handleFetchScoresClick = async () => {
     if (!selectedGame) {
       alert('Please select a game first');
       return;
     }
+    setFetchError(null);
+    setFetchSuccess(null);
 
-    // Clear previous messages
+    // Try to load game list from local bridge first
+    setLoadingScoreDbGames(true);
+    try {
+      const resp = await fetch('http://localhost:3001/games', {
+        signal: AbortSignal.timeout(3000)
+      });
+      const data = await resp.json();
+      setLoadingScoreDbGames(false);
+      if (data.success && data.games?.length > 0) {
+        setScoreDbGames(data.games);
+        setSelectedScoreDbGameId(null);
+        setShowGamePicker(true);
+        return; // wait for user to pick a game in the modal
+      }
+    } catch {
+      setLoadingScoreDbGames(false);
+      // Bridge not running or timed out — fall through
+    }
+
+    // Bridge unavailable — if Vercel score provider is configured, prompt for ID
+    if (scoreProviderAvailable) {
+      const game = games.find(g => g.id === selectedGame);
+      const idInput = prompt(
+        `Fetch scores for: ${game?.title}\n\n` +
+        `Enter the external match ID from the score database, or leave blank to use game ID:`,
+        ''
+      );
+      if (idInput === null) return; // cancelled
+      await handleFetchScores(idInput.trim() || undefined);
+      return;
+    }
+
+    // Neither available — show instructions
+    alert(
+      `❌ Score Provider Not Available\n\n` +
+      `To fetch scores, run on your developer Mac:\n\n` +
+      `  node scripts/score-bridge-server.js\n\n` +
+      `Then use http://localhost:3000/admin/stats (not the Vercel URL).\n\n` +
+      `Browsers block HTTP requests from HTTPS pages, so the Vercel URL cannot reach the local bridge.`
+    );
+  };
+
+  const handleFetchScores = async (externalMatchId?: string) => {
+    if (!selectedGame) return;
+
     setFetchError(null);
     setFetchSuccess(null);
 
     const game = games.find(g => g.id === selectedGame);
     if (!game) return;
-
-    // Prompt for external match ID (optional)
-    const externalMatchId = prompt(
-      `Fetch scores for: ${game.title}\n\n` +
-      `If your score provider uses a different match ID, enter it below.\n` +
-      `Otherwise, leave blank to use the game ID.`,
-      ''
-    );
-
-    if (externalMatchId === null) {
-      // User cancelled
-      return;
-    }
 
     setIsFetchingScores(true);
     try {
@@ -482,7 +528,7 @@ export default function BulkStatsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           iplGameId: selectedGame,
-          externalMatchId: externalMatchId.trim() || undefined
+          externalMatchId: externalMatchId || undefined
         }),
       });
 
@@ -502,7 +548,7 @@ export default function BulkStatsPage() {
         alert(
           `⚠️ Error Fetching Scores\n\n` +
           `${errorMsg}\n\n` +
-          `Make sure you enter the correct external match ID from the score database.\n\n` +
+          `Make sure you select the correct game from the score database.\n\n` +
           `You can also enter scores manually below.`
         );
         return;
@@ -518,7 +564,7 @@ export default function BulkStatsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             iplGameId: selectedGame,
-            externalMatchId: externalMatchId.trim() || undefined
+            externalMatchId: externalMatchId || undefined
           }),
         });
       } catch {
@@ -683,12 +729,12 @@ export default function BulkStatsPage() {
             </div>
             {selectedGame && (
               <button
-                onClick={handleFetchScores}
-                disabled={isFetchingScores}
+                onClick={handleFetchScoresClick}
+                disabled={isFetchingScores || loadingScoreDbGames}
                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 <Download className="h-5 w-5" />
-                {isFetchingScores ? 'Fetching...' : 'Fetch Scores from API'}
+                {loadingScoreDbGames ? 'Loading games...' : isFetchingScores ? 'Fetching...' : 'Fetch Scores from API'}
               </button>
             )}
           </div>
@@ -1105,6 +1151,61 @@ export default function BulkStatsPage() {
           </div>
         )}
       </div>
+
+      {/* Score DB Game Picker Modal */}
+      {showGamePicker && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Select Game from Score Database</h3>
+              <button
+                onClick={() => setShowGamePicker(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Pick the matching game from the score database for{' '}
+              <strong className="text-gray-900">{games.find(g => g.id === selectedGame)?.title}</strong>:
+            </p>
+            <select
+              value={selectedScoreDbGameId ?? ''}
+              onChange={(e) => setSelectedScoreDbGameId(e.target.value ? Number(e.target.value) : null)}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-gray-900 mb-5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">-- Select a game --</option>
+              {scoreDbGames.map(g => (
+                <option key={g.gameId} value={g.gameId}>
+                  {g.homeTeam ?? '?'} vs {g.visitingTeam ?? '?'} — {g.date} (ID: {g.gameId}){g.statusId === 44 ? ' ✓ completed' : ''}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowGamePicker(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!selectedScoreDbGameId) {
+                    alert('Please select a game');
+                    return;
+                  }
+                  setShowGamePicker(false);
+                  await handleFetchScores(String(selectedScoreDbGameId));
+                }}
+                disabled={!selectedScoreDbGameId}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+              >
+                Fetch Scores
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
