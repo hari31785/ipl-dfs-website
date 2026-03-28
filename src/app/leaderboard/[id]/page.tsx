@@ -215,20 +215,26 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-md p-6">
-                <div className="flex items-center gap-3">
-                  <Trophy className="w-10 h-10 text-yellow-600" />
-                  <div>
-                    <p className="text-sm text-yellow-700">Biggest Single Win</p>
-                    <p className="text-2xl font-bold text-yellow-900">
-                      V̶₵{Math.max(...leaderboard.map(e => e.biggestSingleWin)).toFixed(2)}
-                    </p>
-                    <p className="text-xs text-yellow-600">
-                      by @{leaderboard.find(e => e.biggestSingleWin === Math.max(...leaderboard.map(x => x.biggestSingleWin)))?.username}
-                    </p>
+              {(() => {
+                const maxWin = Math.max(...leaderboard.map(e => e.biggestSingleWin || 0))
+                const biggestWinner = leaderboard.find(e => (e.biggestSingleWin || 0) === maxWin)
+                return (
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-md p-6">
+                    <div className="flex items-center gap-3">
+                      <Trophy className="w-10 h-10 text-yellow-600" />
+                      <div>
+                        <p className="text-sm text-yellow-700">Biggest Single Win</p>
+                        <p className="text-2xl font-bold text-yellow-900">
+                          {maxWin > 0 ? `V̶₵${maxWin.toFixed(2)}` : '—'}
+                        </p>
+                        {maxWin > 0 && biggestWinner && (
+                          <p className="text-xs text-yellow-600">by @{biggestWinner.username}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                )
+              })()}
             </>
           )}
         </div>
