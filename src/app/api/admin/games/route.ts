@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     });
     sendToAll({
       title: `🏏 Contests open: ${matchupLabel}`,
-      body: `Sign up now for ${matchupLabel} on ${gameDay}. Pick your wager and compete head-to-head!`,
+      body: `Sign up now for ${matchupLabel} on ${gameDay}. Join contests and compete head-to-head!`,
       icon: '/icon-192.png',
       url: '/dashboard?tab=join',
     }).catch(err => console.error('Push broadcast error (new game):', err));
