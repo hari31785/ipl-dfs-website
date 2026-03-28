@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const pastDueContests = await prisma.contest.findMany({
       where: {
         status: {
-          not: 'COMPLETED'
+          notIn: ['COMPLETED', 'LIVE', 'ACTIVE', 'DRAFT_PHASE']
         },
         iplGame: {
           gameDate: {
