@@ -489,13 +489,27 @@ export default function BulkStatsPage() {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        // Vercel fetch succeeded — populate directly
+        // Direct fetch succeeded — populate directly
         populateBulkStats(result.data.stats, result.data.summary, result.data.unmatchedPlayers);
         return;
       }
 
-      // Step 2: Vercel can't reach score DB — try local bridge on localhost:3001
-      console.log('Vercel score provider unavailable, trying local bridge on localhost:3001...');
+      // If provider IS configured but returned a real error (e.g. game not found), show it directly
+      // Only fall through to bridge if provider is not available/configured
+      if (result.available === true || response.status === 404) {
+        const errorMsg = result.error || 'Failed to fetch scores';
+        setFetchError(errorMsg);
+        alert(
+          `⚠️ Error Fetching Scores\n\n` +
+          `${errorMsg}\n\n` +
+          `Make sure you enter the correct external match ID from the score database.\n\n` +
+          `You can also enter scores manually below.`
+        );
+        return;
+      }
+
+      // Step 2: Provider not configured on this server — try local bridge on localhost:3001
+      console.log('Score provider unavailable on server, trying local bridge on localhost:3001...');
 
       let bridgeResponse: Response;
       try {
@@ -513,7 +527,7 @@ export default function BulkStatsPage() {
         alert(
           `❌ Score Provider Not Available\n\n` +
           `The score database cannot be reached from the server.\n\n` +
-          `To fetch scores, run the local bridge on your Mac:\n\n` +
+          `To fetch scores, use http://localhost:3000/admin/stats on your Mac and run:\n\n` +
           `  node scripts/score-bridge-server.js\n\n` +
           `Then click "Fetch Scores from API" again.\n\n` +
           `You can also enter scores manually below.`
