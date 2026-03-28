@@ -1,14 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
-import { Shield, Users, Trophy, Target, Database, BarChart3, LogOut, Plus, MessageSquare, Bell, Send } from "lucide-react"
+import { Shield, Users, Trophy, Target, Database, BarChart3, LogOut, Plus, MessageSquare, Bell, Send, X, Search } from "lucide-react"
 
 interface AdminData {
   id: string
   username: string
   name: string
   createdAt: string
+}
+
+interface UserSearchResult {
+  id: string
+  username: string
+  name: string
 }
 
 export default function AdminDashboard() {
@@ -24,6 +30,13 @@ export default function AdminDashboard() {
   const [pushForm, setPushForm] = useState({ title: '', body: '', url: '' })
   const [pushSending, setPushSending] = useState(false)
   const [pushResult, setPushResult] = useState<{ sent: number; failed: number; message?: string } | null>(null)
+  // Audience targeting
+  const [pushAudience, setPushAudience] = useState<'all' | 'specific'>('all')
+  const [userQuery, setUserQuery] = useState('')
+  const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([])
+  const [selectedUsers, setSelectedUsers] = useState<UserSearchResult[]>([])
+  const [searchingUsers, setSearchingUsers] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Get admin data from localStorage
@@ -72,19 +85,54 @@ export default function AdminDashboard() {
     }
   }
 
+  const searchUsers = async (q: string) => {
+    if (q.length < 2) { setUserSearchResults([]); return }
+    setSearchingUsers(true)
+    try {
+      const res = await fetch(`/api/admin/users/search?q=${encodeURIComponent(q)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setUserSearchResults((data.users ?? []).slice(0, 8))
+      }
+    } catch {}
+    finally { setSearchingUsers(false) }
+  }
+
+  const addUser = (u: UserSearchResult) => {
+    if (!selectedUsers.find(s => s.id === u.id)) {
+      setSelectedUsers(prev => [...prev, u])
+    }
+    setUserQuery('')
+    setUserSearchResults([])
+  }
+
+  const removeUser = (id: string) => setSelectedUsers(prev => prev.filter(u => u.id !== id))
+
   const sendBroadcast = async () => {
     if (!pushForm.title.trim() || !pushForm.body.trim()) return
+    if (pushAudience === 'specific' && selectedUsers.length === 0) return
     setPushSending(true)
     setPushResult(null)
     try {
+      const body: Record<string, unknown> = {
+        title: pushForm.title,
+        body: pushForm.body,
+        url: pushForm.url || '/dashboard',
+      }
+      if (pushAudience === 'specific') {
+        body.userIds = selectedUsers.map(u => u.id)
+      }
       const res = await fetch('/api/admin/push/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: pushForm.title, body: pushForm.body, url: pushForm.url || '/dashboard' }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       setPushResult(data)
-      if (res.ok) setPushForm({ title: '', body: '', url: '' })
+      if (res.ok) {
+        setPushForm({ title: '', body: '', url: '' })
+        if (pushAudience === 'specific') setSelectedUsers([])
+      }
     } catch {
       setPushResult({ sent: 0, failed: 0, message: 'Network error' })
     } finally {
@@ -395,7 +443,86 @@ export default function AdminDashboard() {
               <Bell className="h-6 w-6 text-indigo-500" />
               Push Notifications
             </h3>
-            <p className="text-gray-500 text-sm mb-5">Send a custom notification to all subscribed users.</p>
+            <p className="text-gray-500 text-sm mb-5">Send a custom notification to all users or specific individuals.</p>
+
+            {/* Audience toggle */}
+            <div className="flex gap-2 mb-5">
+              <button
+                onClick={() => { setPushAudience('all'); setSelectedUsers([]); setUserQuery(''); setUserSearchResults([]); }}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                  pushAudience === 'all'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400'
+                }`}
+              >
+                📢 All Users
+              </button>
+              <button
+                onClick={() => setPushAudience('specific')}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                  pushAudience === 'specific'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400'
+                }`}
+              >
+                👤 Specific Users
+              </button>
+            </div>
+
+            {/* Specific user picker */}
+            {pushAudience === 'specific' && (
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select recipients</label>
+
+                {/* Selected users chips */}
+                {selectedUsers.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedUsers.map(u => (
+                      <span key={u.id} className="flex items-center gap-1 bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                        @{u.username}
+                        <button onClick={() => removeUser(u.id)} className="hover:text-red-600 ml-0.5">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Search input */}
+                <div className="relative" ref={searchRef}>
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={userQuery}
+                    onChange={e => { setUserQuery(e.target.value); searchUsers(e.target.value); }}
+                    placeholder="Search by name or username…"
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                  {(searchingUsers || userSearchResults.length > 0) && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                      {searchingUsers && (
+                        <div className="px-4 py-3 text-sm text-gray-500">Searching…</div>
+                      )}
+                      {userSearchResults.map(u => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => addUser(u)}
+                          disabled={!!selectedUsers.find(s => s.id === u.id)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-indigo-50 border-b last:border-b-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <div className="font-medium text-sm text-gray-900">{u.name}</div>
+                          <div className="text-xs text-gray-500">@{u.username}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {selectedUsers.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">⚠️ Add at least one user to send.</p>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -437,18 +564,28 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-4">
               <button
                 onClick={sendBroadcast}
-                disabled={pushSending || !pushForm.title.trim() || !pushForm.body.trim()}
+                disabled={
+                  pushSending ||
+                  !pushForm.title.trim() ||
+                  !pushForm.body.trim() ||
+                  (pushAudience === 'specific' && selectedUsers.length === 0)
+                }
                 className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors"
               >
                 <Send className="h-4 w-4" />
-                {pushSending ? 'Sending…' : 'Send to All Users'}
+                {pushSending
+                  ? 'Sending…'
+                  : pushAudience === 'all'
+                    ? 'Send to All Users'
+                    : `Send to ${selectedUsers.length} User${selectedUsers.length !== 1 ? 's' : ''}`
+                }
               </button>
 
               {pushResult && (
                 <span className={`text-sm font-medium ${ pushResult.sent > 0 ? 'text-green-600' : 'text-red-500' }`}>
-                  {pushResult.message && pushResult.message !== 'Broadcast sent'
+                  {pushResult.message && pushResult.message !== 'Broadcast sent' && pushResult.message !== 'Targeted send complete'
                     ? `❌ ${pushResult.message}`
-                    : `✅ Sent to ${pushResult.sent} user${pushResult.sent !== 1 ? 's' : ''}${pushResult.failed ? ` (${pushResult.failed} failed)` : ''}`
+                    : `✅ Sent to ${pushResult.sent} device${pushResult.sent !== 1 ? 's' : ''}${pushResult.failed ? ` (${pushResult.failed} failed)` : ''}`
                   }
                 </span>
               )}
