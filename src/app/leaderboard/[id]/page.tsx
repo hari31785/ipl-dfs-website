@@ -218,9 +218,9 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 <div className="flex items-center gap-3">
                   <Trophy className="w-10 h-10 text-yellow-600" />
                   <div>
-                    <p className="text-sm text-yellow-700">Total V̶₵ in Play</p>
+                    <p className="text-sm text-yellow-700">Total V̶₵ Won</p>
                     <p className="text-2xl font-bold text-yellow-900">
-                      V̶₵{leaderboard.reduce((sum, entry) => sum + Math.abs(entry.totalVCWon + entry.totalVCLost), 0).toFixed(2)}
+                      V̶₵{leaderboard.reduce((sum, entry) => sum + entry.totalVCWon, 0).toFixed(2)}
                     </p>
                   </div>
                 </div>
