@@ -1028,14 +1028,32 @@ export default function BulkStatsPage() {
                 <h2 className="text-xl font-bold text-gray-900">
                   Add/Update Stats (Bulk Entry)
                 </h2>
-                <button
-                  onClick={handleBulkSave}
-                  disabled={saving || Object.keys(bulkStats).filter(id => hasAnyStats(id)).length === 0}
-                  className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-bold"
-                >
-                  <Save className="h-5 w-5" />
-                  {saving ? 'Saving...' : `Save All (${Object.keys(bulkStats).filter(id => hasAnyStats(id)).length})`}
-                </button>
+                <div className="flex items-center gap-3">
+                  {Object.keys(bulkStats).some(id => {
+                    const s = bulkStats[id];
+                    return s.runs > 0 || s.wickets > 0 || s.catches > 0 || s.runOuts > 0 || s.stumpings > 0 || s.didNotPlay;
+                  }) && (
+                    <button
+                      onClick={() => {
+                        if (confirm('Clear all entered stats from the form? This does not delete saved stats from the database.')) {
+                          setBulkStats({});
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium border border-gray-300"
+                    >
+                      <X className="h-4 w-4" />
+                      Clear Form
+                    </button>
+                  )}
+                  <button
+                    onClick={handleBulkSave}
+                    disabled={saving || Object.keys(bulkStats).filter(id => hasAnyStats(id)).length === 0}
+                    className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-bold"
+                  >
+                    <Save className="h-5 w-5" />
+                    {saving ? 'Saving...' : `Save All (${Object.keys(bulkStats).filter(id => hasAnyStats(id)).length})`}
+                  </button>
+                </div>
               </div>
 
               <div className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">

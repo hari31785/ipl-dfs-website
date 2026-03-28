@@ -146,9 +146,11 @@ const server = http.createServer(async (req, res) => {
         FROM game g
         LEFT JOIN team ht ON g.home_team_id = ht.team_id
         LEFT JOIN team vt ON g.visiting_team_id = vt.team_id
-        WHERE g.is_active = true
+        WHERE g.game_id IN (
+          SELECT DISTINCT game_id FROM score_info WHERE is_active = true
+        )
         ORDER BY g.date_scheduled DESC
-        LIMIT 50
+        LIMIT 30
       `);
       client.release();
       const games = result.rows.map(r => ({
