@@ -68,17 +68,33 @@ export async function GET(request: Request) {
         },
         games: {
           some: {
-            status: {
-              in: ['UPCOMING', 'SIGNUP_OPEN']
-            },
-            gameDate: {
-              gt: new Date()
-            },
-            contests: {
-              some: {
-                status: 'SIGNUP_OPEN'
+            // Include games that either:
+            // 1. Meet standard criteria (upcoming, future date)
+            // 2. Have reopened contests (SIGNUP_OPEN status)
+            OR: [
+              {
+                // Standard criteria - upcoming games
+                status: {
+                  in: ['UPCOMING', 'SIGNUP_OPEN']
+                },
+                gameDate: {
+                  gt: new Date()
+                },
+                contests: {
+                  some: {
+                    status: 'SIGNUP_OPEN'
+                  }
+                }
+              },
+              {
+                // Reopened contests - regardless of game status/date
+                contests: {
+                  some: {
+                    status: 'SIGNUP_OPEN'
+                  }
+                }
               }
-            }
+            ]
           }
         }
       },
@@ -95,17 +111,33 @@ export async function GET(request: Request) {
       } : {
         games: {
           where: {
-            status: {
-              in: ['UPCOMING', 'SIGNUP_OPEN']
-            },
-            gameDate: {
-              gt: new Date()
-            },
-            contests: {
-              some: {
-                status: 'SIGNUP_OPEN'
+            // Include games that either:
+            // 1. Meet standard criteria (upcoming, future date) 
+            // 2. Have reopened contests (SIGNUP_OPEN status)
+            OR: [
+              {
+                // Standard criteria
+                status: {
+                  in: ['UPCOMING', 'SIGNUP_OPEN']
+                },
+                gameDate: {
+                  gt: new Date()
+                },
+                contests: {
+                  some: {
+                    status: 'SIGNUP_OPEN'
+                  }
+                }
+              },
+              {
+                // Reopened contests - show regardless of game status/date
+                contests: {
+                  some: {
+                    status: 'SIGNUP_OPEN'
+                  }
+                }
               }
-            }
+            ]
           },
           orderBy: {
             gameDate: 'desc'

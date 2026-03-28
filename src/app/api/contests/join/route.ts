@@ -99,8 +99,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if signup deadline has passed
-    if (new Date() > new Date(contest.iplGame.signupDeadline)) {
+    // Check if signup deadline has passed (but allow admin-reopened contests)
+    // If admin reopened signups, they explicitly want to allow late signups
+    const deadlinePassed = new Date() > new Date(contest.iplGame.signupDeadline);
+    if (deadlinePassed && contest.status === 'SIGNUP_OPEN') {
+      // Contest is reopened after deadline - this is allowed
+      console.log(`⚠️ Contest ${contest.id} signup after deadline (admin reopened): ${contest.iplGame.signupDeadline}`);
+    } else if (deadlinePassed) {
       return NextResponse.json(
         { message: "Signup deadline has passed" },
         { status: 400 }

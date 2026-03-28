@@ -246,6 +246,7 @@ model Contest {
   maxParticipants Int    @default(100)
   totalSignups  Int      @default(0)
   status        String   @default("SIGNUP_OPEN") // SIGNUP_OPEN, SIGNUP_CLOSED, DRAFT_PHASE, LIVE, COMPLETED
+  manuallyReopened Boolean @default(false) // Track if admin manually reopened signups
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   

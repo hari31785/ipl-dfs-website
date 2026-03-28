@@ -18,6 +18,9 @@ export async function POST(request: NextRequest) {
           signupDeadline: {
             lte: now
           }
+        },
+        matchups: {
+          none: {} // Only include contests with no existing matchups
         }
       },
       include: {

@@ -686,15 +686,17 @@ export default function DashboardPage() {
                         
                         if (isNaN(signupDeadline.getTime())) return false;
                         
-                        // Check if signup deadline hasn't passed
-                        if (signupDeadline <= now) return false;
-                        
                         // Check if this game has any contests that are open for signup
                         const availableContests = game.contests.filter(contest => 
                           contest.status === 'SIGNUP_OPEN'
                         );
                         
-                        return availableContests.length > 0;
+                        // Show games if they have SIGNUP_OPEN contests OR if deadline hasn't passed
+                        // This ensures reopened contests are visible even if original deadline passed
+                        if (availableContests.length > 0) return true;
+                        
+                        // If no open contests, only show if deadline hasn't passed
+                        return signupDeadline > now;
                       })
                     }))
                     .filter(tournament => tournament.games.length > 0); // Remove tournaments with no available games
@@ -770,6 +772,20 @@ export default function DashboardPage() {
                                       hour12: true,
                                       timeZoneName: 'short'
                                     })}</span>
+                                    {(() => {
+                                      const now = new Date();
+                                      const signupDeadline = new Date(game.signupDeadline);
+                                      const hasOpenContests = game.contests?.some(c => c.status === 'SIGNUP_OPEN');
+                                      
+                                      if (signupDeadline <= now && hasOpenContests) {
+                                        return (
+                                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            📢 Reopened
+                                          </span>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
                                   </div>
                                 </div>
                               </div>
@@ -783,9 +799,10 @@ export default function DashboardPage() {
                                 const now = new Date();
                                 const signupDeadline = new Date(game.signupDeadline);
                                 
-                                // Filter contests based on both deadline and status
+                                // Filter contests - show all SIGNUP_OPEN contests
+                                // If deadline has passed, admin may have manually reopened signups
                                 const availableContests = game.contests.filter(contest => 
-                                  signupDeadline > now && contest.status === 'SIGNUP_OPEN'
+                                  contest.status === 'SIGNUP_OPEN'
                                 );
                                 
                                 return (

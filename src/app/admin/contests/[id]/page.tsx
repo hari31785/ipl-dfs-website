@@ -106,6 +106,8 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   const [addingPick, setAddingPick] = useState(false);
   const [addPickError, setAddPickError] = useState('');
   const [deletingMatchup, setDeletingMatchup] = useState<string | null>(null);
+  const [selectedMatchups, setSelectedMatchups] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     fetchContestDetails();
@@ -352,6 +354,61 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
       alert('❌ Network error occurred');
     } finally {
       setDeletingMatchup(null);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedMatchups);
+    if (ids.length === 0) return;
+
+    const nonCompleted = contest?.matchups.filter(
+      m => ids.includes(m.id) && m.status !== 'COMPLETED'
+    ) ?? [];
+
+    if (!confirm(
+      `⚠️ DELETE ${nonCompleted.length} MATCHUP(S)?\n\nThis will delete the selected matchups and all their draft picks.\n\nAre you sure?`
+    )) return;
+
+    setBulkDeleting(true);
+    try {
+      const response = await fetch('/api/admin/matchups/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchupIds: ids })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ ${data.message}${data.draftPicksDeleted > 0 ? `\n${data.draftPicksDeleted} draft picks deleted` : ''}`);
+        setSelectedMatchups(new Set());
+        fetchContestDetails();
+      } else {
+        alert(`❌ Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error bulk deleting matchups:', error);
+      alert('❌ Network error occurred');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const toggleMatchupSelection = (matchupId: string) => {
+    setSelectedMatchups(prev => {
+      const next = new Set(prev);
+      if (next.has(matchupId)) next.delete(matchupId);
+      else next.add(matchupId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const deletable = contest?.matchups.filter(m => m.status !== 'COMPLETED').map(m => m.id) ?? [];
+    if (deletable.every(id => selectedMatchups.has(id))) {
+      setSelectedMatchups(new Set());
+    } else {
+      setSelectedMatchups(new Set(deletable));
     }
   };
 
@@ -908,6 +965,39 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Bulk Actions Toolbar */}
+            {(() => {
+              const deletable = contest.matchups.filter(m => m.status !== 'COMPLETED');
+              const allSelected = deletable.length > 0 && deletable.every(m => selectedMatchups.has(m.id));
+              return (
+                <div className="flex items-center justify-between bg-white rounded-lg shadow-sm border px-4 py-3">
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 accent-red-600 cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-700 font-medium">
+                      {selectedMatchups.size > 0
+                        ? `${selectedMatchups.size} selected`
+                        : `Select all (${deletable.length} deletable)`}
+                    </span>
+                  </label>
+                  {selectedMatchups.size > 0 && (
+                    <button
+                      onClick={handleBulkDelete}
+                      disabled={bulkDeleting}
+                      className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {bulkDeleting ? 'Deleting...' : `Delete Selected (${selectedMatchups.size})`}
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
+
             {contest.matchups.map((matchup, index) => {
               const user1Picks = getUserPicks(matchup, matchup.user1.id);
               const user2Picks = getUserPicks(matchup, matchup.user2.id);
@@ -922,6 +1012,15 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1">
+                        {matchup.status !== 'COMPLETED' && (
+                          <input
+                            type="checkbox"
+                            checked={selectedMatchups.has(matchup.id)}
+                            onChange={(e) => { e.stopPropagation(); toggleMatchupSelection(matchup.id); }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 accent-red-600 cursor-pointer flex-shrink-0"
+                          />
+                        )}
                         <div className="text-lg font-bold text-gray-600">#{index + 1}</div>
                         
                         <div className="flex items-center gap-4 flex-1">
