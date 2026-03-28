@@ -388,15 +388,48 @@ export default function HowToPlayPage() {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Device-specific tips</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
-                    <div className="flex items-start gap-2">
-                      <span>📱</span>
-                      <span><strong>iPhone (Safari):</strong> First add the site to your Home Screen via the Share menu, then enable notifications from the installed app.</span>
+                  <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-3">Device-specific tips</p>
+
+                  {/* iPhone step-by-step */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">📱</span>
+                      <strong className="text-gray-800 text-sm">iPhone (Safari) — Step-by-step</strong>
                     </div>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                        <p className="text-gray-700 text-sm">Open <strong>ipldfs.com</strong> in <strong>Safari</strong> on your iPhone (must be Safari, not Chrome).</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                        <p className="text-gray-700 text-sm">Tap the <strong>Share button</strong> <span className="inline-block bg-gray-200 text-gray-700 text-xs px-1.5 py-0.5 rounded font-mono">⬆</span> at the bottom of the screen.</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                        <p className="text-gray-700 text-sm">Scroll down in the share sheet and tap <strong>"Add to Home Screen"</strong>.</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                        <p className="text-gray-700 text-sm">Tap <strong>"Add"</strong> in the top-right corner. The IPL DFS icon will appear on your home screen.</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">5</span>
+                        <p className="text-gray-700 text-sm"><strong>Open the app from your home screen</strong> (not from Safari). Then go to your Dashboard and tap <strong>"Enable Notifications"</strong>.</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">6</span>
+                        <p className="text-gray-700 text-sm">Tap <strong>"Allow"</strong> when iOS asks for notification permission. Done! 🎉</p>
+                      </div>
+                    </div>
+                    <p className="text-blue-600 text-xs mt-3 font-medium">⚠️ Push notifications on iPhone only work when the site is opened from the Home Screen app — not directly from Safari.</p>
+                  </div>
+
+                  {/* Other devices */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-gray-600">
                     <div className="flex items-start gap-2">
                       <span>🤖</span>
-                      <span><strong>Android (Chrome):</strong> Tap "Allow" when the permission prompt appears. Notifications work in both the browser and the installed app.</span>
+                      <span><strong>Android (Chrome):</strong> Tap "Allow" when the permission prompt appears. Works in both browser and installed app.</span>
                     </div>
                     <div className="flex items-start gap-2">
                       <span>💻</span>
