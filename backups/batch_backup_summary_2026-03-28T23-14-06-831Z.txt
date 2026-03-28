@@ -1,0 +1,42 @@
+
+=================================================================
+BATCH BACKUP SUMMARY
+=================================================================
+
+Backup Created: 3/28/2026, 7:14:06 PM
+Backup File: batch_backup_2026-03-28T23-14-06-831Z.json
+File Size: 253.67 KB
+Total Records: 688
+
+─────────────────────────────────────────────────────────────────
+TABLE DETAILS:
+─────────────────────────────────────────────────────────────────
+
+  users                         36 records
+  teams                         10 records
+  tournaments                    1 records
+  players                      247 records
+  games                          2 records
+  contests                       4 records
+  signups                       62 records
+  matchups                      15 records
+  draftPicks                   210 records
+  playerStats                   46 records
+  tournamentBalances            25 records
+  coinTransactions              30 records
+  settlements                    0 records
+  messages                       0 records
+
+─────────────────────────────────────────────────────────────────
+BACKUP STATUS: ✅ SUCCESS
+─────────────────────────────────────────────────────────────────
+
+Duration: 3.94 seconds
+
+Notes:
+- Backup includes ALL tables and relationships
+- Data is stored in JSON format for easy restoration
+- Backup can be restored using the restore script
+- Keep multiple backups for safety
+
+=================================================================
