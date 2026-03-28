@@ -22,6 +22,7 @@ interface LeaderboardEntry {
   totalPointsLost: number
   netPoints: number
   contestsPlayed: number
+  biggestSingleWin: number
 }
 
 interface Tournament {
@@ -218,9 +219,12 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 <div className="flex items-center gap-3">
                   <Trophy className="w-10 h-10 text-yellow-600" />
                   <div>
-                    <p className="text-sm text-yellow-700">Total V̶₵ Won</p>
+                    <p className="text-sm text-yellow-700">Biggest Single Win</p>
                     <p className="text-2xl font-bold text-yellow-900">
-                      V̶₵{leaderboard.reduce((sum, entry) => sum + entry.totalVCWon, 0).toFixed(2)}
+                      V̶₵{Math.max(...leaderboard.map(e => e.biggestSingleWin)).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-yellow-600">
+                      by @{leaderboard.find(e => e.biggestSingleWin === Math.max(...leaderboard.map(x => x.biggestSingleWin)))?.username}
                     </p>
                   </div>
                 </div>

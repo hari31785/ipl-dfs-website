@@ -63,6 +63,7 @@ export async function GET(
       totalPointsLost: number
       netPoints: number
       contestsPlayed: number
+      biggestSingleWin: number
     }>()
 
     // Track contests per user
@@ -85,6 +86,7 @@ export async function GET(
         totalPointsLost: 0,
         netPoints: 0,
         contestsPlayed: 0,
+        biggestSingleWin: 0,
       }
 
       const vcAmount = transaction.amount / 100
@@ -94,6 +96,7 @@ export async function GET(
         existing.totalVCWon += vcAmount
         existing.totalCoinsWon += coinAmount
         existing.totalPointsWon += vcAmount // VC directly represents points
+        if (vcAmount > existing.biggestSingleWin) existing.biggestSingleWin = vcAmount
       } else if (transaction.type === 'LOSS') {
         existing.totalVCLost += Math.abs(vcAmount)
         existing.totalCoinsLost += Math.abs(coinAmount)
