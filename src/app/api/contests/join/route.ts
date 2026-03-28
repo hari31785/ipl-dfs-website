@@ -4,24 +4,38 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    const now = new Date();
-    
-    // First, update any expired contests to close signups
-    await prisma.contest.updateMany({
-      where: {
-        status: 'SIGNUP_OPEN',
-        iplGame: {
-          signupDeadline: {
-            lte: now
-          }
-        }
+    // Auto-close expired contests and generate matchups
+    const autoCloseResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/contests/auto-close-expired`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      data: {
-        status: 'SIGNUP_CLOSED'
-      }
     });
+    
+    if (autoCloseResponse.ok) {
+      const autoCloseData = await autoCloseResponse.json();
+      console.log(`✅ Auto-close check completed: ${autoCloseData.message}`);
+    } else {
+      console.warn('⚠️ Auto-close check failed, falling back to simple status update');
+      // Fallback: simple status update
+      const now = new Date();
+      await prisma.contest.updateMany({
+        where: {
+          status: 'SIGNUP_OPEN',
+          iplGame: {
+            signupDeadline: {
+              lte: now
+            }
+          }
+        },
+        data: {
+          status: 'SIGNUP_CLOSED'
+        }
+      });
+    }
 
     // Also mark contests as completed if their game has already been played
+    const now = new Date();
     await prisma.contest.updateMany({
       where: {
         status: {
