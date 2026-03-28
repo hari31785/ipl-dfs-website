@@ -561,40 +561,43 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 overflow-x-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex justify-between items-center py-4 sm:py-6 gap-2">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-secondary-500 rounded-full flex items-center justify-center">
                 <Trophy className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-white">IPL DFS</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-white">IPL DFS</h1>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               <button
                 onClick={() => window.location.href = '/coin-vault'}
-                className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"
+                className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-2.5 sm:px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"
+                title="Coin Vault"
               >
                 <Coins className="h-5 w-5" />
-                Coin Vault
+                <span className="hidden sm:inline">Coin Vault</span>
               </button>
               {tournaments.length > 0 && tournaments[0]?.id && (
                 <button
                   onClick={() => window.location.href = `/leaderboard/${tournaments[0].id}`}
-                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-2.5 sm:px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"
+                  title="Leaderboard"
                 >
                   <Trophy className="h-5 w-5" />
-                  Leaderboard
+                  <span className="hidden sm:inline">Leaderboard</span>
                 </button>
               )}
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-2.5 sm:px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"
+                title="Sign Out"
               >
                 <LogOut className="h-5 w-5" />
-                Sign Out
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
               {/* Push Notification Bell */}
               {permission !== 'unsupported' && (
