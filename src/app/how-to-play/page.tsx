@@ -399,7 +399,7 @@ export default function HowToPlayPage() {
                     <div className="space-y-2">
                       <div className="flex items-start gap-2">
                         <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-                        <p className="text-gray-700 text-sm">Open <strong>ipldfs.com</strong> in <strong>Safari</strong> on your iPhone (must be Safari, not Chrome).</p>
+                        <p className="text-gray-700 text-sm">Open the <strong>IPL DFS website</strong> in <strong>Safari</strong> on your iPhone (must be Safari, not Chrome).</p>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
