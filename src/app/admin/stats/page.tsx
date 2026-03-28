@@ -1201,15 +1201,26 @@ export default function BulkStatsPage() {
               Pick the matching game from the score database for{' '}
               <strong className="text-gray-900">{games.find(g => g.id === selectedGame)?.title}</strong>:
             </p>
-            <p className="text-xs text-orange-600 bg-orange-50 border border-orange-200 rounded p-2 mb-3">
-              ⚠️ Only select games marked <strong>✓ completed</strong> — upcoming games have no score data yet.
-            </p>
+            {scoreDbGames.some(g => g.statusId === 43) && (
+              <p className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2 mb-3">
+                🔴 Live game detected — you can fetch in-progress scores now.
+              </p>
+            )}
             <select
               value={selectedScoreDbGameId ?? ''}
               onChange={(e) => setSelectedScoreDbGameId(e.target.value ? Number(e.target.value) : null)}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-gray-900 mb-5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">-- Select a completed game --</option>
+              <option value="">-- Select a game --</option>
+              {scoreDbGames.filter(g => g.statusId === 43).length > 0 && (
+                <optgroup label="🔴 Live (in progress)">
+                  {scoreDbGames.filter(g => g.statusId === 43).map(g => (
+                    <option key={g.gameId} value={g.gameId}>
+                      {g.homeTeam ?? '?'} vs {g.visitingTeam ?? '?'} — {g.date}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
               {scoreDbGames.filter(g => g.statusId === 44).length > 0 && (
                 <optgroup label="✓ Completed (have score data)">
                   {scoreDbGames.filter(g => g.statusId === 44).map(g => (
@@ -1219,9 +1230,9 @@ export default function BulkStatsPage() {
                   ))}
                 </optgroup>
               )}
-              {scoreDbGames.filter(g => g.statusId !== 44).length > 0 && (
+              {scoreDbGames.filter(g => g.statusId !== 43 && g.statusId !== 44).length > 0 && (
                 <optgroup label="⏳ Upcoming (no data yet)">
-                  {scoreDbGames.filter(g => g.statusId !== 44).map(g => (
+                  {scoreDbGames.filter(g => g.statusId !== 43 && g.statusId !== 44).map(g => (
                     <option key={g.gameId} value={g.gameId} disabled>
                       {g.homeTeam ?? '?'} vs {g.visitingTeam ?? '?'} — {g.date}
                     </option>
