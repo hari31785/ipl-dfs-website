@@ -345,6 +345,72 @@ export default function HowToPlayPage() {
               </div>
             </div>
 
+            {/* Push Notifications */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-8">
+              <h2 className="text-2xl font-bold text-primary-800 mb-2 flex items-center">
+                🔔 Enable Push Notifications
+              </h2>
+              <p className="text-gray-600 mb-6">Never miss a moment — get instant alerts when your draft opens, a contest goes live, or results are posted.</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                  <div className="text-2xl mb-2">⚡</div>
+                  <h4 className="font-semibold text-primary-800 mb-1">Draft Opens</h4>
+                  <p className="text-gray-600 text-sm">Get notified the moment your draft window becomes available so you can pick first.</p>
+                </div>
+                <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+                  <div className="text-2xl mb-2">🏏</div>
+                  <h4 className="font-semibold text-primary-800 mb-1">Contest Goes Live</h4>
+                  <p className="text-gray-600 text-sm">Know instantly when your match kicks off and scoring begins.</p>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
+                  <div className="text-2xl mb-2">🏆</div>
+                  <h4 className="font-semibold text-primary-800 mb-1">Results Are In</h4>
+                  <p className="text-gray-600 text-sm">Find out if you won or lost as soon as scores are settled.</p>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                <h4 className="font-semibold text-primary-800 mb-3">How to enable notifications:</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <span className="bg-secondary-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                    <p className="text-gray-700 text-sm">Go to your <strong>Dashboard</strong> and look for the notification banner at the top, or click the <strong>🔔 bell icon</strong> in the header.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="bg-secondary-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                    <p className="text-gray-700 text-sm">Click <strong>"Enable Notifications"</strong> and when your browser asks for permission, click <strong>Allow</strong>.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="bg-secondary-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                    <p className="text-gray-700 text-sm">That's it! The bell icon will turn <strong>green</strong> when you're subscribed. You can unsubscribe anytime by clicking it again.</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Device-specific tips</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div className="flex items-start gap-2">
+                      <span>📱</span>
+                      <span><strong>iPhone (Safari):</strong> First add the site to your Home Screen via the Share menu, then enable notifications from the installed app.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span>🤖</span>
+                      <span><strong>Android (Chrome):</strong> Tap "Allow" when the permission prompt appears. Notifications work in both the browser and the installed app.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span>💻</span>
+                      <span><strong>Desktop Chrome/Edge:</strong> Click "Allow" in the browser permission bar that appears at the top of the page.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span>🦊</span>
+                      <span><strong>Firefox:</strong> Click "Allow" when the permission dialog appears. Make sure notifications aren't blocked in browser settings.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Tips for Success */}
             <div className="bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-2xl p-8 text-white">
               <h2 className="text-2xl font-bold mb-6">Tips for Success</h2>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Trophy } from 'lucide-react';
 import { calculateFinalLineup, calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
 
@@ -81,6 +82,15 @@ interface Matchup {
 
 export default function ScoresPage({ params }: { params: Promise<{ matchupId: string }> }) {
   const { matchupId } = use(params);
+  const searchParams = useSearchParams();
+  const fromTab = searchParams.get('from'); // 'active' | 'drafted' | 'completed' | null
+
+  const backHref = `/dashboard?tab=my-contests&sub=${fromTab || 'active'}`;
+  const backLabel =
+    fromTab === 'completed' ? 'Back to Completed Contests' :
+    fromTab === 'drafted'   ? 'Back to Drafted Contests' :
+    fromTab === 'active'    ? 'Back to Active Contests' :
+                              'Back to Dashboard';
   const [matchup, setMatchup] = useState<Matchup | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -280,11 +290,11 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center gap-4">
               <a
-                href="/dashboard"
+                href={backHref}
                 className="flex items-center gap-2 text-black hover:text-cricket-700 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span className="font-semibold">Back to Dashboard</span>
+                <span className="font-semibold">{backLabel}</span>
               </a>
               <div className="w-px h-8 bg-black/30"></div>
               <div>

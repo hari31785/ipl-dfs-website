@@ -152,6 +152,7 @@ export default function DashboardPage() {
   const [showDraftedTeamsModal, setShowDraftedTeamsModal] = useState(false)
   const [selectedDraftedContest, setSelectedDraftedContest] = useState<UserContest | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
+  const [dismissedPushBanner, setDismissedPushBanner] = useState(false)
 
   useEffect(() => {
     // Restore tab state from URL params (e.g. when navigating back from scores page)
@@ -161,6 +162,11 @@ export default function DashboardPage() {
     if (tabParam === 'my-contests') setActiveTab('my-contests')
     if (subParam === 'upcoming' || subParam === 'drafted' || subParam === 'active' || subParam === 'completed') {
       setContestSubTab(subParam)
+    }
+
+    // Restore push banner dismissed state
+    if (localStorage.getItem('pushBannerDismissed') === '1') {
+      setDismissedPushBanner(true)
     }
 
     // Get user data from localStorage (simple auth for now)
@@ -619,6 +625,42 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Push Notification Opt-in Banner */}
+        {!dismissedPushBanner && !isSubscribed && permission !== 'denied' && permission !== 'unsupported' && (
+          <div className="mb-4 flex items-center justify-between gap-4 bg-indigo-600 text-white rounded-xl px-5 py-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <Bell className="h-6 w-6 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-sm">Stay in the game — enable notifications</p>
+                <p className="text-xs text-indigo-200 mt-0.5">Get alerted when your draft opens, contest goes live, or results are in.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => {
+                  if (user?.id) subscribe(user.id);
+                  setDismissedPushBanner(true);
+                  localStorage.setItem('pushBannerDismissed', '1');
+                }}
+                disabled={pushLoading}
+                className="bg-white text-indigo-700 hover:bg-indigo-50 font-semibold text-sm px-4 py-1.5 rounded-lg transition-colors"
+              >
+                {pushLoading ? 'Enabling…' : 'Enable'}
+              </button>
+              <button
+                onClick={() => {
+                  setDismissedPushBanner(true);
+                  localStorage.setItem('pushBannerDismissed', '1');
+                }}
+                className="text-indigo-200 hover:text-white text-xl font-bold leading-none px-1"
+                title="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Draft Notification Banners */}
         {(() => {
           const alerts = userContests
