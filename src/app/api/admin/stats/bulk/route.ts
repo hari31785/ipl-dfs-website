@@ -139,20 +139,10 @@ export async function POST(request: NextRequest) {
       return createdOrUpdated;
     });
 
-    // After stats are entered, update game status to COMPLETED
-    // This indicates the game has finished and stats have been recorded
-    await prisma.iPLGame.update({
-      where: { id: iplGameId },
-      data: {
-        status: 'COMPLETED'
-      }
-    });
-
     return NextResponse.json({
       success: true,
       count: results.length,
-      stats: results,
-      gameStatusUpdated: true
+      stats: results
     });
 
   } catch (error) {
