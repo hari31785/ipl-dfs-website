@@ -609,7 +609,8 @@ export default function BulkStatsPage() {
       }
 
       // Populate form with matched stats
-      populateBulkStats(matchResult.data.stats, matchResult.data.summary, matchResult.data.unmatchedPlayers);
+      const isLive = bridgeResult.data.status !== '44'; // anything not explicitly completed = treat as live
+      populateBulkStats(matchResult.data.stats, matchResult.data.summary, matchResult.data.unmatchedPlayers, isLive);
 
     } catch (error) {
       console.error('Error fetching scores:', error);
@@ -625,7 +626,7 @@ export default function BulkStatsPage() {
     }
   };
 
-  const populateBulkStats = (stats: any[], summary: any, unmatchedPlayers: string[]) => {
+  const populateBulkStats = (stats: any[], summary: any, unmatchedPlayers: string[], isLive = false) => {
     const newBulkStats: Record<string, BulkStatEntry> = {};
     for (const stat of stats) {
       newBulkStats[stat.playerId] = {
@@ -635,7 +636,7 @@ export default function BulkStatsPage() {
         catches: stat.catches,
         runOuts: stat.runOuts,
         stumpings: stat.stumpings,
-        didNotPlay: stat.didNotPlay
+        didNotPlay: isLive ? false : stat.didNotPlay // never DNP for live game
       };
     }
     setBulkStats(newBulkStats);
