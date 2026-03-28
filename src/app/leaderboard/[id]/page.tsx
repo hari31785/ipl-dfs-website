@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Trophy, Medal, TrendingUp, TrendingDown, Users, ArrowLeft, Coins } from "lucide-react"
+import { calculateFinalLineup, calculateTotalPointsWithSwap } from "@/lib/benchSwapUtils"
 
 interface LeaderboardEntry {
   rank: number
@@ -40,6 +41,9 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
   const [contestModal, setContestModal] = useState<{ userId: string; username: string } | null>(null)
   const [modalContests, setModalContests] = useState<any[]>([])
   const [modalLoading, setModalLoading] = useState(false)
+  // Scorecard second modal
+  const [scorecardSignup, setScorecardSignup] = useState<any | null>(null)
+  const [scorecardLoading, setScorecardLoading] = useState(false)
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser')
@@ -430,10 +434,18 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                             {isWinner ? '🏆 Won' : isTie ? '🤝 Tie' : '😔 Lost'}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-600 flex items-center justify-between">
+                        <div className="text-xs text-gray-600 flex items-center justify-between mb-2">
                           <span>vs <strong>@{opponent}</strong> · {coinValue}-coin contest</span>
                           <span className="font-mono">{myScore} – {oppScore}</span>
                         </div>
+                        {matchup?.draftPicks?.length > 0 && (
+                          <button
+                            onClick={() => setScorecardSignup(signup)}
+                            className="w-full text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 rounded-lg py-1.5 transition-colors"
+                          >
+                            View Scorecard →
+                          </button>
+                        )}
                       </div>
                     )
                   })}
@@ -443,6 +455,144 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
           </div>
         </div>
       )}
+
+      {/* ── Scorecard second modal ───────────────────────────────────────── */}
+      {scorecardSignup && (() => {
+        const signup = scorecardSignup
+        const matchup = signup.matchup
+        const game = signup.contest?.iplGame
+        const gameId = game?.id ?? signup.contest?.iplGameId
+        const gameLabel = game ? `${game.team1?.shortName ?? ''} vs ${game.team2?.shortName ?? ''}` : 'Match'
+        const isWinner = matchup?.winnerId === signup.id
+        const isTie = matchup?.winnerId === null
+
+        // Split picks by user
+        const user1Picks = (matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user1Id)
+        const user2Picks = (matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user2Id)
+
+        const { finalLineup: u1Lineup, benchPlayers: u1Bench } = calculateFinalLineup(user1Picks, gameId)
+        const { finalLineup: u2Lineup, benchPlayers: u2Bench } = calculateFinalLineup(user2Picks, gameId)
+
+        const u1Total = calculateTotalPointsWithSwap(user1Picks, gameId)
+        const u2Total = calculateTotalPointsWithSwap(user2Picks, gameId)
+
+        // Figure out which side is "this user's" side
+        const viewedUser = contestModal?.username ?? ''
+        // We use signup.matchup user1/user2 ids to map names
+        const isViewedUser1 = matchup?.user1Id === signup?.id
+        const leftLabel = isViewedUser1 ? `@${viewedUser}` : `@${matchup?.opponentUsername ?? 'Opponent'}`
+        const rightLabel = isViewedUser1 ? `@${matchup?.opponentUsername ?? 'Opponent'}` : `@${viewedUser}`
+        const { finalLineup: leftLineup, benchPlayers: leftBench } = isViewedUser1
+          ? { finalLineup: u1Lineup, benchPlayers: u1Bench }
+          : { finalLineup: u2Lineup, benchPlayers: u2Bench }
+        const { finalLineup: rightLineup, benchPlayers: rightBench } = isViewedUser1
+          ? { finalLineup: u2Lineup, benchPlayers: u2Bench }
+          : { finalLineup: u1Lineup, benchPlayers: u1Bench }
+        const leftTotal = isViewedUser1 ? u1Total : u2Total
+        const rightTotal = isViewedUser1 ? u2Total : u1Total
+
+        const renderRow = (pick: any, isBench = false) => {
+          const stats = pick.player?.stats?.find((s: any) => s.iplGameId === gameId)
+          const pts = stats?.points ?? 0
+          const dnp = stats?.didNotPlay ?? false
+          return (
+            <div key={pick.id ?? pick.player?.id} className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-xs ${isBench ? 'opacity-60' : ''} ${pick.isSwapped ? 'bg-blue-50' : pick.swappedOut ? 'bg-orange-50' : ''}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${isBench ? 'bg-gray-400' : 'bg-green-700'}`}>
+                {pick.pickOrder}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-gray-900 truncate">{pick.player?.name}</div>
+                <div className="text-gray-500">{pick.player?.role}</div>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {pick.isSwapped && <span className="text-blue-600 text-xs">↑</span>}
+                {pick.swappedOut && <span className="text-orange-500 text-xs">↓</span>}
+                {dnp && !pick.swappedOut && <span className="text-red-500 font-bold">DNP</span>}
+                <span className={`font-bold w-8 text-right ${isBench ? 'text-gray-400' : 'text-gray-900'}`}>{pts}</span>
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4" onClick={() => setScorecardSignup(null)}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">{gameLabel} · Scorecard</h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-green-600 text-white' : isTie ? 'bg-gray-500 text-white' : 'bg-red-600 text-white'}`}>
+                      {isWinner ? '🏆 Won' : isTie ? '🤝 Tie' : '😔 Lost'}
+                    </span>
+                    <span className="text-xs text-gray-500">{signup.contest?.coinValue}-coin contest</span>
+                  </div>
+                </div>
+                <button onClick={() => setScorecardSignup(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+              </div>
+
+              {/* Score banner */}
+              <div className="grid grid-cols-3 items-center bg-gray-50 border-b border-gray-200 px-5 py-3 text-center">
+                <div>
+                  <div className="text-xs text-gray-500 truncate">{leftLabel}</div>
+                  <div className="text-2xl font-black text-gray-900">{leftTotal}</div>
+                </div>
+                <div className="text-lg font-bold text-gray-400">vs</div>
+                <div>
+                  <div className="text-xs text-gray-500 truncate">{rightLabel}</div>
+                  <div className="text-2xl font-black text-gray-900">{rightTotal}</div>
+                </div>
+              </div>
+
+              {/* Two-column lineups */}
+              <div className="overflow-y-auto flex-1 p-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Left */}
+                  <div>
+                    <div className="text-xs font-bold text-gray-500 uppercase mb-2">⭐ Starting 5</div>
+                    <div className="space-y-1">
+                      {leftLineup.map((p: any) => renderRow(p, false))}
+                    </div>
+                    {leftBench.length > 0 && (
+                      <>
+                        <div className="text-xs font-bold text-gray-400 uppercase mt-3 mb-2">🪑 Bench</div>
+                        <div className="space-y-1">
+                          {leftBench.map((p: any) => renderRow(p, true))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {/* Right */}
+                  <div>
+                    <div className="text-xs font-bold text-gray-500 uppercase mb-2">⭐ Starting 5</div>
+                    <div className="space-y-1">
+                      {rightLineup.map((p: any) => renderRow(p, false))}
+                    </div>
+                    {rightBench.length > 0 && (
+                      <>
+                        <div className="text-xs font-bold text-gray-400 uppercase mt-3 mb-2">🪑 Bench</div>
+                        <div className="space-y-1">
+                          {rightBench.map((p: any) => renderRow(p, true))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-gray-400">↑ Swapped in &nbsp;·&nbsp; ↓ Benched &nbsp;·&nbsp; DNP = Did Not Play</p>
+                </div>
+              </div>
+
+              {/* Footer back button */}
+              <div className="px-5 py-3 border-t border-gray-200">
+                <button onClick={() => setScorecardSignup(null)} className="w-full text-sm font-semibold text-gray-600 hover:text-gray-900 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                  ← Back to contests
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
