@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, ArrowLeft, Home, Search, Filter, Calendar, Mail, Phone, Coins, CheckCircle, Activity } from "lucide-react"
+import { Users, ArrowLeft, Home, Search, Filter, Calendar, Mail, Phone, Coins, CheckCircle, Activity, Bell } from "lucide-react"
 import Link from "next/link"
 
 interface User {
@@ -18,6 +18,7 @@ interface User {
   _count: {
     contestSignups: number
     coinTransactions: number
+    pushSubscriptions: number
   }
 }
 
@@ -325,6 +326,7 @@ export default function AdminUsersPage() {
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Coins</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
+                      <th className="px-6 py-4 text-center text-sm font-medium text-gray-600">Push</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
                     </tr>
@@ -374,6 +376,17 @@ export default function AdminUsersPage() {
                             {user._count.coinTransactions} coin transactions
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {user._count.pushSubscriptions > 0 ? (
+                          <span title="Subscribed to push notifications" className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                            <Bell className="h-3 w-3" /> Yes
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-400">
+                            <Bell className="h-3 w-3" /> No
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -439,7 +452,7 @@ export default function AdminUsersPage() {
                   </div>
                   
                   {/* Stats Row */}
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                  <div className="grid grid-cols-3 gap-4 pt-2 border-t border-gray-100">
                     <div>
                       <div className="flex items-center gap-1 text-sm">
                         <Coins className="h-4 w-4 text-yellow-500" />
@@ -450,6 +463,18 @@ export default function AdminUsersPage() {
                     <div>
                       <div className="text-sm font-medium">{user._count.contestSignups}</div>
                       <p className="text-xs text-gray-500">Contest Signups</p>
+                    </div>
+                    <div>
+                      {user._count.pushSubscriptions > 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                          <Bell className="h-3 w-3" /> Push On
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-400">
+                          <Bell className="h-3 w-3" /> Push Off
+                        </span>
+                      )}
+                      <p className="text-xs text-gray-500 mt-0.5">Notifications</p>
                     </div>
                   </div>
                   

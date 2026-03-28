@@ -18,7 +18,8 @@ export async function GET() {
         _count: {
           select: {
             contestSignups: true,
-            coinTransactions: true
+            coinTransactions: true,
+            pushSubscriptions: true
           }
         }
       },
