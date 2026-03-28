@@ -639,11 +639,13 @@ export default function BulkStatsPage() {
     }
     setBulkStats(newBulkStats);
 
-    let successMessage = `✅ Successfully fetched scores for ${stats.length} players!\n\n`;
-    successMessage += `Matched: ${summary.matchedPlayers}\n`;
+    let successMessage = `✅ Scores fetched from score DB!\n\n`;
+    successMessage += `From score DB: ${summary.totalPlayers} players\n`;
+    successMessage += `Matched to your roster: ${summary.matchedPlayers}\n`;
+    successMessage += `Marked DNP (not in score data): ${summary.dnpPlayers}\n`;
     if (summary.unmatchedPlayers > 0) {
-      successMessage += `Unmatched: ${summary.unmatchedPlayers}\n`;
-      successMessage += `⚠️ Unmatched players: ${unmatchedPlayers.join(', ')}\n\n`;
+      successMessage += `\n⚠️ Unmatched (score DB names not in your roster): ${summary.unmatchedPlayers}\n`;
+      successMessage += `  ${unmatchedPlayers.join(', ')}\n`;
     }
     successMessage += `\n📝 Review the populated stats below and click "Save All Stats" when ready.`;
     setFetchSuccess(successMessage);
@@ -1186,17 +1188,33 @@ export default function BulkStatsPage() {
               Pick the matching game from the score database for{' '}
               <strong className="text-gray-900">{games.find(g => g.id === selectedGame)?.title}</strong>:
             </p>
+            <p className="text-xs text-orange-600 bg-orange-50 border border-orange-200 rounded p-2 mb-3">
+              ⚠️ Only select games marked <strong>✓ completed</strong> — upcoming games have no score data yet.
+            </p>
             <select
               value={selectedScoreDbGameId ?? ''}
               onChange={(e) => setSelectedScoreDbGameId(e.target.value ? Number(e.target.value) : null)}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-gray-900 mb-5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">-- Select a game --</option>
-              {scoreDbGames.map(g => (
-                <option key={g.gameId} value={g.gameId}>
-                  {g.homeTeam ?? '?'} vs {g.visitingTeam ?? '?'} — {g.date} (ID: {g.gameId}){g.statusId === 44 ? ' ✓ completed' : ''}
-                </option>
-              ))}
+              <option value="">-- Select a completed game --</option>
+              {scoreDbGames.filter(g => g.statusId === 44).length > 0 && (
+                <optgroup label="✓ Completed (have score data)">
+                  {scoreDbGames.filter(g => g.statusId === 44).map(g => (
+                    <option key={g.gameId} value={g.gameId}>
+                      {g.homeTeam ?? '?'} vs {g.visitingTeam ?? '?'} — {g.date}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {scoreDbGames.filter(g => g.statusId !== 44).length > 0 && (
+                <optgroup label="⏳ Upcoming (no data yet)">
+                  {scoreDbGames.filter(g => g.statusId !== 44).map(g => (
+                    <option key={g.gameId} value={g.gameId} disabled>
+                      {g.homeTeam ?? '?'} vs {g.visitingTeam ?? '?'} — {g.date}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
             <div className="flex gap-3">
               <button

@@ -20,6 +20,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (rawPlayers.length === 0) {
+      return NextResponse.json(
+        { error: 'No score data found for this game in the score database. The game may not have been played yet — try selecting a completed game (marked ✓ completed in the picker).' },
+        { status: 422 }
+      )
+    }
+
     // Get the game to find the tournament and teams
     const iplGame = await prisma.iPLGame.findUnique({
       where: { id: iplGameId },
