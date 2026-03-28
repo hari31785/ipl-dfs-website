@@ -231,6 +231,9 @@ export default function ContestsPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState('');
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
+  const [showCompletedGames, setShowCompletedGames] = useState(false);
+  const [showActiveGames, setShowActiveGames] = useState(true);
+  const [showWorkflow, setShowWorkflow] = useState(false);
   const [viewMode, setViewMode] = useState<'grouped' | 'table'>('grouped');
   const [showSignupsModal, setShowSignupsModal] = useState(false);
   const [selectedContestSignups, setSelectedContestSignups] = useState<any>(null);
@@ -696,6 +699,10 @@ export default function ContestsPage() {
     new Date(b.game.gameDate).getTime() - new Date(a.game.gameDate).getTime()
   );
 
+  // Split into upcoming/active vs fully completed for UI sections
+  const activeGameGroups = gameGroups.filter(g => g.contests.some(c => c.status !== 'COMPLETED'));
+  const completedGameGroups = gameGroups.filter(g => g.contests.every(c => c.status === 'COMPLETED'));
+
   const toggleGameExpanded = (gameId: string) => {
     const newExpanded = new Set(expandedGames);
     if (newExpanded.has(gameId)) {
@@ -964,102 +971,163 @@ export default function ContestsPage() {
 
       {/* Grouped View by Game */}
       {viewMode === 'grouped' && (
-        <div className="space-y-4">
+        <div className="space-y-8">
           {gameGroups.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
               No contests found. Create an IPL game to automatically generate contests.
             </div>
           ) : (
-            gameGroups.map(({ game, contests: gameContests }) => {
-              const isExpanded = expandedGames.has(game.id);
-              const hasActiveContests = gameContests.some(c => c.status !== 'COMPLETED');
-              
-              return (
-                <div key={game.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
-                  {/* Game Header - Always Visible */}
-                  <div 
-                    className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      hasActiveContests ? 'bg-blue-50' : 'bg-gray-50'
-                    }`}
-                    onClick={() => toggleGameExpanded(game.id)}
+            <>
+              {/* ── Upcoming / Active Games ── */}
+              {activeGameGroups.length > 0 && (
+                <div>
+                  <button
+                    className="flex items-center gap-3 mb-3 w-full text-left group"
+                    onClick={() => setShowActiveGames(v => !v)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <button className="text-gray-600 hover:text-gray-900">
-                          {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                        </button>
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">{game.title}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: game.team1.color }}
-                            ></span>
-                            <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
-                            <span className="text-xs text-gray-600">vs</span>
-                            <span 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: game.team2.color }}
-                            ></span>
-                            <span className="text-sm font-medium text-gray-700">{game.team2.shortName}</span>
+                    <span className="text-lg font-bold text-gray-900">🟢 Upcoming / Active Games</span>
+                    <span className="text-sm text-gray-500 bg-gray-100 rounded-full px-3 py-0.5">{activeGameGroups.length} game{activeGameGroups.length !== 1 ? 's' : ''}</span>
+                    <span className="ml-1 text-gray-400 group-hover:text-gray-600 transition-colors">
+                      {showActiveGames ? <ChevronUp className="h-5 w-5 inline" /> : <ChevronDown className="h-5 w-5 inline" />}
+                    </span>
+                    <span className="text-xs text-gray-400 group-hover:text-gray-500">{showActiveGames ? 'Hide' : 'Show'}</span>
+                  </button>
+                  {showActiveGames && <div className="space-y-4">
+                    {activeGameGroups.map(({ game, contests: gameContests }) => {
+                      const isExpanded = expandedGames.has(game.id);
+                      return (
+                        <div key={game.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                          <div className="p-4 cursor-pointer hover:bg-gray-50 transition-colors bg-blue-50" onClick={() => toggleGameExpanded(game.id)}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <button className="text-gray-600 hover:text-gray-900">
+                                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                </button>
+                                <div>
+                                  <h3 className="text-lg font-bold text-gray-900">{game.title}</h3>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: game.team1.color }}></span>
+                                    <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
+                                    <span className="text-xs text-gray-600">vs</span>
+                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: game.team2.color }}></span>
+                                    <span className="text-sm font-medium text-gray-700">{game.team2.shortName}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <a href={`/admin/stats?gameId=${game.id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-md whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                                📊 Player Stats
+                              </a>
+                              <div className="text-right">
+                                <div className="text-sm text-gray-600">Game: {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                <div className="text-xs text-gray-500">Signup by: {new Date(game.signupDeadline).toLocaleDateString()} {new Date(game.signupDeadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                <div className="text-xs text-gray-400 mt-1">{gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}</div>
+                              </div>
+                            </div>
                           </div>
+                          {isExpanded && (
+                            <div className="p-4 bg-gray-50 border-t border-gray-200">
+                              <div className="grid md:grid-cols-3 gap-4">
+                                {gameContests.map((contest) => (
+                                  <ContestCard
+                                    key={contest.id}
+                                    contest={contest}
+                                    isSelected={selectedContests.includes(contest.id)}
+                                    onToggleSelect={handleSelectContest}
+                                    onCloseSignups={closeSignups}
+                                    onReopenSignups={reopenSignups}
+                                    onOpenDrafting={openDrafting}
+                                    onUpdateStatus={(id, status) => { if (status === 'START_CONTEST') { startContest(id); } else { updateContestStatus(id, status); } }}
+                                    onEndContest={endContest}
+                                    onViewSignups={fetchContestSignups}
+                                    getStatusColor={getStatusColor}
+                                    getContestTypeDisplay={getContestTypeDisplay}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      
-                      <a
-                        href={`/admin/stats?gameId=${game.id}`}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-md whitespace-nowrap"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        📊 Player Stats
-                      </a>
-                      
-                      <div className="text-right">
-                        <div className="text-sm text-gray-600">
-                          Game: {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Signup by: {new Date(game.signupDeadline).toLocaleDateString()} {new Date(game.signupDeadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contest Cards - Collapsible */}
-                  {isExpanded && (
-                    <div className="p-4 bg-gray-50 border-t border-gray-200">
-                      <div className="grid md:grid-cols-3 gap-4">
-                        {gameContests.map((contest) => (
-                          <ContestCard 
-                            key={contest.id}
-                            contest={contest}
-                            isSelected={selectedContests.includes(contest.id)}
-                            onToggleSelect={handleSelectContest}
-                            onCloseSignups={closeSignups}
-                            onReopenSignups={reopenSignups}
-                            onOpenDrafting={openDrafting}
-                            onUpdateStatus={(id, status) => {
-                              if (status === 'START_CONTEST') {
-                                startContest(id);
-                              } else {
-                                updateContestStatus(id, status);
-                              }
-                            }}
-                            onEndContest={endContest}
-                            onViewSignups={fetchContestSignups}
-                            getStatusColor={getStatusColor}
-                            getContestTypeDisplay={getContestTypeDisplay}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                      );
+                    })}
+                  </div>}
                 </div>
-              );
-            })
+              )}
+
+              {/* ── Completed Games ── */}
+              {completedGameGroups.length > 0 && (
+                <div>
+                  <button
+                    className="flex items-center gap-3 mb-3 w-full text-left group"
+                    onClick={() => setShowCompletedGames(v => !v)}
+                  >
+                    <span className="text-lg font-bold text-gray-500">✅ Completed Games</span>
+                    <span className="text-sm text-gray-400 bg-gray-100 rounded-full px-3 py-0.5">{completedGameGroups.length} game{completedGameGroups.length !== 1 ? 's' : ''}</span>
+                    <span className="ml-1 text-gray-400 group-hover:text-gray-600 transition-colors">
+                      {showCompletedGames ? <ChevronUp className="h-5 w-5 inline" /> : <ChevronDown className="h-5 w-5 inline" />}
+                    </span>
+                    <span className="text-xs text-gray-400 group-hover:text-gray-500">{showCompletedGames ? 'Hide' : 'Show'}</span>
+                  </button>
+                  {showCompletedGames && <div className="space-y-4 opacity-75">
+                    {completedGameGroups.map(({ game, contests: gameContests }) => {
+                      const isExpanded = expandedGames.has(game.id);
+                      return (
+                        <div key={game.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                          <div className="p-4 cursor-pointer hover:bg-gray-50 transition-colors bg-gray-50" onClick={() => toggleGameExpanded(game.id)}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <button className="text-gray-600 hover:text-gray-900">
+                                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                </button>
+                                <div>
+                                  <h3 className="text-lg font-bold text-gray-900">{game.title}</h3>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: game.team1.color }}></span>
+                                    <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
+                                    <span className="text-xs text-gray-600">vs</span>
+                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: game.team2.color }}></span>
+                                    <span className="text-sm font-medium text-gray-700">{game.team2.shortName}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <a href={`/admin/stats?gameId=${game.id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-md whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                                📊 Player Stats
+                              </a>
+                              <div className="text-right">
+                                <div className="text-sm text-gray-600">Game: {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                <div className="text-xs text-gray-500">Signup by: {new Date(game.signupDeadline).toLocaleDateString()} {new Date(game.signupDeadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                <div className="text-xs text-gray-400 mt-1">{gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}</div>
+                              </div>
+                            </div>
+                          </div>
+                          {isExpanded && (
+                            <div className="p-4 bg-gray-50 border-t border-gray-200">
+                              <div className="grid md:grid-cols-3 gap-4">
+                                {gameContests.map((contest) => (
+                                  <ContestCard
+                                    key={contest.id}
+                                    contest={contest}
+                                    isSelected={selectedContests.includes(contest.id)}
+                                    onToggleSelect={handleSelectContest}
+                                    onCloseSignups={closeSignups}
+                                    onReopenSignups={reopenSignups}
+                                    onOpenDrafting={openDrafting}
+                                    onUpdateStatus={(id, status) => { if (status === 'START_CONTEST') { startContest(id); } else { updateContestStatus(id, status); } }}
+                                    onEndContest={endContest}
+                                    onViewSignups={fetchContestSignups}
+                                    getStatusColor={getStatusColor}
+                                    getContestTypeDisplay={getContestTypeDisplay}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1279,45 +1347,108 @@ export default function ContestsPage() {
       </div>
       )}
       
-      {/* Instructions */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h3 className="font-medium text-blue-900 mb-3">📋 Contest Management Workflow:</h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="text-sm text-blue-800">
-              <strong className="text-purple-600">Step 1:</strong> <strong>Create IPL Games</strong>
-              <p className="text-xs ml-4">Contests (25/50/100 coins) are auto-generated for each game</p>
-            </div>
-            <div className="text-sm text-blue-800">
-              <strong className="text-purple-600">Step 2:</strong> <strong>Users Sign Up</strong>
-              <p className="text-xs ml-4">Open until signup deadline (8 PM EST day before game)</p>
-            </div>
-            <div className="text-sm text-blue-800">
-              <strong className="text-purple-600">Step 3:</strong> <strong>Close Signups 🔒</strong>
-              <p className="text-xs ml-4">Auto-adds Admin Bot if odd, then generates matchups automatically</p>
-            </div>
-            <div className="text-sm text-blue-800">
-              <strong className="text-purple-600">Step 4:</strong> <strong>Contest Ready 🎯</strong>
-              <p className="text-xs ml-4">Matchups created, contest moves to DRAFT_PHASE automatically</p>
-            </div>
+      {/* Contest Management Workflow */}
+      <div className="mt-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl border border-slate-300 shadow-sm overflow-hidden">
+        <button
+          className="w-full flex items-center justify-between px-6 py-4 group"
+          onClick={() => setShowWorkflow(v => !v)}
+        >
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            <span className="text-lg font-bold text-slate-800">Contest Management Workflow</span>
           </div>
-          <div className="space-y-2">
-            <div className="text-sm text-blue-800">
-              <strong className="text-purple-600">Step 5:</strong> <strong>End Contest 🏁</strong> (when LIVE) to calculate winners and settle coins
-              <p className="text-xs ml-4">Users draft teams, then contest goes live during IPL match</p>
-            </div>
-            <div className="text-sm text-blue-800">
-              <strong className="text-purple-600">Step 6:</strong> <strong>Auto-Complete</strong>
-              <p className="text-xs ml-4">Winners determined automatically, coins distributed with 10% admin fee</p>
-            </div>
+          <div className="flex items-center gap-2 text-slate-400 group-hover:text-slate-600 transition-colors">
+            <span className="text-xs">{showWorkflow ? 'Hide' : 'Show'}</span>
+            {showWorkflow ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </div>
+        </button>
+
+        {showWorkflow && <div className="px-6 pb-6">
+
+        {/* Step Cards Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          {/* 1 */}
+          <div className="bg-white rounded-xl p-3 text-center border border-slate-200 shadow-sm">
+            <div className="w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2">1</div>
+            <div className="text-xl mb-1">🏏</div>
+            <div className="font-bold text-slate-800 text-xs mb-0.5">Create Game</div>
+            <div className="text-slate-500 text-xs">Contests auto-generated (25/50/100 VC)</div>
+          </div>
+          {/* 2 */}
+          <div className="bg-white rounded-xl p-3 text-center border border-slate-200 shadow-sm">
+            <div className="w-7 h-7 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2">2</div>
+            <div className="text-xl mb-1">🟢</div>
+            <div className="font-bold text-slate-800 text-xs mb-0.5">Signups Open</div>
+            <div className="text-slate-500 text-xs">Users register for the contest</div>
+          </div>
+          {/* 3 — admin */}
+          <div className="bg-yellow-50 rounded-xl p-3 text-center border border-yellow-300 shadow-sm">
+            <div className="w-7 h-7 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2">3</div>
+            <div className="text-xl mb-1">🔒</div>
+            <div className="font-bold text-yellow-800 text-xs mb-0.5">Close Signups</div>
+            <div className="text-yellow-700 text-xs">Bot joins if odd · matchups auto-generated</div>
+            <div className="mt-1.5 text-yellow-600 text-[10px] font-semibold uppercase tracking-wide">👤 Admin Action</div>
+          </div>
+          {/* 4 — admin */}
+          <div className="bg-purple-50 rounded-xl p-3 text-center border border-purple-300 shadow-sm">
+            <div className="w-7 h-7 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2">4</div>
+            <div className="text-xl mb-1">🎯</div>
+            <div className="font-bold text-purple-800 text-xs mb-0.5">Open Draft</div>
+            <div className="text-purple-700 text-xs">Each matchup opens for team selection</div>
+            <div className="mt-1.5 text-purple-600 text-[10px] font-semibold uppercase tracking-wide">👤 Admin Action</div>
+          </div>
+          {/* 5 */}
+          <div className="bg-white rounded-xl p-3 text-center border border-slate-200 shadow-sm">
+            <div className="w-7 h-7 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2">5</div>
+            <div className="text-xl mb-1">✏️</div>
+            <div className="font-bold text-slate-800 text-xs mb-0.5">Users Draft</div>
+            <div className="text-slate-500 text-xs">Both players pick 7-player squads</div>
+          </div>
+          {/* 6 — admin */}
+          <div className="bg-green-50 rounded-xl p-3 text-center border border-green-300 shadow-sm">
+            <div className="w-7 h-7 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2">6</div>
+            <div className="text-xl mb-1">▶️</div>
+            <div className="font-bold text-green-800 text-xs mb-0.5">Start Contest</div>
+            <div className="text-green-700 text-xs">Once ≥1 matchup draft is complete</div>
+            <div className="mt-1.5 text-green-600 text-[10px] font-semibold uppercase tracking-wide">👤 Admin Action</div>
+          </div>
+          {/* 7 */}
+          <div className="bg-white rounded-xl p-3 text-center border border-slate-200 shadow-sm">
+            <div className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2">7</div>
+            <div className="text-xl mb-1">🔴</div>
+            <div className="font-bold text-slate-800 text-xs mb-0.5">Live</div>
+            <div className="text-slate-500 text-xs">IPL match running · scores updating</div>
+          </div>
+          {/* 8 — admin */}
+          <div className="bg-red-50 rounded-xl p-3 text-center border border-red-300 shadow-sm">
+            <div className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2">8</div>
+            <div className="text-xl mb-1">🏁</div>
+            <div className="font-bold text-red-800 text-xs mb-0.5">End Contest</div>
+            <div className="text-red-700 text-xs">Winners settled · 10% admin fee deducted</div>
+            <div className="mt-1.5 text-red-600 text-[10px] font-semibold uppercase tracking-wide">👤 Admin Action</div>
           </div>
         </div>
-        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
-          <p className="text-xs text-green-800">
-            <strong>✅ Smart Matchups:</strong> Admin user automatically joins contests with odd signups to ensure head-to-head matchups. 
-            Closing signups now auto-generates the schedule!
-          </p>
+
+        {/* Flow arrows row (desktop only) */}
+        <div className="hidden md:flex items-center justify-around px-2 mb-4 -mt-1">
+          {['→','→','→','→','→','→','→'].map((a, i) => (
+            <span key={i} className="text-slate-400 text-sm font-bold">{a}</span>
+          ))}
         </div>
+
+        {/* Notes */}
+        <div className="flex flex-wrap gap-2 justify-center mt-1">
+          <div className="text-xs bg-white rounded-lg px-3 py-1.5 text-slate-600 border border-slate-200 shadow-sm">
+            🤖 <strong className="text-slate-800">Bot:</strong> Auto-fills odd slots so every player has an opponent
+          </div>
+          <div className="text-xs bg-white rounded-lg px-3 py-1.5 text-slate-600 border border-slate-200 shadow-sm">
+            🔓 <strong className="text-slate-800">Reopen Signups:</strong> Available from DRAFT_PHASE to go back
+          </div>
+          <div className="text-xs bg-white rounded-lg px-3 py-1.5 text-slate-600 border border-slate-200 shadow-sm">
+            💰 <strong className="text-slate-800">Fee:</strong> Winner takes all minus 10% admin cut
+          </div>
+        </div>
+        </div>}
       </div>
       </div>
 

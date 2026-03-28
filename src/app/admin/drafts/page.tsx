@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, ArrowLeft, Target } from 'lucide-react';
+import { Home, ArrowLeft, Target, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface HeadToHeadMatchup {
   id: string;
@@ -76,6 +76,8 @@ export default function DraftPage() {
   const [selectedContest, setSelectedContest] = useState<string>('');
   const [selectedMatchup, setSelectedMatchup] = useState<HeadToHeadMatchup | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showActiveDrafts, setShowActiveDrafts] = useState(true);
+  const [showCompletedDrafts, setShowCompletedDrafts] = useState(false);
 
   useEffect(() => {
     fetchContests();
@@ -134,13 +136,13 @@ export default function DraftPage() {
 
   const getSnakeOrder = () => {
     const order = [];
-    for (let round = 1; round <= 5; round++) {
+    for (let round = 1; round <= 7; round++) {
+      const pick1 = (round * 2) - 1;
+      const pick2 = round * 2;
       if (round % 2 === 1) {
-        // Odd rounds: Team A picks first
-        order.push(`Round ${round}: A picks ${round * 2 - 1}, B picks ${round * 2}`);
+        order.push(`Round ${round}: A picks #${pick1}, B picks #${pick2}`);
       } else {
-        // Even rounds: Team B picks first  
-        order.push(`Round ${round}: B picks ${round * 2 - 1}, A picks ${round * 2}`);
+        order.push(`Round ${round}: B picks #${pick1}, A picks #${pick2}`);
       }
     }
     return order;
@@ -192,19 +194,88 @@ export default function DraftPage() {
 
       {/* Contest Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">Select Contest:</label>
-        <select
-          value={selectedContest}
-          onChange={(e) => setSelectedContest(e.target.value)}
-          className="border rounded px-3 py-2 w-full max-w-md"
-        >
-          <option value="">Choose a contest to view drafts</option>
-          {contests.map((contest) => (
-            <option key={contest.id} value={contest.id}>
-              {contest.iplGame.title} - {contest.coinValue} Coins ({contest._count.matchups} matchups)
-            </option>
-          ))}
-        </select>
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">Select Contest:</h2>
+
+        {/* Active / In-Progress Contests */}
+        {contests.filter(c => c.status !== 'COMPLETED').length > 0 && (
+          <div className="mb-4">
+            <button
+              className="flex items-center gap-2 mb-2 group w-full text-left"
+              onClick={() => setShowActiveDrafts(v => !v)}
+            >
+              <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">🟢 Active / In Progress</span>
+              <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">{contests.filter(c => c.status !== 'COMPLETED').length}</span>
+              <span className="ml-1 text-gray-400 group-hover:text-gray-600 transition-colors">
+                {showActiveDrafts ? <ChevronUp className="h-4 w-4 inline" /> : <ChevronDown className="h-4 w-4 inline" />}
+              </span>
+            </button>
+            {showActiveDrafts && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {contests.filter(c => c.status !== 'COMPLETED').map((contest) => (
+                <button
+                  key={contest.id}
+                  onClick={() => setSelectedContest(contest.id)}
+                  className={`text-left px-4 py-3 rounded-lg border-2 transition-all ${
+                    selectedContest === contest.id
+                      ? 'border-blue-500 bg-blue-50 shadow-sm'
+                      : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'
+                  }`}
+                >
+                  <div className="font-semibold text-gray-900 text-sm">{contest.iplGame.title}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {contest.coinValue} VC · {contest._count.matchups} matchup{contest._count.matchups !== 1 ? 's' : ''}
+                    <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                      contest.status === 'DRAFT_PHASE' ? 'bg-purple-100 text-purple-700' :
+                      contest.status === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
+                    }`}>{contest.status.replace('_', ' ')}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            )}
+          </div>
+        )}
+
+        {/* Completed Contests */}
+        {contests.filter(c => c.status === 'COMPLETED').length > 0 && (
+          <div>
+            <button
+              className="flex items-center gap-2 mb-2 group w-full text-left"
+              onClick={() => setShowCompletedDrafts(v => !v)}
+            >
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">✅ Completed</span>
+              <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">{contests.filter(c => c.status === 'COMPLETED').length}</span>
+              <span className="ml-1 text-gray-400 group-hover:text-gray-600 transition-colors">
+                {showCompletedDrafts ? <ChevronUp className="h-4 w-4 inline" /> : <ChevronDown className="h-4 w-4 inline" />}
+              </span>
+            </button>
+            {showCompletedDrafts && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {contests.filter(c => c.status === 'COMPLETED').map((contest) => (
+                <button
+                  key={contest.id}
+                  onClick={() => setSelectedContest(contest.id)}
+                  className={`text-left px-4 py-3 rounded-lg border-2 transition-all opacity-75 ${
+                    selectedContest === contest.id
+                      ? 'border-blue-500 bg-blue-50 shadow-sm opacity-100'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-semibold text-gray-700 text-sm">{contest.iplGame.title}</div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    {contest.coinValue} VC · {contest._count.matchups} matchup{contest._count.matchups !== 1 ? 's' : ''}
+                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-500">COMPLETED</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            )}
+          </div>
+        )}
+
+        {contests.length === 0 && (
+          <p className="text-gray-500 text-sm">No contests with drafts available yet.</p>
+        )}
       </div>
 
       {/* Matchups List */}
@@ -378,13 +449,14 @@ export default function DraftPage() {
 
       {/* Instructions */}
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h3 className="font-medium text-blue-900 mb-2">Snake Draft Rules:</h3>
+        <h3 className="font-medium text-blue-900 mb-2">🐍 Snake Draft Rules:</h3>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Each user picks 5 players from the two teams playing</li>
-          <li>• Pick order alternates: A-B-B-A-A-B-B-A-A-B (snake format)</li>
+          <li>• Each user picks <strong>7 players</strong> (5 starters + 2 bench) from the two IPL teams playing</li>
+          <li>• <strong>Snake format</strong> — pick order reverses each round: A-B · B-A · A-B · B-A · A-B · B-A · A-B (14 total picks)</li>
           <li>• Each player can only be picked once per matchup</li>
-          <li>• Points = (Player runs × 1) + (Wickets × 20) + (Fielding × 5)</li>
-          <li>• Winner gets coins equal to their score × contest multiplier</li>
+          <li>• <strong>Scoring:</strong> (Runs × 1) + (Wickets × 20) + (Catches/Run Outs/Stumpings × 5)</li>
+          <li>• <strong>Bench swap:</strong> If a starter didn't play (DNP), the next available bench player automatically replaces them</li>
+          <li>• Winner takes the opponent's VC entry fee minus 10% admin fee</li>
         </ul>
       </div>
     </div>
