@@ -692,11 +692,15 @@ export default function BulkStatsPage() {
                 </div>
               )}
               {!scoreProviderAvailable && (
-                <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                <div className="flex items-start gap-2 text-sm text-blue-700 bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">Score Provider not configured</p>
-                    <p className="text-xs mt-1">Enter scores manually below. To enable auto-fetch, set ENABLE_SCORE_API=true and SCORE_API_KEY in your environment.</p>
+                    <p className="font-medium">⚠️ Score fetching requires the local bridge</p>
+                    <p className="text-xs mt-1 leading-relaxed">
+                      To use "Fetch Scores from API", you must be on your <strong>developer Mac</strong> and use <strong>http://localhost:3000/admin/stats</strong> (not the Vercel URL).<br />
+                      Then in a terminal run: <code className="bg-blue-100 px-1 rounded font-mono">node scripts/score-bridge-server.js</code><br />
+                      Browsers block HTTP requests from HTTPS pages, so Vercel URL cannot reach the local bridge.
+                    </p>
                   </div>
                 </div>
               )}

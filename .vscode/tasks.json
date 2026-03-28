@@ -14,6 +14,13 @@
 			"command": "npm run dev",
 			"isBackground": true,
 			"problemMatcher": []
+		},
+		{
+			"label": "Start Score Bridge",
+			"type": "shell",
+			"command": "node scripts/score-bridge-server.js",
+			"isBackground": true,
+			"problemMatcher": []
 		}
 	]
 }
