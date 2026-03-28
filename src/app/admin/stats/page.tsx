@@ -1029,22 +1029,17 @@ export default function BulkStatsPage() {
                   Add/Update Stats (Bulk Entry)
                 </h2>
                 <div className="flex items-center gap-3">
-                  {Object.keys(bulkStats).some(id => {
-                    const s = bulkStats[id];
-                    return s.runs > 0 || s.wickets > 0 || s.catches > 0 || s.runOuts > 0 || s.stumpings > 0 || s.didNotPlay;
-                  }) && (
-                    <button
-                      onClick={() => {
-                        if (confirm('Clear all entered stats from the form? This does not delete saved stats from the database.')) {
-                          setBulkStats({});
-                        }
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium border border-gray-300"
-                    >
-                      <X className="h-4 w-4" />
-                      Clear Form
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      if (confirm('Clear all entered stats from the form? This does not delete saved stats from the database.')) {
+                        setBulkStats({});
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium border border-gray-300"
+                  >
+                    <X className="h-4 w-4" />
+                    Clear Form
+                  </button>
                   <button
                     onClick={handleBulkSave}
                     disabled={saving || Object.keys(bulkStats).filter(id => hasAnyStats(id)).length === 0}
