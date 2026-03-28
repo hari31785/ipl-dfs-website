@@ -128,7 +128,7 @@ export default function DraftPage() {
 
   const getDraftProgress = (matchup: HeadToHeadMatchup) => {
     const totalPicks = matchup.draftPicks.length;
-    const maxPicks = 10; // 5 per user
+    const maxPicks = 14; // 7 per user (5 starters + 2 subs)
     return `${totalPicks}/${maxPicks} picks completed`;
   };
 
@@ -259,7 +259,7 @@ export default function DraftPage() {
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                           <div 
                             className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${(matchup.draftPicks.length / 10) * 100}%` }}
+                            style={{ width: `${(matchup.draftPicks.length / 14) * 100}%` }}
                           ></div>
                         </div>
                       </td>
