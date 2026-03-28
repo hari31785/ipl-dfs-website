@@ -149,6 +149,7 @@ export default function DashboardPage() {
   })
   const [showDraftedTeamsModal, setShowDraftedTeamsModal] = useState(false)
   const [selectedDraftedContest, setSelectedDraftedContest] = useState<UserContest | null>(null)
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     // Get user data from localStorage (simple auth for now)
@@ -584,6 +585,124 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Draft Notification Banners */}
+        {(() => {
+          const alerts = userContests
+            .flatMap(uc => {
+              if (!uc.matchup || dismissedAlerts.has(uc.matchup.id + '_alert')) return []
+              const game = uc.contest.iplGame
+              const matchTitle = `${game.team1.shortName} vs ${game.team2.shortName}`
+              const tournamentName = game.tournament.name
+              const coinValue = uc.contest.coinValue
+              const opponentName = uc.matchup.opponentUsername || 'your opponent'
+              const matchupId = uc.matchup.id
+
+              // 🔴 Alert 1: Draft session started (coin toss done = someone opened draft page)
+              if (
+                uc.contest.status === 'DRAFT_PHASE' &&
+                uc.matchup.status === 'DRAFTING' &&
+                uc.matchup.firstPickUser !== null &&
+                uc.matchup.draftPicksCount < 14
+              ) {
+                return [{ type: 'started', matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id }]
+              }
+
+              // 🟡 Alert 2: Draft window open, no one in yet
+              if (
+                uc.contest.status === 'DRAFT_PHASE' &&
+                uc.matchup.status === 'DRAFTING' &&
+                (uc.matchup.firstPickUser === null || uc.matchup.firstPickUser === undefined) &&
+                uc.matchup.draftPicksCount === 0
+              ) {
+                return [{ type: 'open', matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id }]
+              }
+
+              // 🔵 Alert 3: Opponent matched, draft not open yet
+              if (
+                (uc.contest.status === 'SIGNUP_OPEN' || uc.contest.status === 'SIGNUP_CLOSED') &&
+                uc.matchup !== null
+              ) {
+                return [{ type: 'matched', matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id }]
+              }
+
+              return []
+            })
+            // Sort: started first, then open, then matched
+            .sort((a, b) => {
+              const order = { started: 0, open: 1, matched: 2 }
+              return order[a.type as keyof typeof order] - order[b.type as keyof typeof order]
+            })
+
+          if (alerts.length === 0) return null
+
+          return (
+            <div className="mb-6 space-y-3">
+              {alerts.map((alert) => (
+                <div
+                  key={alert.contestMatchupId + '_' + alert.type}
+                  className={`rounded-xl border px-5 py-4 flex items-start justify-between gap-4 shadow-sm ${
+                    alert.type === 'started'
+                      ? 'bg-red-50 border-red-300'
+                      : alert.type === 'open'
+                      ? 'bg-amber-50 border-amber-300'
+                      : 'bg-blue-50 border-blue-300'
+                  }`}
+                >
+                  <div className="flex items-start gap-3 flex-1">
+                    <span className="text-xl mt-0.5">
+                      {alert.type === 'started' ? '🔴' : alert.type === 'open' ? '⚡' : '🎯'}
+                    </span>
+                    <div className="flex-1">
+                      <p className={`font-semibold text-sm ${
+                        alert.type === 'started' ? 'text-red-800' : alert.type === 'open' ? 'text-amber-800' : 'text-blue-800'
+                      }`}>
+                        {alert.type === 'started' && 'Draft session has started!'}
+                        {alert.type === 'open' && 'Your draft window is open!'}
+                        {alert.type === 'matched' && 'Opponent matched!'}
+                      </p>
+                      <p className={`text-sm mt-0.5 ${
+                        alert.type === 'started' ? 'text-red-700' : alert.type === 'open' ? 'text-amber-700' : 'text-blue-700'
+                      }`}>
+                        {alert.matchTitle} &bull; {alert.tournamentName} &bull; {alert.coinValue} Coin Contest
+                      </p>
+                      <p className={`text-sm mt-1 ${
+                        alert.type === 'started' ? 'text-red-600' : alert.type === 'open' ? 'text-amber-600' : 'text-blue-600'
+                      }`}>
+                        {alert.type === 'started' && `Your opponent ${alert.opponentName} has entered the draft room.`}
+                        {alert.type === 'open' && `Be the first to enter the draft room vs ${alert.opponentName}.`}
+                        {alert.type === 'matched' && `You'll be facing ${alert.opponentName} — draft opens soon.`}
+                      </p>
+                    </div>
+                    {(alert.type === 'started' || alert.type === 'open') && (
+                      <button
+                        onClick={() => {
+                          setActiveTab('my-contests')
+                          setContestSubTab('upcoming')
+                        }}
+                        className={`shrink-0 text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors ${
+                          alert.type === 'started'
+                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                            : 'bg-amber-500 hover:bg-amber-600 text-white'
+                        }`}
+                      >
+                        {alert.type === 'started' ? 'Draft Now →' : 'Go Draft →'}
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setDismissedAlerts(prev => new Set(prev).add(alert.contestMatchupId + '_alert'))}
+                    className={`shrink-0 text-lg font-bold leading-none mt-0.5 ${
+                      alert.type === 'started' ? 'text-red-400 hover:text-red-600' : alert.type === 'open' ? 'text-amber-400 hover:text-amber-600' : 'text-blue-400 hover:text-blue-600'
+                    }`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Card */}
           <div className="lg:col-span-1">
