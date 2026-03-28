@@ -534,7 +534,8 @@ export default function BulkStatsPage() {
 
       if (response.ok && result.success) {
         // Direct fetch succeeded — populate directly
-        populateBulkStats(result.data.stats, result.data.summary, result.data.unmatchedPlayers);
+        const isLive = result.data.status !== 'completed';
+        populateBulkStats(result.data.stats, result.data.summary, result.data.unmatchedPlayers, isLive);
         return;
       }
 

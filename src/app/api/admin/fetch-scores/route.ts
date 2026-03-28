@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         date: gameData.dateScheduled,
         homeTeam: gameData.homeTeam,
         awayTeam: gameData.visitingTeam,
-        status: gameData.status === '44' ? 'completed' : 'scheduled',
+        status: gameData.status === '44' ? 'completed' : gameData.status === '43' ? 'live' : 'scheduled',
         players: gameData.players.map(p => {
           const points = (p.runs * 1) + (p.wickets * 20) + ((p.catches + p.runOuts + p.stumpings) * 5);
           return {
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
           catches: apiPlayer.catches,
           runOuts: apiPlayer.runOuts,
           stumpings: apiPlayer.stumpings,
-          didNotPlay: apiPlayer.didNotPlay,
+          didNotPlay: isCompleted ? apiPlayer.didNotPlay : false,
           // Calculate points based on our formula
           points: (apiPlayer.runs * 1) + (apiPlayer.wickets * 20) + 
                   ((apiPlayer.catches + apiPlayer.runOuts + apiPlayer.stumpings) * 5)
@@ -156,25 +156,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Mark players who didn't appear in API response as DNP
+    // Mark players who didn't appear in score data as DNP — only for completed games
+    const isCompleted = scoreData.status === 'completed'
     const apiPlayerNames = scoreData.players.map((p: any) => p.playerName.toLowerCase())
-    const dnpPlayers = players
-      .filter(p => !apiPlayerNames.some((name: string) => 
-        name.includes(p.name.toLowerCase()) || 
-        p.name.toLowerCase().includes(name)
-      ))
-      .map(p => ({
-        playerId: p.id,
-        playerName: p.name,
-        teamName: p.iplTeam.shortName,
-        runs: 0,
-        wickets: 0,
-        catches: 0,
-        runOuts: 0,
-        stumpings: 0,
-        didNotPlay: true,
-        points: 0
-      }))
+    const dnpPlayers = isCompleted
+      ? players
+          .filter(p => !apiPlayerNames.some((name: string) =>
+            name.includes(p.name.toLowerCase()) ||
+            p.name.toLowerCase().includes(name)
+          ))
+          .map(p => ({
+            playerId: p.id,
+            playerName: p.name,
+            teamName: p.iplTeam.shortName,
+            runs: 0,
+            wickets: 0,
+            catches: 0,
+            runOuts: 0,
+            stumpings: 0,
+            didNotPlay: true,
+            points: 0
+          }))
+      : [] // live game — never pre-emptively mark anyone as DNP
 
     return NextResponse.json({
       success: true,
