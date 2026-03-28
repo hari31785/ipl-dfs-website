@@ -231,12 +231,14 @@ async function restoreAllData(backupFilePath) {
     if (data.signups && data.signups.length > 0) {
       console.log('✍️  Restoring contest signups...');
       for (const signup of data.signups) {
+        const rawDate = signup.signupAt || signup.createdAt;
+        const parsedDate = rawDate ? new Date(rawDate) : new Date();
         await prisma.contestSignup.create({
           data: {
             id: signup.id,
             contestId: signup.contestId,
             userId: signup.userId,
-            createdAt: new Date(signup.createdAt)
+            signupAt: isNaN(parsedDate.getTime()) ? new Date() : parsedDate
           }
         });
       }
@@ -272,14 +274,17 @@ async function restoreAllData(backupFilePath) {
     if (data.draftPicks && data.draftPicks.length > 0) {
       console.log('🎯 Restoring draft picks...');
       for (const pick of data.draftPicks) {
+        const rawTs = pick.pickTimestamp || pick.createdAt;
+        const parsedTs = rawTs ? new Date(rawTs) : new Date();
         await prisma.draftPick.create({
           data: {
             id: pick.id,
             matchupId: pick.matchupId,
-            userId: pick.userId,
             playerId: pick.playerId,
-            pickNumber: pick.pickNumber,
-            createdAt: new Date(pick.createdAt)
+            pickedByUserId: pick.pickedByUserId || pick.userId,
+            pickOrder: pick.pickOrder ?? pick.pickNumber ?? 1,
+            isBench: pick.isBench ?? false,
+            pickTimestamp: isNaN(parsedTs.getTime()) ? new Date() : parsedTs
           }
         });
       }
@@ -290,6 +295,8 @@ async function restoreAllData(backupFilePath) {
     if (data.playerStats && data.playerStats.length > 0) {
       console.log('📊 Restoring player stats...');
       for (const stat of data.playerStats) {
+        const createdAt = stat.createdAt ? new Date(stat.createdAt) : new Date();
+        const updatedAt = stat.updatedAt ? new Date(stat.updatedAt) : new Date();
         await prisma.playerStat.create({
           data: {
             id: stat.id,
@@ -302,8 +309,8 @@ async function restoreAllData(backupFilePath) {
             stumpings: stat.stumpings || 0,
             didNotPlay: stat.didNotPlay || false,
             points: stat.points || 0,
-            createdAt: new Date(stat.createdAt),
-            updatedAt: new Date(stat.updatedAt)
+            createdAt: isNaN(createdAt.getTime()) ? new Date() : createdAt,
+            updatedAt: isNaN(updatedAt.getTime()) ? new Date() : updatedAt
           }
         });
       }

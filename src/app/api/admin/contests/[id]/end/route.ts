@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
+import { sendToUser } from '@/lib/pushNotifications';
 
 
 // POST /api/admin/contests/[id]/end - End contest and settle coin transactions
@@ -43,7 +44,9 @@ export async function POST(
         },
         iplGame: {
           include: {
-            tournament: true
+            tournament: true,
+            team1: true,
+            team2: true
           }
         }
       }
@@ -321,6 +324,25 @@ export async function POST(
       where: { id: contestId },
       data: { status: 'COMPLETED' }
     });
+
+    // Push notifications: tell each user their result
+    for (const matchup of contest.matchups) {
+      const u1 = matchup.user1.user;
+      const u2 = matchup.user2.user;
+      const gameTitle = `${contest.iplGame.team1?.shortName ?? ''} vs ${contest.iplGame.team2?.shortName ?? ''}`;
+      await sendToUser(u1.id, {
+        title: matchup.winnerId === matchup.user1Id ? '🏆 You won!' : '😔 Better luck next time',
+        body: `Results are in for ${gameTitle}. Check your scores now.`,
+        icon: '/icon-192.png',
+        url: `/scores/${matchup.id}?from=completed`,
+      });
+      await sendToUser(u2.id, {
+        title: matchup.winnerId === matchup.user2Id ? '🏆 You won!' : '😔 Better luck next time',
+        body: `Results are in for ${gameTitle}. Check your scores now.`,
+        icon: '/icon-192.png',
+        url: `/scores/${matchup.id}?from=completed`,
+      });
+    }
 
     return NextResponse.json({
       success: true,

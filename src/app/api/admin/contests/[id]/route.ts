@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendToUser } from '@/lib/pushNotifications';
 
 
 // PUT /api/admin/contests/[id] - Update contest status
@@ -36,9 +37,27 @@ export async function PUT(
             team1: true,
             team2: true
           }
+        },
+        signups: {
+          select: { userId: true }
         }
       }
     });
+
+    // Push notification when contest goes LIVE
+    if (status === 'LIVE' || status === 'ACTIVE') {
+      const gameTitle = `${contest.iplGame.team1.shortName} vs ${contest.iplGame.team2.shortName}`;
+      await Promise.all(
+        contest.signups.map((s) =>
+          sendToUser(s.userId, {
+            title: '🏏 Contest is LIVE!',
+            body: `${gameTitle} has started — check your active contest!`,
+            icon: '/icon-192.png',
+            url: '/dashboard?tab=my-contests&sub=active',
+          })
+        )
+      );
+    }
 
     return NextResponse.json(contest);
   } catch (error) {

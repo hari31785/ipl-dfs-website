@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, Ticket, Coins } from "lucide-react"
+import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, Ticket, Coins, Bell, BellOff } from "lucide-react"
 import { useLoading } from '@/contexts/LoadingContext'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 
 interface UserData {
   id: string
@@ -115,6 +116,7 @@ interface UserContest {
 
 export default function DashboardPage() {
   const { setLoading: setGlobalLoading } = useLoading();
+  const { permission, isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [user, setUser] = useState<UserData | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [userContests, setUserContests] = useState<UserContest[]>([])
@@ -152,6 +154,15 @@ export default function DashboardPage() {
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    // Restore tab state from URL params (e.g. when navigating back from scores page)
+    const urlParams = new URLSearchParams(window.location.search)
+    const tabParam = urlParams.get('tab')
+    const subParam = urlParams.get('sub')
+    if (tabParam === 'my-contests') setActiveTab('my-contests')
+    if (subParam === 'upcoming' || subParam === 'drafted' || subParam === 'active' || subParam === 'completed') {
+      setContestSubTab(subParam)
+    }
+
     // Get user data from localStorage (simple auth for now)
     const userData = localStorage.getItem('currentUser')
     if (userData) {
@@ -579,6 +590,29 @@ export default function DashboardPage() {
                 <LogOut className="h-5 w-5" />
                 Sign Out
               </button>
+              {/* Push Notification Bell */}
+              {permission !== 'unsupported' && (
+                <button
+                  onClick={() => {
+                    if (isSubscribed) {
+                      unsubscribe();
+                    } else {
+                      if (user?.id) subscribe(user.id);
+                    }
+                  }}
+                  disabled={pushLoading}
+                  title={isSubscribed ? 'Disable notifications' : 'Enable notifications'}
+                  className={`p-2.5 rounded-lg transition-colors shadow-md ${
+                    isSubscribed
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : permission === 'denied'
+                      ? 'bg-gray-500 cursor-not-allowed text-gray-300'
+                      : 'bg-white hover:bg-gray-100 text-primary-800'
+                  }`}
+                >
+                  {isSubscribed ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1370,7 +1404,7 @@ export default function DashboardPage() {
                             </button>
                           ) : (
                             <button 
-                              onClick={() => window.location.href = `/scores/${signup.matchup?.id}`}
+                              onClick={() => window.location.href = `/scores/${signup.matchup?.id}?from=${contestSubTab}`}
                               className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
                             >
                               View Scores

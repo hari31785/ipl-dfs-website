@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendToUser } from '@/lib/pushNotifications';
 
 
 // POST /api/admin/contests/[id]/open-drafting
@@ -73,6 +74,23 @@ export async function POST(
     });
 
     console.log(`✅ Opened drafting window for contest ${contest.id} with ${updatedContest._count.matchups} matchups`);
+
+    // Push notifications: tell all signed-up users that the draft is open
+    const signups = await prisma.contestSignup.findMany({
+      where: { contestId: id },
+      select: { userId: true },
+    });
+    const gameTitle = `${updatedContest.iplGame.team1.shortName} vs ${updatedContest.iplGame.team2.shortName}`;
+    await Promise.all(
+      signups.map((s) =>
+        sendToUser(s.userId, {
+          title: '⚡ Draft is now open!',
+          body: `Draft your team for ${gameTitle} before your opponent does!`,
+          icon: '/icon-192.png',
+          url: '/dashboard?tab=my-contests&sub=upcoming',
+        })
+      )
+    );
 
     return NextResponse.json({
       message: 'Drafting window opened successfully',
