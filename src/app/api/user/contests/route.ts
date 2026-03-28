@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from '@/lib/prisma'
+import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils'
 
 
 // Get user's contest signups
@@ -87,27 +88,13 @@ export async function GET(request: NextRequest) {
         const mySignupId = isUser1 ? matchup.user1Id : matchup.user2Id;
         const opponentSignupId = isUser1 ? matchup.user2Id : matchup.user1Id;
         
-        // Calculate my score
-        myScore = matchup.draftPicks
-          .filter(pick => pick.pickedByUserId === mySignupId)
-          .reduce((sum, pick) => {
-            const playerStats = pick.player.stats.filter(
-              stat => stat.iplGameId === signup.contest.iplGameId
-            );
-            const points = playerStats.length > 0 ? playerStats[0].points : 0;
-            return sum + points;
-          }, 0);
+        // Calculate my score (with bench swap applied)
+        const myPicks = matchup.draftPicks.filter(pick => pick.pickedByUserId === mySignupId);
+        const oppPicks = matchup.draftPicks.filter(pick => pick.pickedByUserId === opponentSignupId);
+        myScore = calculateTotalPointsWithSwap(myPicks as any, signup.contest.iplGameId);
         
-        // Calculate opponent score
-        opponentScore = matchup.draftPicks
-          .filter(pick => pick.pickedByUserId === opponentSignupId)
-          .reduce((sum, pick) => {
-            const playerStats = pick.player.stats.filter(
-              stat => stat.iplGameId === signup.contest.iplGameId
-            );
-            const points = playerStats.length > 0 ? playerStats[0].points : 0;
-            return sum + points;
-          }, 0);
+        // Calculate opponent score (with bench swap applied)
+        opponentScore = calculateTotalPointsWithSwap(oppPicks as any, signup.contest.iplGameId);
       }
 
       // Derive winnerId from stored DB scores for legacy records

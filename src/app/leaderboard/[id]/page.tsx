@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Trophy, Medal, TrendingUp, TrendingDown, Users, ArrowLeft, Coins } from "lucide-react"
+import { Trophy, Medal, TrendingUp, TrendingDown, Users, ArrowLeft, Coins, Eye } from "lucide-react"
 import { calculateFinalLineup, calculateTotalPointsWithSwap } from "@/lib/benchSwapUtils"
 
 interface LeaderboardEntry {
@@ -242,7 +242,10 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     Player
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-medium text-white uppercase tracking-wider">
-                    Contests
+                    <div className="flex items-center justify-center gap-1">
+                      <span>Contests</span>
+                      <Eye className="w-3 h-3 opacity-70" />
+                    </div>
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                     V̶₵ Won
@@ -301,10 +304,11 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <button
                           onClick={() => openContestHistory(entry.userId, entry.username)}
-                          className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors cursor-pointer"
+                          className="px-3 py-1 inline-flex items-center gap-1.5 text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 ring-1 ring-blue-300 hover:bg-blue-600 hover:text-white hover:ring-blue-600 transition-all cursor-pointer"
                           title={`View ${entry.username}'s contest history`}
                         >
                           {entry.contestsPlayed}
+                          <Eye className="w-3 h-3" />
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -480,8 +484,9 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
         const viewedUser = contestModal?.username ?? ''
         // We use signup.matchup user1/user2 ids to map names
         const isViewedUser1 = matchup?.user1Id === signup?.id
-        const leftLabel = isViewedUser1 ? `@${viewedUser}` : `@${matchup?.opponentUsername ?? 'Opponent'}`
-        const rightLabel = isViewedUser1 ? `@${matchup?.opponentUsername ?? 'Opponent'}` : `@${viewedUser}`
+        // Left always = viewed user, right always = opponent (lineups & scores already ordered this way)
+        const leftLabel = `@${viewedUser}`
+        const rightLabel = `@${matchup?.opponentUsername ?? 'Opponent'}`
         const { finalLineup: leftLineup, benchPlayers: leftBench } = isViewedUser1
           ? { finalLineup: u1Lineup, benchPlayers: u1Bench }
           : { finalLineup: u2Lineup, benchPlayers: u2Bench }
