@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Checking for existing user...')
 
-    // Check if user already exists
+    // Check if user already exists (email, username, phone — all must be unique)
     const existingUser = await prisma.user.findUnique({
       where: { email },
       select: { id: true, email: true }
@@ -92,6 +92,21 @@ export async function POST(request: NextRequest) {
         { message: "Username is already taken" },
         { status: 400 }
       )
+    }
+
+    // Check if phone number is already registered
+    if (phone) {
+      const existingPhone = await prisma.user.findFirst({
+        where: { phone },
+        select: { id: true }
+      })
+      if (existingPhone) {
+        console.log('Phone already registered:', phone)
+        return NextResponse.json(
+          { message: "An account with this phone number already exists" },
+          { status: 400 }
+        )
+      }
     }
 
     console.log('Creating new user...')
