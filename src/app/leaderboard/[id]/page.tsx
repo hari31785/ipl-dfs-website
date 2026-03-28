@@ -36,6 +36,31 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [contestModal, setContestModal] = useState<{ userId: string; username: string } | null>(null)
+  const [modalContests, setModalContests] = useState<any[]>([])
+  const [modalLoading, setModalLoading] = useState(false)
+
+  useEffect(() => {
+    const userData = localStorage.getItem('currentUser')
+    if (userData) {
+      try { setCurrentUserId(JSON.parse(userData).id) } catch {}
+    }
+  }, [])
+
+  const openContestHistory = async (userId: string, username: string) => {
+    setContestModal({ userId, username })
+    setModalContests([])
+    setModalLoading(true)
+    try {
+      const res = await fetch(`/api/user/contests?userId=${userId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setModalContests(data.filter((s: any) => s.matchup?.status === 'COMPLETED'))
+      }
+    } catch {}
+    finally { setModalLoading(false) }
+  }
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -270,13 +295,13 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <a 
-                          href="/coin-vault"
+                        <button
+                          onClick={() => openContestHistory(entry.userId, entry.username)}
                           className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors cursor-pointer"
-                          title="Click to view contest details"
+                          title={`View ${entry.username}'s contest history`}
                         >
                           {entry.contestsPlayed}
-                        </a>
+                        </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -359,6 +384,65 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
           </p>
         </div>
       </div>
+
+      {/* Contest History Modal */}
+      {contestModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setContestModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">@{contestModal.username}'s Contests</h2>
+                <p className="text-sm text-gray-500">Completed contests only</p>
+              </div>
+              <button onClick={() => setContestModal(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="overflow-y-auto flex-1 px-6 py-4">
+              {modalLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : modalContests.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Trophy className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                  <p>No completed contests yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {modalContests.map((signup: any) => {
+                    const game = signup.contest?.iplGame
+                    const matchup = signup.matchup
+                    const isWinner = matchup?.winnerId === signup.id
+                    const isTie = matchup?.winnerId === null
+                    const gameLabel = game ? `${game.team1?.shortName ?? ''} vs ${game.team2?.shortName ?? ''}` : 'Unknown Game'
+                    const coinValue = signup.contest?.coinValue ?? '?'
+                    const opponent = matchup?.opponentUsername ?? 'Unknown'
+                    const myScore = matchup?.myScore ?? '—'
+                    const oppScore = matchup?.opponentScore ?? '—'
+
+                    return (
+                      <div key={signup.id} className={`rounded-xl border p-4 ${isWinner ? 'bg-green-50 border-green-200' : isTie ? 'bg-gray-50 border-gray-200' : 'bg-red-50 border-red-200'}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-semibold text-gray-900 text-sm">{gameLabel}</span>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-green-600 text-white' : isTie ? 'bg-gray-500 text-white' : 'bg-red-600 text-white'}`}>
+                            {isWinner ? '🏆 Won' : isTie ? '🤝 Tie' : '😔 Lost'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-600 flex items-center justify-between">
+                          <span>vs <strong>@{opponent}</strong> · {coinValue}-coin contest</span>
+                          <span className="font-mono">{myScore} – {oppScore}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
