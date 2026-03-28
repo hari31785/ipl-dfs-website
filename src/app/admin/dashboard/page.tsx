@@ -405,7 +405,7 @@ export default function AdminDashboard() {
                   placeholder="e.g. 🏏 Draft opens in 1 hour!"
                   value={pushForm.title}
                   onChange={e => setPushForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   maxLength={60}
                 />
               </div>
@@ -416,7 +416,7 @@ export default function AdminDashboard() {
                   placeholder="/dashboard  or  /how-to-play"
                   value={pushForm.url}
                   onChange={e => setPushForm(f => ({ ...f, url: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
             </div>
@@ -428,7 +428,7 @@ export default function AdminDashboard() {
                 value={pushForm.body}
                 onChange={e => setPushForm(f => ({ ...f, body: e.target.value }))}
                 rows={3}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
                 maxLength={150}
               />
               <p className="text-xs text-gray-400 text-right mt-0.5">{pushForm.body.length}/150</p>
