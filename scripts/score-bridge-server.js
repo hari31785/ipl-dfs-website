@@ -139,6 +139,7 @@ const server = http.createServer(async (req, res) => {
   // Fetch available games list
   if (req.method === 'GET' && parsedUrl.pathname === '/games') {
     try {
+      const seriesId = parsedUrl.query.seriesId || 12; // default to IPL 2026
       const client = await pool.connect();
       const result = await client.query(`
         SELECT g.game_id, g.date_scheduled, g.status_id,
@@ -146,12 +147,13 @@ const server = http.createServer(async (req, res) => {
         FROM game g
         LEFT JOIN team ht ON g.home_team_id = ht.team_id
         LEFT JOIN team vt ON g.visiting_team_id = vt.team_id
-        WHERE g.game_id IN (
-          SELECT DISTINCT game_id FROM score_info WHERE is_active = true
-        )
+        WHERE g.series_id = $1
+          AND g.game_id IN (
+            SELECT DISTINCT game_id FROM score_info WHERE is_active = true
+          )
         ORDER BY g.date_scheduled DESC
         LIMIT 30
-      `);
+      `, [seriesId]);
       client.release();
       const games = result.rows.map(r => ({
         gameId: r.game_id,
