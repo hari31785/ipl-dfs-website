@@ -85,8 +85,11 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
   const searchParams = useSearchParams();
   const fromTab = searchParams.get('from'); // 'active' | 'drafted' | 'completed' | null
 
-  const backHref = `/dashboard?tab=my-contests&sub=${fromTab || 'active'}`;
+  const backHref =
+    fromTab === 'spectate'  ? '/dashboard?tab=spectate' :
+    `/dashboard?tab=my-contests&sub=${fromTab || 'active'}`;
   const backLabel =
+    fromTab === 'spectate'  ? 'Back to Spectate' :
     fromTab === 'completed' ? 'Back to Completed Contests' :
     fromTab === 'drafted'   ? 'Back to Drafted Contests' :
     fromTab === 'active'    ? 'Back to Active Contests' :
@@ -150,21 +153,12 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
 
   const isUser1 = matchup.user1.user.id === currentUser.id;
   const isUser2 = matchup.user2.user.id === currentUser.id;
-  
-  if (!isUser1 && !isUser2) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl text-red-600 mb-4">You are not part of this matchup</div>
-          <a href="/dashboard" className="text-primary-600 underline">Go to Dashboard</a>
-        </div>
-      </div>
-    );
-  }
+  const isSpectator = !isUser1 && !isUser2;
 
-  const mySignupId = isUser1 ? matchup.user1.id : matchup.user2.id;
-  const opponentSignupId = isUser1 ? matchup.user2.id : matchup.user1.id;
-  const opponent = isUser1 ? matchup.user2.user : matchup.user1.user;
+  // For participants: my side = their signup; for spectators: user1 = left, user2 = right
+  const mySignupId = isSpectator ? matchup.user1.id : (isUser1 ? matchup.user1.id : matchup.user2.id);
+  const opponentSignupId = isSpectator ? matchup.user2.id : (isUser1 ? matchup.user2.id : matchup.user1.id);
+  const opponent = isSpectator ? matchup.user2.user : (isUser1 ? matchup.user2.user : matchup.user1.user);
 
   const myPicks = matchup.draftPicks.filter(p => p.pickedByUserId === mySignupId);
   const opponentPicks = matchup.draftPicks.filter(p => p.pickedByUserId === opponentSignupId);
@@ -316,17 +310,32 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Matchup Info */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
+          {isSpectator && (
+            <div className="flex justify-center mb-4">
+              <span className="bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full text-sm font-semibold">
+                👁 Spectating — Read Only
+              </span>
+            </div>
+          )}
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
-              <div className="text-sm font-semibold text-black uppercase tracking-wide mb-2">Your Team</div>
-              <div className="text-xl font-bold text-black">{currentUser.name}</div>
-              <div className="text-sm text-black mt-1">@{currentUser.username}</div>
+              <div className="text-sm font-semibold text-black uppercase tracking-wide mb-2">
+                {isSpectator ? 'Player 1' : 'Your Team'}
+              </div>
+              <div className="text-xl font-bold text-black">
+                {isSpectator ? matchup.user1.user.name : currentUser.name}
+              </div>
+              <div className="text-sm text-black mt-1">
+                @{isSpectator ? matchup.user1.user.username : currentUser.username}
+              </div>
             </div>
             <div className="text-center flex items-center justify-center">
               <div className="text-4xl font-bold text-secondary-400">VS</div>
             </div>
             <div className="text-center p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
-              <div className="text-sm font-semibold text-black uppercase tracking-wide mb-2">Opponent</div>
+              <div className="text-sm font-semibold text-black uppercase tracking-wide mb-2">
+                {isSpectator ? 'Player 2' : 'Opponent'}
+              </div>
               <div className="text-xl font-bold text-black">{opponent.name}</div>
               <div className="text-sm text-black mt-1">@{opponent.username}</div>
             </div>
@@ -342,7 +351,11 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
           }`}>
             <div className="text-center">
               <p className="text-white font-bold text-xl mb-2 flex items-center justify-center gap-1">
-                {isTie ? '🤝 Tie Game!' : didIWin ? '🎉 You Won!' : '😔 You Lost'}
+                {isTie
+                  ? '🤝 Tie Game!'
+                  : isSpectator
+                    ? (didIWin ? `🏆 ${matchup.user1.user.name} Wins!` : `🏆 ${matchup.user2.user.name} Wins!`)
+                    : (didIWin ? '🎉 You Won!' : '😔 You Lost')}
               </p>
               {!isTie && (
                 <div className="flex items-center justify-center gap-6 mb-2">
@@ -353,26 +366,32 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
                       {didIWin ? '+' : ''}{(myTotalPoints - opponentTotalPoints).toFixed(1)}
                     </div>
                   </div>
-                  {/* Coins Won/Lost */}
-                  <div className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded border border-white/30">
-                    <div className="text-white/80 text-xs">Coins Impact</div>
-                    <div className={`text-white font-black text-2xl ${
-                      didIWin ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]' : ''
-                    }`}>
-                      {didIWin ? '+' : '-'}{Math.abs((myTotalPoints - opponentTotalPoints) * matchup.contest.coinValue).toFixed(0)}
-                      <span className="text-base ml-1">🪙</span>
+                  {/* Coins Won/Lost — hidden for spectators */}
+                  {!isSpectator && (
+                    <div className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded border border-white/30">
+                      <div className="text-white/80 text-xs">Coins Impact</div>
+                      <div className={`text-white font-black text-2xl ${
+                        didIWin ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]' : ''
+                      }`}>
+                        {didIWin ? '+' : '-'}{Math.abs((myTotalPoints - opponentTotalPoints) * matchup.contest.coinValue).toFixed(0)}
+                        <span className="text-base ml-1">🪙</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
               <div className="flex items-center justify-center gap-6 pt-2 border-t border-white/30">
                 <div className="text-center">
-                  <div className="text-white/80 text-xs mb-0.5">Your Score</div>
+                  <div className="text-white/80 text-xs mb-0.5">
+                    {isSpectator ? matchup.user1.user.name : 'Your Score'}
+                  </div>
                   <div className="text-white font-black text-xl">⭐ {myTotalPoints.toFixed(1)}</div>
                 </div>
                 <div className="text-white text-lg font-bold">vs</div>
                 <div className="text-center">
-                  <div className="text-white/80 text-xs mb-0.5">Opponent Score</div>
+                  <div className="text-white/80 text-xs mb-0.5">
+                    {isSpectator ? matchup.user2.user.name : 'Opponent Score'}
+                  </div>
                   <div className="text-white font-black text-xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
                 </div>
               </div>
@@ -392,7 +411,9 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
           {/* Your Team */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-xl text-green-800">Your Team</h3>
+              <h3 className="font-bold text-xl text-green-800">
+                {isSpectator ? `${matchup.user1.user.name}'s Team` : 'Your Team'}
+              </h3>
               <span className="bg-green-800 text-white px-3 py-1 rounded-full font-bold text-sm">
                 5 Starters + 2 Bench
               </span>
@@ -448,7 +469,9 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
           {/* Opponent Team */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-xl text-red-800">Opponent Team</h3>
+              <h3 className="font-bold text-xl text-red-800">
+                {isSpectator ? `${matchup.user2.user.name}'s Team` : 'Opponent Team'}
+              </h3>
               <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold text-sm">
                 5 Starters + 2 Bench
               </span>

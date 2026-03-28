@@ -121,8 +121,10 @@ export default function DashboardPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [userContests, setUserContests] = useState<UserContest[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'available' | 'my-contests'>('available')
+  const [activeTab, setActiveTab] = useState<'available' | 'my-contests' | 'spectate'>('available')
   const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'drafted' | 'active' | 'completed'>('upcoming')
+  const [spectateData, setSpectateData] = useState<any[]>([])
+  const [spectateLoading, setSpectateLoading] = useState(false)
   const [myContestsTournamentFilter, setMyContestsTournamentFilter] = useState<string>('all')
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
@@ -160,6 +162,10 @@ export default function DashboardPage() {
     const tabParam = urlParams.get('tab')
     const subParam = urlParams.get('sub')
     if (tabParam === 'my-contests') setActiveTab('my-contests')
+    if (tabParam === 'spectate') {
+      setActiveTab('spectate')
+      fetchSpectateData()
+    }
     if (subParam === 'upcoming' || subParam === 'drafted' || subParam === 'active' || subParam === 'completed') {
       setContestSubTab(subParam)
     }
@@ -220,6 +226,21 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching user contests:', error)
+    }
+  }
+
+  const fetchSpectateData = async () => {
+    setSpectateLoading(true)
+    try {
+      const response = await fetch('/api/contests/spectate')
+      if (response.ok) {
+        const data = await response.json()
+        setSpectateData(data.contests)
+      }
+    } catch (error) {
+      console.error('Error fetching spectate data:', error)
+    } finally {
+      setSpectateLoading(false)
     }
   }
 
@@ -859,6 +880,16 @@ export default function DashboardPage() {
                 }`}
               >
                 My Contests ({userContests.length})
+              </button>
+              <button
+                onClick={() => { setActiveTab('spectate'); fetchSpectateData(); }}
+                className={`pb-4 px-4 font-semibold transition-colors relative ${
+                  activeTab === 'spectate'
+                    ? 'text-secondary-600 border-b-2 border-secondary-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                👁 Spectate
               </button>
             </div>
 
@@ -1500,6 +1531,134 @@ export default function DashboardPage() {
                   ))
                   })()}
                 </div>
+              </div>
+            )}
+
+            {/* Spectate Tab */}
+            {activeTab === 'spectate' && (
+              <div className="space-y-4">
+                {/* Header with refresh */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800">👁 Live Matchups</h3>
+                    <p className="text-sm text-gray-500">All active H2H contests — spectate any matchup</p>
+                  </div>
+                  <button
+                    onClick={fetchSpectateData}
+                    disabled={spectateLoading}
+                    className="flex items-center gap-2 bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {spectateLoading ? '⟳ Loading...' : '↻ Refresh'}
+                  </button>
+                </div>
+
+                {spectateLoading ? (
+                  <div className="bg-white rounded-lg shadow border border-gray-200 p-12 text-center">
+                    <div className="text-gray-500">Loading active matchups...</div>
+                  </div>
+                ) : spectateData.length === 0 ? (
+                  <div className="bg-white rounded-lg shadow border border-gray-200 p-12 text-center">
+                    <div className="text-4xl mb-3">👁</div>
+                    <div className="text-lg font-semibold text-gray-700">No active contests right now</div>
+                    <div className="text-sm text-gray-500 mt-1">Check back once a contest is set to LIVE or ACTIVE</div>
+                  </div>
+                ) : (() => {
+                  // Group contests by game
+                  const gameGroups = spectateData.reduce((groups: any, contest: any) => {
+                    const gameId = contest.iplGame.id
+                    if (!groups[gameId]) {
+                      groups[gameId] = { game: contest.iplGame, contests: [] }
+                    }
+                    groups[gameId].contests.push(contest)
+                    return groups
+                  }, {} as Record<string, { game: any; contests: any[] }>)
+
+                  return Object.values(gameGroups).map((group: any) => (
+                    <div key={group.game.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                      {/* Game header */}
+                      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-lg">
+                            <div className="w-5 h-5 rounded-full border-2 border-white" style={{ backgroundColor: group.game.team1.color }}></div>
+                            <span className="font-bold text-sm text-white">{group.game.team1.shortName}</span>
+                          </div>
+                          <span className="text-white font-bold text-sm">vs</span>
+                          <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-lg">
+                            <div className="w-5 h-5 rounded-full border-2 border-white" style={{ backgroundColor: group.game.team2.color }}></div>
+                            <span className="font-bold text-sm text-white">{group.game.team2.shortName}</span>
+                          </div>
+                          <span className="text-white/70 text-xs ml-auto">
+                            {new Date(group.game.gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Contests */}
+                      <div className="divide-y divide-gray-100">
+                        {group.contests.map((contest: any) => (
+                          <div key={contest.id} className="p-3">
+                            {/* Contest type label */}
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                                {contest.contestType === 'HIGH_ROLLER' ? 'High Roller' :
+                                 contest.contestType === 'REGULAR' ? 'Regular' :
+                                 contest.contestType === 'LOW_STAKES' ? 'Low Stakes' :
+                                 contest.contestType}
+                              </span>
+                              <span className="text-xs text-gray-500">{contest.coinValue} coins/pt</span>
+                              <span className="text-xs text-gray-400">·</span>
+                              <span className="text-xs text-gray-500">{contest.matchups.length} matchup{contest.matchups.length !== 1 ? 's' : ''}</span>
+                            </div>
+
+                            {/* Matchup rows */}
+                            {contest.matchups.length === 0 ? (
+                              <div className="text-xs text-gray-400 italic py-1">No completed drafts yet</div>
+                            ) : (
+                              <div className="space-y-1.5">
+                                {contest.matchups.map((matchup: any) => {
+                                  const hasScores = matchup.user1Score > 0 || matchup.user2Score > 0
+                                  const u1Wins = matchup.user1Score > matchup.user2Score
+                                  const u2Wins = matchup.user2Score > matchup.user1Score
+                                  return (
+                                    <div key={matchup.id} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                                      {/* User 1 */}
+                                      <div className={`flex-1 text-right ${u1Wins && hasScores ? 'font-bold' : ''}`}>
+                                        <div className="text-sm text-gray-900 truncate">{matchup.user1.user.name}</div>
+                                        <div className="text-xs text-gray-500">@{matchup.user1.user.username}</div>
+                                      </div>
+                                      {/* Scores */}
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className={`text-sm font-black w-16 text-right ${u1Wins && hasScores ? 'text-green-700' : 'text-gray-700'}`}>
+                                          {hasScores ? `⭐ ${matchup.user1Score.toFixed(1)}` : '–'}
+                                        </span>
+                                        <span className="text-gray-400 font-bold text-xs">vs</span>
+                                        <span className={`text-sm font-black w-16 ${u2Wins && hasScores ? 'text-green-700' : 'text-gray-700'}`}>
+                                          {hasScores ? `⭐ ${matchup.user2Score.toFixed(1)}` : '–'}
+                                        </span>
+                                      </div>
+                                      {/* User 2 */}
+                                      <div className={`flex-1 ${u2Wins && hasScores ? 'font-bold' : ''}`}>
+                                        <div className="text-sm text-gray-900 truncate">{matchup.user2.user.name}</div>
+                                        <div className="text-xs text-gray-500">@{matchup.user2.user.username}</div>
+                                      </div>
+                                      {/* Watch button */}
+                                      <button
+                                        onClick={() => window.location.href = `/scores/${matchup.id}?from=spectate`}
+                                        className="shrink-0 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors"
+                                      >
+                                        👁 Watch
+                                      </button>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                })()}
               </div>
             )}
           </div>
