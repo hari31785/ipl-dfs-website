@@ -316,17 +316,14 @@ export default function BulkStatsPage() {
         
         try {
           const error = JSON.parse(responseText);
-          if (error.message) {
-            errorMessage = error.message;
-          } else if (error.error) {
-            errorMessage = error.error;
-          }
+          const detail = error.error || '';
+          errorMessage = error.message || 'Unknown error';
+          if (detail && detail !== errorMessage) errorMessage += `\n\nDetail: ${detail}`;
         } catch (e) {
-          // If response is not JSON, use status text
           errorMessage = `Server error: ${response.status} ${response.statusText}\n\nResponse: ${responseText}`;
         }
-        alert(`Error saving stats:\n\n${errorMessage}\n\nPlease check the console for more details.`);
-        console.error('Bulk save error:', errorMessage);
+        console.error('Bulk save error full response:', responseText);
+        alert(`Error saving stats:\n\n${errorMessage}`);
       }
     } catch (error) {
       console.error('Error saving bulk stats:', error);

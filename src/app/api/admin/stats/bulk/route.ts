@@ -56,22 +56,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process all stats in a transaction
+    // Process all stats in a transaction with extended timeout
     const results = await prisma.$transaction(async (tx) => {
       const createdOrUpdated = [];
-      
+
+      // Fetch ALL existing stats for this game in one query (avoid N+1)
+      const allExistingStats = await tx.playerStat.findMany({
+        where: { iplGameId }
+      });
+      const existingMap = new Map(allExistingStats.map(s => [s.playerId, s]));
+
+      // Fetch ALL players for both teams in one query
+      const allPlayers = await tx.player.findMany({
+        where: {
+          id: { in: stats.map((s: any) => s.playerId) }
+        },
+        include: { iplTeam: true }
+      });
+      const playerMap = new Map(allPlayers.map(p => [p.id, p]));
+
       for (const stat of stats) {
         const { playerId, runs = 0, wickets = 0, catches = 0, runOuts = 0, stumpings = 0, didNotPlay = false } = stat;
-        
+
         // Calculate points
         const points = (runs * 1) + (wickets * 20) + ((catches + runOuts + stumpings) * 5);
-        
-        // Check if player exists and is part of the game
-        const player = await tx.player.findUnique({
-          where: { id: playerId },
-          include: { iplTeam: true }
-        });
 
+        const player = playerMap.get(playerId);
         if (!player) {
           throw new Error(`Player with ID ${playerId} not found`);
         }
@@ -80,64 +90,26 @@ export async function POST(request: NextRequest) {
           throw new Error(`Player ${player.name} is not part of the teams playing in this game`);
         }
 
-        // Check if stats already exist
-        const existingStats = await tx.playerStat.findFirst({
-          where: {
-            iplGameId,
-            playerId
-          }
-        });
+        const existingStats = existingMap.get(playerId);
 
         if (existingStats) {
-          // Update existing stats
           const updated = await tx.playerStat.update({
             where: { id: existingStats.id },
-            data: {
-              runs,
-              wickets,
-              catches,
-              runOuts,
-              stumpings,
-              didNotPlay,
-              points
-            },
-            include: {
-              player: {
-                include: {
-                  iplTeam: true
-                }
-              }
-            }
+            data: { runs, wickets, catches, runOuts, stumpings, didNotPlay, points },
+            include: { player: { include: { iplTeam: true } } }
           });
           createdOrUpdated.push(updated);
         } else {
-          // Create new stats
           const created = await tx.playerStat.create({
-            data: {
-              iplGameId,
-              playerId,
-              runs,
-              wickets,
-              catches,
-              runOuts,
-              stumpings,
-              didNotPlay,
-              points
-            },
-            include: {
-              player: {
-                include: {
-                  iplTeam: true
-                }
-              }
-            }
+            data: { iplGameId, playerId, runs, wickets, catches, runOuts, stumpings, didNotPlay, points },
+            include: { player: { include: { iplTeam: true } } }
           });
           createdOrUpdated.push(created);
         }
       }
 
       return createdOrUpdated;
-    });
+    }, { timeout: 30000 });
 
     return NextResponse.json({
       success: true,

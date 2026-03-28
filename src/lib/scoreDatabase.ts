@@ -122,7 +122,7 @@ class ScoreDatabase {
         LEFT JOIN team ht ON g.home_team_id = ht.team_id
         LEFT JOIN team vt ON g.visiting_team_id = vt.team_id
         LEFT JOIN team wt ON g.winner_team_id = wt.team_id
-        WHERE g.game_id = $1 OR g.external_id = $1
+        WHERE (g.game_id = $1::bigint OR g.external_id = $1::bigint)
         AND g.is_active = true
         LIMIT 1
       `, [gameId]);
@@ -188,7 +188,7 @@ class ScoreDatabase {
         JOIN player p ON si.player_id = p.player_id
         LEFT JOIN player_series ps ON p.player_id = ps.player_id AND ps.is_active = true
         LEFT JOIN team t ON ps.team_id = t.team_id
-        WHERE si.game_id = $1
+        WHERE si.game_id = $1::bigint
         AND si.is_active = true
         GROUP BY p.player_id, p.full_name, t.name
         ORDER BY runs DESC, wickets DESC

@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
     // Match players from API response with our database players
     const matchedStats = []
     const unmatchedPlayers = []
+    const isCompleted = scoreData.status === 'completed'
 
     for (const apiPlayer of scoreData.players) {
       // Try to find matching player in our database
@@ -157,7 +158,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark players who didn't appear in score data as DNP — only for completed games
-    const isCompleted = scoreData.status === 'completed'
     const apiPlayerNames = scoreData.players.map((p: any) => p.playerName.toLowerCase())
     const dnpPlayers = isCompleted
       ? players

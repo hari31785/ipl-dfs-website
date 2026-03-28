@@ -44,7 +44,7 @@ async function fetchPlayerScores(gameId) {
       FROM game g
       LEFT JOIN team ht ON g.home_team_id = ht.team_id
       LEFT JOIN team vt ON g.visiting_team_id = vt.team_id
-      WHERE (g.game_id = $1 OR g.external_id = $1::text)
+      WHERE (g.game_id = $1::bigint OR g.external_id = $1::bigint)
       AND g.is_active = true
       LIMIT 1
     `, [gameId]);
@@ -54,6 +54,7 @@ async function fetchPlayerScores(gameId) {
     }
 
     const game = gameResult.rows[0];
+    const gameIdInt = parseInt(game.game_id, 10); // pg returns bigint as string — parse to number
 
     // Fetch player stats
     const statsResult = await client.query(`
@@ -75,7 +76,7 @@ async function fetchPlayerScores(gameId) {
       AND si.is_active = true
       GROUP BY p.player_id, p.full_name, t.name
       ORDER BY runs DESC, wickets DESC
-    `, [game.game_id]);
+    `, [gameIdInt]);
 
     const players = statsResult.rows.map(row => ({
       playerName: row.player_name,
