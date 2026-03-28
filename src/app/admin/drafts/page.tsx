@@ -297,7 +297,7 @@ export default function DraftPage() {
           <div className="bg-white rounded-lg max-w-6xl w-full max-h-screen overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">
+                <h2 className="text-xl font-bold text-gray-900">
                   Draft Details: {selectedMatchup.user1.user.name} vs {selectedMatchup.user2.user.name}
                 </h2>
                 <button
@@ -317,7 +317,7 @@ export default function DraftPage() {
                   <div className="space-y-2">
                     {getUserPicks(selectedMatchup, selectedMatchup.user1.id).map((pick, index) => (
                       <div key={pick.id} className="bg-white rounded p-2 text-sm">
-                        <div className="font-medium">Pick #{pick.pickOrder}: {pick.player.name}</div>
+                        <div className="font-medium text-gray-900">Pick #{pick.pickOrder}: {pick.player.name}</div>
                         <div className="text-gray-600">{pick.player.role} - {pick.player.iplTeam.shortName}</div>
                       </div>
                     ))}
@@ -350,7 +350,7 @@ export default function DraftPage() {
                   <div className="space-y-2">
                     {getUserPicks(selectedMatchup, selectedMatchup.user2.id).map((pick, index) => (
                       <div key={pick.id} className="bg-white rounded p-2 text-sm">
-                        <div className="font-medium">Pick #{pick.pickOrder}: {pick.player.name}</div>
+                        <div className="font-medium text-gray-900">Pick #{pick.pickOrder}: {pick.player.name}</div>
                         <div className="text-gray-600">{pick.player.role} - {pick.player.iplTeam.shortName}</div>
                       </div>
                     ))}
