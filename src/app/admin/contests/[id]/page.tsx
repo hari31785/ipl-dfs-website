@@ -222,7 +222,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
 
   const getNextPickInfo = (matchup: Matchup) => {
     const nextPickOrder = matchup.draftPicks.length + 1;
-    if (nextPickOrder > 10) return null;
+    if (nextPickOrder > 14) return null;
     
     const isUser1Turn = matchup.firstPickUser === 'user1' 
       ? nextPickOrder % 2 === 1 
@@ -898,7 +898,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                     <strong>Pick #{nextPick.pickOrder}</strong> - {nextPick.name}'s turn
                   </div>
                   <div className="text-xs text-gray-600 mt-1">
-                    {matchup.draftPicks.length}/10 picks completed
+                    {matchup.draftPicks.length}/14 picks completed
                   </div>
                 </div>
 
@@ -1126,7 +1126,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                             {getStatusIcon(matchup.status)} {matchup.status.replace('_', ' ')}
                           </div>
                           <div className="text-xs text-gray-600 mt-1">
-                            {matchup.draftPicks.length}/10 picks
+                            {matchup.draftPicks.length}/14 picks
                           </div>
                         </div>
                         <div className="text-gray-400">
@@ -1254,7 +1254,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                       </div>
 
                       {/* Manual Draft Pick Button */}
-                      {matchup.draftPicks.length < 10 && (
+                      {matchup.draftPicks.length < 14 && (
                         <div className="mt-6">
                           <button
                             onClick={() => {
