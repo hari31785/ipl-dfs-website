@@ -110,17 +110,20 @@ export default function VCManagementPage() {
       return;
     }
 
-    const amount = parseFloat(settleAmount);
-    const maxAmount = type === 'ENCASH' ? balance.netBalance : Math.abs(balance.netBalance);
+    const amountVC = parseFloat(settleAmount);
+    const maxAmountVC = type === 'ENCASH' ? balance.netBalance / 100 : Math.abs(balance.netBalance) / 100;
 
-    if (amount > maxAmount) {
-      alert(`Cannot ${type === 'ENCASH' ? 'encash' : 'refill'} more than ${maxAmount} VCs`);
+    if (amountVC > maxAmountVC) {
+      alert(`Cannot ${type === 'ENCASH' ? 'encash' : 'refill'} more than V̶₵${maxAmountVC.toFixed(2)}`);
       return;
     }
 
-    if (!confirm(`Confirm ${type === 'ENCASH' ? 'encash' : 'refill'} ${amount} VCs for ${balance.user.name}?`)) {
+    if (!confirm(`Confirm ${type === 'ENCASH' ? 'encash' : 'refill'} V̶₵${amountVC.toFixed(2)} for ${balance.user.name}?`)) {
       return;
     }
+
+    // Convert VC input to coins for the API (1 V̶₵ = 100 coins)
+    const amountCoins = Math.round(amountVC * 100);
 
     try {
       const response = await fetch('/api/admin/vc-settle', {
@@ -129,7 +132,7 @@ export default function VCManagementPage() {
         body: JSON.stringify({
           tournamentBalanceId: balance.id,
           type,
-          amount,
+          amount: amountCoins,
           adminUsername,
           notes: settleNotes || null,
         }),
@@ -265,13 +268,13 @@ export default function VCManagementPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right font-mono font-bold">
-                          {settlement.amount} VCs
+                          V̶₵{(settlement.amount / 100).toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-sm">
-                          {settlement.balanceBefore}
+                          V̶₵{(settlement.balanceBefore / 100).toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-sm">
-                          {settlement.balanceAfter}
+                          V̶₵{(settlement.balanceAfter / 100).toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-sm">{settlement.adminUsername}</td>
                         <td className="px-4 py-3 text-sm text-gray-400">
@@ -301,7 +304,7 @@ export default function VCManagementPage() {
               >
                 <div className="text-green-700 text-sm font-semibold">Winners</div>
                 <div className="text-gray-800 text-2xl font-bold">{group.winners.length}</div>
-                <div className="text-green-600 text-sm">+{group.totalWinnings} VCs</div>
+                <div className="text-green-600 text-sm">+V̶₵{(group.totalWinnings / 100).toFixed(2)}</div>
               </button>
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'losers' ? 'all' : 'losers')}
@@ -311,7 +314,7 @@ export default function VCManagementPage() {
               >
                 <div className="text-red-700 text-sm font-semibold">Losers</div>
                 <div className="text-gray-800 text-2xl font-bold">{group.losers.length}</div>
-                <div className="text-red-600 text-sm">-{group.totalLosses} VCs</div>
+                <div className="text-red-600 text-sm">-V̶₵{(group.totalLosses / 100).toFixed(2)}</div>
               </button>
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'breakeven' ? 'all' : 'breakeven')}
@@ -321,11 +324,11 @@ export default function VCManagementPage() {
               >
                 <div className="text-yellow-700 text-sm font-semibold">Break Even</div>
                 <div className="text-gray-800 text-2xl font-bold">{group.breakEven.length}</div>
-                <div className="text-yellow-600 text-sm">0 VCs</div>
+                <div className="text-yellow-600 text-sm">V̶₵0.00</div>
               </button>
               <div className={`${group.netBalance >= 0 ? 'bg-green-50 border-green-950' : 'bg-red-50 border-red-950'} border-2 rounded-lg p-4`}>
                 <div className="text-gray-600 text-sm font-semibold">Net Balance</div>
-                <div className="text-gray-800 text-2xl font-bold">{group.netBalance > 0 ? '+' : ''}{group.netBalance} VCs</div>
+                <div className="text-gray-800 text-2xl font-bold">{group.netBalance > 0 ? '+' : ''}V̶₵{(group.netBalance / 100).toFixed(2)}</div>
               </div>
             </div>
 
@@ -351,19 +354,20 @@ export default function VCManagementPage() {
                             <div className="font-semibold">{balance.user.name}</div>
                             <div className="text-sm text-gray-500">{balance.user.username}</div>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono">{balance.balance} VCs</td>
-                          <td className="px-4 py-3 text-right font-mono text-green-600">+{balance.netBalance} VCs</td>
-                          <td className="px-4 py-3 text-right font-mono">{balance.totalSettled} VCs</td>
+                          <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.balance / 100).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-green-600">+V̶₵{(balance.netBalance / 100).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.totalSettled / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-center">
                             {settlingUser === balance.id ? (
                               <div className="flex gap-2 items-center justify-center">
                                 <input
                                   type="number"
-                                  placeholder="Amount"
+                                  placeholder="V̶₵ amount"
                                   value={settleAmount}
                                   onChange={(e) => setSettleAmount(e.target.value)}
                                   className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-24"
-                                  max={balance.netBalance}
+                                  max={balance.netBalance / 100}
+                                  step="0.01"
                                 />
                                 <button
                                   onClick={() => handleSettle(balance, 'ENCASH')}
@@ -421,19 +425,20 @@ export default function VCManagementPage() {
                             <div className="font-semibold">{balance.user.name}</div>
                             <div className="text-sm text-gray-500">{balance.user.username}</div>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono">{balance.balance} VCs</td>
-                          <td className="px-4 py-3 text-right font-mono text-red-600">{balance.netBalance} VCs</td>
-                          <td className="px-4 py-3 text-right font-mono">{balance.totalSettled} VCs</td>
+                          <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.balance / 100).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-red-600">-V̶₵{(Math.abs(balance.netBalance) / 100).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.totalSettled / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-center">
                             {settlingUser === balance.id ? (
                               <div className="flex gap-2 items-center justify-center">
                                 <input
                                   type="number"
-                                  placeholder="Amount"
+                                  placeholder="V̶₵ amount"
                                   value={settleAmount}
                                   onChange={(e) => setSettleAmount(e.target.value)}
                                   className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-24"
-                                  max={Math.abs(balance.netBalance)}
+                                  max={Math.abs(balance.netBalance) / 100}
+                                  step="0.01"
                                 />
                                 <button
                                   onClick={() => handleSettle(balance, 'REFILL')}
@@ -489,8 +494,8 @@ export default function VCManagementPage() {
                             <div className="font-semibold">{balance.user.name}</div>
                             <div className="text-sm text-gray-500">{balance.user.username}</div>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono">{balance.balance} VCs</td>
-                          <td className="px-4 py-3 text-right font-mono text-yellow-600">0 VCs</td>
+                          <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.balance / 100).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-yellow-600">V̶₵0.00</td>
                         </tr>
                       ))}
                     </tbody>
