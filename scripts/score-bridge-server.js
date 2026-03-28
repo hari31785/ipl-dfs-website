@@ -105,9 +105,12 @@ async function fetchPlayerScores(gameId) {
 
 const server = http.createServer(async (req, res) => {
   // CORS headers — allow the admin browser to call this local server
+  // Access-Control-Allow-Private-Network is required for Chrome when
+  // a public HTTPS page (Vercel) fetches from localhost (private network)
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Request-Private-Network');
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
   res.setHeader('Content-Type', 'application/json');
 
   if (req.method === 'OPTIONS') {
