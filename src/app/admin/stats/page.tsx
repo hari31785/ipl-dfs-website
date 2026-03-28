@@ -476,11 +476,10 @@ export default function BulkStatsPage() {
 
     setIsFetchingScores(true);
     try {
+      // Step 1: Try Vercel fetch-scores (works if score DB is reachable from server)
       const response = await fetch('/api/admin/fetch-scores', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           iplGameId: selectedGame,
           externalMatchId: externalMatchId.trim() || undefined
@@ -490,51 +489,69 @@ export default function BulkStatsPage() {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        // Auto-populate the bulk stats form with fetched data
-        const newBulkStats: Record<string, BulkStatEntry> = {};
-        
-        for (const stat of result.data.stats) {
-          newBulkStats[stat.playerId] = {
-            playerId: stat.playerId,
-            runs: stat.runs,
-            wickets: stat.wickets,
-            catches: stat.catches,
-            runOuts: stat.runOuts,
-            stumpings: stat.stumpings,
-            didNotPlay: stat.didNotPlay
-          };
-        }
-
-        setBulkStats(newBulkStats);
-        
-        let successMessage = `✅ Successfully fetched scores for ${result.data.stats.length} players!\n\n`;
-        successMessage += `Matched: ${result.data.summary.matchedPlayers}\n`;
-        if (result.data.summary.unmatchedPlayers > 0) {
-          successMessage += `Unmatched: ${result.data.summary.unmatchedPlayers}\n`;
-          successMessage += `⚠️ Unmatched players: ${result.data.unmatchedPlayers.join(', ')}\n\n`;
-        }
-        successMessage += `\n📝 Review the populated stats below and click "Save All Stats" when ready.`;
-        
-        setFetchSuccess(successMessage);
-        alert(successMessage);
-      } else {
-        const errorMsg = result.error || 'Failed to fetch scores';
-        setFetchError(errorMsg);
-        
-        if (!result.available) {
-          alert(
-            `❌ Score Provider Not Available\n\n` +
-            `${errorMsg}\n\n` +
-            `You can still enter scores manually below.`
-          );
-        } else {
-          alert(
-            `⚠️ Error Fetching Scores\n\n` +
-            `${errorMsg}\n\n` +
-            `Please enter scores manually or try again later.`
-          );
-        }
+        // Vercel fetch succeeded — populate directly
+        populateBulkStats(result.data.stats, result.data.summary, result.data.unmatchedPlayers);
+        return;
       }
+
+      // Step 2: Vercel can't reach score DB — try local bridge on localhost:3001
+      console.log('Vercel score provider unavailable, trying local bridge on localhost:3001...');
+
+      let bridgeResponse: Response;
+      try {
+        bridgeResponse = await fetch('http://localhost:3001/fetch-scores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            iplGameId: selectedGame,
+            externalMatchId: externalMatchId.trim() || undefined
+          }),
+        });
+      } catch {
+        // Bridge not running — show helpful message
+        setFetchError('Local bridge not running');
+        alert(
+          `❌ Score Provider Not Available\n\n` +
+          `The score database cannot be reached from the server.\n\n` +
+          `To fetch scores, run the local bridge on your Mac:\n\n` +
+          `  node scripts/score-bridge-server.js\n\n` +
+          `Then click "Fetch Scores from API" again.\n\n` +
+          `You can also enter scores manually below.`
+        );
+        return;
+      }
+
+      const bridgeResult = await bridgeResponse.json();
+
+      if (!bridgeResponse.ok || !bridgeResult.success) {
+        const errorMsg = bridgeResult.error || 'Bridge fetch failed';
+        setFetchError(errorMsg);
+        alert(`❌ Bridge Error\n\n${errorMsg}\n\nPlease enter scores manually.`);
+        return;
+      }
+
+      // Step 3: Bridge returned raw player data — send to Vercel to match player names → IDs
+      const matchResponse = await fetch('/api/admin/match-scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          iplGameId: selectedGame,
+          rawPlayers: bridgeResult.data.players
+        }),
+      });
+
+      const matchResult = await matchResponse.json();
+
+      if (!matchResponse.ok || !matchResult.success) {
+        const errorMsg = matchResult.error || 'Player matching failed';
+        setFetchError(errorMsg);
+        alert(`❌ Error matching players\n\n${errorMsg}\n\nPlease enter scores manually.`);
+        return;
+      }
+
+      // Populate form with matched stats
+      populateBulkStats(matchResult.data.stats, matchResult.data.summary, matchResult.data.unmatchedPlayers);
+
     } catch (error) {
       console.error('Error fetching scores:', error);
       const errorMsg = error instanceof Error ? error.message : 'Network error';
@@ -547,6 +564,32 @@ export default function BulkStatsPage() {
     } finally {
       setIsFetchingScores(false);
     }
+  };
+
+  const populateBulkStats = (stats: any[], summary: any, unmatchedPlayers: string[]) => {
+    const newBulkStats: Record<string, BulkStatEntry> = {};
+    for (const stat of stats) {
+      newBulkStats[stat.playerId] = {
+        playerId: stat.playerId,
+        runs: stat.runs,
+        wickets: stat.wickets,
+        catches: stat.catches,
+        runOuts: stat.runOuts,
+        stumpings: stat.stumpings,
+        didNotPlay: stat.didNotPlay
+      };
+    }
+    setBulkStats(newBulkStats);
+
+    let successMessage = `✅ Successfully fetched scores for ${stats.length} players!\n\n`;
+    successMessage += `Matched: ${summary.matchedPlayers}\n`;
+    if (summary.unmatchedPlayers > 0) {
+      successMessage += `Unmatched: ${summary.unmatchedPlayers}\n`;
+      successMessage += `⚠️ Unmatched players: ${unmatchedPlayers.join(', ')}\n\n`;
+    }
+    successMessage += `\n📝 Review the populated stats below and click "Save All Stats" when ready.`;
+    setFetchSuccess(successMessage);
+    alert(successMessage);
   };
 
   if (loading) return <div className="p-8">Loading...</div>;
