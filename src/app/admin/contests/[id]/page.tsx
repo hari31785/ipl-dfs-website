@@ -108,6 +108,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   const [deletingMatchup, setDeletingMatchup] = useState<string | null>(null);
   const [selectedMatchups, setSelectedMatchups] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [resettlingMatchup, setResettlingMatchup] = useState<string | null>(null);
 
   useEffect(() => {
     fetchContestDetails();
@@ -391,6 +392,34 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
       alert('❌ Network error occurred');
     } finally {
       setBulkDeleting(false);
+    }
+  };
+
+  const handleResettle = async (matchupId: string, matchupDetails: string) => {
+    if (!confirm(
+      `⚖️ RE-SETTLE MATCHUP?\n\n${matchupDetails}\n\nThis will:\n• Reverse all existing WIN/LOSS coin transactions\n• Recalculate scores with latest bench-swap logic\n• Re-apply correct coin changes and update win/loss stats\n\nAre you sure?`
+    )) return;
+
+    setResettlingMatchup(matchupId);
+    try {
+      const response = await fetch(`/api/admin/matchups/${matchupId}/resettle`, { method: 'POST' });
+      const data = await response.json();
+      if (response.ok) {
+        alert(
+          `✅ Re-settled successfully!\n\n` +
+          `Score: ${data.user1Score} – ${data.user2Score}\n` +
+          `Result: ${data.result}\n` +
+          `Reversed ${data.reversedTransactions} old transaction(s)\n` +
+          `Admin fee collected: ${data.adminFeeCollected} coins`
+        );
+        fetchContestDetails();
+      } else {
+        alert(`❌ Error: ${data.message}`);
+      }
+    } catch {
+      alert('❌ Network error occurred');
+    } finally {
+      setResettlingMatchup(null);
     }
   };
 
@@ -1060,6 +1089,22 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                         >
                           <Edit className="h-4 w-4" />
                         </button>
+                        {matchup.status === 'COMPLETED' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleResettle(
+                                matchup.id,
+                                `${matchup.user1.user.name} (@${matchup.user1.user.username}) vs ${matchup.user2.user.name} (@${matchup.user2.user.username})\nCurrent score: ${matchup.user1Score} – ${matchup.user2Score}`
+                              );
+                            }}
+                            disabled={resettlingMatchup === matchup.id}
+                            className="text-orange-600 hover:text-orange-700 p-2 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold"
+                            title="Re-settle this matchup (recalculate scores & coins)"
+                          >
+                            {resettlingMatchup === matchup.id ? '⏳' : '⚖️'}
+                          </button>
+                        )}
                         {matchup.status !== 'COMPLETED' && (
                           <button
                             onClick={(e) => {
