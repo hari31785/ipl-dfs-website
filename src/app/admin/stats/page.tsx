@@ -93,11 +93,13 @@ export default function BulkStatsPage() {
   const [showGamePicker, setShowGamePicker] = useState(false);
   const [selectedScoreDbGameId, setSelectedScoreDbGameId] = useState<number | null>(null);
   const [loadingScoreDbGames, setLoadingScoreDbGames] = useState(false);
+  const [bridgeAvailable, setBridgeAvailable] = useState<boolean | null>(null); // null = not checked yet
 
   useEffect(() => {
     fetchTournaments();
     fetchGames();
     checkScoreProviderStatus();
+    checkBridgeStatus();
   }, []);
 
   // Handle gameId query parameter after games are loaded
@@ -447,6 +449,17 @@ export default function BulkStatsPage() {
     }
   };
 
+  const checkBridgeStatus = async () => {
+    try {
+      const resp = await fetch('http://localhost:3001/health', {
+        signal: AbortSignal.timeout(2000)
+      });
+      setBridgeAvailable(resp.ok);
+    } catch {
+      setBridgeAvailable(false);
+    }
+  };
+
   const checkScoreProviderStatus = async () => {
     try {
       const response = await fetch('/api/admin/fetch-scores');
@@ -460,7 +473,7 @@ export default function BulkStatsPage() {
     }
   };
 
-  // Called when button is clicked — loads game list from bridge or falls back
+  // Called when button is clicked — loads game list from bridge
   const handleFetchScoresClick = async () => {
     if (!selectedGame) {
       alert('Please select a game first');
@@ -469,7 +482,7 @@ export default function BulkStatsPage() {
     setFetchError(null);
     setFetchSuccess(null);
 
-    // Try to load game list from local bridge first
+    // Always try to load game list from local bridge
     setLoadingScoreDbGames(true);
     try {
       const resp = await fetch('http://localhost:3001/games', {
@@ -477,38 +490,23 @@ export default function BulkStatsPage() {
       });
       const data = await resp.json();
       setLoadingScoreDbGames(false);
+      setBridgeAvailable(true);
       if (data.success && data.games?.length > 0) {
         setScoreDbGames(data.games);
         setSelectedScoreDbGameId(null);
         setShowGamePicker(true);
         return; // wait for user to pick a game in the modal
       }
+      // Bridge running but no games returned
+      setFetchError('Bridge is running but returned no games from the score database.');
+      return;
     } catch {
       setLoadingScoreDbGames(false);
-      // Bridge not running or timed out — fall through
+      setBridgeAvailable(false);
     }
 
-    // Bridge unavailable — if Vercel score provider is configured, prompt for ID
-    if (scoreProviderAvailable) {
-      const game = games.find(g => g.id === selectedGame);
-      const idInput = prompt(
-        `Fetch scores for: ${game?.title}\n\n` +
-        `Enter the external match ID from the score database, or leave blank to use game ID:`,
-        ''
-      );
-      if (idInput === null) return; // cancelled
-      await handleFetchScores(idInput.trim() || undefined);
-      return;
-    }
-
-    // Neither available — show instructions
-    alert(
-      `❌ Score Provider Not Available\n\n` +
-      `To fetch scores, run on your developer Mac:\n\n` +
-      `  node scripts/score-bridge-server.js\n\n` +
-      `Then use http://localhost:3000/admin/stats (not the Vercel URL).\n\n` +
-      `Browsers block HTTP requests from HTTPS pages, so the Vercel URL cannot reach the local bridge.`
-    );
+    // Bridge not running — show inline error (no alert, no prompt)
+    setFetchError('bridge_not_running');
   };
 
   const handleFetchScores = async (externalMatchId?: string) => {
@@ -742,34 +740,53 @@ export default function BulkStatsPage() {
           {/* Status Messages */}
           {selectedGame && (
             <div className="mt-4 space-y-2">
-              {scoreProviderAvailable && (
+              {bridgeAvailable === true && (
                 <div className="flex items-start gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
                   <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">Score Provider is configured and available</p>
-                    <p className="text-xs mt-1">Click "Fetch Scores from API" to auto-populate player statistics, or enter manually below.</p>
+                    <p className="font-medium">✅ Bridge server is running — click "Fetch Scores from API" to pick a game</p>
+                    <p className="text-xs mt-1">A game picker will appear so you don&apos;t need to know the external match ID.</p>
                   </div>
                 </div>
               )}
-              {!scoreProviderAvailable && (
-                <div className="flex items-start gap-2 text-sm text-blue-700 bg-blue-50 p-3 rounded-lg border border-blue-200">
+              {bridgeAvailable === false && (
+                <div className="flex items-start gap-2 text-sm text-orange-700 bg-orange-50 p-3 rounded-lg border border-orange-200">
                   <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">⚠️ Score fetching requires the local bridge</p>
+                    <p className="font-medium">⚠️ Bridge server not running — score fetching requires it</p>
                     <p className="text-xs mt-1 leading-relaxed">
-                      To use "Fetch Scores from API", you must be on your <strong>developer Mac</strong> and use <strong>http://localhost:3000/admin/stats</strong> (not the Vercel URL).<br />
-                      Then in a terminal run: <code className="bg-blue-100 px-1 rounded font-mono">node scripts/score-bridge-server.js</code><br />
-                      Browsers block HTTP requests from HTTPS pages, so Vercel URL cannot reach the local bridge.
+                      Open a terminal on your <strong>developer Mac</strong> and run:<br />
+                      <code className="bg-orange-100 px-1 py-0.5 rounded font-mono text-orange-800">node scripts/score-bridge-server.js</code><br />
+                      Then also make sure you&apos;re using <strong>http://localhost:3000/admin/stats</strong> (not the Vercel URL).<br />
+                      After starting, click "Fetch Scores from API" again.
                     </p>
                   </div>
                 </div>
               )}
-              {fetchError && (
+              {bridgeAvailable === null && (
+                <div className="flex items-start gap-2 text-sm text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <p>Checking bridge server status…</p>
+                </div>
+              )}
+              {fetchError && fetchError !== 'bridge_not_running' && (
                 <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 p-3 rounded-lg border border-red-200">
                   <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">Error fetching scores</p>
                     <p className="text-xs mt-1">{fetchError}</p>
+                  </div>
+                </div>
+              )}
+              {fetchError === 'bridge_not_running' && (
+                <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 p-3 rounded-lg border border-red-200">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Bridge server not running</p>
+                    <p className="text-xs mt-1 leading-relaxed">
+                      Start it with: <code className="bg-red-100 px-1 rounded font-mono">node scripts/score-bridge-server.js</code><br />
+                      Also ensure you&apos;re on <strong>http://localhost:3000/admin/stats</strong>, then click "Fetch Scores from API" again.
+                    </p>
                   </div>
                 </div>
               )}
