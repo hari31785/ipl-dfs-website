@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, Ticket, Coins, Bell, BellOff } from "lucide-react"
+import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, ChevronDown, Ticket, Coins, Bell, BellOff } from "lucide-react"
 import { useLoading } from '@/contexts/LoadingContext'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 
@@ -125,6 +125,7 @@ export default function DashboardPage() {
   const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'drafted' | 'active' | 'completed'>('upcoming')
   const [spectateData, setSpectateData] = useState<any[]>([])
   const [spectateLoading, setSpectateLoading] = useState(false)
+  const [expandedSpectateGames, setExpandedSpectateGames] = useState<Set<string>>(new Set())
   const [myContestsTournamentFilter, setMyContestsTournamentFilter] = useState<string>('all')
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
@@ -1573,10 +1574,21 @@ export default function DashboardPage() {
                     return groups
                   }, {} as Record<string, { game: any; contests: any[] }>)
 
-                  return Object.values(gameGroups).map((group: any) => (
+                  return Object.values(gameGroups).map((group: any) => {
+                    const isExpanded = expandedSpectateGames.has(group.game.id)
+                    const totalMatchups = group.contests.reduce((n: number, c: any) => n + c.matchups.length, 0)
+                    return (
                     <div key={group.game.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-                      {/* Game header */}
-                      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3">
+                      {/* Game header — click to expand/collapse */}
+                      <button
+                        onClick={() => setExpandedSpectateGames(prev => {
+                          const next = new Set(prev)
+                          if (next.has(group.game.id)) next.delete(group.game.id)
+                          else next.add(group.game.id)
+                          return next
+                        })}
+                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 p-3 text-left"
+                      >
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-lg">
                             <div className="w-5 h-5 rounded-full border-2 border-white" style={{ backgroundColor: group.game.team1.color }}></div>
@@ -1587,14 +1599,20 @@ export default function DashboardPage() {
                             <div className="w-5 h-5 rounded-full border-2 border-white" style={{ backgroundColor: group.game.team2.color }}></div>
                             <span className="font-bold text-sm text-white">{group.game.team2.shortName}</span>
                           </div>
-                          <span className="text-white/70 text-xs ml-auto">
+                          <span className="text-white/70 text-xs">
                             {new Date(group.game.gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
+                          <span className="text-white/60 text-xs">
+                            {group.contests.length} contest{group.contests.length !== 1 ? 's' : ''} · {totalMatchups} matchup{totalMatchups !== 1 ? 's' : ''}
+                          </span>
+                          <span className="ml-auto text-white/80">
+                            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </span>
                         </div>
-                      </div>
+                      </button>
 
-                      {/* Contests */}
-                      <div className="divide-y divide-gray-100">
+                      {/* Contests — only shown when expanded */}
+                      {isExpanded && <div className="divide-y divide-gray-100">
                         {group.contests.map((contest: any) => (
                           <div key={contest.id} className="p-3">
                             {/* Contest type label */}
@@ -1655,9 +1673,10 @@ export default function DashboardPage() {
                             )}
                           </div>
                         ))}
-                      </div>
+                      </div>}
                     </div>
-                  ))
+                  )
+                  })
                 })()}
               </div>
             )}
