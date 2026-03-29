@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if admin exists
+    // Check if admin exists (case-insensitive username)
     const admin = await prisma.admin.findUnique({
-      where: { username }
+      where: { username: username.toLowerCase().trim() }
     })
 
     if (!admin) {

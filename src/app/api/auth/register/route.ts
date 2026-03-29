@@ -64,9 +64,13 @@ export async function POST(request: NextRequest) {
 
     console.log('Checking for existing user...')
 
+    // Normalize identifiers to lowercase before storing and checking
+    const normalizedEmail = email.toLowerCase().trim()
+    const normalizedUsername = username.toLowerCase().trim()
+
     // Check if user already exists (email, username, phone — all must be unique)
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
       select: { id: true, email: true }
     })
 
@@ -82,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     // Check if username is taken (required field now)
     const existingUsername = await prisma.user.findUnique({
-      where: { username },
+      where: { username: normalizedUsername },
       select: { id: true, username: true }
     })
 
@@ -121,8 +125,8 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.create({
       data: {
         name,
-        username,
-        email,
+        username: normalizedUsername,
+        email: normalizedEmail,
         phone: phone || null,
         password: hashedPassword,
         securityQuestion1,
