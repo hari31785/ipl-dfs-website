@@ -47,15 +47,39 @@ export async function PUT(
     // Push notification when contest goes LIVE
     if (status === 'LIVE' || status === 'ACTIVE') {
       const gameTitle = `${contest.iplGame.team1.shortName} vs ${contest.iplGame.team2.shortName}`;
+      const contestTypeLabel =
+        contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100 coins)' :
+        contest.contestType === 'REGULAR'     ? 'Regular (50 coins)' :
+        contest.contestType === 'LOW_STAKES'  ? 'Low Stakes (25 coins)' :
+        `${contest.coinValue} coins`;
+
+      // Build userId → opponent username map from matchups
+      const matchupsForNotif = await prisma.headToHeadMatchup.findMany({
+        where: { contestId: id },
+        include: {
+          user1: { include: { user: { select: { id: true, username: true } } } },
+          user2: { include: { user: { select: { id: true, username: true } } } },
+        },
+      });
+      const opponentMap = new Map<string, string>();
+      for (const m of matchupsForNotif) {
+        opponentMap.set(m.user1.user.id, m.user2.user.username);
+        opponentMap.set(m.user2.user.id, m.user1.user.username);
+      }
+
       await Promise.all(
-        contest.signups.map((s) =>
-          sendToUser(s.userId, {
-            title: '🏏 Contest is LIVE!',
-            body: `${gameTitle} has started — check your active contest!`,
+        contest.signups.map((s) => {
+          const opponentUsername = opponentMap.get(s.userId);
+          const body = opponentUsername
+            ? `${gameTitle} is underway — you're up against @${opponentUsername}. Check your active contest!`
+            : `${gameTitle} is underway. Check your active contest!`;
+          return sendToUser(s.userId, {
+            title: `🏏 Contest Live · ${contestTypeLabel}`,
+            body,
             icon: '/icon-192.png',
             url: '/dashboard?tab=my-contests&sub=active',
-          })
-        )
+          });
+        })
       );
     }
 
