@@ -76,20 +76,44 @@ export async function POST(
     console.log(`✅ Opened drafting window for contest ${contest.id} with ${updatedContest._count.matchups} matchups`);
 
     // Push notifications: tell all signed-up users that the draft is open
+    const gameTitle = `${updatedContest.iplGame.team1.shortName} vs ${updatedContest.iplGame.team2.shortName}`;
+    const contestTypeLabel =
+      updatedContest.contestType === 'HIGH_ROLLER' ? 'High Roller (100 coins)' :
+      updatedContest.contestType === 'REGULAR'     ? 'Regular (50 coins)' :
+      updatedContest.contestType === 'LOW_STAKES'  ? 'Low Stakes (25 coins)' :
+      `${updatedContest.coinValue} coins`;
+
+    // Build userId → opponent username map from matchups
+    const matchupsForNotif = await prisma.headToHeadMatchup.findMany({
+      where: { contestId: id },
+      include: {
+        user1: { include: { user: { select: { id: true, username: true } } } },
+        user2: { include: { user: { select: { id: true, username: true } } } },
+      },
+    });
+    const opponentMap = new Map<string, string>();
+    for (const m of matchupsForNotif) {
+      opponentMap.set(m.user1.user.id, m.user2.user.username);
+      opponentMap.set(m.user2.user.id, m.user1.user.username);
+    }
+
     const signups = await prisma.contestSignup.findMany({
       where: { contestId: id },
       select: { userId: true },
     });
-    const gameTitle = `${updatedContest.iplGame.team1.shortName} vs ${updatedContest.iplGame.team2.shortName}`;
     await Promise.all(
-      signups.map((s) =>
-        sendToUser(s.userId, {
-          title: '⚡ Draft is now open!',
-          body: `Draft your team for ${gameTitle} before your opponent does!`,
+      signups.map((s) => {
+        const opponentUsername = opponentMap.get(s.userId);
+        const body = opponentUsername
+          ? `You're up against @${opponentUsername} in ${gameTitle} — draft your team now!`
+          : `Your draft for ${gameTitle} is open — draft your team now!`;
+        return sendToUser(s.userId, {
+          title: `⚡ Draft Open · ${contestTypeLabel}`,
+          body,
           icon: '/icon-192.png',
           url: '/dashboard?tab=my-contests&sub=upcoming',
-        })
-      )
+        });
+      })
     );
 
     return NextResponse.json({
