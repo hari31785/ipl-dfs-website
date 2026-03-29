@@ -78,6 +78,7 @@ export default function DraftPage() {
   const [loading, setLoading] = useState(true);
   const [showActiveDrafts, setShowActiveDrafts] = useState(true);
   const [showCompletedDrafts, setShowCompletedDrafts] = useState(false);
+  const [markingComplete, setMarkingComplete] = useState(false);
 
   useEffect(() => {
     fetchContests();
@@ -116,6 +117,32 @@ export default function DraftPage() {
       }
     } catch (error) {
       console.error('Error fetching matchups:', error);
+    }
+  };
+
+  const markDraftComplete = async (matchupId: string) => {
+    if (!confirm('Mark this draft as COMPLETED? This will close the draft and the contest will move to the scoring phase.')) return;
+    setMarkingComplete(true);
+    try {
+      const res = await fetch(`/api/admin/matchups/${matchupId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'COMPLETED' }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Error: ${err.message}`);
+        return;
+      }
+      // Update local state so modal + table reflect new status immediately
+      const updatedMatchup = { ...selectedMatchup!, status: 'COMPLETED' };
+      setSelectedMatchup(updatedMatchup);
+      setMatchups(prev => prev.map(m => m.id === matchupId ? updatedMatchup : m));
+    } catch (e) {
+      console.error('Error marking draft complete:', e);
+      alert('Failed to mark draft as complete.');
+    } finally {
+      setMarkingComplete(false);
     }
   };
 
@@ -371,12 +398,35 @@ export default function DraftPage() {
                 <h2 className="text-xl font-bold text-gray-900">
                   Draft Details: {selectedMatchup.user1.user.name} vs {selectedMatchup.user2.user.name}
                 </h2>
-                <button
-                  onClick={() => setSelectedMatchup(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
+                <div className="flex items-center gap-3">
+                  {selectedMatchup.status !== 'COMPLETED' && (
+                    <button
+                      onClick={() => markDraftComplete(selectedMatchup.id)}
+                      disabled={markingComplete}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      {markingComplete ? (
+                        <>
+                          <span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full"></span>
+                          Marking…
+                        </>
+                      ) : (
+                        <>✓ Mark Draft Complete</>
+                      )}
+                    </button>
+                  )}
+                  {selectedMatchup.status === 'COMPLETED' && (
+                    <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-100 text-green-700 text-sm font-semibold rounded-lg">
+                      ✓ Draft Completed
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setSelectedMatchup(null)}
+                    className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
