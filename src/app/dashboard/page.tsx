@@ -1117,116 +1117,55 @@ export default function DashboardPage() {
             {/* My Contests Tab */}
             {activeTab === 'my-contests' && (
               <div className="space-y-6">
-                {/* Contest Sub-tabs */}
-                <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setContestSubTab('upcoming')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      contestSubTab === 'upcoming'
-                        ? 'bg-white text-blue-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Upcoming
-                      {userContests.filter(contest => 
-                        // Upcoming: Contests in signup and draft phase (not drafted yet)
-                        (contest.contest.status === 'SIGNUP_OPEN' || 
-                        contest.contest.status === 'SIGNUP_CLOSED' ||
-                        contest.contest.status === 'DRAFT_PHASE') &&
-                        !(contest.matchup && contest.matchup.status === 'COMPLETED' && contest.matchup.draftPicksCount === 14)
-                      ).length > 0 && (
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
-                          {userContests.filter(contest => 
-                            (contest.contest.status === 'SIGNUP_OPEN' || 
-                            contest.contest.status === 'SIGNUP_CLOSED' ||
-                            contest.contest.status === 'DRAFT_PHASE') &&
-                            !(contest.matchup && contest.matchup.status === 'COMPLETED' && contest.matchup.draftPicksCount === 14)
-                          ).length}
-                        </span>
-                      )}
+                {/* Contest Sub-tabs — horizontally scrollable so all 4 always fit on small screens */}
+                {(() => {
+                  const upcomingCount = userContests.filter(c =>
+                    (c.contest.status === 'SIGNUP_OPEN' || c.contest.status === 'SIGNUP_CLOSED' || c.contest.status === 'DRAFT_PHASE') &&
+                    !(c.matchup && c.matchup.status === 'COMPLETED' && c.matchup.draftPicksCount === 14)
+                  ).length;
+                  const draftedCount = userContests.filter(c =>
+                    (c.contest.status === 'DRAFT_PHASE' || c.contest.status === 'ACTIVE') &&
+                    c.matchup && c.matchup.status === 'COMPLETED' && c.matchup.draftPicksCount === 14
+                  ).length;
+                  const activeCount = userContests.filter(c =>
+                    c.contest.status === 'LIVE' || c.contest.status === 'ACTIVE'
+                  ).length;
+                  const completedCount = userContests.filter(c =>
+                    c.contest.status === 'COMPLETED'
+                  ).length;
+                  const tabs = [
+                    { key: 'upcoming',  label: 'Upcoming',  icon: <Clock className="h-4 w-4" />,  count: upcomingCount,  activeCls: 'border-blue-500 text-blue-700',   badgeCls: 'bg-blue-100 text-blue-800'    },
+                    { key: 'drafted',   label: 'Drafted',   icon: <Users className="h-4 w-4" />,  count: draftedCount,   activeCls: 'border-indigo-500 text-indigo-700', badgeCls: 'bg-indigo-100 text-indigo-800' },
+                    { key: 'active',    label: 'Active',    icon: <Zap className="h-4 w-4" />,    count: activeCount,    activeCls: 'border-green-500 text-green-700',  badgeCls: 'bg-green-100 text-green-800'  },
+                    { key: 'completed', label: 'Completed', icon: <Trophy className="h-4 w-4" />, count: completedCount, activeCls: 'border-purple-500 text-purple-700', badgeCls: 'bg-purple-100 text-purple-800' },
+                  ] as const;
+                  return (
+                    <div className="flex border-b border-gray-200 bg-white rounded-t-lg overflow-x-auto scrollbar-hide">
+                      {tabs.map(tab => {
+                        const isActive = contestSubTab === tab.key;
+                        return (
+                          <button
+                            key={tab.key}
+                            onClick={() => setContestSubTab(tab.key)}
+                            className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 px-2 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                              isActive ? tab.activeCls : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1">
+                              {tab.icon}
+                              <span>{tab.label}</span>
+                            </div>
+                            {tab.count > 0 && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none ${isActive ? tab.badgeCls : 'bg-gray-100 text-gray-500'}`}>
+                                {tab.count}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setContestSubTab('drafted')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      contestSubTab === 'drafted'
-                        ? 'bg-white text-blue-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Drafted
-                      {userContests.filter(contest => 
-                        // Drafted: Draft is complete (14 picks) but contest not yet started
-                        (contest.contest.status === 'DRAFT_PHASE' || contest.contest.status === 'ACTIVE') && 
-                        contest.matchup && 
-                        contest.matchup.status === 'COMPLETED' &&
-                        contest.matchup.draftPicksCount === 14
-                      ).length > 0 && (
-                        <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full">
-                          {userContests.filter(contest => 
-                            (contest.contest.status === 'DRAFT_PHASE' || contest.contest.status === 'ACTIVE') && 
-                            contest.matchup && 
-                            contest.matchup.status === 'COMPLETED' &&
-                            contest.matchup.draftPicksCount === 14
-                          ).length}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setContestSubTab('active')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      contestSubTab === 'active'
-                        ? 'bg-white text-blue-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Zap className="h-4 w-4" />
-                      Active
-                      {userContests.filter(contest => 
-                        // Active: Contest has been started by admin (status is LIVE or ACTIVE)
-                        contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE'
-                      ).length > 0 && (
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
-                          {userContests.filter(contest => 
-                            contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE'
-                          ).length}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setContestSubTab('completed')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      contestSubTab === 'completed'
-                        ? 'bg-white text-blue-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Trophy className="h-4 w-4" />
-                      Completed
-                      {userContests.filter(contest => 
-                        // Completed: Contest has been ended by admin (status is COMPLETED)
-                        contest.contest.status === 'COMPLETED'
-                      ).length > 0 && (
-                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full">
-                          {userContests.filter(contest => 
-                            contest.contest.status === 'COMPLETED'
-                          ).length}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                </div>
+                  );
+                })()}
 
                 {/* Tournament Filter */}
                 <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
