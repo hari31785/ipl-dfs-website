@@ -258,7 +258,7 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
               </div>
             </div>
           </div>
-          {!!playerStats && isActive && (
+          {!!playerStats && !didNotPlay && isActive && (
             <button
               onClick={() => setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
               className="text-lg font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-2 rounded shadow-md border-2 border-green-700 hover:scale-105 transition-transform cursor-pointer"
@@ -266,7 +266,7 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
               ⭐ {playerPoints.toFixed(1)}
             </button>
           )}
-          {!!playerStats && !isActive && (
+          {!!playerStats && !didNotPlay && !isActive && (
             <div className="text-sm font-bold text-gray-500 px-3 py-2">
               {playerPoints.toFixed(1)} pts (not counted)
             </div>
