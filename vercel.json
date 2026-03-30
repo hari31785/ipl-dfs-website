@@ -6,6 +6,12 @@
       "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/auto-fetch-scores",
+      "schedule": "*/10 11-19 * * *"
+    }
+  ],
   "env": {
     "NEXTAUTH_URL": "https://ipl-dfs-website.vercel.app"
   }
