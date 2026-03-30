@@ -212,6 +212,32 @@ class ScoreDatabase {
   }
 
   /**
+   * Get list of games from the score DB that have stats data.
+   * Server-side equivalent of GET localhost:3001/games from the bridge.
+   */
+  async getGamesList(seriesId: string = '12'): Promise<any[]> {
+    const pool = this.getPool();
+    const result = await pool.query(`
+      SELECT g.game_id, g.date_scheduled, g.status_id,
+        ht.name as home_team, vt.name as visiting_team
+      FROM game g
+      LEFT JOIN team ht ON g.home_team_id = ht.team_id
+      LEFT JOIN team vt ON g.visiting_team_id = vt.team_id
+      WHERE g.series_id = $1
+        AND g.game_id IN (SELECT DISTINCT game_id FROM score_info WHERE is_active = true)
+      ORDER BY g.date_scheduled DESC LIMIT 30
+    `, [seriesId]);
+
+    return result.rows.map(r => ({
+      gameId: r.game_id,
+      date: r.date_scheduled?.toISOString().split('T')[0],
+      homeTeam: r.home_team,
+      visitingTeam: r.visiting_team,
+      statusId: r.status_id,
+    }));
+  }
+
+  /**
    * Get all tables in the database (for exploration)
    */
   async getTables(): Promise<string[]> {

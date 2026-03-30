@@ -470,7 +470,7 @@ export default function BulkStatsPage() {
     }
   };
 
-  // Called when button is clicked — loads game list from bridge
+  // Called when button is clicked — loads game list from direct API (if configured) or bridge fallback
   const handleFetchScoresClick = async () => {
     if (!selectedGame) {
       alert('Please select a game first');
@@ -478,9 +478,31 @@ export default function BulkStatsPage() {
     }
     setFetchError(null);
     setFetchSuccess(null);
-
-    // Always try to load game list from local bridge
     setLoadingScoreDbGames(true);
+
+    // ── Path 1: Direct server-side score DB (no bridge needed) ──────────────
+    if (scoreProviderAvailable) {
+      try {
+        const resp = await fetch('/api/admin/score-db-games', {
+          signal: AbortSignal.timeout(5000)
+        });
+        const data = await resp.json();
+        setLoadingScoreDbGames(false);
+        if (data.success && data.games?.length > 0) {
+          setScoreDbGames(data.games);
+          setSelectedScoreDbGameId(null);
+          setShowGamePicker(true);
+          return;
+        }
+        setFetchError('Score database returned no games. Try the bridge or enter scores manually.');
+        return;
+      } catch {
+        setLoadingScoreDbGames(false);
+        // Server-side DB failed — fall through to bridge
+      }
+    }
+
+    // ── Path 2: Local bridge fallback (original behaviour, unchanged) ────────
     try {
       const resp = await fetch('http://localhost:3001/games', {
         signal: AbortSignal.timeout(3000)
@@ -492,7 +514,7 @@ export default function BulkStatsPage() {
         setScoreDbGames(data.games);
         setSelectedScoreDbGameId(null);
         setShowGamePicker(true);
-        return; // wait for user to pick a game in the modal
+        return;
       }
       // Bridge running but no games returned
       setFetchError('Bridge is running but returned no games from the score database.');
@@ -502,7 +524,7 @@ export default function BulkStatsPage() {
       setBridgeAvailable(false);
     }
 
-    // Bridge not running — show inline error (no alert, no prompt)
+    // Neither path worked
     setFetchError('bridge_not_running');
   };
 
