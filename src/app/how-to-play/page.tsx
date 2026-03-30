@@ -403,11 +403,11 @@ export default function HowToPlayPage() {
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                        <p className="text-gray-700 text-sm">Tap the <strong>Share button</strong> <span className="inline-block bg-gray-200 text-gray-700 text-xs px-1.5 py-0.5 rounded font-mono">⬆</span> at the bottom of the screen.</p>
+                        <p className="text-gray-700 text-sm">Look at the <strong>bottom toolbar of Safari</strong> (not on our website) for the <strong>Share button</strong> <span className="inline-block bg-gray-200 text-gray-700 text-xs px-1.5 py-0.5 rounded font-mono">⬆</span> — a box with an arrow pointing up. <span className="text-gray-500">Can't see it? Tap the <strong>three dots (•••)</strong> at the bottom-right of Safari first — the Share button appears inside that menu.</span></p>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                        <p className="text-gray-700 text-sm">Scroll down in the share sheet and tap <strong>"Add to Home Screen"</strong>.</p>
+                        <p className="text-gray-700 text-sm">A menu slides up from the bottom. Scroll <strong>down</strong> in that menu and tap <strong>"Add to Home Screen"</strong>.</p>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
