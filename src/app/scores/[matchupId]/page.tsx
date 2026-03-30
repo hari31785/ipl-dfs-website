@@ -183,11 +183,17 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
   const hasScores = hasAnyStats; // Show scores as soon as any stats are entered
 
   // Helper function to render a player card
+  const gameIsCompleted = matchup.contest.iplGame.status === 'COMPLETED';
+
   const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean, swappedOut?: boolean, replacedBy?: string) => {
     const gameId = matchup.contest.iplGame.id;
     const playerStats = pick.player.stats.find((s: any) => s.iplGameId === gameId);
     const playerPoints = playerStats?.points || 0;
     const didNotPlay = playerStats?.didNotPlay || false;
+    // Show score badge if: stat record exists (and not DNP), OR game is completed
+    // and no record at all (player played but had 0 across every stat — external DB
+    // omits players with no scoring events, so no record ≠ DNP)
+    const showScoreBadge = (!!playerStats && !didNotPlay) || (!playerStats && gameIsCompleted);
     
     return (
       <div 
@@ -258,15 +264,15 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
               </div>
             </div>
           </div>
-          {!!playerStats && !didNotPlay && isActive && (
+          {showScoreBadge && isActive && (
             <button
-              onClick={() => setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
-              className="text-lg font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-2 rounded shadow-md border-2 border-green-700 hover:scale-105 transition-transform cursor-pointer"
+              onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
+              className={`text-lg font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-2 rounded shadow-md border-2 border-green-700 transition-transform ${playerStats ? 'hover:scale-105 cursor-pointer' : 'cursor-default'}`}
             >
               ⭐ {playerPoints.toFixed(1)}
             </button>
           )}
-          {!!playerStats && !didNotPlay && !isActive && (
+          {showScoreBadge && !isActive && (
             <div className="text-sm font-bold text-gray-500 px-3 py-2">
               {playerPoints.toFixed(1)} pts (not counted)
             </div>
