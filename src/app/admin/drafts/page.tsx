@@ -157,7 +157,10 @@ export default function DraftPage() {
 
   const getDraftProgress = (matchup: HeadToHeadMatchup) => {
     const totalPicks = matchup.draftPicks.length;
-    const maxPicks = 14; // 7 per user (5 starters + 2 subs)
+    const fpRaw = matchup.firstPickUser || '';
+    const u1Waived = fpRaw.includes(':w1');
+    const u2Waived = fpRaw.includes(':w2');
+    const maxPicks = 14 - (u1Waived ? 2 : 0) - (u2Waived ? 2 : 0);
     return `${totalPicks}/${maxPicks} picks completed`;
   };
 
@@ -330,7 +333,7 @@ export default function DraftPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                        {matchup.firstPickUser === 'user1'
+                        {(matchup.firstPickUser?.split(':')[0] === 'user1')
                           ? matchup.user1.user.name
                           : matchup.user2.user.name}
                       </td>
@@ -339,7 +342,7 @@ export default function DraftPage() {
                         <div className="w-32 bg-gray-200 rounded-full h-1.5 mt-1.5">
                           <div
                             className="bg-pink-500 h-1.5 rounded-full transition-all"
-                            style={{ width: `${(matchup.draftPicks.length / 14) * 100}%` }}
+                            style={{ width: `${Math.min(100, (matchup.draftPicks.length / (14 - (matchup.firstPickUser?.includes(':w1') ? 2 : 0) - (matchup.firstPickUser?.includes(':w2') ? 2 : 0))) * 100)}%` }}
                           />
                         </div>
                       </td>
@@ -436,7 +439,7 @@ export default function DraftPage() {
                   <h3 className="font-bold text-blue-800 mb-3 text-sm">
                     {selectedMatchup.user1.user.name}
                     <span className="ml-2 text-xs font-medium text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
-                      {selectedMatchup.firstPickUser === 'user1' ? 'Picks First' : 'Picks Second'}
+                      {(selectedMatchup.firstPickUser?.split(':')[0] === 'user1') ? 'Picks First' : 'Picks Second'}
                     </span>
                   </h3>
                   <div className="space-y-2">
@@ -472,7 +475,7 @@ export default function DraftPage() {
                   <h3 className="font-bold text-green-800 mb-3 text-sm">
                     {selectedMatchup.user2.user.name}
                     <span className="ml-2 text-xs font-medium text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
-                      {selectedMatchup.firstPickUser === 'user2' ? 'Picks First' : 'Picks Second'}
+                      {(selectedMatchup.firstPickUser?.split(':')[0] === 'user2') ? 'Picks First' : 'Picks Second'}
                     </span>
                   </h3>
                   <div className="space-y-2">

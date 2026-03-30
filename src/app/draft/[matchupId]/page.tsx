@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useRef } from 'react';
 import { ArrowLeft, Users, Trophy, Clock, Target, Coins } from 'lucide-react';
 import { useLoading } from '@/contexts/LoadingContext';
+import { parseFirstPickUser, getEffectivePickSlots } from '@/lib/draftUtils';
 
 interface Player {
   id: string;
@@ -83,6 +84,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [makingPick, setMakingPick] = useState(false);
+  const [waivingBench, setWaivingBench] = useState(false);
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterGrade, setFilterGrade] = useState<string>('all');
@@ -516,22 +518,38 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   }, 0);
 
   const currentPickOrder = matchup.draftPicks.length + 1;
-  const isMyTurn = (() => {
-    if (currentPickOrder > 14) return false;
-    
-    // Snake draft logic
-    const round = Math.ceil(currentPickOrder / 2);
-    const isOddRound = round % 2 === 1;
-    const firstPicker = matchup.firstPickUser === 'user1' ? matchup.user1.id : matchup.user2.id;
-    
-    if (isOddRound) {
-      return currentPickOrder % 2 === 1 ? mySignupId === firstPicker : mySignupId !== firstPicker;
-    } else {
-      return currentPickOrder % 2 === 0 ? mySignupId === firstPicker : mySignupId !== firstPicker;
-    }
-  })();
 
-  const isDraftComplete = matchup.draftPicks.length >= 14;
+  // Parse bench waiver state from firstPickUser encoding
+  const { user1WaivedBench, user2WaivedBench } = parseFirstPickUser(matchup.firstPickUser);
+  const myWaivedBench      = isUser1 ? user1WaivedBench : user2WaivedBench;
+  const opponentWaivedBench = isUser1 ? user2WaivedBench : user1WaivedBench;
+
+  // Effective pick sequence (waived bench slots removed)
+  const effectiveSlots = getEffectivePickSlots(matchup.firstPickUser, matchup.user1.id, matchup.user2.id);
+  const isMyTurn = effectiveSlots.length > 0 && currentPickOrder <= effectiveSlots.length && effectiveSlots[currentPickOrder - 1] === mySignupId;
+  const isDraftComplete = matchup.status === 'COMPLETED' || (effectiveSlots.length > 0 && matchup.draftPicks.length >= effectiveSlots.length);
+
+  const handleWaiveBench = async () => {
+    if (!confirm('Skip your 2 bench picks?\n\nYour team will have only your 5 starters — no substitutes. If a starter is DNP, they score 0.')) return;
+    setWaivingBench(true);
+    try {
+      const res = await fetch(`/api/draft/${matchupId}/waive-bench`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+      if (res.ok) {
+        await fetchMatchupDetails();
+      } else {
+        const err = await res.json();
+        alert(`Error: ${err.message}`);
+      }
+    } catch {
+      alert('Failed to skip bench picks. Please try again.');
+    } finally {
+      setWaivingBench(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
@@ -783,9 +801,14 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-xl text-green-800">Your Team</h3>
-              <span className="bg-green-800 text-white px-3 py-1 rounded-full font-bold text-sm">
-                {myPicks.length}/5
-              </span>
+              <div className="flex items-center gap-2">
+                {myWaivedBench && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">No bench</span>
+                )}
+                <span className="bg-green-800 text-white px-3 py-1 rounded-full font-bold text-sm">
+                  {myPicks.length}/5
+                </span>
+              </div>
             </div>
             {myTotalPoints > 0 && (
               <div className="mb-4 p-4 bg-gradient-to-r from-cricket-500 to-green-600 rounded-xl">
@@ -1108,15 +1131,35 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 {makingPick ? 'Drafting...' : selectedPlayer ? 'Confirm Pick' : 'Select a Player'}
               </button>
             )}
+            {/* Skip Bench button — visible after 5 picks, before bench turns */}
+            {!isDraftComplete && !myWaivedBench && myPicks.length >= 5 && (
+              <button
+                onClick={handleWaiveBench}
+                disabled={waivingBench}
+                className="w-full mt-3 bg-gray-50 hover:bg-gray-100 border-2 border-dashed border-gray-400 hover:border-gray-500 text-gray-600 hover:text-gray-800 px-4 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {waivingBench ? '⏳ Skipping...' : '⏭ Skip Bench — play with 5 starters only'}
+              </button>
+            )}
+            {!isDraftComplete && myWaivedBench && (
+              <div className="mt-3 text-center text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg py-2.5 font-medium">
+                ✅ Bench skipped — your 5 starters are set
+              </div>
+            )}
           </div>
 
           {/* Opponent Picks */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-xl text-red-800">Opponent Team</h3>
-              <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold text-sm">
-                {opponentPicks.length}/5
-              </span>
+              <div className="flex items-center gap-2">
+                {opponentWaivedBench && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">No bench</span>
+                )}
+                <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold text-sm">
+                  {opponentPicks.length}/5
+                </span>
+              </div>
             </div>
             {opponentTotalPoints > 0 && (
               <div className="mb-4 p-4 bg-gradient-to-r from-cricket-500 to-green-600 rounded-xl">

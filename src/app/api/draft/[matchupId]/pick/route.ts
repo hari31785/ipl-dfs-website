@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getEffectivePickSlots } from '@/lib/draftUtils';
 
 // POST /api/draft/[matchupId]/pick - Make a draft pick
 export async function POST(
@@ -64,25 +65,18 @@ export async function POST(
 
     // Determine whose turn it is
     const currentPickOrder = matchup.draftPicks.length + 1;
-    
-    if (currentPickOrder > 14) {
+
+    // Build effective pick order (accounts for bench waivers encoded in firstPickUser)
+    const effectiveSlots = getEffectivePickSlots(matchup.firstPickUser, matchup.user1.id, matchup.user2.id);
+
+    if (currentPickOrder > effectiveSlots.length) {
       return NextResponse.json(
         { message: 'Draft is complete' },
         { status: 400 }
       );
     }
 
-    // Snake draft logic
-    const round = Math.ceil(currentPickOrder / 2);
-    const isOddRound = round % 2 === 1;
-    const firstPicker = matchup.firstPickUser === 'user1' ? matchup.user1.id : matchup.user2.id;
-    
-    let currentTurnSignupId: string;
-    if (isOddRound) {
-      currentTurnSignupId = currentPickOrder % 2 === 1 ? firstPicker : (firstPicker === matchup.user1.id ? matchup.user2.id : matchup.user1.id);
-    } else {
-      currentTurnSignupId = currentPickOrder % 2 === 0 ? firstPicker : (firstPicker === matchup.user1.id ? matchup.user2.id : matchup.user1.id);
-    }
+    const currentTurnSignupId = effectiveSlots[currentPickOrder - 1];
 
     // Check if it's the user's turn
     const userSignupId = matchup.user1.user.id === userId ? matchup.user1.id : matchup.user2.id;
@@ -94,7 +88,7 @@ export async function POST(
       );
     }
 
-    // Determine if this pick is a bench player (picks 11-14)
+    // Determine if this pick is a bench player (after 10 starter picks)
     const isBench = currentPickOrder > 10;
 
     // Create the draft pick
@@ -117,7 +111,7 @@ export async function POST(
 
     // If draft is complete, update matchup status
     // NOTE: Contest status remains in DRAFT_PHASE until admin clicks "Start Contest"
-    if (currentPickOrder === 14) {
+    if (currentPickOrder === effectiveSlots.length) {
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
         data: { status: 'COMPLETED' }
