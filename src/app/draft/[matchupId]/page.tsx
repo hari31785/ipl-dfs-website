@@ -114,13 +114,35 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     fetchMatchupDetails();
   }, [matchupId]);
 
-  // Check if we need to show the toss
+  // Check if we need to show the toss, or auto-dismiss it when the result arrives
   useEffect(() => {
-    if (matchup && currentUser && matchup.status === 'DRAFTING' && !matchup.firstPickUser && tossPhase !== 'complete') {
-      // Toss hasn't been done yet, show toss interface
+    if (!matchup || !currentUser) return;
+
+    // Toss hasn't happened yet — show toss UI
+    if (matchup.status === 'DRAFTING' && !matchup.firstPickUser && tossPhase !== 'complete') {
       initiateToss();
+      return;
     }
-  }, [matchup, currentUser]);
+
+    // Toss result just came in via the main poll while waiting user is still on the "calling" screen
+    if (matchup.firstPickUser && showToss && tossPhase === 'calling') {
+      // Stop the dedicated toss poll — main poll already caught it
+      if (tossPollingIntervalRef.current) {
+        clearInterval(tossPollingIntervalRef.current);
+        tossPollingIntervalRef.current = null;
+      }
+      // Show the result to the waiting user before closing
+      const winnerUserId = matchup.firstPickUser === 'user1'
+        ? matchup.user1.user.id
+        : matchup.user2.user.id;
+      setTossWinner(winnerUserId);
+      setTossPhase('result');
+      setTimeout(() => {
+        setShowToss(false);
+        setTossPhase('complete');
+      }, 4000);
+    }
+  }, [matchup, currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Real-time polling for turn updates
   useEffect(() => {
@@ -322,12 +344,21 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               tossPollingIntervalRef.current = null;
             }
             
+            // Show the result to the waiting user before closing
+            const winnerUserId = data.matchup.firstPickUser === 'user1'
+              ? data.matchup.user1.user.id
+              : data.matchup.user2.user.id;
+            setTossWinner(winnerUserId);
+            setTossPhase('result');
+
             // Update matchup data
             await fetchMatchupDetails();
             
-            // Close the toss modal and show result
-            setShowToss(false);
-            setTossPhase('complete');
+            // Auto-dismiss after showing result
+            setTimeout(() => {
+              setShowToss(false);
+              setTossPhase('complete');
+            }, 4000);
           }
         }
       } catch (error) {
@@ -335,14 +366,14 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       }
     }, 2000); // Poll every 2 seconds
 
-    // Clean up after 60 seconds
+    // Clean up after 120 seconds
     setTimeout(() => {
       if (tossPollingIntervalRef.current) {
-        console.log('⏱️ Polling timeout - stopping after 60 seconds');
+        console.log('⏱️ Polling timeout - stopping after 120 seconds');
         clearInterval(tossPollingIntervalRef.current);
         tossPollingIntervalRef.current = null;
       }
-    }, 60000);
+    }, 120000);
   };
 
   const handleTossCall = async (call: 'HEADS' | 'TAILS') => {
