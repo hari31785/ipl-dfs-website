@@ -119,6 +119,7 @@ export default function DashboardPage() {
   const { permission, isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [user, setUser] = useState<UserData | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [leaderboardTournamentId, setLeaderboardTournamentId] = useState<string | null>(null)
   const [userContests, setUserContests] = useState<UserContest[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'available' | 'my-contests' | 'spectate'>('available')
@@ -184,6 +185,7 @@ export default function DashboardPage() {
       // Fetch fresh user data from database to get latest stats
       fetchUserData(parsedUser.id)
       fetchTournaments()
+      fetchLeaderboardTournament()
       fetchUserContests(parsedUser.id)
     } else {
       // Redirect to login if no user data
@@ -215,6 +217,18 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching tournaments:', error)
+    }
+  }
+
+  const fetchLeaderboardTournament = async () => {
+    try {
+      const response = await fetch('/api/tournaments?forLeaderboard=true')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.length > 0) setLeaderboardTournamentId(data[0].id)
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard tournament:', error)
     }
   }
 
@@ -603,9 +617,9 @@ export default function DashboardPage() {
                 <Coins className="h-5 w-5" />
                 <span className="hidden sm:inline">Coin Vault</span>
               </button>
-              {tournaments.length > 0 && tournaments[0]?.id && (
+              {leaderboardTournamentId && (
                 <button
-                  onClick={() => window.location.href = `/leaderboard/${tournaments[0].id}`}
+                  onClick={() => window.location.href = `/leaderboard/${leaderboardTournamentId}`}
                   className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-2.5 sm:px-5 py-2.5 rounded-lg transition-colors shadow-md font-semibold"
                   title="Leaderboard"
                 >

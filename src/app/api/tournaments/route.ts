@@ -6,6 +6,17 @@ export async function GET(request: Request) {
     // Check if this is for coin vault (show all active tournaments)
     const { searchParams } = new URL(request.url);
     const forCoinVault = searchParams.get('forCoinVault') === 'true';
+    const forLeaderboard = searchParams.get('forLeaderboard') === 'true';
+
+    // Leaderboard just needs the active tournament ID — no game filtering needed
+    if (forLeaderboard) {
+      const leaderboardTournaments = await prisma.tournament.findMany({
+        where: { isActive: true, status: { in: ['ACTIVE', 'UPCOMING'] } },
+        orderBy: { startDate: 'desc' },
+        select: { id: true, name: true, status: true }
+      });
+      return NextResponse.json(leaderboardTournaments);
+    }
 
     const tournaments = await prisma.tournament.findMany({
       where: forCoinVault ? {
