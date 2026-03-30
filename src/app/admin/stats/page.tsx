@@ -764,33 +764,38 @@ export default function BulkStatsPage() {
           {/* Status Messages */}
           {selectedGame && (
             <div className="mt-4 space-y-2">
-              {bridgeAvailable === true && (
+              {scoreProviderAvailable ? (
                 <div className="flex items-start gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
                   <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">✅ Bridge server is running — click "Fetch Scores from API" to pick a game</p>
+                    <p className="font-medium">✅ Score database connected — click "Fetch Scores from API" to pick a game</p>
                     <p className="text-xs mt-1">A game picker will appear so you don&apos;t need to know the external match ID.</p>
                   </div>
                 </div>
-              )}
-              {bridgeAvailable === false && (
+              ) : bridgeAvailable === true ? (
+                <div className="flex items-start gap-2 text-sm text-yellow-700 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">🟡 Using bridge fallback — direct score DB unavailable from Vercel</p>
+                    <p className="text-xs mt-1">Local bridge is running — click "Fetch Scores from API" to pick a game.</p>
+                  </div>
+                </div>
+              ) : bridgeAvailable === false ? (
                 <div className="flex items-start gap-2 text-sm text-orange-700 bg-orange-50 p-3 rounded-lg border border-orange-200">
                   <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">⚠️ Bridge server not running — score fetching requires it</p>
+                    <p className="font-medium">⚠️ Score database unavailable — bridge not running</p>
                     <p className="text-xs mt-1 leading-relaxed">
-                      Open a terminal on your <strong>developer Mac</strong> and run:<br />
+                      If you&apos;re on your <strong>developer Mac</strong>, start the bridge as a fallback:<br />
                       <code className="bg-orange-100 px-1 py-0.5 rounded font-mono text-orange-800">node scripts/score-bridge-server.js</code><br />
-                      Then also make sure you&apos;re using <strong>http://localhost:3000/admin/stats</strong> (not the Vercel URL).<br />
-                      After starting, click "Fetch Scores from API" again.
+                      Or enter scores manually below.
                     </p>
                   </div>
                 </div>
-              )}
-              {bridgeAvailable === null && (
+              ) : (
                 <div className="flex items-start gap-2 text-sm text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-200">
                   <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                  <p>Checking bridge server status…</p>
+                  <p>Checking score database connection…</p>
                 </div>
               )}
               {fetchError && fetchError !== 'bridge_not_running' && (
@@ -806,10 +811,10 @@ export default function BulkStatsPage() {
                 <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 p-3 rounded-lg border border-red-200">
                   <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">Bridge server not running</p>
+                    <p className="font-medium">❌ Both score database and bridge are unavailable</p>
                     <p className="text-xs mt-1 leading-relaxed">
-                      Start it with: <code className="bg-red-100 px-1 rounded font-mono">node scripts/score-bridge-server.js</code><br />
-                      Also ensure you&apos;re on <strong>http://localhost:3000/admin/stats</strong>, then click "Fetch Scores from API" again.
+                      On your developer Mac, start the bridge: <code className="bg-red-100 px-1 rounded font-mono">node scripts/score-bridge-server.js</code><br />
+                      Or enter scores manually below.
                     </p>
                   </div>
                 </div>
