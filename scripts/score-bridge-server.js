@@ -239,3 +239,19 @@ server.on('error', (err) => {
   }
   process.exit(1);
 });
+
+// Graceful shutdown on Ctrl+C
+process.on('SIGINT', async () => {
+  console.log('\n\n🛑 Stopping Score Bridge...');
+  server.close(() => {
+    console.log('✅ HTTP server closed.');
+  });
+  try {
+    await pool.end();
+    console.log('✅ Score DB connection pool closed.');
+  } catch (err) {
+    console.error('⚠️  Error closing DB pool:', err.message);
+  }
+  console.log('👋 Score Bridge stopped. Bye!\n');
+  process.exit(0);
+});
