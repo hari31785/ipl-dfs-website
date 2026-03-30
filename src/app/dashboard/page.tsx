@@ -1452,7 +1452,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Status - Only show for upcoming/drafted tabs, not active/completed */}
-                      {contestSubTab !== 'active' && contestSubTab !== 'completed' && (
+                      {contestSubTab !== 'active' && (
                         <div className={`border rounded p-2 mb-2 ${
                           signup.matchup 
                             ? signup.matchup.status === 'DRAFTING' 
@@ -1516,8 +1516,8 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           </div>
-                          {/* Only show won/lost status in completed tab, not in active tab where scores can still change */}
-                          {contestSubTab === 'completed' && signup.matchup.myScore !== signup.matchup.opponentScore && (
+                          {/* Only show won/lost status in drafted tab, not in active tab where scores can still change */}
+                          {contestSubTab !== 'active' && signup.matchup.myScore !== signup.matchup.opponentScore && (
                             <div className="mt-2 text-center">
                               <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
                                 signup.matchup.myScore > signup.matchup.opponentScore!
