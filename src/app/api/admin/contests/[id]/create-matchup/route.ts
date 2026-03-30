@@ -103,11 +103,9 @@ export async function POST(
     // Allow multiple matchups for same users in same contest
     // Admin can create as many matchups as needed
 
-    // Determine matchup status based on contest status
-    let matchupStatus: 'WAITING_DRAFT' | 'DRAFTING' = 'WAITING_DRAFT';
-    if (contest.status === 'DRAFT_PHASE' || contest.status === 'DRAFTING') {
-      matchupStatus = 'DRAFTING';
-    }
+    // Always create in WAITING_DRAFT so admin can explicitly open drafting via the Open Draft button.
+    // (Previously this was set to DRAFTING when contest was already in DRAFT_PHASE, which hid the Open Draft button.)
+    const matchupStatus: 'WAITING_DRAFT' = 'WAITING_DRAFT';
 
     // Create the matchup
     const matchup = await prisma.headToHeadMatchup.create({

@@ -168,13 +168,13 @@ function ContestCard({
         )}
         
         {/* Open Drafting */}
-        {contest.status === 'DRAFT_PHASE' && contest.matchupStats && 
-         contest.matchupStats.drafting === 0 && contest.matchupStats.completed === 0 && (
+        {contest.status === 'DRAFT_PHASE' && contest.matchupStats &&
+         contest.matchupStats.waiting > 0 && (
           <button
             onClick={() => onOpenDrafting(contest.id)}
             className="block w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-sm font-medium"
           >
-            🎯 Open Draft
+            🎯 Open Draft ({contest.matchupStats.waiting} waiting)
           </button>
         )}
 
@@ -1288,13 +1288,13 @@ export default function ContestsPage() {
                   )}
                   
                   {/* Open Drafting Button (for DRAFT_PHASE status) */}
-                  {contest.status === 'DRAFT_PHASE' && (!contest.matchupStats || contest.matchupStats.drafting === 0) && (
+                  {contest.status === 'DRAFT_PHASE' && contest.matchupStats && contest.matchupStats.waiting > 0 && (
                     <button
                       onClick={() => openDrafting(contest.id)}
                       className="block w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
-                      title="Open the drafting window for all matchups"
+                      title="Open the drafting window for all waiting matchups"
                     >
-                      🎯 Open Draft Window
+                      🎯 Open Draft ({contest.matchupStats.waiting} waiting)
                     </button>
                   )}
 

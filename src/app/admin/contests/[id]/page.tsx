@@ -109,6 +109,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   const [selectedMatchups, setSelectedMatchups] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [resettlingMatchup, setResettlingMatchup] = useState<string | null>(null);
+  const [openingDraft, setOpeningDraft] = useState(false);
 
   useEffect(() => {
     fetchContestDetails();
@@ -441,6 +442,25 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
     }
   };
 
+  const handleOpenDrafting = async () => {
+    if (!confirm('Open the drafting window? All WAITING_DRAFT matchups will move to DRAFTING and users will be notified.')) return;
+    setOpeningDraft(true);
+    try {
+      const res = await fetch(`/api/admin/contests/${id}/open-drafting`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`✅ ${data.message}`);
+        fetchContestDetails();
+      } else {
+        alert(`❌ Error: ${data.message}`);
+      }
+    } catch {
+      alert('❌ Network error occurred');
+    } finally {
+      setOpeningDraft(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-red-50 flex items-center justify-center">
@@ -509,8 +529,8 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
 
-        {/* Create Custom Matchup Button */}
-        <div className="mb-6">
+        {/* Action Buttons */}
+        <div className="mb-6 flex flex-wrap gap-3">
           <button
             onClick={() => setShowCreateMatchup(true)}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md flex items-center gap-2"
@@ -518,6 +538,15 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
             <Users className="h-5 w-5" />
             Create Custom Matchup
           </button>
+          {contest.status === 'DRAFT_PHASE' && contest.matchups.some(m => m.status === 'WAITING_DRAFT') && (
+            <button
+              onClick={handleOpenDrafting}
+              disabled={openingDraft}
+              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md flex items-center gap-2"
+            >
+              🎯 {openingDraft ? 'Opening...' : `Open Draft (${contest.matchups.filter(m => m.status === 'WAITING_DRAFT').length} waiting)`}
+            </button>
+          )}
         </div>
 
         {/* Edit Matchup Modal */}
