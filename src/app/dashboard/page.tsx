@@ -127,6 +127,7 @@ export default function DashboardPage() {
   const [spectateData, setSpectateData] = useState<any[]>([])
   const [spectateLoading, setSpectateLoading] = useState(false)
   const [expandedSpectateGames, setExpandedSpectateGames] = useState<Set<string>>(new Set())
+  const [expandedCompletedGames, setExpandedCompletedGames] = useState<Set<string>>(new Set())
   const [myContestsTournamentFilter, setMyContestsTournamentFilter] = useState<string>('all')
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
@@ -1272,14 +1273,125 @@ export default function DashboardPage() {
                       )
                     }
 
+                    // Completed tab: group by game with collapsible headers + compact inner cards
+                    if (contestSubTab === 'completed') {
+                      const gameGroups = filteredContests
+                        .sort((a, b) => new Date(b.contest.iplGame.gameDate).getTime() - new Date(a.contest.iplGame.gameDate).getTime())
+                        .reduce((groups: Record<string, { game: any; signups: any[] }>, signup) => {
+                          const gameId = signup.contest.iplGame.id
+                          if (!groups[gameId]) groups[gameId] = { game: signup.contest.iplGame, signups: [] }
+                          groups[gameId].signups.push(signup)
+                          return groups
+                        }, {})
+
+                      return Object.values(gameGroups).map((group: any) => {
+                        const isExpanded = expandedCompletedGames.has(group.game.id)
+                        const wins = group.signups.filter((s: any) => s.matchup && s.matchup.myScore !== undefined && s.matchup.myScore > s.matchup.opponentScore).length
+                        const losses = group.signups.filter((s: any) => s.matchup && s.matchup.myScore !== undefined && s.matchup.myScore < s.matchup.opponentScore).length
+                        return (
+                          <div key={group.game.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                            {/* Game header — click to expand/collapse */}
+                            <button
+                              onClick={() => setExpandedCompletedGames(prev => {
+                                const next = new Set(prev)
+                                if (next.has(group.game.id)) next.delete(group.game.id)
+                                else next.add(group.game.id)
+                                return next
+                              })}
+                              className="w-full bg-gradient-to-r from-gray-600 to-gray-700 p-3 text-left"
+                            >
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-lg">
+                                  <div className="w-4 h-4 rounded-full border border-white/60" style={{ backgroundColor: group.game.team1.color }}></div>
+                                  <span className="font-bold text-xs text-white">{group.game.team1.shortName}</span>
+                                </div>
+                                <span className="text-white/70 text-xs font-bold">vs</span>
+                                <div className="flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-lg">
+                                  <div className="w-4 h-4 rounded-full border border-white/60" style={{ backgroundColor: group.game.team2.color }}></div>
+                                  <span className="font-bold text-xs text-white">{group.game.team2.shortName}</span>
+                                </div>
+                                <span className="text-white/60 text-xs ml-1">
+                                  {new Date(group.game.gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                                <span className="text-white/60 text-xs">·</span>
+                                <span className="text-white/80 text-xs">{group.signups.length} contest{group.signups.length !== 1 ? 's' : ''}</span>
+                                {(wins > 0 || losses > 0) && (
+                                  <>
+                                    <span className="text-green-300 text-xs font-bold ml-1">{wins}W</span>
+                                    <span className="text-red-300 text-xs font-bold">{losses}L</span>
+                                  </>
+                                )}
+                                <span className="ml-auto text-white/80">
+                                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                </span>
+                              </div>
+                            </button>
+
+                            {/* Compact contest rows — only shown when expanded */}
+                            {isExpanded && (
+                              <div className="divide-y divide-gray-100">
+                                {group.signups.map((signup: any) => {
+                                  const myScore = signup.matchup?.myScore
+                                  const oppScore = signup.matchup?.opponentScore
+                                  const hasScores = myScore !== undefined && oppScore !== undefined
+                                  const iWon = hasScores && myScore > oppScore
+                                  const iLost = hasScores && myScore < oppScore
+                                  return (
+                                    <div key={signup.id} className="flex items-center gap-3 px-3 py-2.5">
+                                      {/* Contest type + coin value */}
+                                      <div className="min-w-0 flex-1">
+                                        <div className="text-xs font-semibold text-gray-800">
+                                          {signup.contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100)' :
+                                           signup.contest.contestType === 'REGULAR' ? 'Regular (50)' :
+                                           signup.contest.contestType === 'LOW_STAKES' ? 'Low Stakes (25)' :
+                                           signup.contest.contestType}
+                                        </div>
+                                        <div className="text-[10px] text-gray-400">{signup.contest.coinValue} coins/pt · vs {signup.matchup?.opponent?.name ?? '—'}</div>
+                                      </div>
+                                      {/* Scores */}
+                                      {hasScores ? (
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                          <span className={`text-sm font-black ${iWon ? 'text-green-700' : iLost ? 'text-red-700' : 'text-gray-700'}`}>
+                                            ⭐ {myScore.toFixed(1)}
+                                          </span>
+                                          <span className="text-gray-400 text-xs font-bold">vs</span>
+                                          <span className={`text-sm font-black ${iLost ? 'text-green-700' : iWon ? 'text-red-700' : 'text-gray-700'}`}>
+                                            ⭐ {oppScore.toFixed(1)}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <div className="text-xs text-gray-400 shrink-0">No scores yet</div>
+                                      )}
+                                      {/* Win/Loss badge */}
+                                      {hasScores && myScore !== oppScore && (
+                                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${iWon ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                          {iWon ? '🎉 Won' : '😔 Lost'}
+                                        </span>
+                                      )}
+                                      {/* View Scores button */}
+                                      {signup.matchup?.status === 'COMPLETED' && (
+                                        <button
+                                          onClick={() => window.location.href = `/scores/${signup.matchup?.id}?from=completed`}
+                                          className="shrink-0 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                                        >
+                                          View Scores
+                                        </button>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })
+                    }
+
                     return filteredContests
                       .sort((a, b) => {
                         // Sort by game date for better organization
                         const dateA = new Date(a.contest.iplGame.gameDate)
                         const dateB = new Date(b.contest.iplGame.gameDate)
-                        if (contestSubTab === 'completed') {
-                          return dateB.getTime() - dateA.getTime() // Most recent first for completed
-                        }
                         return dateA.getTime() - dateB.getTime() // Earliest first for upcoming/active
                       })
                       .map((signup) => (
