@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendToUser } from '@/lib/pushNotifications';
 
 
 // POST /api/admin/contests/[id]/create-matchup - Create a custom H2H matchup
@@ -30,7 +31,12 @@ export async function POST(
     const contest = await prisma.contest.findUnique({
       where: { id: contestId },
       include: {
-        iplGame: true,
+        iplGame: {
+          include: {
+            team1: true,
+            team2: true
+          }
+        },
         signups: {
           include: {
             user: true
@@ -103,9 +109,10 @@ export async function POST(
     // Allow multiple matchups for same users in same contest
     // Admin can create as many matchups as needed
 
-    // Always create in WAITING_DRAFT so admin can explicitly open drafting via the Open Draft button.
-    // (Previously this was set to DRAFTING when contest was already in DRAFT_PHASE, which hid the Open Draft button.)
-    const matchupStatus: 'WAITING_DRAFT' = 'WAITING_DRAFT';
+    // If the contest is already in DRAFT_PHASE, open the draft immediately for this pair.
+    // Otherwise keep WAITING_DRAFT so the admin can bulk-open via "Open Draft" later.
+    const autoOpen = contest.status === 'DRAFT_PHASE';
+    const matchupStatus = autoOpen ? 'DRAFTING' : 'WAITING_DRAFT';
 
     // Create the matchup
     const matchup = await prisma.headToHeadMatchup.create({
@@ -144,8 +151,33 @@ export async function POST(
       }
     });
 
+    // If we auto-opened the draft, notify only these 2 users (not the whole contest)
+    if (autoOpen) {
+      const gameTitle = `${contest.iplGame.team1.shortName} vs ${contest.iplGame.team2.shortName}`;
+      const contestTypeLabel =
+        contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100 coins)' :
+        contest.contestType === 'REGULAR'     ? 'Regular (50 coins)' :
+        contest.contestType === 'LOW_STAKES'  ? 'Low Stakes (25 coins)' :
+        `${contest.coinValue} coins`;
+
+      await Promise.all([
+        sendToUser(user1.id, {
+          title: `⚡ Draft Open · ${contestTypeLabel}`,
+          body: `You're up against @${user2.username} in ${gameTitle} — draft your team now!`,
+          icon: '/icon-192.png',
+          url: '/dashboard?tab=my-contests&sub=upcoming',
+        }),
+        sendToUser(user2.id, {
+          title: `⚡ Draft Open · ${contestTypeLabel}`,
+          body: `You're up against @${user1.username} in ${gameTitle} — draft your team now!`,
+          icon: '/icon-192.png',
+          url: '/dashboard?tab=my-contests&sub=upcoming',
+        }),
+      ]);
+    }
+
     return NextResponse.json({
-      message: `Custom matchup created: ${user1.username} vs ${user2.username}`,
+      message: `Custom matchup created: ${user1.username} vs ${user2.username}${autoOpen ? ' (draft opened automatically)' : ''}`,
       matchup: {
         id: matchup.id,
         user1: matchup.user1.user.username,
