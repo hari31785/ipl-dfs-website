@@ -339,9 +339,6 @@ export default function CoinVaultPage() {
                     <th className="px-6 py-4 text-right text-xs font-bold text-purple-700 uppercase tracking-wider">
                       VC Won/Lost
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Admin Fee
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -444,15 +441,6 @@ export default function CoinVaultPage() {
                                 -V̶₵{(coinsLost / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600">
-                          {transaction.adminFee > 0 ? (
-                            <span className="text-orange-600 font-medium">
-                              {transaction.adminFee.toLocaleString()}
-                            </span>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
