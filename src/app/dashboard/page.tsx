@@ -1497,8 +1497,8 @@ export default function DashboardPage() {
                         </div>
                       )}
 
-                      {/* Scores - Only show if draft is complete and game has stats */}
-                      {signup.matchup?.status === 'COMPLETED' && signup.matchup.myScore !== undefined && (
+                      {/* Scores - Only show for active/completed tabs, not drafted (no live stats yet) */}
+                      {contestSubTab !== 'drafted' && signup.matchup?.status === 'COMPLETED' && signup.matchup.myScore !== undefined && (
                         <div className="mb-2 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
