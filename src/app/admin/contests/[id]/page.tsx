@@ -107,6 +107,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   const [addingPick, setAddingPick] = useState(false);
   const [addPickError, setAddPickError] = useState('');
   const [deletingPick, setDeletingPick] = useState(false);
+  const [selectedPickUserId, setSelectedPickUserId] = useState<string | null>(null); // which user to add pick for
   const [deletingMatchup, setDeletingMatchup] = useState<string | null>(null);
   const [selectedMatchups, setSelectedMatchups] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -211,6 +212,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
         alert(`✅ ${data.message}\n\nPlayer: ${data.pick.player.name}\nPicked by: ${data.pick.pickedByUsername}\nPick Order: ${data.pick.pickOrder}`);
         setShowAddPick(null);
         setPlayerSearchQuery('');
+        setSelectedPickUserId(null);
         fetchContestDetails(); // Refresh matchups
       } else {
         setAddPickError(data.error || 'Failed to add pick');
@@ -926,12 +928,14 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
         {showAddPick && (() => {
           const matchup = contest?.matchups.find(m => m.id === showAddPick);
           if (!matchup) return null;
-          
+
           const nextPick = getNextPickInfo(matchup);
-          if (!nextPick) return null;
+          const pickOrder = matchup.draftPicks.length + 1;
+          const activeUserId = selectedPickUserId ?? matchup.user1.id;
+          const isUser1Active = activeUserId === matchup.user1.id;
 
           const filteredPlayers = playerSearchQuery.length >= 2
-            ? availablePlayers.filter(p => 
+            ? availablePlayers.filter(p =>
                 p.name.toLowerCase().includes(playerSearchQuery.toLowerCase()) ||
                 p.role.toLowerCase().includes(playerSearchQuery.toLowerCase()) ||
                 p.iplTeam?.name.toLowerCase().includes(playerSearchQuery.toLowerCase())
@@ -942,12 +946,46 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Add Player Pick</h3>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+
+                {/* Pick info banner */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
                   <div className="text-sm text-gray-700">
-                    <strong>Pick #{nextPick.pickOrder}</strong> - {nextPick.name}'s turn
+                    <strong>Pick #{pickOrder}</strong>
+                    {nextPick && activeUserId === nextPick.userSignupId
+                      ? <span className="ml-1 text-blue-700">— {nextPick.name}'s turn (snake order)</span>
+                      : nextPick
+                        ? <span className="ml-1 text-orange-600">— overriding turn (snake says {nextPick.name})</span>
+                        : <span className="ml-1 text-gray-500">— toss not done yet</span>}
                   </div>
-                  <div className="text-xs text-gray-600 mt-1">
-                    {matchup.draftPicks.length}/14 picks completed
+                  <div className="text-xs text-gray-600 mt-1">{matchup.draftPicks.length}/14 picks completed</div>
+                </div>
+
+                {/* User selector */}
+                <div className="mb-4">
+                  <div className="text-xs font-medium text-gray-500 mb-1.5">Picking for:</div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSelectedPickUserId(matchup.user1.id)}
+                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border-2 transition-colors ${
+                        isUser1Active
+                          ? 'bg-blue-600 border-blue-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
+                      }`}
+                    >
+                      {matchup.user1.user.name.split(' ')[0]}
+                      {nextPick?.userSignupId === matchup.user1.id && <span className="ml-1 text-xs opacity-75">⚡</span>}
+                    </button>
+                    <button
+                      onClick={() => setSelectedPickUserId(matchup.user2.id)}
+                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border-2 transition-colors ${
+                        !isUser1Active
+                          ? 'bg-purple-600 border-purple-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-700 hover:border-purple-400'
+                      }`}
+                    >
+                      {matchup.user2.user.name.split(' ')[0]}
+                      {nextPick?.userSignupId === matchup.user2.id && <span className="ml-1 text-xs opacity-75">⚡</span>}
+                    </button>
                   </div>
                 </div>
 
@@ -984,7 +1022,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                         filteredPlayers.map(player => (
                           <button
                             key={player.id}
-                            onClick={() => handleAddPick(matchup.id, player.id, nextPick.userSignupId)}
+                            onClick={() => handleAddPick(matchup.id, player.id, activeUserId)}
                             disabled={addingPick}
                             className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b last:border-b-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
@@ -1020,6 +1058,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                           setShowAddPick(null);
                           setPlayerSearchQuery('');
                           setAddPickError('');
+                          setSelectedPickUserId(null);
                         }}
                         disabled={addingPick}
                         className="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50"
@@ -1249,6 +1288,8 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                         <div className="mt-6">
                           <button
                             onClick={() => {
+                              const np = getNextPickInfo(matchup);
+                              setSelectedPickUserId(np ? np.userSignupId : matchup.user1.id);
                               setShowAddPick(matchup.id);
                               fetchAvailablePlayers(matchup.id);
                               setPlayerSearchQuery('');

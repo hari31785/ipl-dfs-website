@@ -65,42 +65,44 @@ export async function POST(
       );
     }
 
-    // Determine the effective pick slots using the real snake order (handles bench waivers)
-    if (!matchup.firstPickUser) {
+    // Determine the next pick order
+    const nextPickOrder = matchup.draftPicks.length + 1;
+
+    // Check hard cap at 14 picks
+    if (nextPickOrder > 14) {
       return NextResponse.json(
-        { error: 'Toss has not been done yet — firstPickUser is not set' },
+        { error: 'Draft is already complete (14 picks maximum)' },
         { status: 400 }
       );
     }
-    const effectiveSlots = getEffectivePickSlots(matchup.firstPickUser, matchup.user1Id, matchup.user2Id);
 
-    // Check if max picks reached
-    if (matchup.draftPicks.length >= effectiveSlots.length) {
+    // Use effective slots for isBench calculation if toss is done
+    // Admin can add picks for either user regardless of turn order
+    const effectiveSlots = matchup.firstPickUser
+      ? getEffectivePickSlots(matchup.firstPickUser, matchup.user1Id, matchup.user2Id)
+      : null;
+
+    // Additional cap: respect bench waivers (effectiveSlots.length could be 12 or 13)
+    if (effectiveSlots && nextPickOrder > effectiveSlots.length) {
       return NextResponse.json(
         { error: `Draft is already complete (${effectiveSlots.length} picks)` },
         { status: 400 }
       );
     }
 
-    // Determine next pick order
-    const nextPickOrder = matchup.draftPicks.length + 1;
-
-    // Verify correct user's turn using snake order
-    const expectedSignupId = effectiveSlots[nextPickOrder - 1];
-    if (userSignupId !== expectedSignupId) {
-      const expectedUser = expectedSignupId === matchup.user1Id ? matchup.user1.user.username : matchup.user2.user.username;
-      return NextResponse.json(
-        { error: `It's ${expectedUser}'s turn to pick (pick #${nextPickOrder})` },
-        { status: 400 }
-      );
+    // Determine isBench:
+    // If toss is done, count starter slots from effective slots; otherwise use pick count
+    let isBench: boolean;
+    if (effectiveSlots) {
+      const starterSlots = effectiveSlots.slice(0, 10);
+      const myStarterCount = starterSlots.filter(id => id === userSignupId).length;
+      const myPicksSoFar = matchup.draftPicks.filter(p => p.pickedByUserId === userSignupId).length;
+      isBench = myPicksSoFar >= myStarterCount;
+    } else {
+      // Fallback: starters are picks 1-5 per user (first 10 overall)
+      const myPicksSoFar = matchup.draftPicks.filter(p => p.pickedByUserId === userSignupId).length;
+      isBench = myPicksSoFar >= 5;
     }
-
-    // Bench picks are slots 11+ in the full 14-pick sequence (slot index in 1-based)
-    // Count how many starter slots belong to each user (first 10 picks)
-    const starterSlots = effectiveSlots.slice(0, 10);
-    const myStarterCount = starterSlots.filter(id => id === userSignupId).length;
-    const myPicksSoFar = matchup.draftPicks.filter(p => p.pickedByUserId === userSignupId).length;
-    const isBench = myPicksSoFar >= myStarterCount;
 
     // Create the draft pick
     const draftPick = await prisma.draftPick.create({
@@ -124,8 +126,9 @@ export async function POST(
       });
     }
 
-    // Mark complete when all effective slots are filled
-    if (nextPickOrder === effectiveSlots.length) {
+    // Mark complete when all effective slots are filled (or 14 if no toss done)
+    const totalSlots = effectiveSlots ? effectiveSlots.length : 14;
+    if (nextPickOrder === totalSlots) {
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
         data: { status: 'COMPLETED' }
