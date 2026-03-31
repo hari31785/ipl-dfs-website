@@ -1395,7 +1395,7 @@ export default function DashboardPage() {
                         return dateA.getTime() - dateB.getTime() // Earliest first for upcoming/active
                       })
                       .map((signup) => (
-                    <div key={signup.id} className="bg-white rounded-lg shadow border border-gray-200 p-3">
+                    <div key={`${signup.id}-${signup.matchup?.id ?? 'none'}`} className="bg-white rounded-lg shadow border border-gray-200 p-3">
                       {/* Compact Header with Team Badges */}
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
