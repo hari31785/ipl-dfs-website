@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { ArrowLeft, Users, Trophy, Search, Edit, UserPlus, Trash2 } from 'lucide-react';
+import { getEffectivePickSlots } from '@/lib/draftUtils';
 
 interface Player {
   id: string;
@@ -105,6 +106,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   const [playerSearchQuery, setPlayerSearchQuery] = useState('');
   const [addingPick, setAddingPick] = useState(false);
   const [addPickError, setAddPickError] = useState('');
+  const [deletingPick, setDeletingPick] = useState(false);
   const [deletingMatchup, setDeletingMatchup] = useState<string | null>(null);
   const [selectedMatchups, setSelectedMatchups] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -222,19 +224,37 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   };
 
   const getNextPickInfo = (matchup: Matchup) => {
+    if (!matchup.firstPickUser) return null;
+    const effectiveSlots = getEffectivePickSlots(matchup.firstPickUser, matchup.user1.id, matchup.user2.id);
     const nextPickOrder = matchup.draftPicks.length + 1;
-    if (nextPickOrder > 14) return null;
-    
-    const isUser1Turn = matchup.firstPickUser === 'user1' 
-      ? nextPickOrder % 2 === 1 
-      : nextPickOrder % 2 === 0;
-    
+    if (nextPickOrder > effectiveSlots.length) return null;
+
+    const nextSignupId = effectiveSlots[nextPickOrder - 1];
+    const isUser1 = nextSignupId === matchup.user1.id;
     return {
       pickOrder: nextPickOrder,
-      userSignupId: isUser1Turn ? matchup.user1.id : matchup.user2.id,
-      username: isUser1Turn ? matchup.user1.user.username : matchup.user2.user.username,
-      name: isUser1Turn ? matchup.user1.user.name : matchup.user2.user.name
+      userSignupId: nextSignupId,
+      username: isUser1 ? matchup.user1.user.username : matchup.user2.user.username,
+      name: isUser1 ? matchup.user1.user.name : matchup.user2.user.name,
     };
+  };
+
+  const handleDeletePick = async (matchupId: string, pickId: string) => {
+    if (!confirm('Delete this pick? Only the most recently added pick can be removed.')) return;
+    setDeletingPick(true);
+    try {
+      const response = await fetch(`/api/admin/matchups/${matchupId}/picks/${pickId}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (response.ok) {
+        fetchContestDetails();
+      } else {
+        alert(data.error || 'Failed to delete pick');
+      }
+    } catch {
+      alert('Network error while deleting pick');
+    } finally {
+      setDeletingPick(false);
+    }
   };
 
   const handleCreateMatchup = async (e: React.FormEvent) => {
@@ -1168,118 +1188,60 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                   {/* Expanded Draft Details */}
                   {isExpanded && (
                     <div className="p-6 bg-gray-50">
-                      <div className="grid md:grid-cols-2 gap-6">
-                        {/* User 1 Picks */}
-                        <div className="bg-white rounded-lg p-4">
-                          <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-gray-900">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
-                              1
-                            </div>
-                            {matchup.user1.user.name}
-                          </h3>
-                          {user1Picks.length === 0 ? (
-                            <div className="text-sm text-gray-500 italic">No picks yet</div>
-                          ) : (
-                            <>
-                              {/* Starting 5 */}
-                              <div className="mb-4">
-                                <div className="text-xs font-semibold text-gray-600 uppercase mb-2 flex items-center gap-1">
-                                  ⭐ Starting 5
-                                </div>
-                                <div className="space-y-2">
-                                  {user1Picks.slice(0, 5).map(pick => (
-                                    <div key={pick.id} className="flex items-center gap-3 p-2 bg-blue-50 rounded">
-                                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                        {pick.pickOrder}
-                                      </div>
-                                      <div className="flex-1">
-                                        <div className="font-medium text-sm text-gray-900">{pick.player.name}</div>
-                                        <div className="text-xs text-gray-600">{pick.player.role}</div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              {/* Bench */}
-                              {user1Picks.length > 5 && (
-                                <div>
-                                  <div className="text-xs font-semibold text-gray-600 uppercase mb-2 flex items-center gap-1">
-                                    🪑 Bench
-                                  </div>
-                                  <div className="space-y-2">
-                                    {user1Picks.slice(5).map(pick => (
-                                      <div key={pick.id} className="flex items-center gap-3 p-2 bg-gray-100 rounded">
-                                        <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                          {pick.pickOrder}
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="font-medium text-sm text-gray-700">{pick.player.name}</div>
-                                          <div className="text-xs text-gray-500">{pick.player.role}</div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          )}
+                      {/* Snake Order Timeline */}
+                      <div className="bg-white rounded-lg p-4 mb-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-semibold text-base text-gray-900">🐍 Snake Draft Order</h3>
+                          <div className="flex items-center gap-3 text-xs">
+                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>{matchup.user1.user.name.split(' ')[0]}</span>
+                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-purple-500 inline-block"></span>{matchup.user2.user.name.split(' ')[0]}</span>
+                          </div>
                         </div>
-
-                        {/* User 2 Picks */}
-                        <div className="bg-white rounded-lg p-4">
-                          <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-gray-900">
-                            <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">
-                              2
-                            </div>
-                            {matchup.user2.user.name}
-                          </h3>
-                          {user2Picks.length === 0 ? (
-                            <div className="text-sm text-gray-500 italic">No picks yet</div>
-                          ) : (
-                            <>
-                              {/* Starting 5 */}
-                              <div className="mb-4">
-                                <div className="text-xs font-semibold text-gray-600 uppercase mb-2 flex items-center gap-1">
-                                  ⭐ Starting 5
-                                </div>
-                                <div className="space-y-2">
-                                  {user2Picks.slice(0, 5).map(pick => (
-                                    <div key={pick.id} className="flex items-center gap-3 p-2 bg-purple-50 rounded">
-                                      <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                        {pick.pickOrder}
-                                      </div>
-                                      <div className="flex-1">
-                                        <div className="font-medium text-sm text-gray-900">{pick.player.name}</div>
-                                        <div className="text-xs text-gray-600">{pick.player.role}</div>
-                                      </div>
+                        {matchup.draftPicks.length === 0 ? (
+                          <div className="text-sm text-gray-500 italic">No picks yet</div>
+                        ) : (() => {
+                          const effectiveSlots = matchup.firstPickUser
+                            ? getEffectivePickSlots(matchup.firstPickUser, matchup.user1.id, matchup.user2.id)
+                            : [];
+                          const sortedPicks = [...matchup.draftPicks].sort((a, b) => a.pickOrder - b.pickOrder);
+                          const lastPickId = sortedPicks.length > 0 ? sortedPicks[sortedPicks.length - 1].id : null;
+                          return (
+                            <div className="space-y-1.5">
+                              {sortedPicks.map((pick) => {
+                                const slotOwner = effectiveSlots[pick.pickOrder - 1];
+                                const isUser1Pick = slotOwner === matchup.user1.id;
+                                const isBench = pick.pickOrder > 10;
+                                const isLast = pick.id === lastPickId;
+                                return (
+                                  <div key={pick.id} className={`flex items-center gap-2 p-2 rounded-lg ${isUser1Pick ? 'bg-blue-50' : 'bg-purple-50'}`}>
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${isUser1Pick ? 'bg-blue-500' : 'bg-purple-500'}`}>
+                                      {pick.pickOrder}
                                     </div>
-                                  ))}
-                                </div>
-                              </div>
-                              {/* Bench */}
-                              {user2Picks.length > 5 && (
-                                <div>
-                                  <div className="text-xs font-semibold text-gray-600 uppercase mb-2 flex items-center gap-1">
-                                    🪑 Bench
+                                    <div className={`text-xs font-semibold w-16 shrink-0 truncate ${isUser1Pick ? 'text-blue-700' : 'text-purple-700'}`}>
+                                      {isUser1Pick ? matchup.user1.user.name.split(' ')[0] : matchup.user2.user.name.split(' ')[0]}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <span className="font-medium text-sm text-gray-900">{pick.player.name}</span>
+                                      <span className="ml-2 text-xs text-gray-500">{pick.player.role}</span>
+                                      {pick.player.iplTeam && <span className="ml-1 text-xs text-gray-400">· {pick.player.iplTeam.shortName}</span>}
+                                      {isBench && <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">bench</span>}
+                                    </div>
+                                    {isLast && (
+                                      <button
+                                        onClick={() => handleDeletePick(matchup.id, pick.id)}
+                                        disabled={deletingPick}
+                                        title="Undo last pick"
+                                        className="shrink-0 text-xs text-red-400 hover:text-red-600 hover:bg-red-50 px-2 py-1 rounded transition-colors disabled:opacity-50"
+                                      >
+                                        ✕ undo
+                                      </button>
+                                    )}
                                   </div>
-                                  <div className="space-y-2">
-                                    {user2Picks.slice(5).map(pick => (
-                                      <div key={pick.id} className="flex items-center gap-3 p-2 bg-gray-100 rounded">
-                                        <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                          {pick.pickOrder}
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="font-medium text-sm text-gray-700">{pick.player.name}</div>
-                                          <div className="text-xs text-gray-500">{pick.player.role}</div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Manual Draft Pick Button */}

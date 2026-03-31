@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { getEffectivePickSlots } from '@/lib/draftUtils';
 
 export async function POST(
   request: NextRequest,
@@ -66,10 +65,19 @@ export async function POST(
       );
     }
 
-    // Check if max picks reached (10 total: 5 starters each)
-    if (matchup.draftPicks.length >= 10) {
+    // Determine the effective pick slots using the real snake order (handles bench waivers)
+    if (!matchup.firstPickUser) {
       return NextResponse.json(
-        { error: 'Maximum picks (10) already reached for this matchup' },
+        { error: 'Toss has not been done yet — firstPickUser is not set' },
+        { status: 400 }
+      );
+    }
+    const effectiveSlots = getEffectivePickSlots(matchup.firstPickUser, matchup.user1Id, matchup.user2Id);
+
+    // Check if max picks reached
+    if (matchup.draftPicks.length >= effectiveSlots.length) {
+      return NextResponse.json(
+        { error: `Draft is already complete (${effectiveSlots.length} picks)` },
         { status: 400 }
       );
     }
@@ -77,20 +85,22 @@ export async function POST(
     // Determine next pick order
     const nextPickOrder = matchup.draftPicks.length + 1;
 
-    // Verify this is the correct user's turn (snake draft order)
-    const isUser1Turn = matchup.firstPickUser === 'user1' 
-      ? nextPickOrder % 2 === 1 
-      : nextPickOrder % 2 === 0;
-    
-    const expectedUserSignupId = isUser1Turn ? matchup.user1Id : matchup.user2Id;
-    
-    if (userSignupId !== expectedUserSignupId) {
-      const expectedUsername = isUser1Turn ? matchup.user1.user.username : matchup.user2.user.username;
+    // Verify correct user's turn using snake order
+    const expectedSignupId = effectiveSlots[nextPickOrder - 1];
+    if (userSignupId !== expectedSignupId) {
+      const expectedUser = expectedSignupId === matchup.user1Id ? matchup.user1.user.username : matchup.user2.user.username;
       return NextResponse.json(
-        { error: `It's ${expectedUsername}'s turn to pick (pick #${nextPickOrder})` },
+        { error: `It's ${expectedUser}'s turn to pick (pick #${nextPickOrder})` },
         { status: 400 }
       );
     }
+
+    // Bench picks are slots 11+ in the full 14-pick sequence (slot index in 1-based)
+    // Count how many starter slots belong to each user (first 10 picks)
+    const starterSlots = effectiveSlots.slice(0, 10);
+    const myStarterCount = starterSlots.filter(id => id === userSignupId).length;
+    const myPicksSoFar = matchup.draftPicks.filter(p => p.pickedByUserId === userSignupId).length;
+    const isBench = myPicksSoFar >= myStarterCount;
 
     // Create the draft pick
     const draftPick = await prisma.draftPick.create({
@@ -99,14 +109,14 @@ export async function POST(
         playerId,
         pickedByUserId: userSignupId,
         pickOrder: nextPickOrder,
-        isBench: false // All picks are starters for now (5 each)
+        isBench,
       },
       include: {
-        player: true
+        player: true,
       }
     });
 
-    // Update matchup status if needed
+    // Activate matchup if it was waiting
     if (matchup.status === 'WAITING_DRAFT' && nextPickOrder === 1) {
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
@@ -114,14 +124,15 @@ export async function POST(
       });
     }
 
-    // If all 10 picks are complete, mark as COMPLETED
-    if (nextPickOrder === 10) {
+    // Mark complete when all effective slots are filled
+    if (nextPickOrder === effectiveSlots.length) {
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
         data: { status: 'COMPLETED' }
       });
     }
 
+    const pickedByUsername = userSignupId === matchup.user1Id ? matchup.user1.user.username : matchup.user2.user.username;
     return NextResponse.json({
       success: true,
       message: 'Player added successfully',
@@ -129,7 +140,7 @@ export async function POST(
         id: draftPick.id,
         pickOrder: draftPick.pickOrder,
         player: draftPick.player,
-        pickedByUsername: isUser1Turn ? matchup.user1.user.username : matchup.user2.user.username
+        pickedByUsername,
       }
     });
 
@@ -139,7 +150,5 @@ export async function POST(
       { error: 'Failed to add draft pick', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
