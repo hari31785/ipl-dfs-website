@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, ChevronDown, Ticket, Coins, Bell, BellOff } from "lucide-react"
 import { useLoading } from '@/contexts/LoadingContext'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
@@ -159,6 +159,8 @@ export default function DashboardPage() {
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [dismissedPushBanner, setDismissedPushBanner] = useState(false)
 
+  const lastFetchedAt = useRef<number>(0)
+
   useEffect(() => {
     // Restore tab state from URL params (e.g. when navigating back from scores page)
     const urlParams = new URLSearchParams(window.location.search)
@@ -188,11 +190,44 @@ export default function DashboardPage() {
       fetchTournaments()
       fetchLeaderboardTournament()
       fetchUserContests(parsedUser.id)
+      lastFetchedAt.current = Date.now()
     } else {
       // Redirect to login if no user data
       window.location.href = '/login'
     }
     setLoading(false)
+  }, [])
+
+  // Option C: re-fetch on tab resume (>2min stale) + force reload on bfcache restore
+  useEffect(() => {
+    const STALE_MS = 2 * 60 * 1000 // 2 minutes
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - lastFetchedAt.current < STALE_MS) return
+      const userData = localStorage.getItem('currentUser')
+      if (!userData) return
+      const parsedUser = JSON.parse(userData)
+      fetchUserData(parsedUser.id)
+      fetchTournaments()
+      fetchLeaderboardTournament()
+      fetchUserContests(parsedUser.id)
+      lastFetchedAt.current = Date.now()
+    }
+
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        // Page was restored from bfcache — force a full reload for freshness
+        window.location.reload()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pageshow', handlePageShow)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
+    }
   }, [])
 
   const fetchUserData = async (userId: string) => {
