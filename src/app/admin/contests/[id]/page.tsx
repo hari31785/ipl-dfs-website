@@ -106,8 +106,8 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
   const [playerSearchQuery, setPlayerSearchQuery] = useState('');
   const [addingPick, setAddingPick] = useState(false);
   const [addPickError, setAddPickError] = useState('');
+  const [pendingPicks, setPendingPicks] = useState<{ userId: string; player: Player }[]>([]);
   const [deletingPick, setDeletingPick] = useState(false);
-  const [selectedPickUserId, setSelectedPickUserId] = useState<string | null>(null); // which user to add pick for
   const [deletingMatchup, setDeletingMatchup] = useState<string | null>(null);
   const [selectedMatchups, setSelectedMatchups] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -195,33 +195,46 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
     }
   };
 
-  const handleAddPick = async (matchupId: string, playerId: string, userSignupId: string) => {
+  // Queue a player for a user (no API call yet)
+  const addToPending = (userId: string, player: Player) => {
+    setPendingPicks(prev => [...prev, { userId, player }]);
+  };
+
+  // Remove a queued player
+  const removeFromPending = (playerId: string) => {
+    setPendingPicks(prev => prev.filter(p => p.player.id !== playerId));
+  };
+
+  // Submit all pending picks sequentially
+  const handleSubmitPicks = async (matchupId: string) => {
+    if (pendingPicks.length === 0) return;
     setAddingPick(true);
     setAddPickError('');
-    
-    try {
-      const response = await fetch(`/api/admin/matchups/${matchupId}/add-pick`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId, userSignupId })
-      });
+    const errors: string[] = [];
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(`✅ ${data.message}\n\nPlayer: ${data.pick.player.name}\nPicked by: ${data.pick.pickedByUsername}\nPick Order: ${data.pick.pickOrder}`);
-        setShowAddPick(null);
-        setPlayerSearchQuery('');
-        setSelectedPickUserId(null);
-        fetchContestDetails(); // Refresh matchups
-      } else {
-        setAddPickError(data.error || 'Failed to add pick');
+    for (const pending of pendingPicks) {
+      try {
+        const res = await fetch(`/api/admin/matchups/${matchupId}/add-pick`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playerId: pending.player.id, userSignupId: pending.userId }),
+        });
+        const data = await res.json();
+        if (!res.ok) errors.push(`${pending.player.name}: ${data.error}`);
+      } catch {
+        errors.push(`${pending.player.name}: Network error`);
       }
-    } catch (error) {
-      console.error('Error adding pick:', error);
-      setAddPickError('Network error occurred');
-    } finally {
-      setAddingPick(false);
+    }
+
+    setAddingPick(false);
+    if (errors.length > 0) {
+      setAddPickError(errors.join('\n'));
+    } else {
+      setShowAddPick(null);
+      setPlayerSearchQuery('');
+      setPendingPicks([]);
+      setAddPickError('');
+      fetchContestDetails();
     }
   };
 
@@ -929,145 +942,182 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
           const matchup = contest?.matchups.find(m => m.id === showAddPick);
           if (!matchup) return null;
 
-          const nextPick = getNextPickInfo(matchup);
-          const pickOrder = matchup.draftPicks.length + 1;
-          const activeUserId = selectedPickUserId ?? matchup.user1.id;
-          const isUser1Active = activeUserId === matchup.user1.id;
+          const pendingIds = new Set(pendingPicks.map(p => p.player.id));
+          const existingIds = new Set(matchup.draftPicks.map(p => p.player.id));
+          const totalQueued = pendingPicks.length;
+          const remainingSlots = 14 - matchup.draftPicks.length;
 
-          const filteredPlayers = playerSearchQuery.length >= 2
-            ? availablePlayers.filter(p =>
-                p.name.toLowerCase().includes(playerSearchQuery.toLowerCase()) ||
-                p.role.toLowerCase().includes(playerSearchQuery.toLowerCase()) ||
-                p.iplTeam?.name.toLowerCase().includes(playerSearchQuery.toLowerCase())
-              )
-            : availablePlayers;
+          const user1Pending = pendingPicks.filter(p => p.userId === matchup.user1.id);
+          const user2Pending = pendingPicks.filter(p => p.userId === matchup.user2.id);
+
+          const filteredPlayers = availablePlayers
+            .filter(p => !pendingIds.has(p.id) && !existingIds.has(p.id))
+            .filter(p =>
+              playerSearchQuery.length < 2 ||
+              p.name.toLowerCase().includes(playerSearchQuery.toLowerCase()) ||
+              p.role.toLowerCase().includes(playerSearchQuery.toLowerCase()) ||
+              (p.iplTeam?.name ?? '').toLowerCase().includes(playerSearchQuery.toLowerCase())
+            );
+
+          const closeModal = () => {
+            setShowAddPick(null);
+            setPlayerSearchQuery('');
+            setPendingPicks([]);
+            setAddPickError('');
+          };
 
           return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Add Player Pick</h3>
+            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col">
 
-                {/* Pick info banner */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                  <div className="text-sm text-gray-700">
-                    <strong>Pick #{pickOrder}</strong>
-                    {nextPick && activeUserId === nextPick.userSignupId
-                      ? <span className="ml-1 text-blue-700">— {nextPick.name}'s turn (snake order)</span>
-                      : nextPick
-                        ? <span className="ml-1 text-orange-600">— overriding turn (snake says {nextPick.name})</span>
-                        : <span className="ml-1 text-gray-500">— toss not done yet</span>}
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1">{matchup.draftPicks.length}/14 picks completed</div>
-                </div>
-
-                {/* User selector */}
-                <div className="mb-4">
-                  <div className="text-xs font-medium text-gray-500 mb-1.5">Picking for:</div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSelectedPickUserId(matchup.user1.id)}
-                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border-2 transition-colors ${
-                        isUser1Active
-                          ? 'bg-blue-600 border-blue-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
-                      }`}
-                    >
-                      {matchup.user1.user.name.split(' ')[0]}
-                      {nextPick?.userSignupId === matchup.user1.id && <span className="ml-1 text-xs opacity-75">⚡</span>}
-                    </button>
-                    <button
-                      onClick={() => setSelectedPickUserId(matchup.user2.id)}
-                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border-2 transition-colors ${
-                        !isUser1Active
-                          ? 'bg-purple-600 border-purple-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-700 hover:border-purple-400'
-                      }`}
-                    >
-                      {matchup.user2.user.name.split(' ')[0]}
-                      {nextPick?.userSignupId === matchup.user2.id && <span className="ml-1 text-xs opacity-75">⚡</span>}
-                    </button>
-                  </div>
-                </div>
-
-                {loadingPlayers ? (
-                  <div className="text-center py-8 text-gray-600">Loading available players...</div>
-                ) : (
-                  <>
-                    {/* Player Search */}
-                    <div className="mb-4">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          type="text"
-                          value={playerSearchQuery}
-                          onChange={(e) => setPlayerSearchQuery(e.target.value)}
-                          placeholder="Search players by name, role, or team..."
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div className="text-xs text-gray-600 mt-1">
-                        {filteredPlayers.length} of {availablePlayers.length} players available
-                      </div>
+                {/* Header */}
+                <div className="px-6 pt-5 pb-4 border-b border-gray-200 shrink-0">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">🏏 Draft Players</h3>
+                      <p className="text-sm text-gray-500 mt-0.5">
+                        {matchup.user1.user.name.split(' ')[0]} vs {matchup.user2.user.name.split(' ')[0]}
+                        &nbsp;·&nbsp;{matchup.draftPicks.length} saved picks
+                        &nbsp;·&nbsp;{remainingSlots} slots left
+                      </p>
                     </div>
+                    <button onClick={closeModal} disabled={addingPick}
+                      className="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none disabled:opacity-40">
+                      ✕
+                    </button>
+                  </div>
+                </div>
 
-                    {/* Player List */}
-                    <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
-                      {filteredPlayers.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          {availablePlayers.length === 0 
-                            ? 'All players have been picked' 
-                            : 'No players match your search'}
-                        </div>
+                {/* Scrollable body */}
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+
+                  {/* Pending queues — always visible */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 min-h-[72px]">
+                      <div className="text-xs font-semibold text-blue-700 mb-2">
+                        {matchup.user1.user.name.split(' ')[0]} — {user1Pending.length} queued
+                      </div>
+                      {user1Pending.length === 0 ? (
+                        <div className="text-xs text-blue-300 italic">Click +{matchup.user1.user.name.split(' ')[0]} below</div>
                       ) : (
-                        filteredPlayers.map(player => (
-                          <button
-                            key={player.id}
-                            onClick={() => handleAddPick(matchup.id, player.id, activeUserId)}
-                            disabled={addingPick}
-                            className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b last:border-b-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900">{player.name}</div>
-                                <div className="text-sm text-gray-600 flex items-center gap-2">
-                                  <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{player.role}</span>
-                                  {player.iplTeam && (
-                                    <span className="text-xs text-gray-500">{player.iplTeam.shortName || player.iplTeam.name}</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="text-blue-600 font-semibold text-sm">
-                                Select →
-                              </div>
-                            </div>
-                          </button>
+                        user1Pending.map(p => (
+                          <div key={p.player.id} className="flex items-center justify-between gap-1 py-0.5">
+                            <span className="text-xs text-gray-800 truncate">{p.player.name}</span>
+                            <button onClick={() => removeFromPending(p.player.id)}
+                              className="text-red-400 hover:text-red-600 text-xs shrink-0 font-bold">✕</button>
+                          </div>
                         ))
                       )}
                     </div>
-
-                    {addPickError && (
-                      <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">
-                        {addPickError}
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 min-h-[72px]">
+                      <div className="text-xs font-semibold text-purple-700 mb-2">
+                        {matchup.user2.user.name.split(' ')[0]} — {user2Pending.length} queued
                       </div>
-                    )}
-
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAddPick(null);
-                          setPlayerSearchQuery('');
-                          setAddPickError('');
-                          setSelectedPickUserId(null);
-                        }}
-                        disabled={addingPick}
-                        className="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50"
-                      >
-                        {addingPick ? 'Adding...' : 'Cancel'}
-                      </button>
+                      {user2Pending.length === 0 ? (
+                        <div className="text-xs text-purple-300 italic">Click +{matchup.user2.user.name.split(' ')[0]} below</div>
+                      ) : (
+                        user2Pending.map(p => (
+                          <div key={p.player.id} className="flex items-center justify-between gap-1 py-0.5">
+                            <span className="text-xs text-gray-800 truncate">{p.player.name}</span>
+                            <button onClick={() => removeFromPending(p.player.id)}
+                              className="text-red-400 hover:text-red-600 text-xs shrink-0 font-bold">✕</button>
+                          </div>
+                        ))
+                      )}
                     </div>
-                  </>
-                )}
+                  </div>
+
+                  {/* Player list */}
+                  {loadingPlayers ? (
+                    <div className="text-center py-10 text-gray-500">Loading players…</div>
+                  ) : (
+                    <>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={playerSearchQuery}
+                          onChange={e => setPlayerSearchQuery(e.target.value)}
+                          placeholder="Search by name, role, or team…"
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        {filteredPlayers.length} players available
+                        {totalQueued > 0 && <span className="ml-2 text-green-600 font-semibold">{totalQueued} queued</span>}
+                      </div>
+
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        {filteredPlayers.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500 text-sm">
+                            {availablePlayers.filter(p => !pendingIds.has(p.id) && !existingIds.has(p.id)).length === 0
+                              ? 'All players queued or already picked'
+                              : 'No players match your search'}
+                          </div>
+                        ) : (
+                          <div className="max-h-72 overflow-y-auto divide-y divide-gray-100">
+                            {filteredPlayers.map(player => (
+                              <div key={player.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-sm text-gray-900 truncate">{player.name}</div>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded">{player.role}</span>
+                                    {player.iplTeam && <span className="text-xs text-gray-400">{player.iplTeam.shortName || player.iplTeam.name}</span>}
+                                  </div>
+                                </div>
+                                <div className="flex gap-1.5 shrink-0">
+                                  <button
+                                    onClick={() => addToPending(matchup.user1.id, player)}
+                                    disabled={addingPick || totalQueued + matchup.draftPicks.length >= 14}
+                                    className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold px-2.5 py-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                  >
+                                    +{matchup.user1.user.name.split(' ')[0]}
+                                  </button>
+                                  <button
+                                    onClick={() => addToPending(matchup.user2.id, player)}
+                                    disabled={addingPick || totalQueued + matchup.draftPicks.length >= 14}
+                                    className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-800 font-semibold px-2.5 py-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                  >
+                                    +{matchup.user2.user.name.split(' ')[0]}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {addPickError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm whitespace-pre-line">
+                      {addPickError}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-gray-200 flex gap-3 shrink-0">
+                  <button
+                    onClick={closeModal}
+                    disabled={addingPick}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleSubmitPicks(matchup.id)}
+                    disabled={addingPick || totalQueued === 0}
+                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-semibold text-sm transition-colors"
+                  >
+                    {addingPick
+                      ? 'Saving…'
+                      : totalQueued === 0
+                        ? 'Queue players above'
+                        : `Save ${totalQueued} pick${totalQueued > 1 ? 's' : ''} →`}
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -1288,10 +1338,9 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                         <div className="mt-6">
                           <button
                             onClick={() => {
-                              const np = getNextPickInfo(matchup);
-                              setSelectedPickUserId(np ? np.userSignupId : matchup.user1.id);
                               setShowAddPick(matchup.id);
                               fetchAvailablePlayers(matchup.id);
+                              setPendingPicks([]);
                               setPlayerSearchQuery('');
                               setAddPickError('');
                             }}
