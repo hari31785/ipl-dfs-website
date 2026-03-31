@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by email (case-insensitive)
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email.trim(), mode: 'insensitive' } },
       select: {
         id: true,
         name: true,
