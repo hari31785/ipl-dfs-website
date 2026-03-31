@@ -19,6 +19,7 @@ interface DraftPick {
   pickOrder: number;
   pickTimestamp: string;
   pickedByUserId: string;
+  isBench: boolean;
   player: Player;
 }
 
@@ -1289,17 +1290,13 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                         {matchup.draftPicks.length === 0 ? (
                           <div className="text-sm text-gray-500 italic">No picks yet</div>
                         ) : (() => {
-                          const effectiveSlots = matchup.firstPickUser
-                            ? getEffectivePickSlots(matchup.firstPickUser, matchup.user1.id, matchup.user2.id)
-                            : [];
                           const sortedPicks = [...matchup.draftPicks].sort((a, b) => a.pickOrder - b.pickOrder);
                           const lastPickId = sortedPicks.length > 0 ? sortedPicks[sortedPicks.length - 1].id : null;
                           return (
                             <div className="space-y-1.5">
                               {sortedPicks.map((pick) => {
-                                const slotOwner = effectiveSlots[pick.pickOrder - 1];
-                                const isUser1Pick = slotOwner === matchup.user1.id;
-                                const isBench = pick.pickOrder > 10;
+                                const isUser1Pick = pick.pickedByUserId === matchup.user1.id;
+                                const isBench = pick.isBench;
                                 const isLast = pick.id === lastPickId;
                                 return (
                                   <div key={pick.id} className={`flex items-center gap-2 p-2 rounded-lg ${isUser1Pick ? 'bg-blue-50' : 'bg-purple-50'}`}>
