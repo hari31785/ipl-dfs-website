@@ -713,14 +713,20 @@ export default function DashboardPage() {
               const opponentName = uc.matchup.opponentUsername || 'your opponent'
               const matchupId = uc.matchup.id
 
-              // 🔴 Alert 1: Draft session started (coin toss done = someone opened draft page)
+              // �/⏳ Alert 1: Toss done, draft in progress — split by whose turn it is
               if (
                 uc.contest.status === 'DRAFT_PHASE' &&
                 uc.matchup.status === 'DRAFTING' &&
                 uc.matchup.firstPickUser !== null &&
                 uc.matchup.draftPicksCount < 14
               ) {
-                return [{ type: 'started', matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id }]
+                const isUser1 = uc.id === uc.matchup.user1Id
+                const firstPickIsUser1 = uc.matchup.firstPickUser?.startsWith('user1') ?? false
+                const firstPickIsMe = (firstPickIsUser1 && isUser1) || (!firstPickIsUser1 && !isUser1)
+                const isMyTurn = (uc.matchup.draftPicksCount % 2 === 0) === firstPickIsMe
+                const pickNumber = uc.matchup.draftPicksCount + 1
+                const type = isMyTurn ? 'my-turn' : 'started'
+                return [{ type, matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id, pickNumber }]
               }
 
               // 🟡 Alert 2: Draft window open, no one in yet
@@ -745,7 +751,7 @@ export default function DashboardPage() {
             })
             // Sort: started first, then open, then matched
             .sort((a, b) => {
-              const order = { started: 0, open: 1, matched: 2 }
+              const order = { 'my-turn': 0, started: 1, open: 2, matched: 3 }
               return order[a.type as keyof typeof order] - order[b.type as keyof typeof order]
             })
 
@@ -757,8 +763,10 @@ export default function DashboardPage() {
                 <div
                   key={alert.contestMatchupId + '_' + alert.type}
                   className={`rounded-xl border px-5 py-4 flex items-start justify-between gap-4 shadow-sm ${
-                    alert.type === 'started'
-                      ? 'bg-red-50 border-red-300'
+                    alert.type === 'my-turn'
+                      ? 'bg-green-50 border-green-400'
+                      : alert.type === 'started'
+                      ? 'bg-gray-50 border-gray-300'
                       : alert.type === 'open'
                       ? 'bg-amber-50 border-amber-300'
                       : 'bg-blue-50 border-blue-300'
@@ -766,46 +774,50 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-start gap-3 flex-1">
                     <span className="text-xl mt-0.5">
-                      {alert.type === 'started' ? '🔴' : alert.type === 'open' ? '⚡' : '🎯'}
+                      {alert.type === 'my-turn' ? '🟢' : alert.type === 'started' ? '⏳' : alert.type === 'open' ? '⚡' : '🎯'}
                     </span>
                     <div className="flex-1">
                       <p className={`font-semibold text-sm ${
-                        alert.type === 'started' ? 'text-red-800' : alert.type === 'open' ? 'text-amber-800' : 'text-blue-800'
+                        alert.type === 'my-turn' ? 'text-green-800' : alert.type === 'started' ? 'text-gray-700' : alert.type === 'open' ? 'text-amber-800' : 'text-blue-800'
                       }`}>
-                        {alert.type === 'started' && 'Draft session has started!'}
+                        {alert.type === 'my-turn' && "It's your turn to pick!"}
+                        {alert.type === 'started' && 'Draft in progress'}
                         {alert.type === 'open' && 'Your draft window is open!'}
                         {alert.type === 'matched' && 'Opponent matched!'}
                       </p>
                       <p className={`text-sm mt-0.5 ${
-                        alert.type === 'started' ? 'text-red-700' : alert.type === 'open' ? 'text-amber-700' : 'text-blue-700'
+                        alert.type === 'my-turn' ? 'text-green-700' : alert.type === 'started' ? 'text-gray-600' : alert.type === 'open' ? 'text-amber-700' : 'text-blue-700'
                       }`}>
                         {alert.matchTitle} &bull; {alert.tournamentName} &bull; {alert.coinValue} Coin Contest
                       </p>
                       <p className={`text-sm mt-1 ${
-                        alert.type === 'started' ? 'text-red-600' : alert.type === 'open' ? 'text-amber-600' : 'text-blue-600'
+                        alert.type === 'my-turn' ? 'text-green-600' : alert.type === 'started' ? 'text-gray-500' : alert.type === 'open' ? 'text-amber-600' : 'text-blue-600'
                       }`}>
-                        {alert.type === 'started' && `Your opponent ${alert.opponentName} has entered the draft room.`}
+                        {alert.type === 'my-turn' && `Pick #${(alert as any).pickNumber} vs ${alert.opponentName} — don't keep them waiting!`}
+                        {alert.type === 'started' && `${alert.opponentName} is picking now... (Pick #${(alert as any).pickNumber})`}
                         {alert.type === 'open' && `Be the first to enter the draft room vs ${alert.opponentName}.`}
                         {alert.type === 'matched' && `You'll be facing ${alert.opponentName} — draft opens soon.`}
                       </p>
                     </div>
-                    {(alert.type === 'started' || alert.type === 'open') && (
+                    {(alert.type === 'my-turn' || alert.type === 'started' || alert.type === 'open') && (
                       <button
                         onClick={() => window.location.href = `/draft/${alert.matchupId}`}
                         className={`shrink-0 text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors ${
-                          alert.type === 'started'
-                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                          alert.type === 'my-turn'
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                            : alert.type === 'started'
+                            ? 'bg-gray-400 hover:bg-gray-500 text-white'
                             : 'bg-amber-500 hover:bg-amber-600 text-white'
                         }`}
                       >
-                        {alert.type === 'started' ? 'Draft Now →' : 'Go Draft →'}
+                        {alert.type === 'my-turn' ? 'Pick Now →' : alert.type === 'started' ? 'Watch →' : 'Go Draft →'}
                       </button>
                     )}
                   </div>
                   <button
                     onClick={() => setDismissedAlerts(prev => new Set(prev).add(alert.contestMatchupId + '_alert'))}
                     className={`shrink-0 text-lg font-bold leading-none mt-0.5 ${
-                      alert.type === 'started' ? 'text-red-400 hover:text-red-600' : alert.type === 'open' ? 'text-amber-400 hover:text-amber-600' : 'text-blue-400 hover:text-blue-600'
+                      alert.type === 'my-turn' ? 'text-green-400 hover:text-green-600' : alert.type === 'started' ? 'text-gray-400 hover:text-gray-600' : alert.type === 'open' ? 'text-amber-400 hover:text-amber-600' : 'text-blue-400 hover:text-blue-600'
                     }`}
                   >
                     ✕
