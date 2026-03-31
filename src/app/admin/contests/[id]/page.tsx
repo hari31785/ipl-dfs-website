@@ -1278,57 +1278,76 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                   {/* Expanded Draft Details */}
                   {isExpanded && (
                     <div className="p-6 bg-gray-50">
-                      {/* Snake Order Timeline */}
-                      <div className="bg-white rounded-lg p-4 mb-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="font-semibold text-base text-gray-900">🐍 Snake Draft Order</h3>
-                          <div className="flex items-center gap-3 text-xs">
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>{matchup.user1.user.name.split(' ')[0]}</span>
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-purple-500 inline-block"></span>{matchup.user2.user.name.split(' ')[0]}</span>
-                          </div>
-                        </div>
-                        {matchup.draftPicks.length === 0 ? (
-                          <div className="text-sm text-gray-500 italic">No picks yet</div>
-                        ) : (() => {
-                          const sortedPicks = [...matchup.draftPicks].sort((a, b) => a.pickOrder - b.pickOrder);
-                          const lastPickId = sortedPicks.length > 0 ? sortedPicks[sortedPicks.length - 1].id : null;
-                          return (
-                            <div className="space-y-1.5">
-                              {sortedPicks.map((pick) => {
-                                const isUser1Pick = pick.pickedByUserId === matchup.user1.id;
-                                const isBench = pick.isBench;
-                                const isLast = pick.id === lastPickId;
-                                return (
-                                  <div key={pick.id} className={`flex items-center gap-2 p-2 rounded-lg ${isUser1Pick ? 'bg-blue-50' : 'bg-purple-50'}`}>
-                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${isUser1Pick ? 'bg-blue-500' : 'bg-purple-500'}`}>
-                                      {pick.pickOrder}
-                                    </div>
-                                    <div className={`text-xs font-semibold w-16 shrink-0 truncate ${isUser1Pick ? 'text-blue-700' : 'text-purple-700'}`}>
-                                      {isUser1Pick ? matchup.user1.user.name.split(' ')[0] : matchup.user2.user.name.split(' ')[0]}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <span className="font-medium text-sm text-gray-900">{pick.player.name}</span>
-                                      <span className="ml-2 text-xs text-gray-500">{pick.player.role}</span>
-                                      {pick.player.iplTeam && <span className="ml-1 text-xs text-gray-400">· {pick.player.iplTeam.shortName}</span>}
-                                      {isBench && <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">bench</span>}
-                                    </div>
-                                    {isLast && (
-                                      <button
-                                        onClick={() => handleDeletePick(matchup.id, pick.id)}
-                                        disabled={deletingPick}
-                                        title="Undo last pick"
-                                        className="shrink-0 text-xs text-red-400 hover:text-red-600 hover:bg-red-50 px-2 py-1 rounded transition-colors disabled:opacity-50"
-                                      >
-                                        ✕ undo
-                                      </button>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                      {/* Side-by-side picks */}
+                      {(() => {
+                        const user1Picks = [...matchup.draftPicks]
+                          .filter(p => p.pickedByUserId === matchup.user1.id)
+                          .sort((a, b) => a.pickOrder - b.pickOrder);
+                        const user2Picks = [...matchup.draftPicks]
+                          .filter(p => p.pickedByUserId === matchup.user2.id)
+                          .sort((a, b) => a.pickOrder - b.pickOrder);
+                        const allSorted = [...matchup.draftPicks].sort((a, b) => a.pickOrder - b.pickOrder);
+                        const lastPickId = allSorted.length > 0 ? allSorted[allSorted.length - 1].id : null;
+
+                        const renderPick = (pick: DraftPick, color: 'blue' | 'purple') => (
+                          <div key={pick.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${color === 'blue' ? 'bg-blue-50' : 'bg-purple-50'}`}>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${color === 'blue' ? 'bg-blue-500' : 'bg-purple-500'}`}>
+                              {pick.pickOrder}
                             </div>
-                          );
-                        })()}
-                      </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm text-gray-900 truncate">{pick.player.name}</div>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className="text-xs text-gray-500">{pick.player.role}</span>
+                                {pick.player.iplTeam && <span className="text-xs text-gray-400">· {pick.player.iplTeam.shortName}</span>}
+                                {pick.isBench && <span className="text-xs bg-gray-200 text-gray-600 px-1 rounded">bench</span>}
+                              </div>
+                            </div>
+                            {pick.id === lastPickId && (
+                              <button
+                                onClick={() => handleDeletePick(matchup.id, pick.id)}
+                                disabled={deletingPick}
+                                title="Undo last pick"
+                                className="shrink-0 text-xs text-red-400 hover:text-red-600 hover:bg-red-50 px-1.5 py-0.5 rounded transition-colors disabled:opacity-50"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                        );
+
+                        return (
+                          <div className="bg-white rounded-lg p-4 mb-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              {/* User 1 */}
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="w-3 h-3 rounded-full bg-blue-500 shrink-0"></span>
+                                  <span className="font-semibold text-sm text-blue-700">{matchup.user1.user.name}</span>
+                                  <span className="text-xs text-gray-400">({user1Picks.length} picks)</span>
+                                </div>
+                                <div className="space-y-1.5">
+                                  {user1Picks.length === 0
+                                    ? <div className="text-xs text-gray-400 italic">No picks yet</div>
+                                    : user1Picks.map(p => renderPick(p, 'blue'))}
+                                </div>
+                              </div>
+                              {/* User 2 */}
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="w-3 h-3 rounded-full bg-purple-500 shrink-0"></span>
+                                  <span className="font-semibold text-sm text-purple-700">{matchup.user2.user.name}</span>
+                                  <span className="text-xs text-gray-400">({user2Picks.length} picks)</span>
+                                </div>
+                                <div className="space-y-1.5">
+                                  {user2Picks.length === 0
+                                    ? <div className="text-xs text-gray-400 italic">No picks yet</div>
+                                    : user2Picks.map(p => renderPick(p, 'purple'))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Manual Draft Pick Button */}
                       {matchup.draftPicks.length < 14 && (
