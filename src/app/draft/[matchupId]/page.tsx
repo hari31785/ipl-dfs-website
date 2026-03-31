@@ -553,8 +553,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
-      {/* Toss Modal */}
-      {showToss && (
+      {/* Toss Modal — hidden for the waiting user during 'calling' phase; shown for caller + flipping + result */}
+      {showToss && !(tossPhase === 'calling' && callingUser !== currentUser.id) && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border-4 border-cricket-600">
             {tossPhase === 'calling' && (
@@ -767,6 +767,20 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             </div>
           )}
         </div>
+
+        {/* Toss waiting banner — shown to the non-calling user while waiting for toss */}
+        {showToss && tossPhase === 'calling' && callingUser !== currentUser.id && (
+          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="animate-pulse text-2xl">🪙</div>
+              <div>
+                <p className="font-bold text-yellow-800">Waiting for {opponent.name} to call the toss...</p>
+                <p className="text-yellow-700 text-sm">Browse available players below while you wait — the draft will start automatically!</p>
+              </div>
+            </div>
+            <a href="/dashboard" className="shrink-0 text-yellow-700 hover:text-yellow-900 text-sm font-semibold underline">← Dashboard</a>
+          </div>
+        )}
 
         {/* Draft Status */}
         {isDraftComplete ? (
