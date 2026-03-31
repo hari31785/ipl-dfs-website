@@ -806,7 +806,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">No bench</span>
                 )}
                 <span className="bg-green-800 text-white px-3 py-1 rounded-full font-bold text-sm">
-                  {myPicks.length}/5
+                  {myPicks.length}/7
                 </span>
               </div>
             </div>
@@ -1157,7 +1157,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">No bench</span>
                 )}
                 <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold text-sm">
-                  {opponentPicks.length}/5
+                  {opponentPicks.length}/7
                 </span>
               </div>
             </div>
@@ -1174,38 +1174,95 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               {opponentPicks.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 italic">No picks yet</div>
               ) : (
-                opponentPicks.map(pick => (
-                  <div key={pick.id} className="group relative bg-gradient-to-br from-red-50 via-orange-50 to-white border-2 border-red-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shrink-0">
-                        {pick.pickOrder}
+                <>
+                  {/* Starting 5 Section */}
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b-2 border-red-600">
+                      <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">5</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-bold text-black bg-red-100 px-2 py-1 rounded-md shadow-sm border border-red-300">
-                            {pick.player.role}
-                          </span>
-                          <span 
-                            className="text-xs font-bold px-2 py-1 rounded-md shadow-sm border-2" 
-                            style={{ 
-                              backgroundColor: pick.player.iplTeam.color + '15', 
-                              color: 'black',
-                              borderColor: pick.player.iplTeam.color + '60'
-                            }}
-                          >
-                            {pick.player.iplTeam.shortName}
-                          </span>
-                          {pick.player.stats && pick.player.stats.length > 0 && (
-                            <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
-                              ⭐ {pick.player.stats[0].points.toFixed(1)} pts
-                            </span>
-                          )}
+                      <h4 className="font-bold text-red-800 text-lg">Starting 5</h4>
+                      <span className="text-sm text-red-600">({Math.min(opponentPicks.length, 5)}/5)</span>
+                    </div>
+                    {opponentPicks.slice(0, 5).map(pick => (
+                      <div key={pick.id} className="mb-3 group relative bg-gradient-to-br from-red-50 via-orange-50 to-white border-2 border-red-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shrink-0">
+                            {pick.pickOrder}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-bold text-black bg-red-100 px-2 py-1 rounded-md shadow-sm border border-red-300">
+                                {pick.player.role}
+                              </span>
+                              <span
+                                className="text-xs font-bold px-2 py-1 rounded-md shadow-sm border-2"
+                                style={{
+                                  backgroundColor: pick.player.iplTeam.color + '15',
+                                  color: 'black',
+                                  borderColor: pick.player.iplTeam.color + '60'
+                                }}
+                              >
+                                {pick.player.iplTeam.shortName}
+                              </span>
+                              {pick.player.stats && pick.player.stats.length > 0 && (
+                                <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
+                                  ⭐ {pick.player.stats[0].points.toFixed(1)} pts
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))
+
+                  {/* Substitutes Section */}
+                  {opponentPicks.length > 5 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b-2 border-orange-500">
+                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">SUB</span>
+                        </div>
+                        <h4 className="font-bold text-orange-700 text-lg">Substitutes</h4>
+                        <span className="text-sm text-orange-600">({opponentPicks.length - 5}/2)</span>
+                      </div>
+                      {opponentPicks.slice(5).map(pick => (
+                        <div key={pick.id} className="mb-3 group relative bg-gradient-to-br from-orange-50 via-amber-50 to-white border-2 border-orange-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">
+                              {pick.pickOrder}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-bold text-black bg-orange-200 px-2 py-1 rounded-md shadow-sm border border-orange-400">
+                                  {pick.player.role}
+                                </span>
+                                <span
+                                  className="text-xs font-bold px-2 py-1 rounded-md shadow-sm border-2"
+                                  style={{
+                                    backgroundColor: pick.player.iplTeam.color + '15',
+                                    color: 'black',
+                                    borderColor: pick.player.iplTeam.color + '60'
+                                  }}
+                                >
+                                  {pick.player.iplTeam.shortName}
+                                </span>
+                                {pick.player.stats && pick.player.stats.length > 0 && (
+                                  <span className="text-sm font-black text-black bg-gradient-to-r from-orange-300 to-amber-300 px-3 py-1.5 rounded-md shadow-md border-2 border-orange-600">
+                                    ⭐ {pick.player.stats[0].points.toFixed(1)} pts
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
