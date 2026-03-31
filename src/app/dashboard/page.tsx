@@ -1148,11 +1148,11 @@ export default function DashboardPage() {
                 {(() => {
                   const upcomingCount = userContests.filter(c =>
                     (c.contest.status === 'SIGNUP_OPEN' || c.contest.status === 'SIGNUP_CLOSED' || c.contest.status === 'DRAFT_PHASE') &&
-                    !(c.matchup && c.matchup.status === 'COMPLETED' && c.matchup.draftPicksCount === 14)
+                    !(c.matchup && c.matchup.status === 'COMPLETED')
                   ).length;
                   const draftedCount = userContests.filter(c =>
                     (c.contest.status === 'DRAFT_PHASE' || c.contest.status === 'ACTIVE') &&
-                    c.matchup && c.matchup.status === 'COMPLETED' && c.matchup.draftPicksCount === 14
+                    c.matchup && c.matchup.status === 'COMPLETED'
                   ).length;
                   const activeCount = userContests.filter(c =>
                     c.contest.status === 'LIVE' || c.contest.status === 'ACTIVE'
@@ -1232,19 +1232,20 @@ export default function DashboardPage() {
                     if (contestSubTab === 'upcoming') {
                       filteredContests = filteredContests.filter(contest => 
                         // Upcoming: Contests not yet started by admin (signup and draft phase)
-                        // Exclude contests where draft is already complete
+                        // Exclude contests where draft is already complete (matchup.status === COMPLETED
+                        // is the source of truth — handles bench-waived drafts with < 14 picks too)
                         (contest.contest.status === 'SIGNUP_OPEN' || 
                         contest.contest.status === 'SIGNUP_CLOSED' ||
                         contest.contest.status === 'DRAFT_PHASE') &&
-                        !(contest.matchup && contest.matchup.status === 'COMPLETED' && contest.matchup.draftPicksCount === 14)
+                        !(contest.matchup && contest.matchup.status === 'COMPLETED')
                       )
                     } else if (contestSubTab === 'drafted') {
                       filteredContests = filteredContests.filter(contest => 
-                        // Drafted: Draft complete (both teams finished 14 picks), waiting for admin to activate
+                        // Drafted: Draft complete, waiting for admin to activate
+                        // Use matchup.status === COMPLETED as source of truth (handles bench waivers)
                         (contest.contest.status === 'DRAFT_PHASE' || contest.contest.status === 'ACTIVE') && 
                         contest.matchup && 
-                        contest.matchup.status === 'COMPLETED' &&
-                        contest.matchup.draftPicksCount === 14
+                        contest.matchup.status === 'COMPLETED'
                       )
                     } else if (contestSubTab === 'active') {
                       filteredContests = filteredContests.filter(contest => 
