@@ -183,7 +183,7 @@ export default function TeamsManagement() {
                 href="/admin/dashboard"
                 className="flex items-center gap-2 text-white hover:text-blue-200 transition-colors">
                 <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </a>
               <div className="w-px h-6 bg-white/30"></div>
               <div className="flex items-center gap-3">
@@ -197,33 +197,33 @@ export default function TeamsManagement() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Success/Error Messages */}
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          <div className="mb-3 md:mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
             {success}
           </div>
         )}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="mb-3 md:mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         {/* Add Team Button */}
-        <div className="mb-8">
+        <div className="mb-4 md:mb-8">
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors text-sm md:text-base"
           >
-            <Plus className="h-5 w-5" />
-            Add New IPL Team
+            <Plus className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden sm:inline">Add New </span>IPL Team
           </button>
         </div>
 
         {/* Add/Edit Team Form */}
         {showForm && (
-          <div className="mb-8 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="mb-4 md:mb-8 bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
             <div className="flex items-center gap-2 mb-6">
               <Shield className="h-6 w-6 text-primary-600" />
               <h3 className="text-xl font-bold text-primary-800">
@@ -338,8 +338,8 @@ export default function TeamsManagement() {
 
         {/* Teams List */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-xl font-bold text-primary-800">IPL Teams ({teams.length}/10)</h3>
+          <div className="p-3 md:p-6 border-b border-gray-200">
+            <h3 className="text-base md:text-xl font-bold text-primary-800">IPL Teams ({teams.length}/10)</h3>
           </div>
 
           {teams.length === 0 ? (
@@ -354,7 +354,8 @@ export default function TeamsManagement() {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -370,10 +371,7 @@ export default function TeamsManagement() {
                     <tr key={team.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div
-                            className="w-8 h-8 rounded-full"
-                            style={{ backgroundColor: team.color }}
-                          ></div>
+                          <div className="w-8 h-8 rounded-full" style={{ backgroundColor: team.color }}></div>
                           <span className="font-semibold text-gray-900">{team.name}</span>
                         </div>
                       </td>
@@ -387,20 +385,10 @@ export default function TeamsManagement() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => handleEdit(team)}
-                            disabled={deletingTeamId === team.id}
-                            className="text-primary-600 hover:text-primary-800 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Edit team"
-                          >
+                          <button onClick={() => handleEdit(team)} disabled={deletingTeamId === team.id} className="text-primary-600 hover:text-primary-800 p-2 transition-colors disabled:opacity-50" title="Edit team">
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button 
-                            onClick={() => handleDelete(team)}
-                            disabled={deletingTeamId === team.id}
-                            className="text-red-600 hover:text-red-800 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Delete team"
-                          >
+                          <button onClick={() => handleDelete(team)} disabled={deletingTeamId === team.id} className="text-red-600 hover:text-red-800 p-2 transition-colors disabled:opacity-50" title="Delete team">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -410,17 +398,45 @@ export default function TeamsManagement() {
                 </tbody>
               </table>
             </div>
+            {/* Mobile card list */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {teams.map((team) => (
+                <div key={team.id} className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="w-8 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: team.color }}></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm text-gray-900 truncate">{team.name}</span>
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded text-white flex-shrink-0" style={{ backgroundColor: team.color }}>{team.shortName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                      <span>{team.city}</span>
+                      <span>·</span>
+                      <Users className="h-3 w-3" />
+                      <span>{team.players.length} players</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => handleEdit(team)} disabled={deletingTeamId === team.id} className="text-primary-600 p-1.5 hover:bg-blue-50 rounded transition-colors disabled:opacity-50">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => handleDelete(team)} disabled={deletingTeamId === team.id} className="text-red-600 p-1.5 hover:bg-red-50 rounded transition-colors disabled:opacity-50">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
         {/* Quick Add Popular Teams */}
         {teams.length < 10 && (
-          <div className="mt-8 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6">
-            <h4 className="text-lg font-bold text-amber-800 mb-4">Quick Add Popular IPL Teams</h4>
-            <p className="text-amber-700 mb-4">
+          <div className="mt-4 md:mt-8 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 md:p-6">
+            <h4 className="text-sm md:text-lg font-bold text-amber-800 mb-2 md:mb-4">Quick Add Popular IPL Teams</h4>
+            <p className="text-amber-700 text-xs md:text-base mb-3 md:mb-4">
               Click to quickly add these popular IPL teams with their official colors:
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
               {[
                 { name: "Mumbai Indians", short: "MI", city: "Mumbai", color: "#004BA0" },
                 { name: "Chennai Super Kings", short: "CSK", city: "Chennai", color: "#FFD700" },
@@ -440,7 +456,7 @@ export default function TeamsManagement() {
                     })
                     setShowForm(true)
                   }}
-                  className="flex items-center gap-2 p-3 bg-white rounded-lg border border-amber-200 hover:border-amber-300 transition-colors"
+                  className="flex items-center gap-2 p-2 md:p-3 bg-white rounded-lg border border-amber-200 hover:border-amber-300 transition-colors"
                 >
                   <div
                     className="w-4 h-4 rounded-full"
