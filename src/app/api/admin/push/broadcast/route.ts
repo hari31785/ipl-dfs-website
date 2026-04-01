@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendToAll, sendToUser } from '@/lib/pushNotifications';
+import { prisma } from '@/lib/prisma';
 
 // POST /api/admin/push/broadcast — send a push notification to all or specific users
 export async function POST(request: NextRequest) {
   try {
-    const { title, body, url, userIds } = await request.json();
+    const { title, body, url, userIds, activeDraftsOnly } = await request.json();
 
     if (!title || !body) {
       return NextResponse.json({ message: 'title and body are required' }, { status: 400 });
@@ -16,6 +17,35 @@ export async function POST(request: NextRequest) {
       icon: '/icon-192.png',
       url: url || '/dashboard',
     };
+
+    // Active drafts send: find all users in DRAFTING matchups
+    if (activeDraftsOnly) {
+      const activeDraftMatchups = await prisma.headToHeadMatchup.findMany({
+        where: { status: 'DRAFTING' },
+        include: {
+          user1: { include: { user: true } },
+          user2: { include: { user: true } },
+        },
+      });
+      // Collect unique user IDs from both sides of every active draft
+      const uniqueUserIds = [...new Set(
+        activeDraftMatchups.flatMap(m => [m.user1.user.id, m.user2.user.id])
+      )];
+      if (uniqueUserIds.length === 0) {
+        return NextResponse.json({ message: 'No active drafts found', sent: 0, failed: 0 });
+      }
+      let sent = 0;
+      let failed = 0;
+      for (const userId of uniqueUserIds) {
+        try {
+          await sendToUser(userId, payload);
+          sent++;
+        } catch {
+          failed++;
+        }
+      }
+      return NextResponse.json({ message: 'Active drafts send complete', sent, failed });
+    }
 
     // Targeted send: specific user IDs provided
     if (Array.isArray(userIds) && userIds.length > 0) {

@@ -31,7 +31,7 @@ export default function AdminDashboard() {
   const [pushSending, setPushSending] = useState(false)
   const [pushResult, setPushResult] = useState<{ sent: number; failed: number; message?: string } | null>(null)
   // Audience targeting
-  const [pushAudience, setPushAudience] = useState<'all' | 'specific'>('all')
+  const [pushAudience, setPushAudience] = useState<'all' | 'specific' | 'activeDrafts'>('all')
   const [userQuery, setUserQuery] = useState('')
   const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([])
   const [selectedUsers, setSelectedUsers] = useState<UserSearchResult[]>([])
@@ -121,6 +121,9 @@ export default function AdminDashboard() {
       }
       if (pushAudience === 'specific') {
         body.userIds = selectedUsers.map(u => u.id)
+      }
+      if (pushAudience === 'activeDrafts') {
+        body.activeDraftsOnly = true
       }
       const res = await fetch('/api/admin/push/broadcast', {
         method: 'POST',
@@ -458,6 +461,16 @@ export default function AdminDashboard() {
                 📢 All Users
               </button>
               <button
+                onClick={() => { setPushAudience('activeDrafts'); setSelectedUsers([]); setUserQuery(''); setUserSearchResults([]); }}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                  pushAudience === 'activeDrafts'
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
+                }`}
+              >
+                🏏 Active Drafts
+              </button>
+              <button
                 onClick={() => setPushAudience('specific')}
                 className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
                   pushAudience === 'specific'
@@ -577,7 +590,9 @@ export default function AdminDashboard() {
                   ? 'Sending…'
                   : pushAudience === 'all'
                     ? 'Send to All Users'
-                    : `Send to ${selectedUsers.length} User${selectedUsers.length !== 1 ? 's' : ''}`
+                    : pushAudience === 'activeDrafts'
+                      ? 'Send to Active Draft Players'
+                      : `Send to ${selectedUsers.length} User${selectedUsers.length !== 1 ? 's' : ''}`
                 }
               </button>
 
