@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { parseFirstPickUser, buildFirstPickUser, getEffectivePickSlots } from '@/lib/draftUtils';
+import { sendToUser } from '@/lib/pushNotifications';
 
 // POST /api/draft/[matchupId]/waive-bench
 // Allows a user to skip their 2 bench picks once they have ≥5 starter picks.
@@ -82,7 +83,25 @@ export async function POST(
         where: { id: matchupId },
         data: { status: 'COMPLETED' },
       });
+      // Trigger 4: Draft complete — notify both
+      const draftUrl = `/draft/${matchupId}`;
+      Promise.allSettled([
+        sendToUser(matchup.user1.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
+        sendToUser(matchup.user2.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
+      ]).catch(() => {});
       return NextResponse.json({ message: 'Bench picks waived — draft complete!', completed: true });
+    }
+
+    // Trigger 3: If waiver hands the turn to opponent, notify them
+    const nextPickerSignupId = effectiveSlots[matchup.draftPicks.length];
+    if (nextPickerSignupId && nextPickerSignupId !== userSignupId) {
+      const nextPickerUser = nextPickerSignupId === matchup.user1.id ? matchup.user1.user : matchup.user2.user;
+      const waivingUser = isUser1 ? matchup.user1.user : matchup.user2.user;
+      sendToUser(nextPickerUser.id, {
+        title: `🏏 Your Turn — Pick #${matchup.draftPicks.length + 1}`,
+        body: `${waivingUser.name} skipped their bench. It's your turn now!`,
+        url: `/draft/${matchupId}`,
+      }).catch(() => {});
     }
 
     return NextResponse.json({ message: 'Bench picks waived', completed: false });

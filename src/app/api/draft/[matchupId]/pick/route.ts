@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getEffectivePickSlots } from '@/lib/draftUtils';
+import { sendToUser } from '@/lib/pushNotifications';
 
 // POST /api/draft/[matchupId]/pick - Make a draft pick
 export async function POST(
@@ -111,11 +112,30 @@ export async function POST(
 
     // If draft is complete, update matchup status
     // NOTE: Contest status remains in DRAFT_PHASE until admin clicks "Start Contest"
-    if (currentPickOrder === effectiveSlots.length) {
+    const isDraftComplete = currentPickOrder === effectiveSlots.length;
+    if (isDraftComplete) {
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
         data: { status: 'COMPLETED' }
       });
+      // Trigger 4: Notify both players — draft is done
+      const draftUrl = `/draft/${matchupId}`;
+      Promise.allSettled([
+        sendToUser(matchup.user1.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
+        sendToUser(matchup.user2.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
+      ]).catch(() => {});
+    } else {
+      // Trigger 1: Notify next picker only if turn changes (skip back-to-back picks)
+      const nextPickerSignupId = effectiveSlots[currentPickOrder]; // 0-indexed slot after this pick
+      if (nextPickerSignupId && nextPickerSignupId !== userSignupId) {
+        const nextPickerUser = nextPickerSignupId === matchup.user1.id ? matchup.user1.user : matchup.user2.user;
+        const pickerName = matchup.user1.user.id === userId ? matchup.user1.user.name : matchup.user2.user.name;
+        sendToUser(nextPickerUser.id, {
+          title: `🏏 Your Turn — Pick #${currentPickOrder + 1}`,
+          body: `${pickerName} just picked ${draftPick.player.name}. Go now!`,
+          url: `/draft/${matchupId}`,
+        }).catch(() => {});
+      }
     }
 
     return NextResponse.json({

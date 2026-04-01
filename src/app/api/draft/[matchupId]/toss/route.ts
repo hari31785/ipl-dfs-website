@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { parseFirstPickUser } from '@/lib/draftUtils';
+import { sendToUser } from '@/lib/pushNotifications';
 
 export async function POST(
   request: NextRequest,
@@ -16,13 +18,42 @@ export async function POST(
       );
     }
 
-    // Update matchup with toss result
+    // Fetch matchup with user details (needed for notifications)
+    const matchup = await prisma.headToHeadMatchup.findUnique({
+      where: { id: matchupId },
+      include: {
+        user1: { include: { user: true } },
+        user2: { include: { user: true } },
+      },
+    });
+
+    // Save toss result
     const updatedMatchup = await prisma.headToHeadMatchup.update({
       where: { id: matchupId },
       data: { 
-        firstPickUser: firstPickUser // "user1" or "user2"
+        firstPickUser: firstPickUser
       }
     });
+
+    // Trigger 2: Notify both players — draft has started
+    if (matchup) {
+      const { firstPick } = parseFirstPickUser(firstPickUser);
+      const firstPickerUser = firstPick === matchup.user1.id ? matchup.user1.user : matchup.user2.user;
+      const secondPickerUser = firstPick === matchup.user1.id ? matchup.user2.user : matchup.user1.user;
+      const draftUrl = `/draft/${matchupId}`;
+      Promise.allSettled([
+        sendToUser(firstPickerUser.id, {
+          title: '🏆 Draft Started — You Pick First!',
+          body: 'The toss is done. Make your first pick now!',
+          url: draftUrl,
+        }),
+        sendToUser(secondPickerUser.id, {
+          title: '🏆 Draft Started!',
+          body: `${firstPickerUser.name} won the toss and picks first. Get ready!`,
+          url: draftUrl,
+        }),
+      ]).catch(() => {});
+    }
 
     return NextResponse.json({
       success: true,
