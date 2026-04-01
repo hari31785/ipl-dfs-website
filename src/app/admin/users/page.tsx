@@ -318,23 +318,23 @@ export default function AdminUsersPage() {
           ) : (
             <>
               {/* Desktop Table */}
-              <div className="hidden lg:block overflow-x-auto">
+              <div className="hidden lg:block">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">User</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Coins</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
-                      <th className="px-6 py-4 text-center text-sm font-medium text-gray-600">Push</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
+                      <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">User</th>
+                      <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
+                      <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Coins</th>
+                      <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
+                      <th className="px-4 py-4 text-center text-sm font-medium text-gray-600">Push</th>
+                      <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
+                      <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                   {filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div>
                           <div className="font-medium text-gray-900">
                             {user.name || 'No name set'}
@@ -342,12 +342,12 @@ export default function AdminUsersPage() {
                           <div className="text-sm text-gray-500">@{user.username}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div className="space-y-1">
                           {user.email && (
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <Mail className="h-3 w-3" />
-                              {user.email}
+                              <span className="truncate max-w-[160px]">{user.email}</span>
                             </div>
                           )}
                           {user.phone && (
@@ -361,23 +361,23 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-1">
                           <Coins className="h-4 w-4 text-yellow-500" />
                           <span className="font-medium text-gray-900">{user.coins.toLocaleString()}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div className="space-y-1">
                           <div className="text-sm text-gray-600">
-                            {user._count.contestSignups} contest signups
+                            {user._count.contestSignups} signups
                           </div>
                           <div className="text-sm text-gray-600">
-                            {user._count.coinTransactions} coin transactions
+                            {user._count.coinTransactions} transactions
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-4 py-4 text-center">
                         {user._count.pushSubscriptions > 0 ? (
                           <span title="Subscribed to push notifications" className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
                             <Bell className="h-3 w-3" /> Yes
@@ -388,23 +388,23 @@ export default function AdminUsersPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-1 text-sm text-gray-600">
                           <Calendar className="h-3 w-3" />
                           {formatDate(user.createdAt)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openResetPasswordModal(user)}
-                            className="px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
+                            className="px-2 py-1 rounded-lg text-sm font-medium transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
                           >
-                            Reset Password
+                            Reset Pwd
                           </button>
                           <button
                             onClick={() => deleteUser(user.id, user.username)}
-                            className="px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+                            className="px-2 py-1 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
                           >
                             Delete
                           </button>

@@ -1149,11 +1149,11 @@ export default function ContestsPage() {
 
       {/* Table View - Original */}
       {viewMode === 'table' && (
-      <div className="bg-white rounded-lg shadow overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className="bg-white rounded-lg shadow">
+        <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
                 <input
                   type="checkbox"
                   checked={filteredContests.length > 0 && selectedContests.length === filteredContests.length}
@@ -1161,22 +1161,22 @@ export default function ContestsPage() {
                   className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Game & Contest
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Game
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Contest Type
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Participants
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Signups
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Schedule
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -1184,7 +1184,7 @@ export default function ContestsPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredContests.map((contest) => (
               <tr key={contest.id}>
-                <td className="px-6 py-4">
+                <td className="px-3 py-4">
                   <input
                     type="checkbox"
                     checked={selectedContests.includes(contest.id)}
@@ -1192,7 +1192,7 @@ export default function ContestsPage() {
                     className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-4 whitespace-nowrap">
                   <div>
                     <div className="font-medium text-gray-900">{contest.iplGame.title}</div>
                     <div className="flex items-center space-x-2 mt-1">
@@ -1210,15 +1210,15 @@ export default function ContestsPage() {
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-4 whitespace-nowrap">
                   <div className="font-medium text-lg text-blue-600">
                     {getContestTypeDisplay(contest.contestType, contest.coinValue)}
                   </div>
                   <div className="text-sm text-gray-500">
-                    Max: {contest.maxParticipants} users
+                    Max: {contest.maxParticipants}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
                     <strong>{contest._count.signups}</strong> signups
                   </div>
@@ -1242,18 +1242,18 @@ export default function ContestsPage() {
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <div>Game: {new Date(contest.iplGame.gameDate).toLocaleString()}</div>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div>{new Date(contest.iplGame.gameDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</div>
                   <div className="text-xs text-gray-500">
-                    Signup by: {new Date(contest.iplGame.signupDeadline).toLocaleString()}
+                    by {new Date(contest.iplGame.signupDeadline).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(contest.status)}`}>
                     {contest.status.replace('_', ' ')}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-y-2">
+                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium space-y-2">
                   {/* View Signups Button */}
                   {contest._count.signups > 0 && (
                     <button
