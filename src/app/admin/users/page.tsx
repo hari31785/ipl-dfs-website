@@ -209,57 +209,57 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Action Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="hidden md:flex justify-between items-center mb-6">
           <div>
             <p className="text-gray-900 font-medium">View and manage all registered users</p>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
+        <div className="grid grid-cols-4 gap-1.5 mb-4 md:gap-6 md:mb-6">
+          <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 p-2 md:p-6">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-3xl font-bold text-blue-600">{users.length}</p>
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-600">Total<br className="md:hidden" /> Users</p>
+                <p className="text-lg md:text-3xl font-bold text-blue-600">{users.length}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-500" />
+              <Users className="hidden md:block h-8 w-8 text-blue-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 p-2 md:p-6">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Users</p>
-                <p className="text-3xl font-bold text-green-600">{users.filter(u => u.isActive).length}</p>
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-600">Active<br className="md:hidden" /> Users</p>
+                <p className="text-lg md:text-3xl font-bold text-green-600">{users.filter(u => u.isActive).length}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="hidden md:block h-8 w-8 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 p-2 md:p-6">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Coins</p>
-                <p className="text-3xl font-bold text-yellow-600">
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-600">Total<br className="md:hidden" /> Coins</p>
+                <p className="text-lg md:text-3xl font-bold text-yellow-600">
                   {users.reduce((sum, user) => sum + user.coins, 0).toLocaleString()}
                 </p>
               </div>
-              <Coins className="h-8 w-8 text-yellow-500" />
+              <Coins className="hidden md:block h-8 w-8 text-yellow-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 p-2 md:p-6">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left">
               <div>
-                <p className="text-sm font-medium text-gray-600">Contest Signups</p>
-                <p className="text-3xl font-bold text-purple-600">
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-600">Contest<br className="md:hidden" /> Signups</p>
+                <p className="text-lg md:text-3xl font-bold text-purple-600">
                   {users.reduce((sum, user) => sum + user._count.contestSignups, 0)}
                 </p>
               </div>
-              <Activity className="h-8 w-8 text-purple-500" />
+              <Activity className="hidden md:block h-8 w-8 text-purple-500" />
             </div>
           </div>
         </div>
@@ -417,81 +417,58 @@ export default function AdminUsersPage() {
             </div>
             
             {/* Mobile Card Layout */}
-            <div className="lg:hidden divide-y divide-gray-200">
+            <div className="lg:hidden divide-y divide-gray-100">
               {filteredUsers.map((user) => (
-                <div key={user.id} className="p-4 space-y-3">
-                  {/* User Header */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">
-                          {user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                <div key={user.id} className="p-3 space-y-2">
+                  {/* Row 1: avatar + name/username + coins */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-8 h-8 flex-shrink-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-xs">
+                          {(user.name || user.username).charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{user.name || 'N/A'}</h3>
-                        <p className="text-sm text-gray-600">@{user.username}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm truncate">{user.name || 'N/A'}</p>
+                        <p className="text-xs text-gray-400 truncate">@{user.username}{user.email ? ` · ${user.email}` : ''}</p>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Coins className="h-3.5 w-3.5 text-yellow-500" />
+                      <span className="text-sm font-bold text-gray-800">{user.coins.toLocaleString()}</span>
                     </div>
                   </div>
-                  
-                  {/* Contact Info */}
-                  <div className="space-y-1">
-                    {user.email && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Mail className="h-3 w-3" />
-                        {user.email}
-                      </div>
-                    )}
-                    {user.phone && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="h-3 w-3" />
-                        {user.phone}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Stats Row */}
-                  <div className="grid grid-cols-3 gap-4 pt-2 border-t border-gray-100">
-                    <div>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Coins className="h-4 w-4 text-yellow-500" />
-                        <span className="font-medium">{user.coins.toLocaleString()}</span>
-                      </div>
-                      <p className="text-xs text-gray-500">Coins</p>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">{user._count.contestSignups}</div>
-                      <p className="text-xs text-gray-500">Contest Signups</p>
-                    </div>
-                    <div>
+                  {/* Row 2: stats + actions */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>{user._count.contestSignups} signups</span>
+                      <span className="text-gray-300">·</span>
+                      <span>{user._count.coinTransactions} txns</span>
+                      <span className="text-gray-300">·</span>
                       {user._count.pushSubscriptions > 0 ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                          <Bell className="h-3 w-3" /> Push On
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
+                          <Bell className="h-2.5 w-2.5" /> Push
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-400">
-                          <Bell className="h-3 w-3" /> Push Off
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-400">
+                          <Bell className="h-2.5 w-2.5" /> Off
                         </span>
                       )}
-                      <p className="text-xs text-gray-500 mt-0.5">Notifications</p>
                     </div>
-                  </div>
-                  
-                  {/* Action Button */}
-                  <div className="pt-2 flex gap-2">
-                    <button
-                      onClick={() => openResetPasswordModal(user)}
-                      className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
-                    >
-                      Reset Password
-                    </button>
-                    <button
-                      onClick={() => deleteUser(user.id, user.username)}
-                      className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => openResetPasswordModal(user)}
+                        className="px-2.5 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => deleteUser(user.id, user.username)}
+                        className="px-2.5 py-1 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
