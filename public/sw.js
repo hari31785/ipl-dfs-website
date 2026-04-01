@@ -18,8 +18,24 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200],
   };
 
+  const notifUrl = payload.url || '';
+  const isDraftNotif = notifUrl.includes('/draft/');
+
   event.waitUntil(
-    self.registration.showNotification(payload.title || 'IPL DFS', options)
+    (async () => {
+      // For draft notifications only: suppress if user is actively looking at that page
+      if (isDraftNotif) {
+        const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+        const isOnDraftPageAndVisible = allClients.some((client) => {
+          const clientPath = new URL(client.url).pathname;
+          const notifPath = new URL(notifUrl, self.location.origin).pathname;
+          // Same draft page AND user is currently looking at it
+          return clientPath === notifPath && client.visibilityState === 'visible';
+        });
+        if (isOnDraftPageAndVisible) return; // Already watching — skip notification
+      }
+      await self.registration.showNotification(payload.title || 'IPL DFS', options);
+    })()
   );
 });
 
