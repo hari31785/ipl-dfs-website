@@ -305,64 +305,80 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Matchup Info */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-3 py-2 sm:p-6 mb-4 sm:mb-6">
           {isSpectator && (
-            <div className="flex justify-center mb-4">
-              <span className="bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full text-sm font-semibold">
+            <div className="flex justify-center mb-2 sm:mb-4">
+              <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
                 👁 Spectating — Read Only
               </span>
             </div>
           )}
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
-              <div className="text-sm font-semibold text-black uppercase tracking-wide mb-2">
-                {isSpectator ? 'Player 1' : 'Your Team'}
+          <div className="flex items-center justify-between gap-2 sm:grid sm:grid-cols-3 sm:gap-6">
+            <div className="flex-1 text-center py-2 px-2 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
+              <div className="text-[10px] sm:text-sm font-semibold text-black uppercase tracking-wide mb-0.5 sm:mb-2">
+                {isSpectator ? 'Player 1' : 'You'}
               </div>
-              <div className="text-xl font-bold text-black">
+              <div className="text-sm sm:text-xl font-bold text-black truncate">
                 {isSpectator ? matchup.user1.user.name : currentUser.name}
               </div>
-              <div className="text-sm text-black mt-1">
+              <div className="text-[10px] sm:text-sm text-black mt-0 sm:mt-1 truncate">
                 @{isSpectator ? matchup.user1.user.username : currentUser.username}
               </div>
             </div>
-            <div className="text-center flex items-center justify-center">
-              <div className="text-4xl font-bold text-secondary-400">VS</div>
+            <div className="text-center flex items-center justify-center shrink-0 px-1">
+              <div className="text-xl sm:text-4xl font-bold text-secondary-400">VS</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
-              <div className="text-sm font-semibold text-black uppercase tracking-wide mb-2">
+            <div className="flex-1 text-center py-2 px-2 sm:p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
+              <div className="text-[10px] sm:text-sm font-semibold text-black uppercase tracking-wide mb-0.5 sm:mb-2">
                 {isSpectator ? 'Player 2' : 'Opponent'}
               </div>
-              <div className="text-xl font-bold text-black">{opponent.name}</div>
-              <div className="text-sm text-black mt-1">@{opponent.username}</div>
+              <div className="text-sm sm:text-xl font-bold text-black truncate">{opponent.name}</div>
+              <div className="text-[10px] sm:text-sm text-black mt-0 sm:mt-1 truncate">@{opponent.username}</div>
             </div>
           </div>
         </div>
 
         {/* Victory/Result Banner - Only show for completed games, not for live/active games */}
         {hasScores && matchup.contest.status === 'COMPLETED' && (
-          <div className={`rounded-lg p-4 mb-4 shadow-md ${
+          <div className={`rounded-lg px-3 py-2 sm:p-4 mb-3 sm:mb-4 shadow-md ${
             isTie ? 'bg-gradient-to-r from-gray-500 to-gray-600' :
             didIWin ? 'bg-gradient-to-r from-green-500 to-green-600' :
             'bg-gradient-to-r from-red-500 to-red-600'
           }`}>
-            <div className="text-center">
-              <p className="text-white font-bold text-xl mb-2 flex items-center justify-center gap-1">
+            <div className="flex items-center justify-between gap-2 sm:block sm:text-center">
+              {/* Result label */}
+              <p className="text-white font-bold text-base sm:text-xl sm:mb-2 flex items-center gap-1">
                 {isTie
-                  ? '🤝 Tie Game!'
+                  ? '🤝 Tie!'
                   : isSpectator
                     ? (didIWin ? `🏆 ${matchup.user1.user.name} Wins!` : `🏆 ${matchup.user2.user.name} Wins!`)
                     : (didIWin ? '🎉 You Won!' : '😔 You Lost')}
               </p>
+              {/* Scores inline on mobile, centred block on desktop */}
+              <div className="flex items-center gap-2 sm:gap-6 sm:justify-center sm:pt-2 sm:border-t sm:border-white/30">
+                <div className="text-center">
+                  <div className="text-white/70 text-[9px] sm:text-xs sm:mb-0.5 hidden sm:block">
+                    {isSpectator ? matchup.user1.user.name : 'Your Score'}
+                  </div>
+                  <div className="text-white font-black text-base sm:text-xl">⭐ {myTotalPoints.toFixed(1)}</div>
+                </div>
+                <div className="text-white/70 text-xs font-bold">vs</div>
+                <div className="text-center">
+                  <div className="text-white/70 text-[9px] sm:text-xs sm:mb-0.5 hidden sm:block">
+                    {isSpectator ? matchup.user2.user.name : 'Opp'}
+                  </div>
+                  <div className="text-white font-black text-base sm:text-xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
+                </div>
+              </div>
+              {/* Margin + Coins — hidden on mobile, visible on desktop */}
               {!isTie && (
-                <div className="flex items-center justify-center gap-6 mb-2">
-                  {/* Victory Margin */}
+                <div className="hidden sm:flex items-center justify-center gap-6 mt-2">
                   <div>
                     <div className="text-white/80 text-xs">Victory Margin</div>
                     <div className="text-white font-black text-2xl">
                       {didIWin ? '+' : ''}{(myTotalPoints - opponentTotalPoints).toFixed(1)}
                     </div>
                   </div>
-                  {/* Coins Won/Lost — hidden for spectators */}
                   {!isSpectator && (
                     <div className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded border border-white/30">
                       <div className="text-white/80 text-xs">Coins Impact</div>
@@ -376,21 +392,6 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
                   )}
                 </div>
               )}
-              <div className="flex items-center justify-center gap-6 pt-2 border-t border-white/30">
-                <div className="text-center">
-                  <div className="text-white/80 text-xs mb-0.5">
-                    {isSpectator ? matchup.user1.user.name : 'Your Score'}
-                  </div>
-                  <div className="text-white font-black text-xl">⭐ {myTotalPoints.toFixed(1)}</div>
-                </div>
-                <div className="text-white text-lg font-bold">vs</div>
-                <div className="text-center">
-                  <div className="text-white/80 text-xs mb-0.5">
-                    {isSpectator ? matchup.user2.user.name : 'Opponent Score'}
-                  </div>
-                  <div className="text-white font-black text-xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
-                </div>
-              </div>
             </div>
           </div>
         )}
