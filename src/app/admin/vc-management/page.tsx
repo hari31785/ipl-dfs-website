@@ -181,7 +181,7 @@ export default function VCManagementPage() {
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </button>
               <div className="text-white">
                 <h1 className="text-lg md:text-2xl font-bold">💰 VC Settlement Management</h1>
@@ -197,7 +197,7 @@ export default function VCManagementPage() {
                 className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
               >
                 <span>{showHistory ? '📊' : '📜'}</span>
-                {showHistory ? 'Show Balances' : 'View History'}
+                <span className="hidden sm:inline">{showHistory ? 'Show Balances' : 'View History'}</span>
               </button>
             </div>
           </div>
@@ -205,10 +205,10 @@ export default function VCManagementPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Tournament Filter */}
         {!showHistory && (
-          <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
+          <div className="bg-white rounded-xl shadow-md p-3 md:p-6 mb-4 md:mb-8 border border-gray-200">
             <label className="text-sm font-medium text-gray-700 mr-4">Filter by Tournament:</label>
             <select
               value={selectedTournament}
@@ -228,12 +228,12 @@ export default function VCManagementPage() {
         {/* Settlement History View */}
         {showHistory && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">📜 Settlement History</h2>
+            <h2 className="text-xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6">📜 Settlement History</h2>
             {settlementHistory.length === 0 ? (
               <div className="text-gray-600 text-center py-8">No settlement history found</div>
             ) : (
-              <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
-                <table className="w-full text-gray-800">
+              <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-x-auto">
+                <table className="w-full text-gray-800 min-w-[700px]">
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="px-4 py-3 text-left">Date</th>
@@ -292,113 +292,110 @@ export default function VCManagementPage() {
         {/* Tournament Groups */}
         {!showHistory && Object.entries(filteredGroups).map(([tournamentId, group]) => (
           <div key={tournamentId} className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">{group.tournament.name}</h2>
-            
+            <h2 className="text-lg md:text-3xl font-bold text-gray-800 mb-3 md:mb-4">{group.tournament.name}</h2>
+
             {/* Summary */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-4 gap-1.5 mb-4 md:gap-4 md:mb-6">
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'winners' ? 'all' : 'winners')}
-                className={`bg-green-50 border-2 rounded-lg p-4 text-left hover:shadow-lg transition-all ${
+                className={`bg-green-50 border-2 rounded-lg p-2 md:p-4 text-center md:text-left hover:shadow-lg transition-all ${
                   categoryFilter === 'winners' ? 'border-green-950 ring-2 ring-green-800' : 'border-green-950'
                 }`}
               >
-                <div className="text-green-700 text-sm font-semibold">Winners</div>
-                <div className="text-gray-800 text-2xl font-bold">{group.winners.length}</div>
-                <div className="text-green-600 text-sm">+V̶₵{(group.totalWinnings / 100).toFixed(2)}</div>
+                <div className="text-green-700 text-[9px] md:text-sm font-semibold">Winners</div>
+                <div className="text-gray-800 text-xl md:text-2xl font-bold">{group.winners.length}</div>
+                <div className="text-green-600 text-[8px] md:text-sm truncate">+V̶₵{(group.totalWinnings / 100).toFixed(2)}</div>
               </button>
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'losers' ? 'all' : 'losers')}
-                className={`bg-red-50 border-2 rounded-lg p-4 text-left hover:shadow-lg transition-all ${
+                className={`bg-red-50 border-2 rounded-lg p-2 md:p-4 text-center md:text-left hover:shadow-lg transition-all ${
                   categoryFilter === 'losers' ? 'border-red-950 ring-2 ring-red-800' : 'border-red-950'
                 }`}
               >
-                <div className="text-red-700 text-sm font-semibold">Losers</div>
-                <div className="text-gray-800 text-2xl font-bold">{group.losers.length}</div>
-                <div className="text-red-600 text-sm">-V̶₵{(group.totalLosses / 100).toFixed(2)}</div>
+                <div className="text-red-700 text-[9px] md:text-sm font-semibold">Losers</div>
+                <div className="text-gray-800 text-xl md:text-2xl font-bold">{group.losers.length}</div>
+                <div className="text-red-600 text-[8px] md:text-sm truncate">-V̶₵{(group.totalLosses / 100).toFixed(2)}</div>
               </button>
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'breakeven' ? 'all' : 'breakeven')}
-                className={`bg-yellow-50 border-2 rounded-lg p-4 text-left hover:shadow-lg transition-all ${
+                className={`bg-yellow-50 border-2 rounded-lg p-2 md:p-4 text-center md:text-left hover:shadow-lg transition-all ${
                   categoryFilter === 'breakeven' ? 'border-yellow-950 ring-2 ring-yellow-800' : 'border-yellow-950'
                 }`}
               >
-                <div className="text-yellow-700 text-sm font-semibold">Break Even</div>
-                <div className="text-gray-800 text-2xl font-bold">{group.breakEven.length}</div>
-                <div className="text-yellow-600 text-sm">V̶₵0.00</div>
+                <div className="text-yellow-700 text-[9px] md:text-sm font-semibold">Even</div>
+                <div className="text-gray-800 text-xl md:text-2xl font-bold">{group.breakEven.length}</div>
+                <div className="text-yellow-600 text-[8px] md:text-sm">V̶₵0.00</div>
               </button>
-              <div className={`${group.netBalance >= 0 ? 'bg-green-50 border-green-950' : 'bg-red-50 border-red-950'} border-2 rounded-lg p-4`}>
-                <div className="text-gray-600 text-sm font-semibold">Net Balance</div>
-                <div className="text-gray-800 text-2xl font-bold">{group.netBalance > 0 ? '+' : ''}V̶₵{(group.netBalance / 100).toFixed(2)}</div>
+              <div className={`${group.netBalance >= 0 ? 'bg-green-50 border-green-950' : 'bg-red-50 border-red-950'} border-2 rounded-lg p-2 md:p-4 text-center md:text-left`}>
+                <div className="text-gray-600 text-[9px] md:text-sm font-semibold">Net</div>
+                <div className="text-gray-800 text-base md:text-2xl font-bold truncate">{group.netBalance > 0 ? '+' : ''}V̶₵{(group.netBalance / 100).toFixed(2)}</div>
               </div>
             </div>
 
             {/* Winners Table */}
             {group.winners.length > 0 && (categoryFilter === 'all' || categoryFilter === 'winners') && (
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-green-700 mb-3">✅ Winners (Positive Balance)</h3>
-                <div className="bg-white rounded-lg overflow-hidden border border-green-200">
-                  <table className="w-full text-gray-800">
+                <h3 className="text-base md:text-2xl font-bold text-green-700 mb-2 md:mb-3">✅ Winners ({group.winners.length})</h3>
+                {/* Desktop table */}
+                <div className="hidden md:block bg-white rounded-lg overflow-x-auto border border-green-200">
+                  <table className="w-full text-gray-800 min-w-[560px]">
                     <thead className="bg-green-100">
                       <tr>
                         <th className="px-4 py-3 text-left">User</th>
-                        <th className="px-4 py-3 text-right">Current Balance</th>
+                        <th className="px-4 py-3 text-right">Balance</th>
                         <th className="px-4 py-3 text-right">Net Winnings</th>
-                        <th className="px-4 py-3 text-right">Total Settled</th>
+                        <th className="px-4 py-3 text-right">Settled</th>
                         <th className="px-4 py-3 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {group.winners.map((balance) => (
                         <tr key={balance.id} className="border-t border-gray-200">
-                          <td className="px-4 py-3">
-                            <div className="font-semibold">{balance.user.name}</div>
-                            <div className="text-sm text-gray-500">{balance.user.username}</div>
-                          </td>
+                          <td className="px-4 py-3"><div className="font-semibold">{balance.user.name}</div><div className="text-sm text-gray-500">{balance.user.username}</div></td>
                           <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.balance / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-right font-mono text-green-600">+V̶₵{(balance.netBalance / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.totalSettled / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-center">
                             {settlingUser === balance.id ? (
                               <div className="flex gap-2 items-center justify-center">
-                                <input
-                                  type="number"
-                                  placeholder="V̶₵ amount"
-                                  value={settleAmount}
-                                  onChange={(e) => setSettleAmount(e.target.value)}
-                                  className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-24"
-                                  max={balance.netBalance / 100}
-                                  step="0.01"
-                                />
-                                <button
-                                  onClick={() => handleSettle(balance, 'ENCASH')}
-                                  className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm"
-                                >
-                                  Encash
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSettlingUser(null);
-                                    setSettleAmount('');
-                                    setSettleNotes('');
-                                  }}
-                                  className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm"
-                                >
-                                  Cancel
-                                </button>
+                                <input type="number" placeholder="V̶₵ amount" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-24" max={balance.netBalance / 100} step="0.01" />
+                                <button onClick={() => handleSettle(balance, 'ENCASH')} className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm">Encash</button>
+                                <button onClick={() => { setSettlingUser(null); setSettleAmount(''); setSettleNotes(''); }} className="bg-gray-500 hover:bg-gray-400 text-white px-3 py-1 rounded text-sm">Cancel</button>
                               </div>
                             ) : (
-                              <button
-                                onClick={() => setSettlingUser(balance.id)}
-                                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded"
-                              >
-                                💰 Encash
-                              </button>
+                              <button onClick={() => setSettlingUser(balance.id)} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded">💰 Encash</button>
                             )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                </div>
+                {/* Mobile cards */}
+                <div className="md:hidden bg-white rounded-lg border border-green-200 divide-y divide-gray-100">
+                  {group.winners.map((balance) => (
+                    <div key={balance.id} className="p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900">{balance.user.name}</p>
+                          <p className="text-xs text-gray-500">@{balance.user.username}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-green-600">+V̶₵{(balance.netBalance / 100).toFixed(2)}</p>
+                          <p className="text-xs text-gray-400">Settled: V̶₵{(balance.totalSettled / 100).toFixed(2)}</p>
+                        </div>
+                      </div>
+                      {settlingUser === balance.id ? (
+                        <div className="flex gap-1.5 items-center">
+                          <input type="number" placeholder="V̶₵ amt" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 flex-1 text-sm" max={balance.netBalance / 100} step="0.01" />
+                          <button onClick={() => handleSettle(balance, 'ENCASH')} className="bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap">💰 Encash</button>
+                          <button onClick={() => { setSettlingUser(null); setSettleAmount(''); setSettleNotes(''); }} className="bg-gray-400 text-white px-2 py-1.5 rounded text-sm">✕</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setSettlingUser(balance.id)} className="w-full bg-green-600 hover:bg-green-500 text-white py-1.5 rounded text-sm font-medium">💰 Encash</button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -406,64 +403,35 @@ export default function VCManagementPage() {
             {/* Losers Table */}
             {group.losers.length > 0 && (categoryFilter === 'all' || categoryFilter === 'losers') && (
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-red-700 mb-3">📉 Losers (Negative Balance)</h3>
-                <div className="bg-white rounded-lg overflow-hidden border border-red-200">
-                  <table className="w-full text-gray-800">
+                <h3 className="text-base md:text-2xl font-bold text-red-700 mb-2 md:mb-3">📉 Losers ({group.losers.length})</h3>
+                {/* Desktop table */}
+                <div className="hidden md:block bg-white rounded-lg overflow-x-auto border border-red-200">
+                  <table className="w-full text-gray-800 min-w-[560px]">
                     <thead className="bg-red-100">
                       <tr>
                         <th className="px-4 py-3 text-left">User</th>
-                        <th className="px-4 py-3 text-right">Current Balance</th>
+                        <th className="px-4 py-3 text-right">Balance</th>
                         <th className="px-4 py-3 text-right">Amount Owed</th>
-                        <th className="px-4 py-3 text-right">Total Settled</th>
+                        <th className="px-4 py-3 text-right">Settled</th>
                         <th className="px-4 py-3 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {group.losers.map((balance) => (
                         <tr key={balance.id} className="border-t border-gray-200">
-                          <td className="px-4 py-3">
-                            <div className="font-semibold">{balance.user.name}</div>
-                            <div className="text-sm text-gray-500">{balance.user.username}</div>
-                          </td>
+                          <td className="px-4 py-3"><div className="font-semibold">{balance.user.name}</div><div className="text-sm text-gray-500">{balance.user.username}</div></td>
                           <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.balance / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-right font-mono text-red-600">-V̶₵{(Math.abs(balance.netBalance) / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.totalSettled / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-center">
                             {settlingUser === balance.id ? (
                               <div className="flex gap-2 items-center justify-center">
-                                <input
-                                  type="number"
-                                  placeholder="V̶₵ amount"
-                                  value={settleAmount}
-                                  onChange={(e) => setSettleAmount(e.target.value)}
-                                  className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-24"
-                                  max={Math.abs(balance.netBalance) / 100}
-                                  step="0.01"
-                                />
-                                <button
-                                  onClick={() => handleSettle(balance, 'REFILL')}
-                                  className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm"
-                                >
-                                  Refill
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSettlingUser(null);
-                                    setSettleAmount('');
-                                    setSettleNotes('');
-                                  }}
-                                  className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm"
-                                >
-                                  Cancel
-                                </button>
+                                <input type="number" placeholder="V̶₵ amount" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-24" max={Math.abs(balance.netBalance) / 100} step="0.01" />
+                                <button onClick={() => handleSettle(balance, 'REFILL')} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm">Refill</button>
+                                <button onClick={() => { setSettlingUser(null); setSettleAmount(''); setSettleNotes(''); }} className="bg-gray-500 hover:bg-gray-400 text-white px-3 py-1 rounded text-sm">Cancel</button>
                               </div>
                             ) : (
-                              <button
-                                onClick={() => setSettlingUser(balance.id)}
-                                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded"
-                              >
-                                💳 Refill
-                              </button>
+                              <button onClick={() => setSettlingUser(balance.id)} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded">💳 Refill</button>
                             )}
                           </td>
                         </tr>
@@ -471,14 +439,41 @@ export default function VCManagementPage() {
                     </tbody>
                   </table>
                 </div>
+                {/* Mobile cards */}
+                <div className="md:hidden bg-white rounded-lg border border-red-200 divide-y divide-gray-100">
+                  {group.losers.map((balance) => (
+                    <div key={balance.id} className="p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900">{balance.user.name}</p>
+                          <p className="text-xs text-gray-500">@{balance.user.username}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-red-600">-V̶₵{(Math.abs(balance.netBalance) / 100).toFixed(2)}</p>
+                          <p className="text-xs text-gray-400">Settled: V̶₵{(balance.totalSettled / 100).toFixed(2)}</p>
+                        </div>
+                      </div>
+                      {settlingUser === balance.id ? (
+                        <div className="flex gap-1.5 items-center">
+                          <input type="number" placeholder="V̶₵ amt" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 flex-1 text-sm" max={Math.abs(balance.netBalance) / 100} step="0.01" />
+                          <button onClick={() => handleSettle(balance, 'REFILL')} className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap">💳 Refill</button>
+                          <button onClick={() => { setSettlingUser(null); setSettleAmount(''); setSettleNotes(''); }} className="bg-gray-400 text-white px-2 py-1.5 rounded text-sm">✕</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setSettlingUser(balance.id)} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-1.5 rounded text-sm font-medium">💳 Refill</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Break Even */}
             {group.breakEven.length > 0 && (categoryFilter === 'all' || categoryFilter === 'breakeven') && (
               <div>
-                <h3 className="text-2xl font-bold text-yellow-700 mb-3">⚖️ Break Even</h3>
-                <div className="bg-white rounded-lg overflow-hidden border border-yellow-200">
+                <h3 className="text-base md:text-2xl font-bold text-yellow-700 mb-2 md:mb-3">⚖️ Break Even ({group.breakEven.length})</h3>
+                {/* Desktop table */}
+                <div className="hidden md:block bg-white rounded-lg overflow-x-auto border border-yellow-200">
                   <table className="w-full text-gray-800">
                     <thead className="bg-yellow-100">
                       <tr>
@@ -490,16 +485,28 @@ export default function VCManagementPage() {
                     <tbody>
                       {group.breakEven.map((balance) => (
                         <tr key={balance.id} className="border-t border-gray-200">
-                          <td className="px-4 py-3">
-                            <div className="font-semibold">{balance.user.name}</div>
-                            <div className="text-sm text-gray-500">{balance.user.username}</div>
-                          </td>
+                          <td className="px-4 py-3"><div className="font-semibold">{balance.user.name}</div><div className="text-sm text-gray-500">{balance.user.username}</div></td>
                           <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.balance / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-right font-mono text-yellow-600">V̶₵0.00</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                </div>
+                {/* Mobile cards */}
+                <div className="md:hidden bg-white rounded-lg border border-yellow-200 divide-y divide-gray-100">
+                  {group.breakEven.map((balance) => (
+                    <div key={balance.id} className="p-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-sm text-gray-900">{balance.user.name}</p>
+                        <p className="text-xs text-gray-500">@{balance.user.username}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-mono text-gray-600">V̶₵{(balance.balance / 100).toFixed(2)}</p>
+                        <p className="text-xs font-semibold text-yellow-600">Break Even</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
