@@ -1384,45 +1384,39 @@ export default function DashboardPage() {
                                   const hasScores = myScore !== undefined && oppScore !== undefined
                                   const iWon = hasScores && myScore > oppScore
                                   const iLost = hasScores && myScore < oppScore
+                                  const coinVal = signup.contest.coinValue
+                                  const oppName = signup.matchup?.opponent?.name ?? signup.matchup?.opponentUsername ?? '—'
                                   return (
-                                    <div key={signup.id} className="flex items-center gap-3 px-3 py-2.5">
-                                      {/* Contest type + coin value */}
+                                    <div key={signup.id} className="flex items-center gap-2 px-3 py-1.5">
+                                      {/* Win/Loss indicator strip */}
+                                      <div className={`w-1 self-stretch rounded-full shrink-0 ${iWon ? 'bg-green-400' : iLost ? 'bg-red-400' : 'bg-gray-200'}`} />
+                                      {/* Contest info */}
                                       <div className="min-w-0 flex-1">
-                                        <div className="text-xs font-semibold text-gray-800">
-                                          {signup.contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100)' :
-                                           signup.contest.contestType === 'REGULAR' ? 'Regular (50)' :
-                                           signup.contest.contestType === 'LOW_STAKES' ? 'Low Stakes (25)' :
-                                           signup.contest.contestType}
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="text-[11px] font-bold text-gray-800">{coinVal}🪙</span>
+                                          <span className="text-[10px] text-gray-400">vs @{oppName}</span>
+                                          {hasScores && myScore !== oppScore && (
+                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${iWon ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                              {iWon ? 'WON' : 'LOST'}
+                                            </span>
+                                          )}
                                         </div>
-                                        <div className="text-[10px] text-gray-400">{signup.contest.coinValue} coins/pt · vs {signup.matchup?.opponent?.name ?? '—'}</div>
+                                        {hasScores && (
+                                          <div className="text-[10px] font-mono text-gray-500 mt-0.5">
+                                            <span className={iWon ? 'text-green-700 font-bold' : iLost ? 'text-red-700' : ''}>{myScore.toFixed(1)}</span>
+                                            <span className="text-gray-300 mx-1">–</span>
+                                            <span className={iLost ? 'text-green-700 font-bold' : iWon ? 'text-red-700' : ''}>{oppScore.toFixed(1)}</span>
+                                          </div>
+                                        )}
+                                        {!hasScores && <div className="text-[10px] text-gray-400 mt-0.5">No scores yet</div>}
                                       </div>
-                                      {/* Scores */}
-                                      {hasScores ? (
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                          <span className={`text-sm font-black ${iWon ? 'text-green-700' : iLost ? 'text-red-700' : 'text-gray-700'}`}>
-                                            ⭐ {myScore.toFixed(1)}
-                                          </span>
-                                          <span className="text-gray-400 text-xs font-bold">vs</span>
-                                          <span className={`text-sm font-black ${iLost ? 'text-green-700' : iWon ? 'text-red-700' : 'text-gray-700'}`}>
-                                            ⭐ {oppScore.toFixed(1)}
-                                          </span>
-                                        </div>
-                                      ) : (
-                                        <div className="text-xs text-gray-400 shrink-0">No scores yet</div>
-                                      )}
-                                      {/* Win/Loss badge */}
-                                      {hasScores && myScore !== oppScore && (
-                                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${iWon ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                          {iWon ? '🎉 Won' : '😔 Lost'}
-                                        </span>
-                                      )}
-                                      {/* View Scores button */}
+                                      {/* View button */}
                                       {signup.matchup?.status === 'COMPLETED' && (
                                         <button
                                           onClick={() => window.location.href = `/scores/${signup.matchup?.id}?from=completed`}
-                                          className="shrink-0 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                                          className="shrink-0 bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-[10px] font-semibold transition-colors"
                                         >
-                                          View Scores
+                                          Scores →
                                         </button>
                                       )}
                                     </div>
