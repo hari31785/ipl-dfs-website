@@ -525,7 +525,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                 className="flex items-center gap-2 text-white hover:text-purple-200 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Contests
+                <span className="hidden sm:inline">Back to Contests</span>
               </a>
               <div className="w-px h-6 bg-white/30"></div>
               <div className="flex items-center gap-3">
@@ -542,43 +542,43 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Contest Info */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="grid md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow-md p-3 md:p-6 mb-4 md:mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
             <div>
-              <div className="text-sm text-gray-500">Contest Type</div>
-              <div className="text-lg font-semibold text-blue-600">{contest.coinValue} Coins/Point</div>
+              <div className="text-xs text-gray-500">Contest Type</div>
+              <div className="text-sm md:text-lg font-semibold text-blue-600">{contest.coinValue} Coins/Pt</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500">Status</div>
-              <div className="text-lg font-semibold text-gray-900">{contest.status.replace('_', ' ')}</div>
+              <div className="text-xs text-gray-500">Status</div>
+              <div className="text-sm md:text-lg font-semibold text-gray-900">{contest.status.replace('_', ' ')}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500">Participants</div>
-              <div className="text-lg font-semibold text-gray-900">{contest._count.signups} signups</div>
+              <div className="text-xs text-gray-500">Participants</div>
+              <div className="text-sm md:text-lg font-semibold text-gray-900">{contest._count.signups} signups</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500">Matchups</div>
-              <div className="text-lg font-semibold text-gray-900">{contest._count.matchups} total</div>
+              <div className="text-xs text-gray-500">Matchups</div>
+              <div className="text-sm md:text-lg font-semibold text-gray-900">{contest._count.matchups} total</div>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mb-6 flex flex-wrap gap-3">
+        <div className="mb-4 md:mb-6 flex flex-wrap gap-2 md:gap-3">
           <button
             onClick={() => setShowCreateMatchup(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md flex items-center gap-2"
+            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors shadow-md flex items-center gap-2 text-sm md:text-base"
           >
-            <Users className="h-5 w-5" />
-            Create Custom Matchup
+            <Users className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden sm:inline">Create Custom </span>Matchup
           </button>
           {contest.status === 'DRAFT_PHASE' && contest.matchups.some(m => m.status === 'WAITING_DRAFT') && (
             <button
               onClick={handleOpenDrafting}
               disabled={openingDraft}
-              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md flex items-center gap-2"
+              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-3 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors shadow-md flex items-center gap-2 text-sm md:text-base"
             >
               🎯 {openingDraft ? 'Opening...' : `Open Draft (${contest.matchups.filter(m => m.status === 'WAITING_DRAFT').length} waiting)`}
             </button>
@@ -1175,10 +1175,59 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                 <div key={matchup.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                   {/* Matchup Header */}
                   <div 
-                    className="p-4 bg-gradient-to-r from-gray-50 to-white border-b cursor-pointer hover:bg-gray-50 transition"
+                    className="p-3 md:p-4 bg-gradient-to-r from-gray-50 to-white border-b cursor-pointer hover:bg-gray-50 transition"
                     onClick={() => setSelectedMatchup(isExpanded ? null : matchup.id)}
                   >
-                    <div className="flex items-center justify-between">
+                    {/* Mobile layout */}
+                    <div className="flex items-center gap-2 md:hidden">
+                      {matchup.status !== 'COMPLETED' && (
+                        <input
+                          type="checkbox"
+                          checked={selectedMatchups.has(matchup.id)}
+                          onChange={(e) => { e.stopPropagation(); toggleMatchupSelection(matchup.id); }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-4 h-4 accent-red-600 cursor-pointer flex-shrink-0"
+                        />
+                      )}
+                      <div className="text-sm font-bold text-gray-500">#{index + 1}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 text-sm">
+                          <span className="font-semibold text-gray-900 truncate">{matchup.user1.user.name.split(' ')[0]}</span>
+                          <span className="text-gray-400 font-bold shrink-0">vs</span>
+                          <span className="font-semibold text-gray-900 truncate">{matchup.user2.user.name.split(' ')[0]}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(matchup.status)}`}>
+                            {getStatusIcon(matchup.status)} {matchup.status === 'WAITING_DRAFT' ? 'Waiting' : matchup.status === 'DRAFTING' ? 'Drafting' : matchup.status === 'COMPLETED' ? 'Done' : matchup.status}
+                          </span>
+                          <span className="text-xs text-gray-500">{matchup.draftPicks.length}/14</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingMatchup(matchup); setSelectedUser1(null); setSelectedUser2(null); setSearchQuery(''); setActiveSearchField(null); setUpdateError(''); }}
+                          className="text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                        ><Edit className="h-3.5 w-3.5" /></button>
+                        {matchup.status === 'COMPLETED' && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleResettle(matchup.id, `${matchup.user1.user.name} vs ${matchup.user2.user.name}\nScore: ${matchup.user1Score} – ${matchup.user2Score}`); }}
+                            disabled={resettlingMatchup === matchup.id}
+                            className="text-orange-600 p-1.5 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50 text-xs"
+                          >{resettlingMatchup === matchup.id ? '⏳' : '⚖️'}</button>
+                        )}
+                        {matchup.status !== 'COMPLETED' && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteMatchup(matchup.id, `${matchup.user1.user.name} vs ${matchup.user2.user.name}`); }}
+                            disabled={deletingMatchup === matchup.id}
+                            className="text-red-600 p-1.5 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          ><Trash2 className="h-3.5 w-3.5" /></button>
+                        )}
+                        <div className="text-gray-400 text-xs">{isExpanded ? '▲' : '▼'}</div>
+                      </div>
+                    </div>
+
+                    {/* Desktop layout */}
+                    <div className="hidden md:flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1">
                         {matchup.status !== 'COMPLETED' && (
                           <input
@@ -1277,7 +1326,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
 
                   {/* Expanded Draft Details */}
                   {isExpanded && (
-                    <div className="p-6 bg-gray-50">
+                    <div className="p-3 md:p-6 bg-gray-50">
                       {/* Side-by-side picks */}
                       {(() => {
                         const user1Picks = [...matchup.draftPicks]

@@ -1469,32 +1469,29 @@ export default function ContestsPage() {
 
       {/* Signups Modal */}
       {showSignupsModal && selectedContestSignups && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Users className="h-6 w-6" />
-                  Contest Signups ({selectedContestSignups.signups.length})
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 md:p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+              <div className="min-w-0">
+                <h3 className="text-base md:text-xl font-bold text-white flex items-center gap-2">
+                  <Users className="h-5 w-5 shrink-0" />
+                  Signups ({selectedContestSignups.signups.length})
                 </h3>
                 {selectedContestSignups.game && (
-                  <p className="text-sm text-teal-50 mt-1">
-                    {selectedContestSignups.game.title} • {selectedContestSignups.contest.contestType.replace('_', ' ')} ({selectedContestSignups.contest.coinValue} coins/point)
+                  <p className="text-xs md:text-sm text-teal-50 mt-0.5 truncate">
+                    {selectedContestSignups.game.title} · {selectedContestSignups.contest.coinValue} coins/pt
                   </p>
                 )}
               </div>
               <button
-                onClick={() => {
-                  setShowSignupsModal(false);
-                  setSelectedContestSignups(null);
-                }}
-                className="text-white hover:text-teal-100 transition"
+                onClick={() => { setShowSignupsModal(false); setSelectedContestSignups(null); }}
+                className="text-white hover:text-teal-100 transition text-xl shrink-0 ml-3"
               >
                 ✕
               </button>
             </div>
             
-            <div className="overflow-auto flex-1 p-6">
+            <div className="overflow-auto flex-1 p-3 md:p-6">
               {loadingSignups ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
@@ -1505,92 +1502,87 @@ export default function ContestsPage() {
                   No signups yet for this contest.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          #
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          User
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Matchup Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {selectedContestSignups.signups.map((signup: any, index: number) => {
-                        // Get the first matchup (user could be user1 or user2 in matchups)
-                        const matchup = signup.matchupsAsUser1?.[0] || signup.matchupsAsUser2?.[0];
-                        return (
-                          <tr key={signup.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {index + 1}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{signup.user.name}</div>
-                              <div className="text-xs text-gray-500">@{signup.user.username}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {signup.user.email}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {matchup ? (
-                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                  matchup.status === 'WAITING_DRAFT' ? 'bg-yellow-100 text-yellow-800' :
-                                  matchup.status === 'DRAFTING' ? 'bg-blue-100 text-blue-800' :
-                                  matchup.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {matchup.status === 'WAITING_DRAFT' ? '⏳ Waiting' :
-                                   matchup.status === 'DRAFTING' ? '✍️ Drafting' :
-                                   matchup.status === 'COMPLETED' ? '✅ Completed' :
-                                   matchup.status}
-                                </span>
-                              ) : (
-                                <span className="text-xs text-gray-400 italic">No matchup</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <button
-                                onClick={() => removeUserFromContest(
-                                  selectedContestSignups.contest.id,
-                                  signup.id,
-                                  signup.user.name
-                                )}
-                                disabled={matchup !== undefined && matchup !== null}
-                                className={`px-3 py-1 rounded text-xs font-medium transition ${
-                                  matchup ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'
-                                }`}
-                                title={matchup ? 'Cannot remove user with active matchup' : 'Remove user from contest'}
-                              >
-                                Remove
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <>
+                  {/* Desktop table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matchup Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {selectedContestSignups.signups.map((signup: any, index: number) => {
+                          const matchup = signup.matchupsAsUser1?.[0] || signup.matchupsAsUser2?.[0];
+                          return (
+                            <tr key={signup.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">{signup.user.name}</div>
+                                <div className="text-xs text-gray-500">@{signup.user.username}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{signup.user.email}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {matchup ? (
+                                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${matchup.status === 'WAITING_DRAFT' ? 'bg-yellow-100 text-yellow-800' : matchup.status === 'DRAFTING' ? 'bg-blue-100 text-blue-800' : matchup.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    {matchup.status === 'WAITING_DRAFT' ? '⏳ Waiting' : matchup.status === 'DRAFTING' ? '✍️ Drafting' : matchup.status === 'COMPLETED' ? '✅ Completed' : matchup.status}
+                                  </span>
+                                ) : <span className="text-xs text-gray-400 italic">No matchup</span>}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                <button
+                                  onClick={() => removeUserFromContest(selectedContestSignups.contest.id, signup.id, signup.user.name)}
+                                  disabled={matchup !== undefined && matchup !== null}
+                                  className={`px-3 py-1 rounded text-xs font-medium transition ${matchup ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                                  title={matchup ? 'Cannot remove user with active matchup' : 'Remove user from contest'}
+                                >Remove</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Mobile card list */}
+                  <div className="md:hidden divide-y divide-gray-100">
+                    {selectedContestSignups.signups.map((signup: any, index: number) => {
+                      const matchup = signup.matchupsAsUser1?.[0] || signup.matchupsAsUser2?.[0];
+                      return (
+                        <div key={signup.id} className="py-3 flex items-center gap-3">
+                          <div className="text-xs font-bold text-gray-400 w-5 shrink-0">{index + 1}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-gray-900 truncate">{signup.user.name}</div>
+                            <div className="text-xs text-gray-500">@{signup.user.username}</div>
+                            <div className="text-xs text-gray-400 truncate">{signup.user.email}</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1.5 shrink-0">
+                            {matchup ? (
+                              <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${matchup.status === 'WAITING_DRAFT' ? 'bg-yellow-100 text-yellow-800' : matchup.status === 'DRAFTING' ? 'bg-blue-100 text-blue-800' : matchup.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                {matchup.status === 'WAITING_DRAFT' ? '⏳' : matchup.status === 'DRAFTING' ? '✍️' : matchup.status === 'COMPLETED' ? '✅' : ''} {matchup.status === 'WAITING_DRAFT' ? 'Waiting' : matchup.status === 'DRAFTING' ? 'Drafting' : matchup.status === 'COMPLETED' ? 'Done' : matchup.status}
+                              </span>
+                            ) : <span className="text-xs text-gray-400 italic">No matchup</span>}
+                            <button
+                              onClick={() => removeUserFromContest(selectedContestSignups.contest.id, signup.id, signup.user.name)}
+                              disabled={matchup !== undefined && matchup !== null}
+                              className={`px-2.5 py-1 rounded text-xs font-medium transition ${matchup ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                            >Remove</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
             
-            <div className="bg-gray-50 px-6 py-4 flex justify-end">
+            <div className="bg-gray-50 px-4 md:px-6 py-3 md:py-4 flex justify-end">
               <button
-                onClick={() => {
-                  setShowSignupsModal(false);
-                  setSelectedContestSignups(null);
-                }}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
+                onClick={() => { setShowSignupsModal(false); setSelectedContestSignups(null); }}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition text-sm"
               >
                 Close
               </button>
