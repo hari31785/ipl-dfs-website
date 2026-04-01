@@ -244,15 +244,15 @@ export default function AdminDashboard() {
         {/* Admin Actions */}
         <div className="grid grid-cols-2 gap-3 md:gap-8">
           {/* Tournament Management */}
-          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
-            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-3 md:mb-6 flex items-center gap-1.5 md:gap-2">
+          <div className="bg-white rounded-xl shadow-lg p-2 md:p-6 border border-gray-100">
+            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-2 md:mb-6 flex items-center gap-1.5 md:gap-2">
               <Trophy className="h-3.5 w-3.5 md:h-6 md:w-6" />
               <span className="leading-tight">Tournament<br className="md:hidden" /> Mgmt</span>
             </h3>
-            <div className="space-y-2 md:space-y-4">
+            <div className="space-y-1 md:space-y-4">
               <a
                 href="/admin/tournaments"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -269,15 +269,15 @@ export default function AdminDashboard() {
           </div>
 
           {/* User Management */}
-          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
-            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-3 md:mb-6 flex items-center gap-1.5 md:gap-2">
+          <div className="bg-white rounded-xl shadow-lg p-2 md:p-6 border border-gray-100">
+            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-2 md:mb-6 flex items-center gap-1.5 md:gap-2">
               <Users className="h-3.5 w-3.5 md:h-6 md:w-6" />
               <span className="leading-tight">User &amp; Coin<br className="md:hidden" /> Mgmt</span>
             </h3>
-            <div className="space-y-2 md:space-y-4">
+            <div className="space-y-1 md:space-y-4">
               <Link
                 href="/admin/users"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
               
               <Link
                 href="/admin/vc-management"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -309,7 +309,7 @@ export default function AdminDashboard() {
               
               <Link
                 href="/admin/messages"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -326,15 +326,15 @@ export default function AdminDashboard() {
           </div>
 
           {/* Team & Player Management */}
-          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
-            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-3 md:mb-6 flex items-center gap-1.5 md:gap-2">
+          <div className="bg-white rounded-xl shadow-lg p-2 md:p-6 border border-gray-100">
+            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-2 md:mb-6 flex items-center gap-1.5 md:gap-2">
               <Database className="h-3.5 w-3.5 md:h-6 md:w-6" />
               <span className="leading-tight">Team &amp; Player<br className="md:hidden" /> Mgmt</span>
             </h3>
-            <div className="space-y-2 md:space-y-4">
+            <div className="space-y-1 md:space-y-4">
               <a
                 href="/admin/teams"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -350,7 +350,7 @@ export default function AdminDashboard() {
 
               <a
                 href="/admin/players"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -367,15 +367,15 @@ export default function AdminDashboard() {
           </div>
 
           {/* Contest Management */}
-          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
-            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-3 md:mb-6 flex items-center gap-1.5 md:gap-2">
+          <div className="bg-white rounded-xl shadow-lg p-2 md:p-6 border border-gray-100">
+            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-2 md:mb-6 flex items-center gap-1.5 md:gap-2">
               <Trophy className="h-3.5 w-3.5 md:h-6 md:w-6" />
               <span className="leading-tight">Contest<br className="md:hidden" /> Mgmt</span>
             </h3>
-            <div className="space-y-2 md:space-y-4">
+            <div className="space-y-1 md:space-y-4">
               <a
                 href="/admin/games"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -391,7 +391,7 @@ export default function AdminDashboard() {
 
               <a
                 href="/admin/contests"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -407,7 +407,7 @@ export default function AdminDashboard() {
 
               <a
                 href="/admin/stats"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
@@ -423,7 +423,7 @@ export default function AdminDashboard() {
 
               <a
                 href="/admin/drafts"
-                className="block w-full p-2 md:p-4 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full px-2 py-1 md:p-4 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 md:gap-3">
