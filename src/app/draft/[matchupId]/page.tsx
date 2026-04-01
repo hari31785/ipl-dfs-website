@@ -784,26 +784,26 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
         {/* Draft Status */}
         {isDraftComplete ? (
-          <div className="bg-gradient-to-r from-cricket-500 to-green-600 text-black rounded-lg p-4 mb-4 shadow-md">
-            <p className="text-center font-bold text-base flex items-center justify-center gap-2">
-              <Trophy className="h-5 w-5" />
+          <div className="bg-gradient-to-r from-cricket-500 to-green-600 text-black rounded-lg px-3 py-2 mb-2 shadow-md">
+            <p className="text-center font-bold text-sm flex items-center justify-center gap-2">
+              <Trophy className="h-4 w-4" />
               Draft Complete! Good luck in the game!
             </p>
           </div>
         ) : (
-          <div className={`border-2 rounded-lg p-4 mb-4 shadow-sm ${isMyTurn ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-cricket-600' : 'bg-gray-50 border-gray-300'}`}>
-            <p className={`text-center font-bold text-base flex items-center justify-center gap-2 ${isMyTurn ? 'text-orange-700' : 'text-gray-600'}`}>
+          <div className={`border-2 rounded-lg px-3 py-2 mb-2 shadow-sm ${isMyTurn ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-cricket-600' : 'bg-gray-50 border-gray-300'}`}>
+            <p className={`text-center font-bold text-sm flex items-center justify-center gap-1.5 ${isMyTurn ? 'text-orange-700' : 'text-gray-600'}`}>
               {isMyTurn ? (
                 <>
-                  <Target className="h-6 w-6 text-secondary-400" />
-                  Your Turn - Pick #{currentPickOrder}
-                  <span className="ml-2 animate-pulse bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-normal">🔴 LIVE</span>
+                  <Target className="h-4 w-4 text-secondary-400 shrink-0" />
+                  Your Turn — Pick #{currentPickOrder}
+                  <span className="animate-pulse bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full text-[10px] font-normal">🔴 LIVE</span>
                 </>
               ) : (
                 <>
-                  <Clock className="h-6 w-6" />
-                  Waiting for {opponent.name} - Pick #{currentPickOrder}
-                  <span className="ml-2 animate-pulse bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-normal">Auto-refreshing...</span>
+                  <Clock className="h-4 w-4 shrink-0" />
+                  Waiting for {opponent.name} — Pick #{currentPickOrder}
+                  <span className="animate-pulse bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full text-[10px] font-normal">Refreshing…</span>
                 </>
               )}
             </p>
@@ -811,33 +811,33 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         )}
 
         {/* ── Mobile-only compact team summary ── */}
-        <div className="lg:hidden mb-3 grid grid-cols-2 gap-2">
+        <div className="lg:hidden mb-2 grid grid-cols-2 gap-1.5">
           {/* My picks summary */}
-          <div className="bg-white rounded-xl border-2 border-green-300 p-2.5 shadow">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-bold text-green-800 truncate">Your Team</span>
-              <span className="text-xs font-bold bg-green-800 text-white px-1.5 py-0.5 rounded-full shrink-0 ml-1">
+          <div className="bg-white rounded-lg border-2 border-green-300 px-2 py-1.5 shadow-sm">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold text-green-800 truncate">Your Team</span>
+              <span className="text-[9px] font-bold bg-green-800 text-white px-1 py-0 rounded-full shrink-0 ml-1">
                 {myPicks.length}/{effectiveSlots.filter(s => s === mySignupId).length || 7}
               </span>
             </div>
             {myPicks.length === 0 ? (
-              <p className="text-xs text-gray-400 italic">No picks yet</p>
+              <p className="text-[9px] text-gray-400 italic">No picks yet</p>
             ) : (
-              <div className="space-y-1">
-                {myPicks.slice(0, 5).map((pick, i) => (
+              <div className="space-y-0.5">
+                {myPicks.slice(0, 5).map((pick) => (
                   <div key={pick.id} className="flex items-center gap-1">
-                    <span className="w-4 h-4 rounded-full bg-green-700 text-white text-[9px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
-                    <span className="text-[10px] font-semibold text-gray-900 truncate">{pick.player.name}</span>
-                    <span className="text-[9px] text-gray-500 shrink-0">{pick.player.iplTeam.shortName}</span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-green-700 text-white text-[8px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
+                    <span className="text-[9px] font-semibold text-gray-900 truncate flex-1">{pick.player.name}</span>
+                    <span className="text-[8px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
                   </div>
                 ))}
                 {myPicks.length > 5 && (
-                  <div className="pt-0.5 border-t border-orange-200">
+                  <div className="border-t border-orange-200 pt-0.5 space-y-0.5">
                     {myPicks.slice(5).map(pick => (
-                      <div key={pick.id} className="flex items-center gap-1 mt-0.5">
-                        <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
-                        <span className="text-[10px] font-semibold text-gray-600 truncate">{pick.player.name}</span>
-                        <span className="text-[9px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
+                      <div key={pick.id} className="flex items-center gap-1">
+                        <span className="w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
+                        <span className="text-[9px] font-semibold text-gray-500 truncate flex-1">{pick.player.name}</span>
+                        <span className="text-[8px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
                       </div>
                     ))}
                   </div>
@@ -846,31 +846,31 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             )}
           </div>
           {/* Opponent picks summary */}
-          <div className="bg-white rounded-xl border-2 border-red-300 p-2.5 shadow">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-bold text-red-800 truncate">{opponent.name}</span>
-              <span className="text-xs font-bold bg-red-200 text-red-800 px-1.5 py-0.5 rounded-full shrink-0 ml-1">
+          <div className="bg-white rounded-lg border-2 border-red-300 px-2 py-1.5 shadow-sm">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold text-red-800 truncate">{opponent.name}</span>
+              <span className="text-[9px] font-bold bg-red-200 text-red-800 px-1 py-0 rounded-full shrink-0 ml-1">
                 {opponentPicks.length}/{effectiveSlots.filter(s => s === opponentSignupId).length || 7}
               </span>
             </div>
             {opponentPicks.length === 0 ? (
-              <p className="text-xs text-gray-400 italic">No picks yet</p>
+              <p className="text-[9px] text-gray-400 italic">No picks yet</p>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {opponentPicks.slice(0, 5).map(pick => (
                   <div key={pick.id} className="flex items-center gap-1">
-                    <span className="w-4 h-4 rounded-full bg-red-700 text-white text-[9px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
-                    <span className="text-[10px] font-semibold text-gray-900 truncate">{pick.player.name}</span>
-                    <span className="text-[9px] text-gray-500 shrink-0">{pick.player.iplTeam.shortName}</span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-red-700 text-white text-[8px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
+                    <span className="text-[9px] font-semibold text-gray-900 truncate flex-1">{pick.player.name}</span>
+                    <span className="text-[8px] text-gray-500 shrink-0">{pick.player.iplTeam.shortName}</span>
                   </div>
                 ))}
                 {opponentPicks.length > 5 && (
-                  <div className="pt-0.5 border-t border-orange-200">
+                  <div className="border-t border-orange-200 pt-0.5 space-y-0.5">
                     {opponentPicks.slice(5).map(pick => (
-                      <div key={pick.id} className="flex items-center gap-1 mt-0.5">
-                        <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
-                        <span className="text-[10px] font-semibold text-gray-600 truncate">{pick.player.name}</span>
-                        <span className="text-[9px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
+                      <div key={pick.id} className="flex items-center gap-1">
+                        <span className="w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
+                        <span className="text-[9px] font-semibold text-gray-500 truncate flex-1">{pick.player.name}</span>
+                        <span className="text-[8px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
                       </div>
                     ))}
                   </div>
