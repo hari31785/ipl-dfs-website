@@ -212,11 +212,25 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
           {pick.pickOrder}
         </div>
 
-        {/* Name + role/team */}
+        {/* Name (row 1) + role/team badges (row 2) */}
         <div className="flex-1 min-w-0">
-          <div className={`font-bold text-[10px] sm:text-sm leading-tight truncate ${isActive ? 'text-black' : 'text-gray-500'}`}>
-            {pick.player.name}
+          {/* Row 1: name + score side by side */}
+          <div className="flex items-center gap-1 justify-between">
+            <div className={`font-bold text-[10px] sm:text-sm leading-tight truncate flex-1 min-w-0 ${isActive ? 'text-black' : 'text-gray-500'}`}>
+              {pick.player.name}
+            </div>
+            {showScoreBadge && isActive ? (
+              <button
+                onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
+                className={`shrink-0 text-[9px] sm:text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-1 sm:px-3 py-0 sm:py-1.5 rounded shadow border border-green-700 ${playerStats ? 'cursor-pointer' : 'cursor-default'}`}
+              >
+                ⭐{playerPoints.toFixed(1)}
+              </button>
+            ) : showScoreBadge && !isActive ? (
+              <span className="shrink-0 text-[9px] sm:text-xs font-bold text-gray-400">{playerPoints.toFixed(1)}</span>
+            ) : null}
           </div>
+          {/* Row 2: role + team + status — no score competition */}
           <div className="flex items-center gap-1 mt-0.5">
             <span className={`text-[8px] sm:text-[10px] font-semibold px-1 py-0 rounded ${isActive ? 'bg-green-200 text-black' : 'bg-gray-200 text-gray-500'}`}>
               {pick.player.role}
@@ -232,20 +246,6 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
             )}
           </div>
         </div>
-
-        {/* Score */}
-        <div className="shrink-0 text-right">
-          {showScoreBadge && isActive ? (
-            <button
-              onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
-              className={`text-[10px] sm:text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded shadow border border-green-700 ${playerStats ? 'hover:scale-105 cursor-pointer' : 'cursor-default'}`}
-            >
-              ⭐{playerPoints.toFixed(1)}
-            </button>
-          ) : showScoreBadge && !isActive ? (
-            <span className="text-[9px] sm:text-xs font-bold text-gray-400">{playerPoints.toFixed(1)}</span>
-          ) : null}
-        </div>
       </div>
     );
   };
@@ -255,19 +255,19 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
       {/* Header */}
       <div className="bg-white border-b-4 border-cricket-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between py-2.5 sm:py-6">
+            <div className="flex items-center gap-2 sm:gap-4">
               <a
                 href={backHref}
-                className="flex items-center gap-2 text-black hover:text-cricket-700 transition-colors"
+                className="flex items-center gap-1.5 text-black hover:text-cricket-700 transition-colors"
               >
-                <ArrowLeft className="h-5 w-5" />
-                <span className="font-semibold">{backLabel}</span>
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-semibold text-sm sm:text-base">{backLabel}</span>
               </a>
-              <div className="w-px h-8 bg-black/30"></div>
+              <div className="w-px h-6 sm:h-8 bg-black/30"></div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-black">🏏 Contest Scores</h1>
-                <div className="text-gray-800 text-sm mt-1">{matchup.contest.iplGame.title}</div>
+                <h1 className="text-base sm:text-2xl md:text-3xl font-bold text-black">🏏 Contest Scores</h1>
+                <div className="text-gray-800 text-xs sm:text-sm mt-0.5 sm:mt-1 truncate max-w-[180px] sm:max-w-none">{matchup.contest.iplGame.title}</div>
               </div>
             </div>
             <div className="hidden md:flex flex-col items-end gap-2">
