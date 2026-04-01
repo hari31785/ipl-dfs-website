@@ -345,54 +345,40 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
             didIWin ? 'bg-gradient-to-r from-green-500 to-green-600' :
             'bg-gradient-to-r from-red-500 to-red-600'
           }`}>
-            <div className="flex items-center justify-between gap-2 sm:block sm:text-center">
-              {/* Result label */}
-              <p className="text-white font-bold text-base sm:text-xl sm:mb-2 flex items-center gap-1">
+            {/* Row 1: Result label + scores */}
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-white font-bold text-base sm:text-xl flex items-center gap-1 shrink-0">
                 {isTie
                   ? '🤝 Tie!'
                   : isSpectator
                     ? (didIWin ? `🏆 ${matchup.user1.user.name} Wins!` : `🏆 ${matchup.user2.user.name} Wins!`)
                     : (didIWin ? '🎉 You Won!' : '😔 You Lost')}
               </p>
-              {/* Scores inline on mobile, centred block on desktop */}
-              <div className="flex items-center gap-2 sm:gap-6 sm:justify-center sm:pt-2 sm:border-t sm:border-white/30">
-                <div className="text-center">
-                  <div className="text-white/70 text-[9px] sm:text-xs sm:mb-0.5 hidden sm:block">
-                    {isSpectator ? matchup.user1.user.name : 'Your Score'}
-                  </div>
-                  <div className="text-white font-black text-base sm:text-xl">⭐ {myTotalPoints.toFixed(1)}</div>
-                </div>
+              <div className="flex items-center gap-2">
+                <div className="text-white font-black text-sm sm:text-xl">⭐ {myTotalPoints.toFixed(1)}</div>
                 <div className="text-white/70 text-xs font-bold">vs</div>
-                <div className="text-center">
-                  <div className="text-white/70 text-[9px] sm:text-xs sm:mb-0.5 hidden sm:block">
-                    {isSpectator ? matchup.user2.user.name : 'Opp'}
-                  </div>
-                  <div className="text-white font-black text-base sm:text-xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
-                </div>
+                <div className="text-white font-black text-sm sm:text-xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
               </div>
-              {/* Margin + Coins — hidden on mobile, visible on desktop */}
-              {!isTie && (
-                <div className="hidden sm:flex items-center justify-center gap-6 mt-2">
-                  <div>
-                    <div className="text-white/80 text-xs">Victory Margin</div>
-                    <div className="text-white font-black text-2xl">
-                      {didIWin ? '+' : ''}{(myTotalPoints - opponentTotalPoints).toFixed(1)}
+            </div>
+            {/* Row 2: Victory Margin + Coins Impact */}
+            {!isTie && (
+              <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-white/30">
+                <div className="flex items-center gap-1.5">
+                  <div className="text-white/70 text-[10px]">Margin</div>
+                  <div className="text-white font-black text-sm sm:text-2xl">
+                    {didIWin ? '+' : ''}{(myTotalPoints - opponentTotalPoints).toFixed(1)}
+                  </div>
+                </div>
+                {!isSpectator && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/10 rounded border border-white/30">
+                    <div className="text-white/70 text-[10px]">Coins</div>
+                    <div className={`text-white font-black text-sm sm:text-2xl ${didIWin ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]' : ''}`}>
+                      {didIWin ? '+' : '-'}{Math.abs((myTotalPoints - opponentTotalPoints) * matchup.contest.coinValue).toFixed(0)}🪙
                     </div>
                   </div>
-                  {!isSpectator && (
-                    <div className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded border border-white/30">
-                      <div className="text-white/80 text-xs">Coins Impact</div>
-                      <div className={`text-white font-black text-2xl ${
-                        didIWin ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]' : ''
-                      }`}>
-                        {didIWin ? '+' : '-'}{Math.abs((myTotalPoints - opponentTotalPoints) * matchup.contest.coinValue).toFixed(0)}
-                        <span className="text-base ml-1">🪙</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
