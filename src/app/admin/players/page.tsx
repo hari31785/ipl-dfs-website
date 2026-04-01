@@ -617,7 +617,7 @@ export default function PlayersManagement() {
                 className="flex items-center gap-2 text-white hover:text-green-200 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </a>
               <div className="w-px h-6 bg-white/30"></div>
               <div className="flex items-center gap-3">
@@ -631,7 +631,7 @@ export default function PlayersManagement() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Success/Error Messages */}
         {success && (
           <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
@@ -645,13 +645,13 @@ export default function PlayersManagement() {
         )}
 
         {/* Controls */}
-        <div className="mb-8 flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="flex gap-3">
-            {/* Tournament Selector */}
+        <div className="mb-4 md:mb-8 space-y-2">
+          {/* Row 1: Tournament selector + Team filter */}
+          <div className="flex flex-wrap gap-2 items-center justify-between">
             <select
               value={selectedTournament}
               onChange={(e) => setSelectedTournament(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="flex-1 min-w-[130px] max-w-xs px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
             >
               <option value="">Select Tournament</option>
               {tournaments.map((tournament) => (
@@ -660,56 +660,56 @@ export default function PlayersManagement() {
                 </option>
               ))}
             </select>
-            
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 hidden sm:inline">Filter by Team:</span>
+              <select
+                value={selectedTeam}
+                onChange={(e) => setSelectedTeam(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white text-sm"
+              >
+                <option value="all">All Teams</option>
+                {teams.map(team => (
+                  <option key={team.id} value={team.id}>{team.shortName}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {/* Row 2: Action buttons */}
+          <div className="flex flex-wrap gap-1.5 md:gap-3">
             <button
               onClick={() => setShowForm(true)}
               disabled={!selectedTournament}
-              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              className="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors text-sm"
             >
-              <Plus className="h-5 w-5" />
-              Add Single Player
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Single </span>Player
             </button>
             <button
               onClick={() => setShowBulkForm(true)}
               disabled={!selectedTournament}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors text-sm"
             >
-              <Users className="h-5 w-5" />
-              Bulk Add Players
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Bulk Add </span>Players
             </button>
             <button
               onClick={handleOpenCopyModal}
               disabled={!selectedTournament}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors text-sm"
             >
-              <Users className="h-5 w-5" />
-              Copy Players
+              <Users className="h-4 w-4" />
+              Copy<span className="hidden sm:inline"> Players</span>
             </button>
             {selectedPlayers.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 disabled={isDeleting}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors text-sm"
               >
-                <Trash2 className="h-5 w-5" />
-                {isDeleting ? "Deleting..." : `Delete Selected (${selectedPlayers.length})`}
+                <Trash2 className="h-4 w-4" />
+                {isDeleting ? "Deleting..." : `Delete (${selectedPlayers.length})`}
               </button>
             )}
-          </div>
-
-          {/* Team Filter */}
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-gray-700">Filter by Team:</span>
-            <select
-              value={selectedTeam}
-              onChange={(e) => setSelectedTeam(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white"
-            >
-              <option value="all">All Teams</option>
-              {teams.map(team => (
-                <option key={team.id} value={team.id}>{team.shortName}</option>
-              ))}
-            </select>
           </div>
         </div>
 
@@ -844,8 +844,8 @@ export default function PlayersManagement() {
 
         {/* Bulk Add Players Form */}
         {showBulkForm && (
-          <div className="mb-8 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center gap-2 mb-6">
+          <div className="mb-4 md:mb-8 bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
+            <div className="flex items-center gap-2 mb-4 md:mb-6">
               <Users className="h-6 w-6 text-green-600" />
               <h3 className="text-xl font-bold text-primary-800">Bulk Add Players</h3>
             </div>
@@ -915,8 +915,8 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
 
         {/* Players List */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-xl font-bold text-primary-800">
+          <div className="p-3 md:p-6 border-b border-gray-200">
+            <h3 className="text-base md:text-xl font-bold text-primary-800">
               Players ({filteredPlayers.length})
               {selectedTeam !== "all" && (
                 <span className="text-sm font-normal text-gray-600 ml-2">
@@ -940,7 +940,9 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -993,7 +995,7 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button 
+                          <button
                             onClick={() => handleEdit(player)}
                             disabled={deletingPlayerId === player.id}
                             className="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
@@ -1002,7 +1004,7 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
                             <Edit className="h-4 w-4" />
                             <span>Edit</span>
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDelete(player)}
                             disabled={deletingPlayerId === player.id}
                             className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
@@ -1018,6 +1020,64 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
                 </tbody>
               </table>
             </div>
+            {/* Mobile cards */}
+            <div className="md:hidden">
+              <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={filteredPlayers.length > 0 && selectedPlayers.length === filteredPlayers.length}
+                  onChange={handleSelectAll}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <span className="text-xs font-medium text-gray-500">Select All ({filteredPlayers.length})</span>
+              </div>
+              <div className="divide-y divide-gray-200">
+                {filteredPlayers.map((player) => (
+                  <div key={player.id} className="px-3 py-3 flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedPlayers.includes(player.id)}
+                      onChange={() => handleSelectPlayer(player.id)}
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">{getRoleIcon(player.role)}</span>
+                        <span className="font-semibold text-sm text-gray-900 truncate">{player.name}</span>
+                        <div
+                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: player.iplTeam.color }}
+                        />
+                        <span className="text-xs text-gray-500 flex-shrink-0">{player.iplTeam.shortName}</span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {PLAYER_ROLES.find(r => r.value === player.role)?.label}
+                        {player.jerseyNumber ? ` · #${player.jerseyNumber}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => handleEdit(player)}
+                        disabled={deletingPlayerId === player.id}
+                        className="p-1.5 text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Edit"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(player)}
+                        disabled={deletingPlayerId === player.id}
+                        className="p-1.5 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            </>
           )}
         </div>
       </div>
