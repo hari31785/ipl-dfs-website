@@ -190,93 +190,83 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
     const playerStats = pick.player.stats.find((s: any) => s.iplGameId === gameId);
     const playerPoints = playerStats?.points || 0;
     const didNotPlay = playerStats?.didNotPlay || false;
-    // Show score badge if: stat record exists (and not DNP), OR game is completed
-    // and no record at all (player played but had 0 across every stat — external DB
-    // omits players with no scoring events, so no record ≠ DNP)
     const showScoreBadge = (!!playerStats && !didNotPlay) || (!playerStats && gameIsCompleted);
     
     return (
       <div 
         key={pick.id} 
-        className={`group relative rounded-xl p-4 transition-all ${
+        className={`group relative rounded-lg sm:rounded-xl p-2 sm:p-4 transition-all ${
           isActive 
             ? 'bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300' 
             : 'bg-gradient-to-br from-gray-100 to-gray-50 border-2 border-gray-300 opacity-75'
         }`}
       >
         {isSwapped && (
-          <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-            SWAPPED IN
+          <div className="absolute top-1 right-1 bg-blue-500 text-white text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold">
+            SWAPPED
           </div>
         )}
         {swappedOut && (
-          <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-            BENCHED
+          <div className="absolute top-1 right-1 bg-orange-500 text-white text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold">
+            BENCH
           </div>
         )}
         {didNotPlay && !isActive && !swappedOut && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+          <div className="absolute top-1 right-1 bg-red-500 text-white text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold">
             DNP
           </div>
         )}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-start gap-3 flex-1">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg ${
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <div className={`w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-black text-[10px] sm:text-sm shadow shrink-0 ${
               isActive ? 'bg-gradient-to-br from-cricket-600 to-green-800' : 'bg-gray-400'
             }`}>
               {pick.pickOrder}
             </div>
-            <div className="flex-1">
-              <div className={`font-bold text-lg mb-1 ${isActive ? 'text-black' : 'text-gray-600'}`}>
+            <div className="flex-1 min-w-0">
+              <div className={`font-bold text-[11px] sm:text-lg leading-tight truncate ${
+                isActive ? 'text-black' : 'text-gray-600'
+              }`}>
                 {pick.player.name}
-                {isSwapped && swappedFor && (
-                  <span className="text-xs text-blue-600 block">
-                    (replacing {swappedFor})
-                  </span>
-                )}
-                {swappedOut && replacedBy && (
-                  <span className="text-xs text-orange-600 block">
-                    (replaced by {replacedBy})
-                  </span>
-                )}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`text-xs font-bold px-2 py-1 rounded ${
-                  isActive ? 'bg-green-200 text-black' : 'bg-gray-200 text-gray-600'
-                }`}>
-                  {pick.player.role}
-                </span>
-                <span 
-                  className="text-xs font-bold px-2 py-1 rounded border-2" 
-                  style={{ 
-                    backgroundColor: pick.player.iplTeam.color + '15', 
-                    color: 'black',
-                    borderColor: pick.player.iplTeam.color + '60'
-                  }}
-                >
-                  {pick.player.iplTeam.shortName}
-                </span>
-                {pick.isBench && (
-                  <span className="text-xs font-bold bg-orange-200 text-orange-800 px-2 py-1 rounded">
-                    BENCH
-                  </span>
-                )}
-              </div>
+              {isSwapped && swappedFor && (
+                <span className="text-[9px] sm:text-xs text-blue-600 block truncate">(replaces {swappedFor})</span>
+              )}
+              {swappedOut && replacedBy && (
+                <span className="text-[9px] sm:text-xs text-orange-600 block truncate">(→ {replacedBy})</span>
+              )}
             </div>
           </div>
-          {showScoreBadge && isActive && (
-            <button
-              onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
-              className={`text-lg font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-2 rounded shadow-md border-2 border-green-700 transition-transform ${playerStats ? 'hover:scale-105 cursor-pointer' : 'cursor-default'}`}
+          <div className="flex flex-wrap items-center gap-1">
+            <span className={`text-[9px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded ${
+              isActive ? 'bg-green-200 text-black' : 'bg-gray-200 text-gray-600'
+            }`}>
+              {pick.player.role}
+            </span>
+            <span 
+              className="text-[9px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded border" 
+              style={{ 
+                backgroundColor: pick.player.iplTeam.color + '15', 
+                color: 'black',
+                borderColor: pick.player.iplTeam.color + '60'
+              }}
             >
-              ⭐ {playerPoints.toFixed(1)}
-            </button>
-          )}
-          {showScoreBadge && !isActive && (
-            <div className="text-sm font-bold text-gray-500 px-3 py-2">
-              {playerPoints.toFixed(1)} pts (not counted)
-            </div>
-          )}
+              {pick.player.iplTeam.shortName}
+            </span>
+            {showScoreBadge && isActive && (
+              <button
+                onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
+                className={`text-[10px] sm:text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-1.5 sm:px-3 py-0.5 sm:py-2 rounded shadow border border-green-700 transition-transform ${playerStats ? 'hover:scale-105 cursor-pointer' : 'cursor-default'}`}
+              >
+                ⭐ {playerPoints.toFixed(1)}
+              </button>
+            )}
+            {showScoreBadge && !isActive && (
+              <span className="text-[9px] sm:text-xs font-bold text-gray-500">
+                {playerPoints.toFixed(1)}pts
+              </span>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -413,37 +403,37 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
           </div>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-6">
           {/* Your Team */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-xl text-green-800">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-1">
+              <h3 className="font-bold text-sm sm:text-xl text-green-800">
                 {isSpectator ? `${matchup.user1.user.name}'s Team` : 'Your Team'}
               </h3>
-              <span className="bg-green-800 text-white px-3 py-1 rounded-full font-bold text-sm">
+              <span className="hidden sm:inline bg-green-800 text-white px-3 py-1 rounded-full font-bold text-sm">
                 5 Starters + 2 Bench
               </span>
             </div>
             
             {myTotalPoints > 0 && (
-              <div className="mb-4 p-4 bg-gradient-to-r from-cricket-500 to-green-600 rounded-xl">
+              <div className="mb-3 sm:mb-4 p-2 sm:p-4 bg-gradient-to-r from-cricket-500 to-green-600 rounded-lg sm:rounded-xl">
                 <div className="text-center">
-                  <div className="text-black text-xs font-semibold uppercase tracking-wider opacity-90 mb-1">Total Score (Active Players Only)</div>
-                  <div className="text-black font-black text-3xl">⭐ {myTotalPoints.toFixed(1)}</div>
-                  <div className="text-black/90 text-xs mt-1">Fantasy Points</div>
+                  <div className="hidden sm:block text-black text-xs font-semibold uppercase tracking-wider opacity-90 mb-1">Total Score (Active Players Only)</div>
+                  <div className="text-black font-black text-xl sm:text-3xl">⭐ {myTotalPoints.toFixed(1)}</div>
+                  <div className="text-black/90 text-[10px] sm:text-xs mt-0.5">pts</div>
                 </div>
               </div>
             )}
 
             {/* Starting Lineup */}
-            <div className="mb-6">
-              <h4 className="font-bold text-lg text-green-800 mb-3 flex items-center gap-2">
-                🏏 Active Lineup
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+            <div className="mb-3 sm:mb-6">
+              <h4 className="font-bold text-xs sm:text-lg text-green-800 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                🏏 <span className="hidden sm:inline">Active </span>Lineup
+                <span className="hidden sm:inline text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                   Counts toward score
                 </span>
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 {myFinalLineup.map((player: any) => 
                   renderPlayerCard(player, true, player.swappedFor, player.isSwapped)
                 )}
@@ -452,20 +442,20 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
 
             {/* Bench Players */}
             <div>
-              <h4 className="font-bold text-lg text-gray-600 mb-3 flex items-center gap-2">
-                🪑 Bench Players
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+              <h4 className="font-bold text-xs sm:text-lg text-gray-600 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                🪑 Bench
+                <span className="hidden sm:inline text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                   Backup only
                 </span>
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 {myBenchPlayers.length > 0 ? (
                   myBenchPlayers.map((pick: any) => 
                     renderPlayerCard(pick, false, undefined, false, pick.swappedOut, pick.replacedBy)
                   )
                 ) : (
-                  <div className="text-gray-500 text-sm italic p-4 bg-gray-50 rounded-lg">
-                    All bench players are in use
+                  <div className="text-gray-500 text-xs italic p-2 sm:p-4 bg-gray-50 rounded-lg">
+                    All bench in use
                   </div>
                 )}
               </div>
@@ -473,35 +463,35 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
           </div>
 
           {/* Opponent Team */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-xl text-red-800">
-                {isSpectator ? `${matchup.user2.user.name}'s Team` : 'Opponent Team'}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-1">
+              <h3 className="font-bold text-sm sm:text-xl text-red-800">
+                {isSpectator ? `${matchup.user2.user.name}'s Team` : 'Opponent'}
               </h3>
-              <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold text-sm">
+              <span className="hidden sm:inline bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold text-sm">
                 5 Starters + 2 Bench
               </span>
             </div>
             
             {opponentTotalPoints > 0 && (
-              <div className="mb-4 p-4 bg-gradient-to-r from-cricket-500 to-red-600 rounded-xl">
+              <div className="mb-3 sm:mb-4 p-2 sm:p-4 bg-gradient-to-r from-cricket-500 to-red-600 rounded-lg sm:rounded-xl">
                 <div className="text-center">
-                  <div className="text-black text-xs font-semibold uppercase tracking-wider opacity-90 mb-1">Total Score (Active Players Only)</div>
-                  <div className="text-black font-black text-3xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
-                  <div className="text-black/90 text-xs mt-1">Fantasy Points</div>
+                  <div className="hidden sm:block text-black text-xs font-semibold uppercase tracking-wider opacity-90 mb-1">Total Score (Active Players Only)</div>
+                  <div className="text-black font-black text-xl sm:text-3xl">⭐ {opponentTotalPoints.toFixed(1)}</div>
+                  <div className="text-black/90 text-[10px] sm:text-xs mt-0.5">pts</div>
                 </div>
               </div>
             )}
 
             {/* Starting Lineup */}
-            <div className="mb-6">
-              <h4 className="font-bold text-lg text-red-800 mb-3 flex items-center gap-2">
-                🏏 Active Lineup
-                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+            <div className="mb-3 sm:mb-6">
+              <h4 className="font-bold text-xs sm:text-lg text-red-800 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                🏏 <span className="hidden sm:inline">Active </span>Lineup
+                <span className="hidden sm:inline text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
                   Counts toward score
                 </span>
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 {opponentFinalLineup.map((player: any) => 
                   renderPlayerCard(player, true, player.swappedFor, player.isSwapped)
                 )}
@@ -510,20 +500,20 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
 
             {/* Bench Players */}
             <div>
-              <h4 className="font-bold text-lg text-gray-600 mb-3 flex items-center gap-2">
-                🪑 Bench Players
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+              <h4 className="font-bold text-xs sm:text-lg text-gray-600 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                🪑 Bench
+                <span className="hidden sm:inline text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                   Backup only
                 </span>
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 {opponentBenchPlayers.length > 0 ? (
                   opponentBenchPlayers.map((pick: any) => 
                     renderPlayerCard(pick, false, undefined, false, pick.swappedOut, pick.replacedBy)
                   )
                 ) : (
-                  <div className="text-gray-500 text-sm italic p-4 bg-gray-50 rounded-lg">
-                    All bench players are in use
+                  <div className="text-gray-500 text-xs italic p-2 sm:p-4 bg-gray-50 rounded-lg">
+                    All bench in use
                   </div>
                 )}
               </div>

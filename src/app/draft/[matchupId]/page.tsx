@@ -810,9 +810,79 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           </div>
         )}
 
+        {/* ── Mobile-only compact team summary ── */}
+        <div className="lg:hidden mb-3 grid grid-cols-2 gap-2">
+          {/* My picks summary */}
+          <div className="bg-white rounded-xl border-2 border-green-300 p-2.5 shadow">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold text-green-800 truncate">Your Team</span>
+              <span className="text-xs font-bold bg-green-800 text-white px-1.5 py-0.5 rounded-full shrink-0 ml-1">
+                {myPicks.length}/{effectiveSlots.filter(s => s === mySignupId).length || 7}
+              </span>
+            </div>
+            {myPicks.length === 0 ? (
+              <p className="text-xs text-gray-400 italic">No picks yet</p>
+            ) : (
+              <div className="space-y-1">
+                {myPicks.slice(0, 5).map((pick, i) => (
+                  <div key={pick.id} className="flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-green-700 text-white text-[9px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
+                    <span className="text-[10px] font-semibold text-gray-900 truncate">{pick.player.name}</span>
+                    <span className="text-[9px] text-gray-500 shrink-0">{pick.player.iplTeam.shortName}</span>
+                  </div>
+                ))}
+                {myPicks.length > 5 && (
+                  <div className="pt-0.5 border-t border-orange-200">
+                    {myPicks.slice(5).map(pick => (
+                      <div key={pick.id} className="flex items-center gap-1 mt-0.5">
+                        <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
+                        <span className="text-[10px] font-semibold text-gray-600 truncate">{pick.player.name}</span>
+                        <span className="text-[9px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          {/* Opponent picks summary */}
+          <div className="bg-white rounded-xl border-2 border-red-300 p-2.5 shadow">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold text-red-800 truncate">{opponent.name}</span>
+              <span className="text-xs font-bold bg-red-200 text-red-800 px-1.5 py-0.5 rounded-full shrink-0 ml-1">
+                {opponentPicks.length}/{effectiveSlots.filter(s => s === opponentSignupId).length || 7}
+              </span>
+            </div>
+            {opponentPicks.length === 0 ? (
+              <p className="text-xs text-gray-400 italic">No picks yet</p>
+            ) : (
+              <div className="space-y-1">
+                {opponentPicks.slice(0, 5).map(pick => (
+                  <div key={pick.id} className="flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-red-700 text-white text-[9px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
+                    <span className="text-[10px] font-semibold text-gray-900 truncate">{pick.player.name}</span>
+                    <span className="text-[9px] text-gray-500 shrink-0">{pick.player.iplTeam.shortName}</span>
+                  </div>
+                ))}
+                {opponentPicks.length > 5 && (
+                  <div className="pt-0.5 border-t border-orange-200">
+                    {opponentPicks.slice(5).map(pick => (
+                      <div key={pick.id} className="flex items-center gap-1 mt-0.5">
+                        <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
+                        <span className="text-[10px] font-semibold text-gray-600 truncate">{pick.player.name}</span>
+                        <span className="text-[9px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Your Picks */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          {/* Your Picks — hidden on mobile (shown in summary above), visible on desktop */}
+          <div className="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-xl text-green-800">Your Team</h3>
               <div className="flex items-center gap-2">
@@ -930,8 +1000,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             </div>
           </div>
 
-          {/* Available Players */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          {/* Available Players — full width on mobile (order-first), middle col on desktop */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 order-first lg:order-none col-span-1">
             <h3 className="font-bold text-xl text-primary-800 mb-4">Available Players</h3>
             
             {/* Calculate Grades Button */}
@@ -1162,8 +1232,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             )}
           </div>
 
-          {/* Opponent Picks */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          {/* Opponent Picks — hidden on mobile (shown in summary above), visible on desktop */}
+          <div className="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-xl text-red-800">Opponent Team</h3>
               <div className="flex items-center gap-2">

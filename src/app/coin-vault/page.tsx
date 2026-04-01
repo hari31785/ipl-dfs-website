@@ -245,55 +245,55 @@ export default function CoinVaultPage() {
         )}
 
         {/* Balance Card */}
-        <div className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl shadow-2xl p-8 mb-8">
+        <div className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl shadow-lg p-3 sm:p-4 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 text-yellow-100 mb-2">
-                <Coins className="h-6 w-6" />
-                <span className="text-lg font-medium">
+              <div className="flex items-center gap-1.5 text-yellow-100 mb-1">
+                <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm font-medium">
                   {tournaments.find(t => t.id === selectedTournament)?.name || 'Tournament'} Balance
                 </span>
               </div>
-              <div className="text-6xl font-bold text-white mb-2">
+              <div className="text-2xl sm:text-4xl font-bold text-white mb-1">
                 V̶₵{(balance / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <p className="text-yellow-100 text-sm font-semibold mb-1">
+              <p className="text-yellow-100 text-xs font-semibold mb-0.5">
                 Virtual Credits (V̶₵)
               </p>
-              <p className="text-yellow-100 text-sm">
-                Total Winnings: V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} | Total Losses: V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <p className="text-yellow-100 text-xs">
+                Won: V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} | Lost: V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
-              <p className="text-yellow-100 text-xs mt-1">
+              <p className="text-yellow-100 text-xs mt-0.5">
                 (1 V̶₵ = 100 Coins)
               </p>
             </div>
-            <div className="w-32 h-32 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <Coins className="h-20 w-20 text-white" />
+            <div className="hidden sm:flex w-16 h-16 bg-white bg-opacity-20 rounded-full items-center justify-center">
+              <Coins className="h-10 w-10 text-white" />
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shrink-0">
+                <TrendingUp className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-green-700 font-medium">Total Winnings</p>
-                <p className="text-3xl font-bold text-green-900">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-xs text-green-700 font-medium">Total Winnings</p>
+                <p className="text-xl font-bold text-green-900">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
-          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-white" />
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 bg-red-500 rounded-full flex items-center justify-center shrink-0">
+                <TrendingDown className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-red-700 font-medium">Total Losses</p>
-                <p className="text-3xl font-bold text-red-900">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-xs text-red-700 font-medium">Total Losses</p>
+                <p className="text-xl font-bold text-red-900">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
@@ -301,10 +301,10 @@ export default function CoinVaultPage() {
 
         {/* Transaction Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <History className="h-6 w-6 text-primary-700" />
-              <h2 className="text-2xl font-bold text-gray-900">Contest History</h2>
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <History className="h-5 w-5 text-primary-700" />
+              <h2 className="text-lg font-bold text-gray-900">Contest History</h2>
             </div>
           </div>
 
@@ -317,140 +317,144 @@ export default function CoinVaultPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b-2 border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Game & Opponent
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Score & Result
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-green-700 uppercase tracking-wider">
-                      Coins Won
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-red-700 uppercase tracking-wider">
-                      Coins Lost
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-purple-700 uppercase tracking-wider">
-                      VC Won/Lost
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {transactions.map((transaction) => {
-                    const isWin = transaction.type === 'WIN'
-                    const coinsWon = isWin ? transaction.amount : 0
-                    const coinsLost = !isWin ? Math.abs(transaction.amount) : 0
-                    
-                    const gameDate = transaction.contest?.iplGame.gameDate 
-                      ? new Date(transaction.contest.iplGame.gameDate).toLocaleDateString()
-                      : new Date(transaction.createdAt).toLocaleDateString()
-                    
-                    const gameInfo = transaction.contest 
-                      ? `${transaction.contest.iplGame.team1.shortName} vs ${transaction.contest.iplGame.team2.shortName}`
-                      : 'N/A'
-                    
-                    const contestType = transaction.contest?.contestType || 'N/A'
-                    
-                    // Get opponent and score information
-                    let opponentName = 'Unknown'
-                    let userScore = 0
-                    let opponentScore = 0
-                    let scoreInfo = 'Score unavailable'
-                    
-                    if (transaction.matchup && user) {
-                      const isUser1 = transaction.matchup.user1.user.name === user.name
-                      opponentName = isUser1 
-                        ? transaction.matchup.user2.user.name 
-                        : transaction.matchup.user1.user.name
-                      userScore = isUser1 
-                        ? transaction.matchup.user1Score 
-                        : transaction.matchup.user2Score
-                      opponentScore = isUser1 
-                        ? transaction.matchup.user2Score 
-                        : transaction.matchup.user1Score
-                      
-                      const result = userScore > opponentScore ? 'WON' : 
-                                     userScore < opponentScore ? 'LOST' : 'TIE'
-                      const resultColor = result === 'WON' ? 'text-green-600' : 
-                                          result === 'LOST' ? 'text-red-600' : 'text-gray-600'
-                      
-                      scoreInfo = `${userScore.toFixed(1)} - ${opponentScore.toFixed(1)} (${result})`
-                    }
-                    
-                    return (
-                      <tr key={transaction.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {gameDate}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          <div className="font-medium">{gameInfo}</div>
-                          <div className="text-xs text-gray-500">vs {opponentName}</div>
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium mt-1 inline-block">
-                            {contestType}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          <div className={`font-medium ${
-                            scoreInfo.includes('WON') ? 'text-green-600' : 
-                            scoreInfo.includes('LOST') ? 'text-red-600' : 'text-gray-600'
-                          }`}>
-                            {scoreInfo}
-                          </div>
-                          {(coinsWon > 0 || coinsLost > 0) && (
-                            <div className={`text-xs font-semibold mt-1 ${
-                              coinsWon > 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {coinsWon > 0 ? `+${coinsWon.toLocaleString()} coins` : `-${coinsLost.toLocaleString()} coins`}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          {coinsWon > 0 ? (
-                            <span className="text-lg font-bold text-green-600">
-                              +{coinsWon.toLocaleString()}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          {coinsLost > 0 ? (
-                            <span className="text-lg font-bold text-red-600">
-                              -{coinsLost.toLocaleString()}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          {coinsWon > 0 ? (
-                            <div>
-                              <span className="text-xl font-bold text-purple-600">
-                                +V̶₵{(coinsWon / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                          ) : coinsLost > 0 ? (
-                            <div>
-                              <span className="text-xl font-bold text-purple-600">
-                                -V̶₵{(coinsLost / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* ── Mobile card list (< md) ── */}
+              <div className="divide-y divide-gray-100 md:hidden">
+                {transactions.map((transaction) => {
+                  const isWin = transaction.type === 'WIN'
+                  const coinsWon = isWin ? transaction.amount : 0
+                  const coinsLost = !isWin ? Math.abs(transaction.amount) : 0
+                  const gameDate = transaction.contest?.iplGame.gameDate
+                    ? new Date(transaction.contest.iplGame.gameDate).toLocaleDateString()
+                    : new Date(transaction.createdAt).toLocaleDateString()
+                  const gameInfo = transaction.contest
+                    ? `${transaction.contest.iplGame.team1.shortName} vs ${transaction.contest.iplGame.team2.shortName}`
+                    : 'N/A'
+                  const contestType = transaction.contest?.contestType || 'N/A'
+                  let opponentName = 'Unknown'
+                  let userScore = 0
+                  let opponentScore = 0
+                  let result = ''
+                  if (transaction.matchup && user) {
+                    const isUser1 = transaction.matchup.user1.user.name === user.name
+                    opponentName = isUser1 ? transaction.matchup.user2.user.name : transaction.matchup.user1.user.name
+                    userScore = isUser1 ? transaction.matchup.user1Score : transaction.matchup.user2Score
+                    opponentScore = isUser1 ? transaction.matchup.user2Score : transaction.matchup.user1Score
+                    result = userScore > opponentScore ? 'WON' : userScore < opponentScore ? 'LOST' : 'TIE'
+                  }
+                  return (
+                    <div key={transaction.id} className="px-4 py-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-semibold text-gray-800">{gameInfo}</span>
+                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium">{contestType}</span>
+                        </div>
+                        {result && (
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                            result === 'WON' ? 'bg-green-100 text-green-700' :
+                            result === 'LOST' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
+                          }`}>{result}</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 mb-1">
+                        {gameDate} · vs {opponentName}
+                        {result && <span className="ml-1">({userScore.toFixed(1)} – {opponentScore.toFixed(1)})</span>}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {coinsWon > 0 ? (
+                          <span className="text-sm font-bold text-purple-600">+V̶₵{(coinsWon / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        ) : coinsLost > 0 ? (
+                          <span className="text-sm font-bold text-purple-600">-V̶₵{(coinsLost / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        ) : null}
+                        {coinsWon > 0 ? (
+                          <span className="text-xs text-green-600 font-medium">+{coinsWon.toLocaleString()} coins</span>
+                        ) : coinsLost > 0 ? (
+                          <span className="text-xs text-red-600 font-medium">-{coinsLost.toLocaleString()} coins</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* ── Desktop table (≥ md) ── */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b-2 border-gray-200">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Game & Opponent</th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Score & Result</th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-green-700 uppercase tracking-wider">Coins Won</th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase tracking-wider">Coins Lost</th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-purple-700 uppercase tracking-wider">VC Won/Lost</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {transactions.map((transaction) => {
+                      const isWin = transaction.type === 'WIN'
+                      const coinsWon = isWin ? transaction.amount : 0
+                      const coinsLost = !isWin ? Math.abs(transaction.amount) : 0
+                      const gameDate = transaction.contest?.iplGame.gameDate
+                        ? new Date(transaction.contest.iplGame.gameDate).toLocaleDateString()
+                        : new Date(transaction.createdAt).toLocaleDateString()
+                      const gameInfo = transaction.contest
+                        ? `${transaction.contest.iplGame.team1.shortName} vs ${transaction.contest.iplGame.team2.shortName}`
+                        : 'N/A'
+                      const contestType = transaction.contest?.contestType || 'N/A'
+                      let opponentName = 'Unknown'
+                      let userScore = 0
+                      let opponentScore = 0
+                      let scoreInfo = 'Score unavailable'
+                      if (transaction.matchup && user) {
+                        const isUser1 = transaction.matchup.user1.user.name === user.name
+                        opponentName = isUser1 ? transaction.matchup.user2.user.name : transaction.matchup.user1.user.name
+                        userScore = isUser1 ? transaction.matchup.user1Score : transaction.matchup.user2Score
+                        opponentScore = isUser1 ? transaction.matchup.user2Score : transaction.matchup.user1Score
+                        const result = userScore > opponentScore ? 'WON' : userScore < opponentScore ? 'LOST' : 'TIE'
+                        scoreInfo = `${userScore.toFixed(1)} - ${opponentScore.toFixed(1)} (${result})`
+                      }
+                      return (
+                        <tr key={transaction.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">{gameDate}</td>
+                          <td className="px-3 py-2 text-xs text-gray-900">
+                            <div className="font-medium">{gameInfo}</div>
+                            <div className="text-gray-500">vs {opponentName}</div>
+                            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium mt-0.5 inline-block">{contestType}</span>
+                          </td>
+                          <td className="px-3 py-2 text-xs text-gray-900">
+                            <div className={`font-medium ${
+                              scoreInfo.includes('WON') ? 'text-green-600' :
+                              scoreInfo.includes('LOST') ? 'text-red-600' : 'text-gray-600'
+                            }`}>{scoreInfo}</div>
+                            {(coinsWon > 0 || coinsLost > 0) && (
+                              <div className={`font-semibold mt-0.5 ${coinsWon > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {coinsWon > 0 ? `+${coinsWon.toLocaleString()} coins` : `-${coinsLost.toLocaleString()} coins`}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-right">
+                            {coinsWon > 0 ? <span className="text-sm font-bold text-green-600">+{coinsWon.toLocaleString()}</span> : <span className="text-gray-400">-</span>}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-right">
+                            {coinsLost > 0 ? <span className="text-sm font-bold text-red-600">-{coinsLost.toLocaleString()}</span> : <span className="text-gray-400">-</span>}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-right">
+                            {coinsWon > 0 ? (
+                              <span className="text-sm font-bold text-purple-600">+V̶₵{(coinsWon / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            ) : coinsLost > 0 ? (
+                              <span className="text-sm font-bold text-purple-600">-V̶₵{(coinsLost / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
