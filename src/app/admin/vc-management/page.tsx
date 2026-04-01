@@ -172,7 +172,7 @@ export default function VCManagementPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
+          <div className="flex items-center justify-between py-3 md:py-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/admin/dashboard')}
@@ -184,7 +184,7 @@ export default function VCManagementPage() {
                 Back to Dashboard
               </button>
               <div className="text-white">
-                <h1 className="text-2xl font-bold">💰 VC Settlement Management</h1>
+                <h1 className="text-lg md:text-2xl font-bold">💰 VC Settlement Management</h1>
                 <p className="text-emerald-100 text-sm">Manage user coin balances and settlements</p>
               </div>
             </div>

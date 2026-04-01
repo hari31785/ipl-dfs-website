@@ -518,7 +518,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
+          <div className="flex items-center justify-between py-3 md:py-6">
             <div className="flex items-center gap-4">
               <a
                 href="/admin/contests"
@@ -533,7 +533,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
                   <Users className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">Contest Matchups</h1>
+                  <h1 className="text-lg md:text-2xl font-bold text-white">Contest Matchups</h1>
                   <div className="text-purple-100 text-sm">{contest.iplGame.title}</div>
                 </div>
               </div>

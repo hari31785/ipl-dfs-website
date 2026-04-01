@@ -165,19 +165,19 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="bg-gradient-to-r from-primary-800 via-primary-700 to-red-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex justify-between items-center py-3 md:py-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
-                <Shield className="h-6 w-6 text-white" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-red-500 rounded-full flex items-center justify-center">
+                <Shield className="h-5 w-5 md:h-6 md:w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">IPL DFS Admin</h1>
+                <h1 className="text-lg md:text-2xl font-bold text-white">IPL DFS Admin</h1>
                 <p className="text-red-100 text-sm">Welcome back, {admin.name}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors border-2 border-white/40 hover:border-white/60 shadow-lg font-medium"
+              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors border-2 border-white/40 hover:border-white/60 shadow-lg font-medium text-sm md:text-base"
             >
               <LogOut className="h-4 w-4" />
               Sign Out

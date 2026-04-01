@@ -610,7 +610,7 @@ export default function PlayersManagement() {
       {/* Header */}
       <div className="bg-gradient-to-r from-green-500 via-green-600 to-green-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
+          <div className="flex items-center justify-between py-3 md:py-6">
             <div className="flex items-center gap-4">
               <a
                 href="/admin/dashboard"
@@ -624,7 +624,7 @@ export default function PlayersManagement() {
                 <div className="w-10 h-10 bg-green-400 rounded-full flex items-center justify-center">
                   <Users className="h-6 w-6 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold text-white">Player Management</h1>
+                <h1 className="text-lg md:text-2xl font-bold text-white">Player Management</h1>
               </div>
             </div>
           </div>
