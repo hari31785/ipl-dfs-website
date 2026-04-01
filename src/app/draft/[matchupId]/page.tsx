@@ -551,6 +551,13 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     }
   };
 
+  const sortedMyPicks = myPicks.slice().sort((a, b) => a.pickOrder - b.pickOrder);
+  const sortedOppPicks = opponentPicks.slice().sort((a, b) => a.pickOrder - b.pickOrder);
+  const roleAbbr = (role: string) =>
+    role === 'ALL_ROUNDER' ? 'AR' :
+    role === 'WICKET_KEEPER' ? 'WK' :
+    role === 'BATSMAN' ? 'BAT' : 'BWL';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
       {/* Toss Modal — hidden for the waiting user during 'calling' phase; shown for caller + flipping + result */}
@@ -810,54 +817,124 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           </div>
         )}
 
-        {/* ── Mobile-only compact team summary ── */}
+        {/* ── Mobile-only team list (starters + bench) ── */}
         <div className="lg:hidden mb-2 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-          <div className="flex items-stretch">
-            {/* My team */}
-            <div className="flex-1 min-w-0 px-2.5 py-2 bg-gradient-to-br from-green-50 to-emerald-50 border-r border-gray-200">
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="text-[10px] font-bold text-green-800 truncate">Your Team</span>
-                <span className="text-[9px] font-bold bg-green-700 text-white px-1.5 py-0 rounded-full shrink-0">
-                  {myPicks.length}/{effectiveSlots.filter(s => s === mySignupId).length || 7}
-                </span>
-              </div>
-              {myPicks.length === 0 ? (
-                <p className="text-[9px] text-gray-400 italic">No picks yet</p>
-              ) : (
-                <div className="flex flex-wrap gap-x-1.5 gap-y-0.5">
-                  {myPicks.map((pick) => (
-                    <span key={pick.id} className={`text-[8px] font-semibold truncate max-w-[80px] ${pick.pickOrder > 5 ? 'text-orange-600' : 'text-gray-800'}`}>
-                      {pick.pickOrder > 5 ? '🪑' : `${pick.pickOrder}.`} {pick.player.name.split(' ').slice(-1)[0]}
-                    </span>
-                  ))}
-                </div>
-              )}
+
+          {/* Column headers */}
+          <div className="grid grid-cols-2">
+            <div className="flex items-center justify-between px-2.5 py-1.5 bg-green-700">
+              <span className="text-[11px] font-bold text-white truncate">Your Team</span>
+              <span className="text-[9px] font-bold bg-white/20 text-white px-1.5 rounded-full ml-1 shrink-0">
+                {myPicks.length}/{effectiveSlots.filter(s => s === mySignupId).length || 7}
+              </span>
             </div>
-            {/* VS divider */}
-            <div className="flex items-center justify-center px-1.5 shrink-0 bg-white">
-              <span className="text-[10px] font-black text-gray-400">VS</span>
-            </div>
-            {/* Opponent team */}
-            <div className="flex-1 min-w-0 px-2.5 py-2 bg-gradient-to-br from-red-50 to-orange-50 border-l border-gray-200">
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="text-[10px] font-bold text-red-800 truncate">{opponent.name.split(' ')[0]}</span>
-                <span className="text-[9px] font-bold bg-red-700 text-white px-1.5 py-0 rounded-full shrink-0">
-                  {opponentPicks.length}/{effectiveSlots.filter(s => s === opponentSignupId).length || 7}
-                </span>
-              </div>
-              {opponentPicks.length === 0 ? (
-                <p className="text-[9px] text-gray-400 italic">No picks yet</p>
-              ) : (
-                <div className="flex flex-wrap gap-x-1.5 gap-y-0.5">
-                  {opponentPicks.map((pick) => (
-                    <span key={pick.id} className={`text-[8px] font-semibold truncate max-w-[80px] ${pick.pickOrder > 5 ? 'text-orange-600' : 'text-gray-800'}`}>
-                      {pick.pickOrder > 5 ? '🪑' : `${pick.pickOrder}.`} {pick.player.name.split(' ').slice(-1)[0]}
-                    </span>
-                  ))}
-                </div>
-              )}
+            <div className="flex items-center justify-between px-2.5 py-1.5 bg-red-700 border-l border-white/20">
+              <span className="text-[11px] font-bold text-white truncate">{opponent.name.split(' ')[0]}</span>
+              <span className="text-[9px] font-bold bg-white/20 text-white px-1.5 rounded-full ml-1 shrink-0">
+                {opponentPicks.length}/{effectiveSlots.filter(s => s === opponentSignupId).length || 7}
+              </span>
             </div>
           </div>
+
+          {/* Starting 5 label */}
+          <div className="grid grid-cols-2 bg-gray-50 border-b border-gray-200">
+            <div className="px-2 py-0.5">
+              <span className="text-[9px] font-bold text-green-700 uppercase tracking-wide">⚡ Starting 5</span>
+            </div>
+            <div className="px-2 py-0.5 border-l border-gray-200">
+              <span className="text-[9px] font-bold text-red-700 uppercase tracking-wide">⚡ Starting 5</span>
+            </div>
+          </div>
+
+          {/* Starter rows 1–5 */}
+          {[0,1,2,3,4].map(i => {
+            const myP = sortedMyPicks[i];
+            const oppP = sortedOppPicks[i];
+            return (
+              <div key={i} className="grid grid-cols-2 border-b border-gray-100">
+                <div className="px-2 py-1.5 flex items-center gap-1 min-w-0 bg-green-50/50">
+                  <span className="text-[9px] font-bold text-green-700 w-4 shrink-0">{i+1}.</span>
+                  {myP ? (
+                    <>
+                      <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{myP.player.name.split(' ').slice(-1)[0]}</span>
+                      <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(myP.player.role)}</span>
+                    </>
+                  ) : (
+                    <span className="text-[9px] text-gray-300 italic">empty</span>
+                  )}
+                </div>
+                <div className="px-2 py-1.5 flex items-center gap-1 min-w-0 bg-red-50/50 border-l border-gray-200">
+                  <span className="text-[9px] font-bold text-red-700 w-4 shrink-0">{i+1}.</span>
+                  {oppP ? (
+                    <>
+                      <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{oppP.player.name.split(' ').slice(-1)[0]}</span>
+                      <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(oppP.player.role)}</span>
+                    </>
+                  ) : (
+                    <span className="text-[9px] text-gray-300 italic">empty</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Bench label */}
+          <div className="grid grid-cols-2 bg-orange-50 border-y border-orange-100">
+            <div className="px-2 py-0.5">
+              <span className="text-[9px] font-bold text-orange-600 uppercase tracking-wide">
+                {myWaivedBench ? '✅ No Bench' : '🪑 Bench'}
+              </span>
+            </div>
+            <div className="px-2 py-0.5 border-l border-orange-100">
+              <span className="text-[9px] font-bold text-orange-600 uppercase tracking-wide">
+                {opponentWaivedBench ? '✅ No Bench' : '🪑 Bench'}
+              </span>
+            </div>
+          </div>
+
+          {/* Bench rows 6–7 */}
+          {[5,6].map(i => {
+            const myP = sortedMyPicks[i];
+            const oppP = sortedOppPicks[i];
+            return (
+              <div key={i} className={`grid grid-cols-2 ${i === 5 ? 'border-b border-gray-100' : ''}`}>
+                <div className="px-2 py-1.5 flex items-center gap-1 min-w-0 bg-orange-50/30">
+                  {myWaivedBench ? (
+                    <span className="text-[9px] text-gray-300 italic pl-5">—</span>
+                  ) : (
+                    <>
+                      <span className="text-[9px] font-bold text-orange-600 w-4 shrink-0">{i+1}.</span>
+                      {myP ? (
+                        <>
+                          <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{myP.player.name.split(' ').slice(-1)[0]}</span>
+                          <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(myP.player.role)}</span>
+                        </>
+                      ) : (
+                        <span className="text-[9px] text-gray-300 italic">empty</span>
+                      )}
+                    </>
+                  )}
+                </div>
+                <div className="px-2 py-1.5 flex items-center gap-1 min-w-0 bg-orange-50/30 border-l border-gray-200">
+                  {opponentWaivedBench ? (
+                    <span className="text-[9px] text-gray-300 italic pl-5">—</span>
+                  ) : (
+                    <>
+                      <span className="text-[9px] font-bold text-orange-600 w-4 shrink-0">{i+1}.</span>
+                      {oppP ? (
+                        <>
+                          <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{oppP.player.name.split(' ').slice(-1)[0]}</span>
+                          <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(oppP.player.role)}</span>
+                        </>
+                      ) : (
+                        <span className="text-[9px] text-gray-300 italic">empty</span>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
