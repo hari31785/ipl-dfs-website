@@ -191,82 +191,60 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
     const playerPoints = playerStats?.points || 0;
     const didNotPlay = playerStats?.didNotPlay || false;
     const showScoreBadge = (!!playerStats && !didNotPlay) || (!playerStats && gameIsCompleted);
-    
+
+    // Status label: only one can be true at a time
+    const statusLabel = isSwapped ? '↑SWAP' : swappedOut ? '↓BENCH' : (didNotPlay && !isActive && !swappedOut) ? 'DNP' : null;
+    const statusColor = isSwapped ? 'bg-blue-500' : swappedOut ? 'bg-orange-500' : 'bg-red-500';
+
     return (
-      <div 
-        key={pick.id} 
-        className={`group relative rounded-lg sm:rounded-xl p-2 sm:p-4 transition-all ${
-          isActive 
-            ? 'bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300' 
-            : 'bg-gradient-to-br from-gray-100 to-gray-50 border-2 border-gray-300 opacity-75'
+      <div
+        key={pick.id}
+        className={`flex items-center gap-1.5 rounded-lg p-1.5 sm:p-3 ${
+          isActive
+            ? 'bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300'
+            : 'bg-gray-50 border-2 border-gray-200 opacity-75'
         }`}
       >
-        {isSwapped && (
-          <div className="absolute top-1 right-1 bg-blue-500 text-white text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold">
-            SWAPPED
+        {/* Pick number */}
+        <div className={`w-5 h-5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-black text-[9px] sm:text-sm shadow shrink-0 ${
+          isActive ? 'bg-gradient-to-br from-cricket-600 to-green-800' : 'bg-gray-400'
+        }`}>
+          {pick.pickOrder}
+        </div>
+
+        {/* Name + role/team */}
+        <div className="flex-1 min-w-0">
+          <div className={`font-bold text-[10px] sm:text-sm leading-tight truncate ${isActive ? 'text-black' : 'text-gray-500'}`}>
+            {pick.player.name}
           </div>
-        )}
-        {swappedOut && (
-          <div className="absolute top-1 right-1 bg-orange-500 text-white text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold">
-            BENCH
-          </div>
-        )}
-        {didNotPlay && !isActive && !swappedOut && (
-          <div className="absolute top-1 right-1 bg-red-500 text-white text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold">
-            DNP
-          </div>
-        )}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-1.5">
-            <div className={`w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-black text-[10px] sm:text-sm shadow shrink-0 ${
-              isActive ? 'bg-gradient-to-br from-cricket-600 to-green-800' : 'bg-gray-400'
-            }`}>
-              {pick.pickOrder}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className={`font-bold text-[11px] sm:text-lg leading-tight truncate ${
-                isActive ? 'text-black' : 'text-gray-600'
-              }`}>
-                {pick.player.name}
-              </div>
-              {isSwapped && swappedFor && (
-                <span className="text-[9px] sm:text-xs text-blue-600 block truncate">(replaces {swappedFor})</span>
-              )}
-              {swappedOut && replacedBy && (
-                <span className="text-[9px] sm:text-xs text-orange-600 block truncate">(→ {replacedBy})</span>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-1">
-            <span className={`text-[9px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded ${
-              isActive ? 'bg-green-200 text-black' : 'bg-gray-200 text-gray-600'
-            }`}>
+          <div className="flex items-center gap-1 mt-0.5">
+            <span className={`text-[8px] sm:text-[10px] font-semibold px-1 py-0 rounded ${isActive ? 'bg-green-200 text-black' : 'bg-gray-200 text-gray-500'}`}>
               {pick.player.role}
             </span>
-            <span 
-              className="text-[9px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded border" 
-              style={{ 
-                backgroundColor: pick.player.iplTeam.color + '15', 
-                color: 'black',
-                borderColor: pick.player.iplTeam.color + '60'
-              }}
-            >
+            <span className="text-[8px] sm:text-[10px] font-semibold px-1 py-0 rounded border"
+              style={{ backgroundColor: pick.player.iplTeam.color + '20', color: 'black', borderColor: pick.player.iplTeam.color + '60' }}>
               {pick.player.iplTeam.shortName}
             </span>
-            {showScoreBadge && isActive && (
-              <button
-                onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
-                className={`text-[10px] sm:text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-1.5 sm:px-3 py-0.5 sm:py-2 rounded shadow border border-green-700 transition-transform ${playerStats ? 'hover:scale-105 cursor-pointer' : 'cursor-default'}`}
-              >
-                ⭐ {playerPoints.toFixed(1)}
-              </button>
-            )}
-            {showScoreBadge && !isActive && (
-              <span className="text-[9px] sm:text-xs font-bold text-gray-500">
-                {playerPoints.toFixed(1)}pts
+            {statusLabel && (
+              <span className={`text-[8px] sm:text-[10px] font-bold px-1 py-0 rounded text-white ${statusColor}`}>
+                {statusLabel}
               </span>
             )}
           </div>
+        </div>
+
+        {/* Score */}
+        <div className="shrink-0 text-right">
+          {showScoreBadge && isActive ? (
+            <button
+              onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
+              className={`text-[10px] sm:text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded shadow border border-green-700 ${playerStats ? 'hover:scale-105 cursor-pointer' : 'cursor-default'}`}
+            >
+              ⭐{playerPoints.toFixed(1)}
+            </button>
+          ) : showScoreBadge && !isActive ? (
+            <span className="text-[9px] sm:text-xs font-bold text-gray-400">{playerPoints.toFixed(1)}</span>
+          ) : null}
         </div>
       </div>
     );
