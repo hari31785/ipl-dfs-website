@@ -238,6 +238,9 @@ export default function ContestsPage() {
   const [showSignupsModal, setShowSignupsModal] = useState(false);
   const [selectedContestSignups, setSelectedContestSignups] = useState<any>(null);
   const [loadingSignups, setLoadingSignups] = useState(false);
+  const [showReopenModal, setShowReopenModal] = useState(false);
+  const [reopenContestId, setReopenContestId] = useState<string | null>(null);
+  const [reopenDeadline, setReopenDeadline] = useState('');
 
   useEffect(() => {
     // First run cleanup for past due contests
@@ -545,17 +548,28 @@ export default function ContestsPage() {
     }
   };
 
-  const reopenSignups = async (contestId: string) => {
-    if (!confirm('Reopen signups? This will allow more users to join the contest. Existing matchups will be preserved.')) {
-      return;
-    }
+  const toLocalDateTimeInput = (date: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
 
+  const reopenSignups = (contestId: string) => {
+    // Pre-fill with now + 2 hours
+    setReopenDeadline(toLocalDateTimeInput(new Date(Date.now() + 2 * 60 * 60 * 1000)));
+    setReopenContestId(contestId);
+    setShowReopenModal(true);
+  };
+
+  const confirmReopenSignups = async () => {
+    if (!reopenContestId || !reopenDeadline) return;
+    setShowReopenModal(false);
     setGlobalLoading(true, 'Reopening signups...');
     try {
-      const response = await fetch(`/api/admin/contests/${contestId}/reopen-signups`, {
+      const response = await fetch(`/api/admin/contests/${reopenContestId}/reopen-signups`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newDeadline: new Date(reopenDeadline).toISOString() }),
       });
-
       if (response.ok) {
         const data = await response.json();
         await fetchContests();
@@ -570,6 +584,9 @@ export default function ContestsPage() {
       console.error('Error reopening signups:', error);
       setGlobalLoading(false);
       alert('Error reopening signups');
+    } finally {
+      setReopenContestId(null);
+      setReopenDeadline('');
     }
   };
 
@@ -1578,6 +1595,55 @@ export default function ContestsPage() {
                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reopen Signups Modal */}
+      {showReopenModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 rounded-t-xl">
+              <h2 className="text-lg font-bold text-white">🔓 Reopen Signups</h2>
+              <p className="text-green-100 text-sm mt-0.5">Set a new deadline so users can join again</p>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+                ⚠️ This extends the signup deadline for <strong>all contests on the same game</strong>. Existing matchups and picks are preserved.
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  New Signup Deadline
+                </label>
+                <input
+                  type="datetime-local"
+                  value={reopenDeadline}
+                  onChange={(e) => setReopenDeadline(e.target.value)}
+                  min={toLocalDateTimeInput(new Date())}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Must be a future date/time</p>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowReopenModal(false);
+                  setReopenContestId(null);
+                  setReopenDeadline('');
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmReopenSignups}
+                disabled={!reopenDeadline || new Date(reopenDeadline) <= new Date()}
+                className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ✅ Reopen Signups
               </button>
             </div>
           </div>

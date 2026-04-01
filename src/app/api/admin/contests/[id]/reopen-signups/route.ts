@@ -9,24 +9,27 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const body = await request.json();
+    const { newDeadline } = body;
+
+    if (!newDeadline) {
+      return NextResponse.json(
+        { message: 'New signup deadline is required' },
+        { status: 400 }
+      );
+    }
+
+    const deadlineDate = new Date(newDeadline);
+    if (isNaN(deadlineDate.getTime()) || deadlineDate <= new Date()) {
+      return NextResponse.json(
+        { message: 'Deadline must be a valid date in the future' },
+        { status: 400 }
+      );
+    }
+
     const contest = await prisma.contest.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: {
-            matchups: true
-          }
-        },
-        matchups: {
-          include: {
-            _count: {
-              select: {
-                draftPicks: true
-              }
-            }
-          }
-        }
-      }
+      select: { id: true, iplGameId: true, status: true }
     });
 
     if (!contest) {
@@ -36,11 +39,20 @@ export async function POST(
       );
     }
 
-    // Just reopen the contest without deleting matchups
-    // This allows more users to join while preserving existing matchups
-    const updatedContest = await prisma.contest.update({
+    // Extend the signup deadline on the game AND reopen the contest atomically
+    await prisma.$transaction([
+      prisma.iPLGame.update({
+        where: { id: contest.iplGameId },
+        data: { signupDeadline: deadlineDate }
+      }),
+      prisma.contest.update({
+        where: { id },
+        data: { status: 'SIGNUP_OPEN' }
+      })
+    ]);
+
+    const updatedContest = await prisma.contest.findUnique({
       where: { id },
-      data: { status: 'SIGNUP_OPEN' },
       include: {
         iplGame: {
           include: {
@@ -57,10 +69,10 @@ export async function POST(
       }
     });
 
-    console.log(`✅ Reopened signups for contest ${contest.id}`);
+    console.log(`✅ Reopened signups for contest ${id} — new deadline: ${deadlineDate.toISOString()}`);
 
     return NextResponse.json({
-      message: 'Signups reopened successfully',
+      message: `Signups reopened! New deadline: ${deadlineDate.toLocaleString()}`,
       contest: updatedContest
     });
 

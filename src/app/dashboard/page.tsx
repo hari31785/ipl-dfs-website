@@ -1163,15 +1163,21 @@ export default function DashboardPage() {
                                               )}
                                             </button>
                                             {hasJoined && unjoiningContest !== contest.id && (
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  handleUnjoinContest(contest.id);
-                                                }}
-                                                className="mt-1 w-full px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded border border-red-600 transition-colors"
-                                              >
-                                                ✕ Unjoin
-                                              </button>
+                                              new Date() > new Date(game.signupDeadline) ? (
+                                                <p className="mt-1 w-full text-center text-xs text-gray-400 font-medium py-1">
+                                                  🔒 Deadline Passed
+                                                </p>
+                                              ) : (
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleUnjoinContest(contest.id);
+                                                  }}
+                                                  className="mt-1 w-full px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded border border-red-600 transition-colors"
+                                                >
+                                                  ✕ Unjoin
+                                                </button>
+                                              )
                                             )}
                                           </div>
                                         );
@@ -1640,13 +1646,19 @@ export default function DashboardPage() {
                           </button>
                         )}
                         {!signup.matchup && (
-                          <button 
-                            onClick={() => handleLeaveContest(signup.id)}
-                            disabled={leavingContest === signup.id}
-                            className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {leavingContest === signup.id ? 'Leaving...' : 'Leave Contest'}
-                          </button>
+                          new Date() > new Date(signup.contest.iplGame.signupDeadline) ? (
+                            <span className="flex-1 text-center text-xs text-gray-400 font-medium py-1.5">
+                              🔒 Deadline Passed
+                            </span>
+                          ) : (
+                            <button 
+                              onClick={() => handleLeaveContest(signup.id)}
+                              disabled={leavingContest === signup.id}
+                              className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {leavingContest === signup.id ? 'Leaving...' : 'Leave Contest'}
+                            </button>
+                          )
                         )}
                       </div>
                     </div>

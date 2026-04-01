@@ -16,7 +16,13 @@ export async function POST(request: Request) {
     const signup = await prisma.contestSignup.findUnique({
       where: { id: signupId },
       include: {
-        contest: true,
+        contest: {
+          include: {
+            iplGame: {
+              select: { signupDeadline: true }
+            }
+          }
+        },
       },
     })
 
@@ -24,6 +30,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Contest signup not found" },
         { status: 404 }
+      )
+    }
+
+    // Block leaving after the signup deadline
+    if (new Date() > new Date(signup.contest.iplGame.signupDeadline)) {
+      return NextResponse.json(
+        { error: "Cannot leave after the signup deadline has passed" },
+        { status: 400 }
       )
     }
 
