@@ -856,7 +856,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   <span className="text-[9px] font-bold text-green-700 w-4 shrink-0">{i+1}.</span>
                   {myP ? (
                     <>
-                      <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{myP.player.name.split(' ').slice(-1)[0]}</span>
+                      <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{myP.player.name}</span>
                       <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(myP.player.role)}</span>
                     </>
                   ) : (
@@ -867,7 +867,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   <span className="text-[9px] font-bold text-red-700 w-4 shrink-0">{i+1}.</span>
                   {oppP ? (
                     <>
-                      <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{oppP.player.name.split(' ').slice(-1)[0]}</span>
+                      <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{oppP.player.name}</span>
                       <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(oppP.player.role)}</span>
                     </>
                   ) : (
@@ -906,7 +906,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                       <span className="text-[9px] font-bold text-orange-600 w-4 shrink-0">{i+1}.</span>
                       {myP ? (
                         <>
-                          <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{myP.player.name.split(' ').slice(-1)[0]}</span>
+                          <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{myP.player.name}</span>
                           <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(myP.player.role)}</span>
                         </>
                       ) : (
@@ -923,7 +923,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                       <span className="text-[9px] font-bold text-orange-600 w-4 shrink-0">{i+1}.</span>
                       {oppP ? (
                         <>
-                          <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{oppP.player.name.split(' ').slice(-1)[0]}</span>
+                          <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{oppP.player.name}</span>
                           <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(oppP.player.role)}</span>
                         </>
                       ) : (
