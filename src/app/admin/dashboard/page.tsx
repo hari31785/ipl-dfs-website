@@ -186,56 +186,57 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Admin Dashboard - Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Link href="/admin/users" className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
-            <div className="flex items-center justify-between">
+        {/* Mobile: horizontal scroll strip  |  Desktop: 5-col grid */}
+        <div className="flex gap-3 overflow-x-auto pb-1 mb-4 md:mb-8 md:grid md:grid-cols-5 md:gap-6 md:overflow-visible md:pb-0 scrollbar-hide">
+          <Link href="/admin/users" className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
               <div>
-                <p className="text-sm font-medium text-gray-600 group-hover:text-blue-600 transition-colors">Total Users</p>
-                <p className="text-3xl font-bold text-primary-800 group-hover:text-blue-700 transition-colors">{stats.totalUsers}</p>
+                <p className="text-[10px] md:text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors leading-tight">Total Users</p>
+                <p className="text-2xl md:text-3xl font-bold text-primary-800 group-hover:text-blue-700 transition-colors">{stats.totalUsers}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-500 group-hover:text-blue-600 transition-colors" />
+              <Users className="h-5 w-5 md:h-8 md:w-8 text-blue-500 group-hover:text-blue-600 transition-colors" />
             </div>
           </Link>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between">
+          <div className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Players</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.totalPlayers}</p>
+                <p className="text-[10px] md:text-sm font-medium text-gray-500 leading-tight">Total Players</p>
+                <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.totalPlayers}</p>
               </div>
-              <Target className="h-8 w-8 text-cricket-500" />
+              <Target className="h-5 w-5 md:h-8 md:w-8 text-cricket-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between">
+          <div className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
               <div>
-                <p className="text-sm font-medium text-gray-600">IPL Teams</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.totalTeams}</p>
+                <p className="text-[10px] md:text-sm font-medium text-gray-500 leading-tight">IPL Teams</p>
+                <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.totalTeams}</p>
               </div>
-              <Database className="h-8 w-8 text-secondary-500" />
+              <Database className="h-5 w-5 md:h-8 md:w-8 text-secondary-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between">
+          <div className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Contests</p>
-                <p className="text-3xl font-bold text-red-600">{stats.activeContests}</p>
+                <p className="text-[10px] md:text-sm font-medium text-gray-500 leading-tight">Active Contests</p>
+                <p className="text-2xl md:text-3xl font-bold text-red-600">{stats.activeContests}</p>
               </div>
-              <Trophy className="h-8 w-8 text-red-500" />
+              <Trophy className="h-5 w-5 md:h-8 md:w-8 text-red-500" />
             </div>
           </div>
 
-          <Link href="/admin/messages" className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
-            <div className="flex items-center justify-between">
+          <Link href="/admin/messages" className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
               <div>
-                <p className="text-sm font-medium text-gray-600 group-hover:text-purple-600 transition-colors">Pending Messages</p>
-                <p className="text-3xl font-bold text-purple-600 group-hover:text-purple-700 transition-colors">{stats.pendingMessages}</p>
+                <p className="text-[10px] md:text-sm font-medium text-gray-500 group-hover:text-purple-600 transition-colors leading-tight">Pending Messages</p>
+                <p className="text-2xl md:text-3xl font-bold text-purple-600 group-hover:text-purple-700 transition-colors">{stats.pendingMessages}</p>
               </div>
-              <MessageSquare className="h-8 w-8 text-purple-500 group-hover:text-purple-600 transition-colors" />
+              <MessageSquare className="h-5 w-5 md:h-8 md:w-8 text-purple-500 group-hover:text-purple-600 transition-colors" />
             </div>
           </Link>
         </div>
