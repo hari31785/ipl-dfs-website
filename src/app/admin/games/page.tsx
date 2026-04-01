@@ -276,7 +276,7 @@ export default function GamesPage() {
                 className="flex items-center gap-2 text-white hover:text-indigo-200 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </a>
               <div className="w-px h-6 bg-white/30"></div>
               <div className="flex items-center gap-3">
@@ -290,22 +290,20 @@ export default function GamesPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <p className="text-gray-900 font-medium">Schedule and manage IPL matches</p>
-        </div>
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
+      <div className="flex justify-between items-center mb-3 md:mb-6">
+        <p className="hidden sm:block text-gray-900 font-medium text-sm">Schedule and manage IPL matches</p>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 md:px-4 rounded-lg flex items-center gap-1.5 transition-colors font-medium text-sm"
         >
           <Plus className="h-4 w-4" />
-          Create New Game
+          <span className="hidden sm:inline">Create New </span>Game
         </button>
       </div>
 
       {/* Filters */}
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex flex-wrap gap-2 md:gap-4">
         <div>
           <label className="block text-sm font-medium mb-2">Tournament:</label>
           <select
@@ -339,7 +337,8 @@ export default function GamesPage() {
       </div>
 
       {/* Games List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Desktop table */}
+      <div className="hidden md:block bg-white rounded-lg shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -452,6 +451,43 @@ export default function GamesPage() {
           <div className="text-center py-12 text-gray-500">
             No games found
           </div>
+        )}
+      </div>
+      {/* Mobile cards */}
+      <div className="md:hidden bg-white rounded-lg shadow divide-y divide-gray-200">
+        {filteredGames.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">No games found</div>
+        ) : (
+          filteredGames.map((game) => (
+            <div key={game.id} className="p-3">
+              <div className="flex items-start justify-between mb-1.5">
+                <div>
+                  <div className="font-semibold text-sm text-gray-900">{game.title}</div>
+                  <div className="text-xs text-gray-400">{game.tournament.name}</div>
+                </div>
+                <span className={`inline-flex px-2 py-0.5 text-[10px] font-medium rounded-full ${getStatusColor(game.status)}`}>
+                  {game.status.replace('_', ' ')}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: game.team1.color }}></span>
+                <span className="text-xs font-medium text-gray-800">{game.team1.shortName}</span>
+                <span className="text-xs text-gray-400">vs</span>
+                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: game.team2.color }}></span>
+                <span className="text-xs font-medium text-gray-800">{game.team2.shortName}</span>
+                <span className="ml-auto text-xs text-gray-400">{game._count.contests} contest(s)</span>
+              </div>
+              <div className="text-xs text-gray-500 mb-2">
+                {new Date(game.gameDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
+                <span className="mx-1 text-gray-300">·</span>
+                Deadline: {new Date(game.signupDeadline).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleEdit(game)} className="flex-1 text-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold">Edit</button>
+                <button onClick={() => handleDelete(game.id)} className="flex-1 text-center px-3 py-1.5 bg-red-600 text-white rounded text-xs font-semibold">Delete</button>
+              </div>
+            </div>
+          ))
         )}
       </div>
 

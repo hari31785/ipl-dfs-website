@@ -688,7 +688,7 @@ export default function BulkStatsPage() {
                 className="flex items-center gap-2 text-white hover:text-orange-200 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </a>
               <div className="w-px h-6 bg-white/30"></div>
               <div className="flex items-center gap-3">
@@ -702,10 +702,10 @@ export default function BulkStatsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Tournament Filter */}
         {tournaments.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 md:p-6 mb-3 md:mb-6">
             <label className="block text-sm font-bold text-gray-700 mb-2">
               Filter by Tournament
             </label>
@@ -715,7 +715,7 @@ export default function BulkStatsPage() {
                 setSelectedTournament(e.target.value);
                 setSelectedGame(''); // Clear game selection when tournament changes
               }}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-medium text-gray-900"
+              className="w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-base font-medium text-gray-900"
             >
               <option value="all" className="text-gray-900">All Tournaments</option>
               {tournaments.map((tournament) => (
@@ -728,16 +728,16 @@ export default function BulkStatsPage() {
         )}
 
         {/* Game Selection */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 md:p-6 mb-3 md:mb-6">
           <label className="block text-sm font-bold text-gray-700 mb-2">
             Select Game
           </label>
-          <div className="flex gap-4 items-end">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-end">
             <div className="flex-1">
               <select
                 value={selectedGame}
                 onChange={(e) => setSelectedGame(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-medium text-gray-900"
+                className="w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-base font-medium text-gray-900"
               >
                 <option value="" className="text-gray-900">-- Select a game --</option>
                 {games
@@ -753,10 +753,10 @@ export default function BulkStatsPage() {
               <button
                 onClick={handleFetchScoresClick}
                 disabled={isFetchingScores || loadingScoreDbGames}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                className="flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
               >
-                <Download className="h-5 w-5" />
-                {loadingScoreDbGames ? 'Loading games...' : isFetchingScores ? 'Fetching...' : 'Fetch Scores from API'}
+                <Download className="h-4 w-4 md:h-5 md:w-5" />
+                {loadingScoreDbGames ? 'Loading...' : isFetchingScores ? 'Fetching...' : <><span className="hidden sm:inline">Fetch Scores from API</span><span className="sm:hidden">Fetch Scores</span></>}
               </button>
             )}
           </div>
@@ -836,9 +836,9 @@ export default function BulkStatsPage() {
           <>
             {/* Existing Stats Section */}
             {existingStats.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 md:p-6 mb-3 md:mb-6">
+                <div className="flex items-center justify-between mb-3 md:mb-4">
+                  <h2 className="text-base md:text-xl font-bold text-gray-900">
                     Existing Stats ({existingStats.length})
                   </h2>
                   <button
@@ -850,7 +850,8 @@ export default function BulkStatsPage() {
                     {isDeletingAll ? 'Deleting All...' : 'Delete All'}
                   </button>
                 </div>
-                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto max-h-[600px] overflow-y-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                       <tr>
@@ -873,172 +874,29 @@ export default function BulkStatsPage() {
                             <>
                               <td className="px-4 py-3 font-medium text-gray-900">{stat.player.name}</td>
                               <td className="px-4 py-3">
-                                <span 
-                                  className="text-xs font-bold px-2 py-1 rounded"
-                                  style={{ 
-                                    backgroundColor: stat.player.iplTeam.color + '20',
-                                    color: stat.player.iplTeam.color
-                                  }}
-                                >
-                                  {stat.player.iplTeam.shortName}
-                                </span>
+                                <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: stat.player.iplTeam.color + '20', color: stat.player.iplTeam.color }}>{stat.player.iplTeam.shortName}</span>
                               </td>
-                              <td className="px-4 py-3">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={editFormData.runs ?? 0}
-                                  onChange={(e) => setEditFormData({ ...editFormData, runs: parseInt(e.target.value) || 0 })}
-                                  disabled={editFormData.didNotPlay ?? false}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                              </td>
-                              <td className="px-4 py-3">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={editFormData.wickets ?? 0}
-                                  onChange={(e) => setEditFormData({ ...editFormData, wickets: parseInt(e.target.value) || 0 })}
-                                  disabled={editFormData.didNotPlay ?? false}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                              </td>
-                              <td className="px-4 py-3">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={editFormData.catches ?? 0}
-                                  onChange={(e) => setEditFormData({ ...editFormData, catches: parseInt(e.target.value) || 0 })}
-                                  disabled={editFormData.didNotPlay ?? false}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                              </td>
-                              <td className="px-4 py-3">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={editFormData.runOuts ?? 0}
-                                  onChange={(e) => setEditFormData({ ...editFormData, runOuts: parseInt(e.target.value) || 0 })}
-                                  disabled={editFormData.didNotPlay ?? false}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                              </td>
-                              <td className="px-4 py-3">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={editFormData.stumpings ?? 0}
-                                  onChange={(e) => setEditFormData({ ...editFormData, stumpings: parseInt(e.target.value) || 0 })}
-                                  disabled={editFormData.didNotPlay ?? false}
-                                  className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={editFormData.didNotPlay ?? false}
-                                  onChange={(e) => {
-                                    const isChecked = e.target.checked;
-                                    setEditFormData({ 
-                                      ...editFormData, 
-                                      didNotPlay: isChecked,
-                                      // Clear all stats if DNP is checked
-                                      ...(isChecked && {
-                                        runs: 0,
-                                        wickets: 0,
-                                        catches: 0,
-                                        runOuts: 0,
-                                        stumpings: 0
-                                      })
-                                    });
-                                  }}
-                                  className="w-4 h-4"
-                                />
-                              </td>
-                              <td className="px-4 py-3 text-center font-bold text-green-600">
-                                {editFormData.didNotPlay ? (
-                                  <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span>
-                                ) : (
-                                  calculatePoints(
-                                    editFormData.runs ?? 0,
-                                    editFormData.wickets ?? 0,
-                                    editFormData.catches ?? 0,
-                                    editFormData.runOuts ?? 0,
-                                    editFormData.stumpings ?? 0
-                                  )
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center justify-center gap-2">
-                                  <button
-                                    onClick={() => handleUpdateStat(stat.id)}
-                                    disabled={isUpdating}
-                                    className="p-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Save"
-                                  >
-                                    <Save className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setEditingStatId(null);
-                                      setEditFormData({});
-                                    }}
-                                    disabled={isUpdating}
-                                    className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Cancel"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </td>
+                              <td className="px-4 py-3"><input type="number" min="0" value={editFormData.runs ?? 0} onChange={(e) => setEditFormData({ ...editFormData, runs: parseInt(e.target.value) || 0 })} disabled={editFormData.didNotPlay ?? false} className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" /></td>
+                              <td className="px-4 py-3"><input type="number" min="0" value={editFormData.wickets ?? 0} onChange={(e) => setEditFormData({ ...editFormData, wickets: parseInt(e.target.value) || 0 })} disabled={editFormData.didNotPlay ?? false} className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" /></td>
+                              <td className="px-4 py-3"><input type="number" min="0" value={editFormData.catches ?? 0} onChange={(e) => setEditFormData({ ...editFormData, catches: parseInt(e.target.value) || 0 })} disabled={editFormData.didNotPlay ?? false} className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" /></td>
+                              <td className="px-4 py-3"><input type="number" min="0" value={editFormData.runOuts ?? 0} onChange={(e) => setEditFormData({ ...editFormData, runOuts: parseInt(e.target.value) || 0 })} disabled={editFormData.didNotPlay ?? false} className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" /></td>
+                              <td className="px-4 py-3"><input type="number" min="0" value={editFormData.stumpings ?? 0} onChange={(e) => setEditFormData({ ...editFormData, stumpings: parseInt(e.target.value) || 0 })} disabled={editFormData.didNotPlay ?? false} className="w-16 px-2 py-1 border rounded text-center text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" /></td>
+                              <td className="px-4 py-3 text-center"><input type="checkbox" checked={editFormData.didNotPlay ?? false} onChange={(e) => { const isChecked = e.target.checked; setEditFormData({ ...editFormData, didNotPlay: isChecked, ...(isChecked && { runs: 0, wickets: 0, catches: 0, runOuts: 0, stumpings: 0 }) }); }} className="w-4 h-4" /></td>
+                              <td className="px-4 py-3 text-center font-bold text-green-600">{editFormData.didNotPlay ? <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span> : calculatePoints(editFormData.runs ?? 0, editFormData.wickets ?? 0, editFormData.catches ?? 0, editFormData.runOuts ?? 0, editFormData.stumpings ?? 0)}</td>
+                              <td className="px-4 py-3"><div className="flex items-center justify-center gap-2"><button onClick={() => handleUpdateStat(stat.id)} disabled={isUpdating} className="p-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50" title="Save"><Save className="h-4 w-4" /></button><button onClick={() => { setEditingStatId(null); setEditFormData({}); }} disabled={isUpdating} className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50" title="Cancel"><X className="h-4 w-4" /></button></div></td>
                             </>
                           ) : (
                             <>
                               <td className="px-4 py-3 font-medium text-gray-900">{stat.player.name}</td>
-                              <td className="px-4 py-3">
-                                <span 
-                                  className="text-xs font-bold px-2 py-1 rounded"
-                                  style={{ 
-                                    backgroundColor: stat.player.iplTeam.color + '20',
-                                    color: stat.player.iplTeam.color
-                                  }}
-                                >
-                                  {stat.player.iplTeam.shortName}
-                                </span>
-                              </td>
+                              <td className="px-4 py-3"><span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: stat.player.iplTeam.color + '20', color: stat.player.iplTeam.color }}>{stat.player.iplTeam.shortName}</span></td>
                               <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.runs}</td>
                               <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.wickets}</td>
                               <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.catches}</td>
                               <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.runOuts}</td>
                               <td className="px-4 py-3 text-center text-gray-900">{stat.didNotPlay ? '—' : stat.stumpings}</td>
-                              <td className="px-4 py-3 text-center">
-                                {stat.didNotPlay ? (
-                                  <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span>
-                                ) : (
-                                  '—'
-                                )}
-                              </td>
+                              <td className="px-4 py-3 text-center">{stat.didNotPlay ? <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span> : '—'}</td>
                               <td className="px-4 py-3 text-center font-bold text-green-600">{stat.points}</td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center justify-center gap-2">
-                                  <button
-                                    onClick={() => handleEditStat(stat)}
-                                    disabled={deletingStatId === stat.id || isDeletingAll}
-                                    className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Edit"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteStat(stat.id)}
-                                    disabled={deletingStatId === stat.id || isDeletingAll}
-                                    className="p-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Delete"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </td>
+                              <td className="px-4 py-3"><div className="flex items-center justify-center gap-2"><button onClick={() => handleEditStat(stat)} disabled={deletingStatId === stat.id || isDeletingAll} className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50" title="Edit"><Edit className="h-4 w-4" /></button><button onClick={() => handleDeleteStat(stat.id)} disabled={deletingStatId === stat.id || isDeletingAll} className="p-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50" title="Delete"><Trash2 className="h-4 w-4" /></button></div></td>
                             </>
                           )}
                         </tr>
@@ -1046,13 +904,55 @@ export default function BulkStatsPage() {
                     </tbody>
                   </table>
                 </div>
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
+                  {existingStats.map((stat) => (
+                    <div key={stat.id} className="p-3">
+                      {editingStatId === stat.id ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ backgroundColor: stat.player.iplTeam.color + '20', color: stat.player.iplTeam.color }}>{stat.player.iplTeam.shortName}</span>
+                              <span className="font-medium text-sm text-gray-900">{stat.player.name}</span>
+                            </div>
+                            <div className="flex gap-1">
+                              <button onClick={() => handleUpdateStat(stat.id)} disabled={isUpdating} className="p-1.5 bg-green-500 text-white rounded disabled:opacity-50"><Save className="h-3.5 w-3.5" /></button>
+                              <button onClick={() => { setEditingStatId(null); setEditFormData({}); }} disabled={isUpdating} className="p-1.5 bg-gray-400 text-white rounded"><X className="h-3.5 w-3.5" /></button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-6 gap-1">
+                            {(['runs','wickets','catches','runOuts','stumpings'] as const).map((field, i) => (
+                              <div key={field}><label className="text-[9px] text-gray-500 block text-center">{['R','W','C','RO','St'][i]}</label><input type="number" min="0" value={(editFormData[field] ?? 0) as number} onChange={(e) => setEditFormData({ ...editFormData, [field]: parseInt(e.target.value) || 0 })} disabled={editFormData.didNotPlay ?? false} className="w-full px-1 py-1 border rounded text-center text-xs text-gray-900 disabled:bg-gray-100" /></div>
+                            ))}
+                            <div><label className="text-[9px] text-gray-500 block text-center">DNP</label><div className="flex justify-center mt-1"><input type="checkbox" checked={editFormData.didNotPlay ?? false} onChange={(e) => { const c = e.target.checked; setEditFormData({ ...editFormData, didNotPlay: c, ...(c && { runs:0, wickets:0, catches:0, runOuts:0, stumpings:0 }) }); }} className="w-4 h-4" /></div></div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ backgroundColor: stat.player.iplTeam.color + '20', color: stat.player.iplTeam.color }}>{stat.player.iplTeam.shortName}</span>
+                              <span className="font-medium text-sm text-gray-900">{stat.player.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {stat.didNotPlay ? <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded font-bold">DNP</span> : <span className="text-sm font-bold text-green-600">{stat.points}pts</span>}
+                              <button onClick={() => handleEditStat(stat)} disabled={deletingStatId === stat.id || isDeletingAll} className="p-1 bg-blue-500 text-white rounded disabled:opacity-50"><Edit className="h-3.5 w-3.5" /></button>
+                              <button onClick={() => handleDeleteStat(stat.id)} disabled={deletingStatId === stat.id || isDeletingAll} className="p-1 bg-red-500 text-white rounded disabled:opacity-50"><Trash2 className="h-3.5 w-3.5" /></button>
+                            </div>
+                          </div>
+                          {!stat.didNotPlay && <div className="text-xs text-gray-500">R:{stat.runs} · W:{stat.wickets} · C:{stat.catches} · RO:{stat.runOuts} · St:{stat.stumpings}</div>}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Bulk Entry Section */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 md:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3 md:mb-4">
+                <h2 className="text-base md:text-xl font-bold text-gray-900">
                   Add/Update Stats (Bulk Entry)
                 </h2>
                 <div className="flex items-center gap-3">
@@ -1085,7 +985,8 @@ export default function BulkStatsPage() {
                 </p>
               </div>
 
-              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto max-h-[600px] overflow-y-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                     <tr>
@@ -1102,102 +1003,50 @@ export default function BulkStatsPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {getGamePlayers().map((player) => (
-                      <tr 
-                        key={player.id} 
-                        className={`hover:bg-gray-50 ${hasAnyStats(player.id) ? 'bg-green-50' : ''}`}
-                      >
+                      <tr key={player.id} className={`hover:bg-gray-50 ${hasAnyStats(player.id) ? 'bg-green-50' : ''}`}>
                         <td className="px-4 py-3 font-medium text-gray-900">{player.name}</td>
-                        <td className="px-4 py-3">
-                          <span 
-                            className="text-xs font-bold px-2 py-1 rounded"
-                            style={{ 
-                              backgroundColor: player.iplTeam.color + '20',
-                              color: player.iplTeam.color
-                            }}
-                          >
-                            {player.iplTeam.shortName}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="number"
-                            min="0"
-                            value={getStatValue(player.id, 'runs') as number}
-                            onChange={(e) => handleStatChange(player.id, 'runs', e.target.value)}
-                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="number"
-                            min="0"
-                            value={getStatValue(player.id, 'wickets') as number}
-                            onChange={(e) => handleStatChange(player.id, 'wickets', e.target.value)}
-                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="number"
-                            min="0"
-                            value={getStatValue(player.id, 'catches') as number}
-                            onChange={(e) => handleStatChange(player.id, 'catches', e.target.value)}
-                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="number"
-                            min="0"
-                            value={getStatValue(player.id, 'runOuts') as number}
-                            onChange={(e) => handleStatChange(player.id, 'runOuts', e.target.value)}
-                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="number"
-                            min="0"
-                            value={getStatValue(player.id, 'stumpings') as number}
-                            onChange={(e) => handleStatChange(player.id, 'stumpings', e.target.value)}
-                            disabled={getStatValue(player.id, 'didNotPlay') as boolean}
-                            className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <input
-                            type="checkbox"
-                            checked={getStatValue(player.id, 'didNotPlay') as boolean}
-                            onChange={(e) => handleStatChange(player.id, 'didNotPlay', e.target.checked)}
-                            className="w-4 h-4"
-                          />
-                        </td>
-                        <td className="px-4 py-3 text-center font-bold text-green-600">
-                          {getStatValue(player.id, 'didNotPlay') ? (
-                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span>
-                          ) : (
-                            calculatePoints(
-                              getStatValue(player.id, 'runs') as number,
-                              getStatValue(player.id, 'wickets') as number,
-                              getStatValue(player.id, 'catches') as number,
-                              getStatValue(player.id, 'runOuts') as number,
-                              getStatValue(player.id, 'stumpings') as number
-                            )
-                          )}
-                        </td>
+                        <td className="px-4 py-3"><span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: player.iplTeam.color + '20', color: player.iplTeam.color }}>{player.iplTeam.shortName}</span></td>
+                        <td className="px-4 py-3"><input type="number" min="0" value={getStatValue(player.id, 'runs') as number} onChange={(e) => handleStatChange(player.id, 'runs', e.target.value)} disabled={getStatValue(player.id, 'didNotPlay') as boolean} className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" placeholder="0" /></td>
+                        <td className="px-4 py-3"><input type="number" min="0" value={getStatValue(player.id, 'wickets') as number} onChange={(e) => handleStatChange(player.id, 'wickets', e.target.value)} disabled={getStatValue(player.id, 'didNotPlay') as boolean} className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" placeholder="0" /></td>
+                        <td className="px-4 py-3"><input type="number" min="0" value={getStatValue(player.id, 'catches') as number} onChange={(e) => handleStatChange(player.id, 'catches', e.target.value)} disabled={getStatValue(player.id, 'didNotPlay') as boolean} className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" placeholder="0" /></td>
+                        <td className="px-4 py-3"><input type="number" min="0" value={getStatValue(player.id, 'runOuts') as number} onChange={(e) => handleStatChange(player.id, 'runOuts', e.target.value)} disabled={getStatValue(player.id, 'didNotPlay') as boolean} className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" placeholder="0" /></td>
+                        <td className="px-4 py-3"><input type="number" min="0" value={getStatValue(player.id, 'stumpings') as number} onChange={(e) => handleStatChange(player.id, 'stumpings', e.target.value)} disabled={getStatValue(player.id, 'didNotPlay') as boolean} className="w-16 px-2 py-1 border rounded text-center focus:ring-2 focus:ring-orange-500 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" placeholder="0" /></td>
+                        <td className="px-4 py-3 text-center"><input type="checkbox" checked={getStatValue(player.id, 'didNotPlay') as boolean} onChange={(e) => handleStatChange(player.id, 'didNotPlay', e.target.checked)} className="w-4 h-4" /></td>
+                        <td className="px-4 py-3 text-center font-bold text-green-600">{getStatValue(player.id, 'didNotPlay') ? <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">DNP</span> : calculatePoints(getStatValue(player.id, 'runs') as number, getStatValue(player.id, 'wickets') as number, getStatValue(player.id, 'catches') as number, getStatValue(player.id, 'runOuts') as number, getStatValue(player.id, 'stumpings') as number)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+              {/* Mobile form cards */}
+              <div className="md:hidden divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
+                {getGamePlayers().map((player) => (
+                  <div key={player.id} className={`p-3 ${hasAnyStats(player.id) ? 'bg-green-50' : ''}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ backgroundColor: player.iplTeam.color + '20', color: player.iplTeam.color }}>{player.iplTeam.shortName}</span>
+                        <span className="font-medium text-sm text-gray-900">{player.name}</span>
+                      </div>
+                      <div className="text-sm font-bold text-green-600">
+                        {getStatValue(player.id, 'didNotPlay') ? <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded font-bold">DNP</span> : calculatePoints(getStatValue(player.id, 'runs') as number, getStatValue(player.id, 'wickets') as number, getStatValue(player.id, 'catches') as number, getStatValue(player.id, 'runOuts') as number, getStatValue(player.id, 'stumpings') as number)}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-6 gap-1">
+                      {(['runs','wickets','catches','runOuts','stumpings'] as const).map((field, i) => (
+                        <div key={field}>
+                          <label className="text-[9px] text-gray-500 block text-center">{['R','W','C','RO','St'][i]}</label>
+                          <input type="number" min="0" value={getStatValue(player.id, field) as number} onChange={(e) => handleStatChange(player.id, field, e.target.value)} disabled={getStatValue(player.id, 'didNotPlay') as boolean} className="w-full px-1 py-1 border rounded text-center text-xs text-gray-900 focus:ring-1 focus:ring-orange-500 disabled:bg-gray-100" placeholder="0" />
+                        </div>
+                      ))}
+                      <div>
+                        <label className="text-[9px] text-gray-500 block text-center">DNP</label>
+                        <div className="flex justify-center mt-1">
+                          <input type="checkbox" checked={getStatValue(player.id, 'didNotPlay') as boolean} onChange={(e) => handleStatChange(player.id, 'didNotPlay', e.target.checked)} className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </>

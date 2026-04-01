@@ -768,7 +768,7 @@ export default function ContestsPage() {
                 className="flex items-center gap-2 text-white hover:text-purple-200 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </a>
               <div className="w-px h-6 bg-white/30"></div>
               <div className="flex items-center gap-3">
@@ -782,7 +782,7 @@ export default function ContestsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
       {/* Create Contest Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -884,15 +884,13 @@ export default function ContestsPage() {
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <p className="text-gray-900 font-medium">Contests are automatically created when IPL games are scheduled</p>
-        </div>
+      <div className="flex justify-between items-center mb-3 md:mb-6">
+        <p className="hidden sm:block text-gray-900 font-medium text-sm">Contests are automatically created when IPL games are scheduled</p>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          className="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors text-sm"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-4 w-4 md:h-5 md:w-5" />
           Add Contest
         </button>
       </div>
@@ -1014,31 +1012,31 @@ export default function ContestsPage() {
                       const isExpanded = expandedGames.has(game.id);
                       return (
                         <div key={game.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
-                          <div className="p-4 cursor-pointer hover:bg-gray-50 transition-colors bg-blue-50" onClick={() => toggleGameExpanded(game.id)}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <button className="text-gray-600 hover:text-gray-900">
-                                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                                </button>
-                                <div>
-                                  <h3 className="text-lg font-bold text-gray-900">{game.title}</h3>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: game.team1.color }}></span>
-                                    <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
-                                    <span className="text-xs text-gray-600">vs</span>
-                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: game.team2.color }}></span>
-                                    <span className="text-sm font-medium text-gray-700">{game.team2.shortName}</span>
+                          <div className="p-3 md:p-4 cursor-pointer hover:bg-blue-100 transition-colors bg-blue-50" onClick={() => toggleGameExpanded(game.id)}>
+                            <div className="flex items-center gap-2">
+                              <button className="text-gray-600 hover:text-gray-900 flex-shrink-0">
+                                {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                              </button>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-sm md:text-lg font-bold text-gray-900 truncate">{game.title}</h3>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: game.team1.color }}></span>
+                                    <span className="text-xs font-medium text-gray-700">{game.team1.shortName}</span>
+                                    <span className="text-xs text-gray-500">vs</span>
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: game.team2.color }}></span>
+                                    <span className="text-xs font-medium text-gray-700">{game.team2.shortName}</span>
                                   </div>
                                 </div>
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                  {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  <span className="mx-1 text-gray-300">·</span>
+                                  {gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}
+                                </div>
                               </div>
-                              <a href={`/admin/stats?gameId=${game.id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-md whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                                📊 Player Stats
+                              <a href={`/admin/stats?gameId=${game.id}`} className="px-2 py-1.5 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs md:text-sm font-bold shadow-md whitespace-nowrap flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                📊<span className="hidden sm:inline"> Stats</span>
                               </a>
-                              <div className="text-right">
-                                <div className="text-sm text-gray-600">Game: {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                <div className="text-xs text-gray-500">Signup by: {new Date(game.signupDeadline).toLocaleDateString()} {new Date(game.signupDeadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                <div className="text-xs text-gray-400 mt-1">{gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}</div>
-                              </div>
                             </div>
                           </div>
                           {isExpanded && (
@@ -1089,31 +1087,31 @@ export default function ContestsPage() {
                       const isExpanded = expandedGames.has(game.id);
                       return (
                         <div key={game.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
-                          <div className="p-4 cursor-pointer hover:bg-gray-50 transition-colors bg-gray-50" onClick={() => toggleGameExpanded(game.id)}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <button className="text-gray-600 hover:text-gray-900">
-                                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                                </button>
-                                <div>
-                                  <h3 className="text-lg font-bold text-gray-900">{game.title}</h3>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: game.team1.color }}></span>
-                                    <span className="text-sm font-medium text-gray-700">{game.team1.shortName}</span>
-                                    <span className="text-xs text-gray-600">vs</span>
-                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: game.team2.color }}></span>
-                                    <span className="text-sm font-medium text-gray-700">{game.team2.shortName}</span>
+                          <div className="p-3 md:p-4 cursor-pointer hover:bg-gray-100 transition-colors bg-gray-50" onClick={() => toggleGameExpanded(game.id)}>
+                            <div className="flex items-center gap-2">
+                              <button className="text-gray-600 hover:text-gray-900 flex-shrink-0">
+                                {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                              </button>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-sm md:text-lg font-bold text-gray-900 truncate">{game.title}</h3>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: game.team1.color }}></span>
+                                    <span className="text-xs font-medium text-gray-700">{game.team1.shortName}</span>
+                                    <span className="text-xs text-gray-500">vs</span>
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: game.team2.color }}></span>
+                                    <span className="text-xs font-medium text-gray-700">{game.team2.shortName}</span>
                                   </div>
                                 </div>
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                  {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  <span className="mx-1 text-gray-300">·</span>
+                                  {gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}
+                                </div>
                               </div>
-                              <a href={`/admin/stats?gameId=${game.id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-md whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                                📊 Player Stats
+                              <a href={`/admin/stats?gameId=${game.id}`} className="px-2 py-1.5 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs md:text-sm font-bold shadow-md whitespace-nowrap flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                📊<span className="hidden sm:inline"> Stats</span>
                               </a>
-                              <div className="text-right">
-                                <div className="text-sm text-gray-600">Game: {new Date(game.gameDate).toLocaleDateString()} {new Date(game.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                <div className="text-xs text-gray-500">Signup by: {new Date(game.signupDeadline).toLocaleDateString()} {new Date(game.signupDeadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                <div className="text-xs text-gray-400 mt-1">{gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}</div>
-                              </div>
                             </div>
                           </div>
                           {isExpanded && (
@@ -1151,7 +1149,7 @@ export default function ContestsPage() {
 
       {/* Table View - Original */}
       {viewMode === 'table' && (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

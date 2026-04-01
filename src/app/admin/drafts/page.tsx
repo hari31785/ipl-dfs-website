@@ -198,7 +198,7 @@ export default function DraftPage() {
                 className="flex items-center gap-2 text-white hover:text-pink-200 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </a>
               <div className="w-px h-6 bg-white/30"></div>
               <div className="flex items-center gap-3">
@@ -212,11 +212,11 @@ export default function DraftPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8 space-y-4 md:space-y-6">
 
         {/* Contest Selection */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Select Contest</h2>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 md:p-6">
+          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 md:mb-4">Select Contest</h2>
 
           {/* Active / In-Progress Contests */}
           {contests.filter(c => c.status !== 'COMPLETED').length > 0 && (
@@ -307,10 +307,11 @@ export default function DraftPage() {
         {/* Matchups List */}
         {selectedContest && matchups.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-              <h3 className="font-bold text-gray-800">Head-to-Head Matchups</h3>
+            <div className="px-3 md:px-6 py-3 md:py-4 bg-gray-50 border-b border-gray-200">
+              <h3 className="font-bold text-gray-800 text-sm md:text-base">Head-to-Head Matchups</h3>
             </div>
-            <div className="overflow-x-auto">
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -325,44 +326,49 @@ export default function DraftPage() {
                   {matchups.map((matchup) => (
                     <tr key={matchup.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-gray-900 text-sm">
-                          {matchup.user1.user.name} vs {matchup.user2.user.name}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          @{matchup.user1.user.username} vs @{matchup.user2.user.username}
-                        </div>
+                        <div className="font-semibold text-gray-900 text-sm">{matchup.user1.user.name} vs {matchup.user2.user.name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">@{matchup.user1.user.username} vs @{matchup.user2.user.username}</div>
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                        {(matchup.firstPickUser?.split(':')[0] === 'user1')
-                          ? matchup.user1.user.name
-                          : matchup.user2.user.name}
+                        {(matchup.firstPickUser?.split(':')[0] === 'user1') ? matchup.user1.user.name : matchup.user2.user.name}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-800">{getDraftProgress(matchup)}</div>
                         <div className="w-32 bg-gray-200 rounded-full h-1.5 mt-1.5">
-                          <div
-                            className="bg-pink-500 h-1.5 rounded-full transition-all"
-                            style={{ width: `${Math.min(100, (matchup.draftPicks.length / (14 - (matchup.firstPickUser?.includes(':w1') ? 2 : 0) - (matchup.firstPickUser?.includes(':w2') ? 2 : 0))) * 100)}%` }}
-                          />
+                          <div className="bg-pink-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, (matchup.draftPicks.length / (14 - (matchup.firstPickUser?.includes(':w1') ? 2 : 0) - (matchup.firstPickUser?.includes(':w2') ? 2 : 0))) * 100)}%` }} />
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 text-xs font-bold rounded-full ${getMatchupStatusColor(matchup.status)}`}>
-                          {matchup.status.replace('_', ' ')}
-                        </span>
+                        <span className={`inline-flex px-2.5 py-1 text-xs font-bold rounded-full ${getMatchupStatusColor(matchup.status)}`}>{matchup.status.replace('_', ' ')}</span>
                       </td>
                       <td className="px-6 py-4 text-sm font-medium">
-                        <button
-                          onClick={() => setSelectedMatchup(matchup)}
-                          className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                        >
-                          View Details
-                        </button>
+                        <button onClick={() => setSelectedMatchup(matchup)} className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold rounded-lg transition-colors">View Details</button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-gray-200">
+              {matchups.map((matchup) => (
+                <div key={matchup.id} className="p-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="font-semibold text-sm text-gray-900">{matchup.user1.user.name} vs {matchup.user2.user.name}</div>
+                      <div className="text-xs text-gray-500">@{matchup.user1.user.username} · @{matchup.user2.user.username}</div>
+                    </div>
+                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full flex-shrink-0 ml-2 ${getMatchupStatusColor(matchup.status)}`}>{matchup.status.replace('_', ' ')}</span>
+                  </div>
+                  <div className="mb-2">
+                    <div className="text-xs text-gray-600 mb-1">{getDraftProgress(matchup)}</div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div className="bg-pink-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (matchup.draftPicks.length / (14 - (matchup.firstPickUser?.includes(':w1') ? 2 : 0) - (matchup.firstPickUser?.includes(':w2') ? 2 : 0))) * 100)}%` }} />
+                    </div>
+                  </div>
+                  <button onClick={() => setSelectedMatchup(matchup)} className="w-full bg-pink-600 hover:bg-pink-700 text-white py-1.5 rounded-lg text-xs font-semibold">View Details</button>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -374,8 +380,8 @@ export default function DraftPage() {
         )}
 
         {/* Snake Draft Rules */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <h3 className="font-bold text-gray-800 mb-3">🐍 Snake Draft Rules</h3>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 md:p-6">
+          <h3 className="font-bold text-gray-800 mb-2 md:mb-3 text-sm md:text-base">🐍 Snake Draft Rules</h3>
           <ul className="text-sm text-gray-700 space-y-2">
             <li className="flex gap-2"><span className="text-gray-400">•</span><span>Each user picks <strong className="text-gray-900">7 players</strong> (5 starters + 2 bench) from the two IPL teams playing</span></li>
             <li className="flex gap-2"><span className="text-gray-400">•</span><span><strong className="text-gray-900">Snake format</strong> — pick order reverses each round: A-B · B-A · A-B · B-A · A-B · B-A · A-B (14 total picks)</span></li>
