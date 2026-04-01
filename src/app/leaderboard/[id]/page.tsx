@@ -240,67 +240,51 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
         </div>
 
         {/* Mobile Card List */}
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-2">
           {leaderboard.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-lg px-6 py-12 text-center text-gray-500">
-              <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-lg">No completed contests yet</p>
-              <p className="text-sm">The leaderboard will populate as contests are completed</p>
+            <div className="bg-white rounded-lg shadow-lg px-4 py-8 text-center text-gray-500">
+              <Trophy className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+              <p>No completed contests yet</p>
             </div>
           ) : (
             leaderboard.map((entry, index) => (
               <div
                 key={entry.userId}
-                className={`bg-white rounded-lg shadow-md p-4 ${
+                className={`bg-white rounded-lg shadow-sm px-3 py-2 ${
                   index === 0 ? 'border-2 border-yellow-400' :
                   index === 1 ? 'border-2 border-gray-400' :
                   index === 2 ? 'border-2 border-amber-500' : 'border border-gray-200'
                 }`}
               >
-                {/* Rank + Name + Contests button */}
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                {/* Row 1: Rank + Name + Contests button */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                       {getRankDisplay(entry.rank)}
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900">{entry.name}</div>
-                      <div className="text-sm text-gray-500">@{entry.username}</div>
-                      <div className="text-xs text-gray-400">{entry.totalWins}/{entry.totalMatches} wins</div>
+                      <span className="text-sm font-bold text-gray-900">{entry.name}</span>
+                      <span className="text-xs text-gray-400 ml-1.5">@{entry.username} · {entry.totalWins}/{entry.totalMatches}W</span>
                     </div>
                   </div>
                   <button
                     onClick={() => openContestHistory(entry.userId, entry.username)}
-                    className="px-3 py-1 flex items-center gap-1.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 ring-1 ring-blue-300 hover:bg-blue-600 hover:text-white hover:ring-blue-600 transition-all flex-shrink-0"
+                    className="px-2 py-0.5 flex items-center gap-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 ring-1 ring-blue-300 hover:bg-blue-600 hover:text-white hover:ring-blue-600 transition-all flex-shrink-0"
                   >
                     {entry.contestsPlayed}
                     <Eye className="w-3 h-3" />
                   </button>
                 </div>
-                {/* VC stats row */}
-                <div className="grid grid-cols-3 gap-2 text-center pt-3 border-t border-gray-100">
-                  <div>
-                    <div className="text-xs text-gray-400 mb-0.5">V̶₵ Won</div>
-                    <div className="text-sm font-semibold text-green-600">+{entry.totalVCWon.toFixed(2)}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400 mb-0.5">Net V̶₵</div>
-                    <div className={`text-base font-black ${entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                      {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400 mb-0.5">V̶₵ Lost</div>
-                    <div className="text-sm font-semibold text-red-600">-{entry.totalVCLost.toFixed(2)}</div>
-                  </div>
-                </div>
-                {/* Coins row */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
-                  <span>Won: <span className="text-green-700 font-semibold">{entry.totalCoinsWon.toLocaleString()}</span></span>
-                  <span className={`font-bold ${entry.netCoins > 0 ? 'text-green-700' : entry.netCoins < 0 ? 'text-red-700' : 'text-gray-700'}`}>
-                    Net: {entry.netCoins > 0 ? '+' : ''}{entry.netCoins.toLocaleString()} 🪙
+                {/* Row 2: VC + Coins inline */}
+                <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100 text-xs">
+                  <span className="text-gray-400">Won <span className="text-green-600 font-semibold">{entry.totalVCWon.toFixed(2)}</span></span>
+                  <span className={`font-black text-sm ${entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                    {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
                   </span>
-                  <span>Lost: <span className="text-red-700 font-semibold">{entry.totalCoinsLost.toLocaleString()}</span></span>
+                  <span className="text-gray-400">Lost <span className="text-red-600 font-semibold">{entry.totalVCLost.toFixed(2)}</span></span>
+                  <span className={`font-semibold ${entry.netCoins > 0 ? 'text-green-700' : entry.netCoins < 0 ? 'text-red-700' : 'text-gray-500'}`}>
+                    {entry.netCoins > 0 ? '+' : ''}{entry.netCoins.toLocaleString()}🪙
+                  </span>
                 </div>
               </div>
             ))
