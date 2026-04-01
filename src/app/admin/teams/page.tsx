@@ -354,6 +354,7 @@ export default function TeamsManagement() {
               </button>
             </div>
           ) : (
+            <>
             {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
@@ -426,6 +427,7 @@ export default function TeamsManagement() {
                 </div>
               ))}
             </div>
+            </>
           )}
         </div>
 
