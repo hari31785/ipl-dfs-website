@@ -636,19 +636,19 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       {/* Header */}
       <div className="bg-white border-b-4 border-cricket-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between py-2.5 sm:py-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <a
                 href="/dashboard"
-                className="flex items-center gap-2 text-black hover:text-cricket-700 transition-colors"
+                className="flex items-center gap-1.5 text-black hover:text-cricket-700 transition-colors"
               >
-                <ArrowLeft className="h-5 w-5" />
-                <span className="font-semibold">Back to Dashboard</span>
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-semibold text-sm sm:text-base">Back to Dashboard</span>
               </a>
-              <div className="w-px h-8 bg-black/30"></div>
+              <div className="w-px h-6 sm:h-8 bg-black/30"></div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-black">🏏 Snake Draft</h1>
-                <div className="text-gray-800 text-xs mt-1">{matchup.contest.iplGame.title}</div>
+                <h1 className="text-base sm:text-xl md:text-2xl font-bold text-black">🏏 Snake Draft</h1>
+                <div className="text-gray-800 text-xs mt-0.5 truncate max-w-[180px] sm:max-w-none">{matchup.contest.iplGame.title}</div>
               </div>
             </div>
             <div className="hidden md:flex flex-col items-end gap-1">
@@ -664,20 +664,20 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Matchup Info */}
-        <div className="bg-white rounded-lg shadow border border-gray-200 p-3 mb-4">
-          <div className="grid md:grid-cols-3 gap-3">
-            <div className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
-              <div className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Your Team</div>
-              <div className="text-lg font-bold text-black">{currentUser.name}</div>
-              <div className="text-xs text-black mt-1">@{currentUser.username}</div>
+        <div className="bg-white rounded-lg shadow border border-gray-200 px-3 py-2 sm:p-3 mb-3 sm:mb-4">
+          <div className="flex items-center justify-between gap-2 sm:grid sm:grid-cols-3 sm:gap-3">
+            <div className="flex-1 text-center py-1.5 px-2 sm:p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
+              <div className="text-[10px] sm:text-xs font-semibold text-black uppercase tracking-wide mb-0.5 sm:mb-1">You</div>
+              <div className="text-sm sm:text-lg font-bold text-black truncate">{currentUser.name}</div>
+              <div className="text-[10px] sm:text-xs text-black truncate">@{currentUser.username}</div>
             </div>
-            <div className="text-center flex items-center justify-center">
-              <div className="text-2xl font-bold text-secondary-400">VS</div>
+            <div className="text-center flex items-center justify-center shrink-0 px-1">
+              <div className="text-lg sm:text-2xl font-bold text-secondary-400">VS</div>
             </div>
-            <div className="text-center p-3 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
-              <div className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Opponent</div>
-              <div className="text-lg font-bold text-black">{opponent.name}</div>
-              <div className="text-xs text-black mt-1">@{opponent.username}</div>
+            <div className="flex-1 text-center py-1.5 px-2 sm:p-3 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
+              <div className="text-[10px] sm:text-xs font-semibold text-black uppercase tracking-wide mb-0.5 sm:mb-1">Opponent</div>
+              <div className="text-sm sm:text-lg font-bold text-black truncate">{opponent.name}</div>
+              <div className="text-[10px] sm:text-xs text-black truncate">@{opponent.username}</div>
             </div>
           </div>
         </div>
@@ -811,72 +811,52 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         )}
 
         {/* ── Mobile-only compact team summary ── */}
-        <div className="lg:hidden mb-2 grid grid-cols-2 gap-1.5">
-          {/* My picks summary */}
-          <div className="bg-white rounded-lg border-2 border-green-300 px-2 py-1.5 shadow-sm">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold text-green-800 truncate">Your Team</span>
-              <span className="text-[9px] font-bold bg-green-800 text-white px-1 py-0 rounded-full shrink-0 ml-1">
-                {myPicks.length}/{effectiveSlots.filter(s => s === mySignupId).length || 7}
-              </span>
-            </div>
-            {myPicks.length === 0 ? (
-              <p className="text-[9px] text-gray-400 italic">No picks yet</p>
-            ) : (
-              <div className="space-y-0.5">
-                {myPicks.slice(0, 5).map((pick) => (
-                  <div key={pick.id} className="flex items-center gap-1">
-                    <span className="w-3.5 h-3.5 rounded-full bg-green-700 text-white text-[8px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
-                    <span className="text-[9px] font-semibold text-gray-900 truncate flex-1">{pick.player.name}</span>
-                    <span className="text-[8px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
-                  </div>
-                ))}
-                {myPicks.length > 5 && (
-                  <div className="border-t border-orange-200 pt-0.5 space-y-0.5">
-                    {myPicks.slice(5).map(pick => (
-                      <div key={pick.id} className="flex items-center gap-1">
-                        <span className="w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
-                        <span className="text-[9px] font-semibold text-gray-500 truncate flex-1">{pick.player.name}</span>
-                        <span className="text-[8px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+        <div className="lg:hidden mb-2 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          <div className="flex items-stretch">
+            {/* My team */}
+            <div className="flex-1 min-w-0 px-2.5 py-2 bg-gradient-to-br from-green-50 to-emerald-50 border-r border-gray-200">
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-[10px] font-bold text-green-800 truncate">Your Team</span>
+                <span className="text-[9px] font-bold bg-green-700 text-white px-1.5 py-0 rounded-full shrink-0">
+                  {myPicks.length}/{effectiveSlots.filter(s => s === mySignupId).length || 7}
+                </span>
               </div>
-            )}
-          </div>
-          {/* Opponent picks summary */}
-          <div className="bg-white rounded-lg border-2 border-red-300 px-2 py-1.5 shadow-sm">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold text-red-800 truncate">{opponent.name}</span>
-              <span className="text-[9px] font-bold bg-red-200 text-red-800 px-1 py-0 rounded-full shrink-0 ml-1">
-                {opponentPicks.length}/{effectiveSlots.filter(s => s === opponentSignupId).length || 7}
-              </span>
+              {myPicks.length === 0 ? (
+                <p className="text-[9px] text-gray-400 italic">No picks yet</p>
+              ) : (
+                <div className="flex flex-wrap gap-x-1.5 gap-y-0.5">
+                  {myPicks.map((pick) => (
+                    <span key={pick.id} className={`text-[8px] font-semibold truncate max-w-[80px] ${pick.pickOrder > 5 ? 'text-orange-600' : 'text-gray-800'}`}>
+                      {pick.pickOrder > 5 ? '🪑' : `${pick.pickOrder}.`} {pick.player.name.split(' ').slice(-1)[0]}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-            {opponentPicks.length === 0 ? (
-              <p className="text-[9px] text-gray-400 italic">No picks yet</p>
-            ) : (
-              <div className="space-y-0.5">
-                {opponentPicks.slice(0, 5).map(pick => (
-                  <div key={pick.id} className="flex items-center gap-1">
-                    <span className="w-3.5 h-3.5 rounded-full bg-red-700 text-white text-[8px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
-                    <span className="text-[9px] font-semibold text-gray-900 truncate flex-1">{pick.player.name}</span>
-                    <span className="text-[8px] text-gray-500 shrink-0">{pick.player.iplTeam.shortName}</span>
-                  </div>
-                ))}
-                {opponentPicks.length > 5 && (
-                  <div className="border-t border-orange-200 pt-0.5 space-y-0.5">
-                    {opponentPicks.slice(5).map(pick => (
-                      <div key={pick.id} className="flex items-center gap-1">
-                        <span className="w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shrink-0">{pick.pickOrder}</span>
-                        <span className="text-[9px] font-semibold text-gray-500 truncate flex-1">{pick.player.name}</span>
-                        <span className="text-[8px] text-gray-400 shrink-0">{pick.player.iplTeam.shortName}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* VS divider */}
+            <div className="flex items-center justify-center px-1.5 shrink-0 bg-white">
+              <span className="text-[10px] font-black text-gray-400">VS</span>
+            </div>
+            {/* Opponent team */}
+            <div className="flex-1 min-w-0 px-2.5 py-2 bg-gradient-to-br from-red-50 to-orange-50 border-l border-gray-200">
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-[10px] font-bold text-red-800 truncate">{opponent.name.split(' ')[0]}</span>
+                <span className="text-[9px] font-bold bg-red-700 text-white px-1.5 py-0 rounded-full shrink-0">
+                  {opponentPicks.length}/{effectiveSlots.filter(s => s === opponentSignupId).length || 7}
+                </span>
               </div>
-            )}
+              {opponentPicks.length === 0 ? (
+                <p className="text-[9px] text-gray-400 italic">No picks yet</p>
+              ) : (
+                <div className="flex flex-wrap gap-x-1.5 gap-y-0.5">
+                  {opponentPicks.map((pick) => (
+                    <span key={pick.id} className={`text-[8px] font-semibold truncate max-w-[80px] ${pick.pickOrder > 5 ? 'text-orange-600' : 'text-gray-800'}`}>
+                      {pick.pickOrder > 5 ? '🪑' : `${pick.pickOrder}.`} {pick.player.name.split(' ').slice(-1)[0]}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
