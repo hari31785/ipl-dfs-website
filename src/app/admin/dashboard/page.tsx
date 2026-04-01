@@ -242,163 +242,163 @@ export default function AdminDashboard() {
         </div>
 
         {/* Admin Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-2 gap-3 md:gap-8">
           {/* Tournament Management */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <h3 className="text-xl font-bold text-primary-800 mb-6 flex items-center gap-2">
-              <Trophy className="h-6 w-6" />
-              Tournament Management
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
+            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-3 md:mb-6 flex items-center gap-1.5 md:gap-2">
+              <Trophy className="h-3.5 w-3.5 md:h-6 md:w-6" />
+              <span className="leading-tight">Tournament<br className="md:hidden" /> Mgmt</span>
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2 md:space-y-4">
               <a
                 href="/admin/tournaments"
-                className="block w-full p-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Trophy className="h-6 w-6" />
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <Trophy className="h-4 w-4 md:h-6 md:w-6 flex-shrink-0" />
                     <div>
-                      <div className="font-semibold">Manage Tournaments</div>
-                      <div className="text-sm opacity-90">Create IPL seasons</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">Tournaments</div>
+                      <div className="hidden md:block text-sm opacity-90">Create IPL seasons</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </a>
             </div>
           </div>
 
           {/* User Management */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <h3 className="text-xl font-bold text-primary-800 mb-6 flex items-center gap-2">
-              <Users className="h-6 w-6" />
-              User & Coin Management
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
+            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-3 md:mb-6 flex items-center gap-1.5 md:gap-2">
+              <Users className="h-3.5 w-3.5 md:h-6 md:w-6" />
+              <span className="leading-tight">User &amp; Coin<br className="md:hidden" /> Mgmt</span>
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2 md:space-y-4">
               <Link
                 href="/admin/users"
-                className="block w-full p-4 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Users className="h-6 w-6" />
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <Users className="h-4 w-4 md:h-6 md:w-6 flex-shrink-0" />
                     <div>
-                      <div className="font-semibold">Manage Users</div>
-                      <div className="text-sm opacity-90">View and manage registered users</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">Users</div>
+                      <div className="hidden md:block text-sm opacity-90">View and manage registered users</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
               
               <Link
                 href="/admin/vc-management"
-                className="block w-full p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">💰</span>
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <span className="text-base md:text-2xl">💰</span>
                     <div>
-                      <div className="font-semibold">VC Settlement</div>
-                      <div className="text-sm opacity-90">Encash winners & refill losers</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">VC Settlement</div>
+                      <div className="hidden md:block text-sm opacity-90">Encash winners &amp; refill losers</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
               
               <Link
                 href="/admin/messages"
-                className="block w-full p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">💬</span>
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <span className="text-base md:text-2xl">💬</span>
                     <div>
-                      <div className="font-semibold">User Messages</div>
-                      <div className="text-sm opacity-90">View support messages from users</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">Messages</div>
+                      <div className="hidden md:block text-sm opacity-90">View support messages from users</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
             </div>
           </div>
 
           {/* Team & Player Management */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <h3 className="text-xl font-bold text-primary-800 mb-6 flex items-center gap-2">
-              <Database className="h-6 w-6" />
-              Team & Player Management
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
+            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-3 md:mb-6 flex items-center gap-1.5 md:gap-2">
+              <Database className="h-3.5 w-3.5 md:h-6 md:w-6" />
+              <span className="leading-tight">Team &amp; Player<br className="md:hidden" /> Mgmt</span>
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2 md:space-y-4">
               <a
                 href="/admin/teams"
-                className="block w-full p-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Database className="h-6 w-6" />
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <Database className="h-4 w-4 md:h-6 md:w-6 flex-shrink-0" />
                     <div>
-                      <div className="font-semibold">Manage IPL Teams</div>
-                      <div className="text-sm opacity-90">Add/Edit 10 IPL teams</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">IPL Teams</div>
+                      <div className="hidden md:block text-sm opacity-90">Add/Edit 10 IPL teams</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </a>
 
               <a
                 href="/admin/players"
-                className="block w-full p-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Users className="h-6 w-6" />
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <Users className="h-4 w-4 md:h-6 md:w-6 flex-shrink-0" />
                     <div>
-                      <div className="font-semibold">Manage Players</div>
-                      <div className="text-sm opacity-90">Add/Edit player roster</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">Players</div>
+                      <div className="hidden md:block text-sm opacity-90">Add/Edit player roster</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </a>
             </div>
           </div>
 
           {/* Contest Management */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-            <h3 className="text-xl font-bold text-primary-800 mb-6 flex items-center gap-2">
-              <Trophy className="h-6 w-6" />
-              Contest Management
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6 border border-gray-100">
+            <h3 className="text-xs md:text-xl font-bold text-primary-800 mb-3 md:mb-6 flex items-center gap-1.5 md:gap-2">
+              <Trophy className="h-3.5 w-3.5 md:h-6 md:w-6" />
+              <span className="leading-tight">Contest<br className="md:hidden" /> Mgmt</span>
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2 md:space-y-4">
               <a
                 href="/admin/games"
-                className="block w-full p-4 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Trophy className="h-6 w-6" />
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <Trophy className="h-4 w-4 md:h-6 md:w-6 flex-shrink-0" />
                     <div>
-                      <div className="font-semibold">IPL Games</div>
-                      <div className="text-sm opacity-90">Schedule matches</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">IPL Games</div>
+                      <div className="hidden md:block text-sm opacity-90">Schedule matches</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </a>
 
               <a
                 href="/admin/contests"
-                className="block w-full p-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Trophy className="h-6 w-6" />
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <Trophy className="h-4 w-4 md:h-6 md:w-6 flex-shrink-0" />
                     <div>
-                      <div className="font-semibold">Contest Types</div>
-                      <div className="text-sm opacity-90">Manage contest variations</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">Contests</div>
+                      <div className="hidden md:block text-sm opacity-90">Manage contest variations</div>
                     </div>
                   </div>
                   <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -407,33 +407,33 @@ export default function AdminDashboard() {
 
               <a
                 href="/admin/stats"
-                className="block w-full p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <BarChart3 className="h-6 w-6" />
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <BarChart3 className="h-4 w-4 md:h-6 md:w-6 flex-shrink-0" />
                     <div>
-                      <div className="font-semibold">Player Statistics</div>
-                      <div className="text-sm opacity-90">Enter match performance</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">Statistics</div>
+                      <div className="hidden md:block text-sm opacity-90">Enter match performance</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </a>
 
               <a
                 href="/admin/drafts"
-                className="block w-full p-4 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-lg transition-colors group shadow-lg"
+                className="block w-full p-2 md:p-4 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-lg transition-colors group shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Target className="h-6 w-6" />
+                  <div className="flex items-center gap-1.5 md:gap-3">
+                    <Target className="h-4 w-4 md:h-6 md:w-6 flex-shrink-0" />
                     <div>
-                      <div className="font-semibold">Draft Management</div>
-                      <div className="text-sm opacity-90">Monitor snake drafts</div>
+                      <div className="text-xs md:text-base font-semibold leading-tight">Drafts</div>
+                      <div className="hidden md:block text-sm opacity-90">Monitor snake drafts</div>
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <Plus className="hidden md:block h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </a>
             </div>
@@ -441,7 +441,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Push Notifications Broadcast */}
-        <div className="mt-8">
+        <div className="mt-4 md:mt-8">
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <h3 className="text-xl font-bold text-primary-800 mb-1 flex items-center gap-2">
               <Bell className="h-6 w-6 text-indigo-500" />
@@ -610,8 +610,8 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Setup */}
-        <div className="mt-8">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6">
+        <div className="mt-4 md:mt-8">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 md:p-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <Shield className="h-6 w-6 text-white" />
