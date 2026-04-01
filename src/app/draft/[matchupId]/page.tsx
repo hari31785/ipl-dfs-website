@@ -791,8 +791,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             </p>
           </div>
         ) : (
-          <div className={`border-2 rounded-lg px-3 py-2 mb-2 shadow-sm ${isMyTurn ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-cricket-600' : 'bg-gray-50 border-gray-300'}`}>
-            <p className={`text-center font-bold text-sm flex items-center justify-center gap-1.5 ${isMyTurn ? 'text-orange-700' : 'text-gray-600'}`}>
+          <div className={`border-2 rounded-lg px-3 py-2 mb-2 shadow-sm ${isMyTurn ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-cricket-600' : 'bg-indigo-50 border-indigo-400'}`}>
+            <p className={`text-center font-bold text-sm flex items-center justify-center gap-1.5 ${isMyTurn ? 'text-orange-700' : 'text-indigo-700'}`}>
               {isMyTurn ? (
                 <>
                   <Target className="h-4 w-4 text-secondary-400 shrink-0" />
