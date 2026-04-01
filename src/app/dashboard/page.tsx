@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, ChevronDown, Ticket, Coins, Bell, BellOff } from "lucide-react"
+import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, ChevronDown, Ticket, Coins, Bell, BellOff, RefreshCw } from "lucide-react"
 import { useLoading } from '@/contexts/LoadingContext'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 
@@ -160,6 +160,20 @@ export default function DashboardPage() {
   const [dismissedPushBanner, setDismissedPushBanner] = useState(false)
 
   const lastFetchedAt = useRef<number>(0)
+  const [isDashRefreshing, setIsDashRefreshing] = useState(false)
+
+  const handleDashRefresh = async () => {
+    if (!user) return
+    setIsDashRefreshing(true)
+    await Promise.all([
+      fetchUserData(user.id),
+      fetchTournaments(),
+      fetchLeaderboardTournament(),
+      fetchUserContests(user.id),
+    ])
+    lastFetchedAt.current = Date.now()
+    setIsDashRefreshing(false)
+  }
 
   useEffect(() => {
     // Restore tab state from URL params (e.g. when navigating back from scores page)
@@ -2301,6 +2315,19 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Floating Refresh Button */}
+      {user && (
+        <button
+          onClick={handleDashRefresh}
+          disabled={isDashRefreshing}
+          className="fixed bottom-6 right-4 z-50 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-70 text-white font-semibold px-5 py-3 rounded-full shadow-2xl transition-all"
+          aria-label="Refresh dashboard"
+        >
+          <RefreshCw className={`h-5 w-5 ${isDashRefreshing ? 'animate-spin' : ''}`} />
+          <span className="text-sm">{isDashRefreshing ? 'Refreshing…' : 'Refresh'}</span>
+        </button>
       )}
     </div>
   )

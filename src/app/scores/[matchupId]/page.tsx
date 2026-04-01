@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, Trophy } from 'lucide-react';
+import { ArrowLeft, Trophy, RefreshCw } from 'lucide-react';
 import { calculateFinalLineup, calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
 
 interface Player {
@@ -98,6 +98,13 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedPlayerStats, setSelectedPlayerStats] = useState<{ player: Player; pickOrder: number } | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchMatchupDetails();
+    setIsRefreshing(false);
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
@@ -577,6 +584,17 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
             </div>
           </div>
         )}
+
+      {/* Floating Refresh Button */}
+      <button
+        onClick={handleRefresh}
+        disabled={isRefreshing}
+        className="fixed bottom-6 right-4 z-50 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-70 text-white font-semibold px-5 py-3 rounded-full shadow-2xl transition-all"
+        aria-label="Refresh scores"
+      >
+        <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <span className="text-sm">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
+      </button>
       </div>
     </div>
   );
