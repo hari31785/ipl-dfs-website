@@ -186,57 +186,57 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Admin Dashboard - Stats Cards */}
-        {/* Mobile: horizontal scroll strip  |  Desktop: 5-col grid */}
-        <div className="flex gap-3 overflow-x-auto pb-1 mb-4 md:mb-8 md:grid md:grid-cols-5 md:gap-6 md:overflow-visible md:pb-0 scrollbar-hide">
-          <Link href="/admin/users" className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+        {/* Mobile: 5-col compact grid (no scroll)  |  Desktop: 5-col spacious grid */}
+        <div className="grid grid-cols-5 gap-1.5 mb-4 md:gap-6 md:mb-8">
+          <Link href="/admin/users" className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-lg p-2 md:p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left gap-0.5 md:gap-0">
               <div>
-                <p className="text-[10px] md:text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors leading-tight">Total Users</p>
-                <p className="text-2xl md:text-3xl font-bold text-primary-800 group-hover:text-blue-700 transition-colors">{stats.totalUsers}</p>
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors">Total<br className="md:hidden" /> Users</p>
+                <p className="text-lg md:text-3xl font-bold text-primary-800 group-hover:text-blue-700 transition-colors">{stats.totalUsers}</p>
               </div>
-              <Users className="h-5 w-5 md:h-8 md:w-8 text-blue-500 group-hover:text-blue-600 transition-colors" />
+              <Users className="hidden md:block h-8 w-8 text-blue-500 group-hover:text-blue-600 transition-colors" />
             </div>
           </Link>
 
-          <div className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+          <div className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-lg p-2 md:p-6 border border-gray-100">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left gap-0.5 md:gap-0">
               <div>
-                <p className="text-[10px] md:text-sm font-medium text-gray-500 leading-tight">Total Players</p>
-                <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.totalPlayers}</p>
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-500">Total<br className="md:hidden" /> Players</p>
+                <p className="text-lg md:text-3xl font-bold text-gray-900">{stats.totalPlayers}</p>
               </div>
-              <Target className="h-5 w-5 md:h-8 md:w-8 text-cricket-500" />
+              <Target className="hidden md:block h-8 w-8 text-cricket-500" />
             </div>
           </div>
 
-          <div className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+          <div className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-lg p-2 md:p-6 border border-gray-100">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left gap-0.5 md:gap-0">
               <div>
-                <p className="text-[10px] md:text-sm font-medium text-gray-500 leading-tight">IPL Teams</p>
-                <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.totalTeams}</p>
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-500">IPL<br className="md:hidden" /> Teams</p>
+                <p className="text-lg md:text-3xl font-bold text-gray-900">{stats.totalTeams}</p>
               </div>
-              <Database className="h-5 w-5 md:h-8 md:w-8 text-secondary-500" />
+              <Database className="hidden md:block h-8 w-8 text-secondary-500" />
             </div>
           </div>
 
-          <div className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+          <div className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-lg p-2 md:p-6 border border-gray-100">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left gap-0.5 md:gap-0">
               <div>
-                <p className="text-[10px] md:text-sm font-medium text-gray-500 leading-tight">Active Contests</p>
-                <p className="text-2xl md:text-3xl font-bold text-red-600">{stats.activeContests}</p>
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-500">Active<br className="md:hidden" /> Contests</p>
+                <p className="text-lg md:text-3xl font-bold text-red-600">{stats.activeContests}</p>
               </div>
-              <Trophy className="h-5 w-5 md:h-8 md:w-8 text-red-500" />
+              <Trophy className="hidden md:block h-8 w-8 text-red-500" />
             </div>
           </div>
 
-          <Link href="/admin/messages" className="flex-shrink-0 w-32 md:w-auto bg-white rounded-xl shadow-sm md:shadow-lg p-3 md:p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+          <Link href="/admin/messages" className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-lg p-2 md:p-6 border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left gap-0.5 md:gap-0">
               <div>
-                <p className="text-[10px] md:text-sm font-medium text-gray-500 group-hover:text-purple-600 transition-colors leading-tight">Pending Messages</p>
-                <p className="text-2xl md:text-3xl font-bold text-purple-600 group-hover:text-purple-700 transition-colors">{stats.pendingMessages}</p>
+                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-500 group-hover:text-purple-600 transition-colors">Msgs<br className="md:hidden" /><span className="hidden md:inline"> Pending</span></p>
+                <p className="text-lg md:text-3xl font-bold text-purple-600 group-hover:text-purple-700 transition-colors">{stats.pendingMessages}</p>
               </div>
-              <MessageSquare className="h-5 w-5 md:h-8 md:w-8 text-purple-500 group-hover:text-purple-600 transition-colors" />
+              <MessageSquare className="hidden md:block h-8 w-8 text-purple-500 group-hover:text-purple-600 transition-colors" />
             </div>
           </Link>
         </div>
