@@ -60,13 +60,10 @@ export async function POST(
     }
 
     console.log(`🔀 Generating matchups for contest ${contest.id} (fair pairing)...`);
-    console.log(`   Players: ${signups.map(s => s.user.username).join(', ')}`);
     
     // Fair pairing: prefer opponents not yet faced in this tournament
     const tournamentId = contest.iplGame?.tournamentId ?? '';
     const pairs = await fairPairSignups(signups, tournamentId, id, prisma);
-    
-    console.log(`   Pairs: ${pairs.map(([a, b]) => `${a.user.username} vs ${b.user.username}`).join(', ')}`);
     
     // Create head-to-head matchups
     const matchups = [];
