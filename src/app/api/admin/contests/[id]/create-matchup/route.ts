@@ -109,10 +109,18 @@ export async function POST(
     // Allow multiple matchups for same users in same contest
     // Admin can create as many matchups as needed
 
-    // If the contest is already in DRAFT_PHASE, open the draft immediately for this pair.
-    // Otherwise keep WAITING_DRAFT so the admin can bulk-open via "Open Draft" later.
-    const autoOpen = contest.status === 'DRAFT_PHASE';
+    // If the contest is already in DRAFT_PHASE or SIGNUP_CLOSED, open the draft immediately for this pair.
+    // Also advance a SIGNUP_CLOSED contest to DRAFT_PHASE so users can access the draft.
+    const autoOpen = contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED';
     const matchupStatus = autoOpen ? 'DRAFTING' : 'WAITING_DRAFT';
+
+    // Advance SIGNUP_CLOSED → DRAFT_PHASE so the draft API allows access
+    if (contest.status === 'SIGNUP_CLOSED') {
+      await prisma.contest.update({
+        where: { id: contest.id },
+        data: { status: 'DRAFT_PHASE' },
+      });
+    }
 
     // Create the matchup
     const matchup = await prisma.headToHeadMatchup.create({

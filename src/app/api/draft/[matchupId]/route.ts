@@ -73,10 +73,12 @@ export async function GET(
     const now = new Date();
     
     // Check both contest and matchup status for draft accessibility
-    // Contest can be in DRAFT_PHASE, LIVE, ACTIVE, or COMPLETED
+    // Contest can be in DRAFT_PHASE, SIGNUP_CLOSED (custom matchup on a 0-signup closed contest),
+    // LIVE, ACTIVE, or COMPLETED
     // Matchup should be in DRAFTING or COMPLETED status
     const isDraftPhase = 
       contest.status === 'DRAFT_PHASE' || 
+      contest.status === 'SIGNUP_CLOSED' || // custom matchup created on a closed contest
       contest.status === 'DRAFTING'; // Legacy support
     const isMatchupDrafting = matchup.status === 'DRAFTING';
     const isCompletedPhase = 
