@@ -181,7 +181,7 @@ function ContestCard({
         )}
 
         {/* Start Contest - Show when drafting is open and at least one draft is complete */}
-        {contest.status === 'DRAFT_PHASE' && contest.matchupStats && (
+        {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') && contest.matchupStats && (
           contest.matchupStats.drafting > 0 || contest.matchupStats.completed > 0
         ) && contest.matchupStats.completed > 0 && (
           <button
@@ -1306,8 +1306,8 @@ export default function ContestsPage() {
                     </button>
                   )}
                   
-                  {/* Open Drafting Button (for DRAFT_PHASE status) */}
-                  {contest.status === 'DRAFT_PHASE' && contest.matchupStats && contest.matchupStats.waiting > 0 && (
+                  {/* Open Drafting Button (for DRAFT_PHASE or SIGNUP_CLOSED status) */}
+                  {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') && contest.matchupStats && contest.matchupStats.waiting > 0 && (
                     <button
                       onClick={() => openDrafting(contest.id)}
                       className="block w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
@@ -1318,7 +1318,7 @@ export default function ContestsPage() {
                   )}
 
                   {/* Start Contest Button - transitions to LIVE */}
-                  {contest.status === 'DRAFT_PHASE' && contest.matchupStats && (
+                  {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') && contest.matchupStats && (
                     contest.matchupStats.drafting > 0 || contest.matchupStats.completed > 0
                   ) && contest.matchupStats.completed > 0 && (
                     <button

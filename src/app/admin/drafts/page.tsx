@@ -97,7 +97,7 @@ export default function DraftPage() {
         const data = await response.json();
         // Filter to show only contests that can have drafts
         const draftableContests = data.filter((c: Contest) => 
-          ['DRAFT_PHASE', 'LIVE', 'COMPLETED'].includes(c.status)
+          ['SIGNUP_CLOSED', 'DRAFT_PHASE', 'LIVE', 'COMPLETED'].includes(c.status)
         );
         setContests(draftableContests);
       }
@@ -250,8 +250,9 @@ export default function DraftPage() {
                         <span className="text-xs text-gray-600">{contest._count.matchups} matchup{contest._count.matchups !== 1 ? 's' : ''}</span>
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                           contest.status === 'DRAFT_PHASE' ? 'bg-purple-100 text-purple-700' :
+                          contest.status === 'SIGNUP_CLOSED' ? 'bg-yellow-100 text-yellow-700' :
                           contest.status === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
-                        }`}>{contest.status.replace('_', ' ')}</span>
+                        }`}>{contest.status.replace(/_/g, ' ')}</span>
                       </div>
                     </button>
                   ))}
