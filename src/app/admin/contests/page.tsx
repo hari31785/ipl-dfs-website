@@ -235,6 +235,7 @@ export default function ContestsPage() {
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
   const [showCompletedGames, setShowCompletedGames] = useState(false);
   const [showActiveGames, setShowActiveGames] = useState(true);
+  const [recertifyingGame, setRecertifyingGame] = useState<string | null>(null);
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [viewMode, setViewMode] = useState<'grouped' | 'table'>('grouped');
   const [showSignupsModal, setShowSignupsModal] = useState(false);
@@ -732,6 +733,45 @@ export default function ContestsPage() {
     setExpandedGames(newExpanded);
   };
 
+  const recertifyGame = async (gameId: string, gameTitle: string) => {
+    if (!confirm(
+      `Re-Certify all contests for "${gameTitle}"?\n\n` +
+      `This will recalculate scores for every completed matchup under this game, ` +
+      `reverse and rewrite all WIN/LOSS transactions based on the latest stats, ` +
+      `and update coin balances accordingly.\n\n` +
+      `Only do this if player stats were corrected after settlement.`
+    )) return;
+    setRecertifyingGame(gameId);
+    try {
+      const res = await fetch(`/api/admin/games/${gameId}/recertify`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        const changed = data.changedMatchups;
+        alert(
+          `✅ Re-Certification complete for ${gameTitle}\n\n` +
+          `• Matchups processed: ${data.totalMatchups}\n` +
+          `• Scores changed: ${changed}\n` +
+          `• Transactions reversed & rewritten: ${data.totalTransactionsReversed}\n` +
+          `• Admin fee collected: ${data.totalAdminFeeCollected} coins\n\n` +
+          (changed > 0
+            ? data.matchups.filter((m: any) => m.changed).map((m: any) =>
+                `  ${m.user1} vs ${m.user2} [${m.contestCoinValue}c]: ` +
+                `${m.oldUser1Score.toFixed(1)}–${m.oldUser2Score.toFixed(1)} → ` +
+                `${m.newUser1Score.toFixed(1)}–${m.newUser2Score.toFixed(1)} (${m.result})`
+              ).join('\n')
+            : 'No scores changed — all results remain the same.')
+        );
+        fetchContests();
+      } else {
+        alert(`❌ Re-Certification failed: ${data.message}`);
+      }
+    } catch {
+      alert('❌ Re-Certification failed — network error');
+    } finally {
+      setRecertifyingGame(null);
+    }
+  };
+
   const expandAll = () => {
     setExpandedGames(new Set(gameGroups.map(g => g.game.id)));
   };
@@ -1111,9 +1151,18 @@ export default function ContestsPage() {
                                   {gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}
                                 </div>
                               </div>
-                              <a href={`/admin/stats?gameId=${game.id}`} className="px-2 py-1.5 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs md:text-sm font-bold shadow-md whitespace-nowrap flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                                📊<span className="hidden sm:inline"> Stats</span>
-                              </a>
+                              <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <a href={`/admin/stats?gameId=${game.id}`} className="px-2 py-1.5 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs md:text-sm font-bold shadow-md whitespace-nowrap">
+                                  📊<span className="hidden sm:inline"> Stats</span>
+                                </a>
+                                <button
+                                  onClick={() => recertifyGame(game.id, game.title)}
+                                  disabled={recertifyingGame === game.id}
+                                  className="px-2 py-1.5 md:px-4 md:py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300 text-white rounded-lg transition text-xs md:text-sm font-bold shadow-md whitespace-nowrap disabled:cursor-not-allowed"
+                                >
+                                  {recertifyingGame === game.id ? '⏳' : <span>🔁<span className="hidden sm:inline"> Re-Certify</span></span>}
+                                </button>
+                              </div>
                             </div>
                           </div>
                           {isExpanded && (
