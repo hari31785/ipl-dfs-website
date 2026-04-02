@@ -5,11 +5,11 @@ const prisma = new PrismaClient();
 
 // Grade thresholds
 const GRADE_THRESHOLDS = {
-  'A+': 90,
-  'A': 75,
-  'B': 60,
-  'C': 45,
-  'D': 30,
+  'A+': 75,
+  'A': 60,
+  'B': 45,
+  'C': 30,
+  'D': 15,
   'E': 0
 };
 
