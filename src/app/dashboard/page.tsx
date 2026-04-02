@@ -2165,11 +2165,11 @@ export default function DashboardPage() {
                   const starters = myPicks.slice(0, 5)
                   const bench = myPicks.slice(5)
                   return (
-                    <>
-                      <div className="px-2 pt-1 pb-0.5 text-[9px] font-bold text-blue-700 uppercase tracking-wide shrink-0">⭐ Starting 5</div>
-                      <div className="flex-1 flex flex-col px-1.5 pb-0.5 gap-[3px]">
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="px-2 pt-1 pb-0.5 text-[9px] font-bold text-blue-700 uppercase tracking-wide">⭐ Starting 5</div>
+                      <div className="flex flex-col px-1.5 pb-0.5 gap-[2px]">
                         {starters.map((pick, idx) => (
-                          <div key={pick.id} className="flex-1 flex items-center gap-1.5 px-2 bg-white rounded border border-blue-100 min-h-0">
+                          <div key={pick.id} className="h-10 flex items-center gap-1.5 px-2 bg-white rounded border border-blue-100">
                             <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0">{idx + 1}</div>
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-semibold text-gray-900 truncate leading-tight">{pick.player.name}</div>
@@ -2180,10 +2180,10 @@ export default function DashboardPage() {
                       </div>
                       {bench.length > 0 && (
                         <>
-                          <div className="px-2 pt-0.5 pb-0.5 text-[9px] font-bold text-gray-500 uppercase tracking-wide border-t border-blue-200 bg-blue-50 shrink-0">🪑 Bench</div>
-                          <div className="flex flex-col px-1.5 pb-1.5 gap-[3px] shrink-0">
+                          <div className="px-2 pt-1 pb-0.5 text-[9px] font-bold text-gray-500 uppercase tracking-wide border-t border-blue-200 bg-blue-50 mt-0.5">🪑 Bench</div>
+                          <div className="flex flex-col px-1.5 pb-1.5 gap-[2px]">
                             {bench.map((pick, idx) => (
-                              <div key={pick.id} className="h-8 flex items-center gap-1.5 px-2 bg-gray-50 rounded border border-gray-200">
+                              <div key={pick.id} className="h-10 flex items-center gap-1.5 px-2 bg-gray-50 rounded border border-gray-200">
                                 <div className="w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0">{idx + 6}</div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-xs font-semibold text-gray-800 truncate leading-tight">{pick.player.name}</div>
@@ -2194,7 +2194,7 @@ export default function DashboardPage() {
                           </div>
                         </>
                       )}
-                    </>
+                    </div>
                   )
                 })()}
               </div>
@@ -2212,11 +2212,11 @@ export default function DashboardPage() {
                   const starters = oppPicks.slice(0, 5)
                   const bench = oppPicks.slice(5)
                   return (
-                    <>
-                      <div className="px-2 pt-1 pb-0.5 text-[9px] font-bold text-purple-700 uppercase tracking-wide shrink-0">⭐ Starting 5</div>
-                      <div className="flex-1 flex flex-col px-1.5 pb-0.5 gap-[3px]">
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="px-2 pt-1 pb-0.5 text-[9px] font-bold text-purple-700 uppercase tracking-wide">⭐ Starting 5</div>
+                      <div className="flex flex-col px-1.5 pb-0.5 gap-[2px]">
                         {starters.map((pick, idx) => (
-                          <div key={pick.id} className="flex-1 flex items-center gap-1.5 px-2 bg-white rounded border border-purple-100 min-h-0">
+                          <div key={pick.id} className="h-10 flex items-center gap-1.5 px-2 bg-white rounded border border-purple-100">
                             <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0">{idx + 1}</div>
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-semibold text-gray-900 truncate leading-tight">{pick.player.name}</div>
@@ -2227,10 +2227,10 @@ export default function DashboardPage() {
                       </div>
                       {bench.length > 0 && (
                         <>
-                          <div className="px-2 pt-0.5 pb-0.5 text-[9px] font-bold text-gray-500 uppercase tracking-wide border-t border-purple-200 bg-purple-50 shrink-0">🪑 Bench</div>
-                          <div className="flex flex-col px-1.5 pb-1.5 gap-[3px] shrink-0">
+                          <div className="px-2 pt-1 pb-0.5 text-[9px] font-bold text-gray-500 uppercase tracking-wide border-t border-purple-200 bg-purple-50 mt-0.5">🪑 Bench</div>
+                          <div className="flex flex-col px-1.5 pb-1.5 gap-[2px]">
                             {bench.map((pick, idx) => (
-                              <div key={pick.id} className="h-8 flex items-center gap-1.5 px-2 bg-gray-50 rounded border border-gray-200">
+                              <div key={pick.id} className="h-10 flex items-center gap-1.5 px-2 bg-gray-50 rounded border border-gray-200">
                                 <div className="w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0">{idx + 6}</div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-xs font-semibold text-gray-800 truncate leading-tight">{pick.player.name}</div>
@@ -2241,7 +2241,7 @@ export default function DashboardPage() {
                           </div>
                         </>
                       )}
-                    </>
+                    </div>
                   )
                 })()}
               </div>
