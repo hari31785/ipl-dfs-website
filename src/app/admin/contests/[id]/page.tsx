@@ -1129,7 +1129,13 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">No Matchups Yet</h3>
-            <p className="text-gray-500">Close signups to generate matchups for this contest.</p>
+            <p className="text-gray-500 mb-4">No signups were collected for this contest.</p>
+            <button
+              onClick={() => setShowCreateMatchup(true)}
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors shadow-md text-sm"
+            >
+              <Users className="h-4 w-4" /> Create Custom Matchup
+            </button>
           </div>
         ) : (
           <div className="space-y-4">

@@ -133,7 +133,7 @@ function ContestCard({
         )}
         
         {/* View Matchups */}
-        {contest._count.matchups > 0 && (
+        {(contest._count.matchups > 0 || contest.status === 'SIGNUP_CLOSED') && (
           <a
             href={`/admin/contests/${contest.id}`}
             className="block w-full px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-sm font-medium"
@@ -1268,7 +1268,7 @@ export default function ContestsPage() {
                   )}
                   
                   {/* View Matchups Button */}
-                  {contest._count.matchups > 0 && (
+                  {(contest._count.matchups > 0 || contest.status === 'SIGNUP_CLOSED') && (
                     <a
                       href={`/admin/contests/${contest.id}`}
                       className="block w-full px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center"
