@@ -170,22 +170,24 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const checkDraftAccess = () => {
     if (!matchup) return false;
     
-    // Check if matchup is in drafting phase or completed
     const matchupStatus = matchup.status;
-    const isDraftingStatus = matchupStatus === 'DRAFTING' || matchupStatus === 'COMPLETED';
-    
-    // If admin has opened the drafting window (matchup status is DRAFTING or COMPLETED),
-    // allow access regardless of signup deadline
+    const contestStatus = matchup.contest.status;
+
+    // Always allow if matchup is DRAFTING or COMPLETED
     if (matchupStatus === 'DRAFTING' || matchupStatus === 'COMPLETED') {
       return true;
     }
-    
-    // Otherwise, check if deadline has passed
+
+    // Allow WAITING_DRAFT matchups when the deadline has passed AND contest is
+    // in a draftable state (covers custom matchups on SIGNUP_CLOSED contests)
     const signupDeadline = new Date(matchup.contest.iplGame.signupDeadline);
     const now = new Date();
     const isPastSignupDeadline = now > signupDeadline;
-    
-    return isDraftingStatus && isPastSignupDeadline;
+    const isDraftableContest =
+      contestStatus === 'DRAFT_PHASE' ||
+      contestStatus === 'SIGNUP_CLOSED';
+
+    return isPastSignupDeadline && isDraftableContest;
   };
 
   const fetchMatchupDetails = async () => {
