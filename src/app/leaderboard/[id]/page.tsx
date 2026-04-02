@@ -61,7 +61,9 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
       const res = await fetch(`/api/user/contests?userId=${userId}`)
       if (res.ok) {
         const data = await res.json()
-        setModalContests(data.filter((s: any) => s.matchup?.status === 'COMPLETED'))
+        // Only show fully settled contests (contest.status === COMPLETED)
+        // matchup.status === 'COMPLETED' only means draft is done, not the game result
+        setModalContests(data.filter((s: any) => s.contest?.status === 'COMPLETED'))
       }
     } catch {}
     finally { setModalLoading(false) }

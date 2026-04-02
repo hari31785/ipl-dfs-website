@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { fairPairSignups } from '@/lib/matchupUtils';
 
 
 // POST /api/admin/contests/[id]/close-signups
@@ -100,7 +101,8 @@ export async function POST(
         iplGame: {
           include: {
             team1: true,
-            team2: true
+            team2: true,
+            tournament: { select: { id: true } }
           }
         },
         signups: {
@@ -140,16 +142,15 @@ export async function POST(
         });
       }
       
-      console.log('🎲 Auto-generating matchups...');
+      console.log('🎲 Auto-generating matchups (fair pairing)...');
       
-      // Shuffle signups randomly
-      const shuffledSignups = [...signups].sort(() => Math.random() - 0.5);
+      // Fair pairing: prefer opponents not yet faced in this tournament
+      const tournamentId = updatedContest.iplGame.tournament?.id ?? '';
+      const pairs = await fairPairSignups(signups, tournamentId, updatedContest.id, prisma);
       
       // Create head-to-head matchups
       const matchups = [];
-      for (let i = 0; i < shuffledSignups.length; i += 2) {
-        const user1 = shuffledSignups[i];
-        const user2 = shuffledSignups[i + 1];
+      for (const [user1, user2] of pairs) {
         
         const matchup = await prisma.headToHeadMatchup.create({
           data: {

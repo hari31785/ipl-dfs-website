@@ -1,19 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
-
-// Helper function for cryptographically secure random shuffling
-function secureShuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    // Use crypto.randomInt for true randomization
-    const j = crypto.randomInt(0, i + 1);
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  
-  return shuffled;
-}
+import { fairPairSignups } from '@/lib/matchupUtils';
 
 // POST /api/admin/contests/[id]/generate-matchups
 export async function POST(
@@ -26,20 +13,12 @@ export async function POST(
     const contest = await prisma.contest.findUnique({
       where: { id },
       include: {
+        iplGame: { select: { tournamentId: true } },
         signups: {
-          include: {
-            user: true
-          },
-          // Get signups in consistent order before shuffling
-          orderBy: {
-            signupAt: 'asc'
-          }
+          include: { user: true },
+          orderBy: { signupAt: 'asc' }
         },
-        _count: {
-          select: {
-            matchups: true
-          }
-        }
+        _count: { select: { matchups: true } }
       }
     });
 
@@ -80,28 +59,28 @@ export async function POST(
       );
     }
 
-    console.log(`🔀 Generating matchups for contest ${contest.id}...`);
+    console.log(`🔀 Generating matchups for contest ${contest.id} (fair pairing)...`);
     console.log(`   Players: ${signups.map(s => s.user.username).join(', ')}`);
     
-    // Use cryptographically secure shuffling for TRUE randomization
-    // This ensures different matchups even if same players join multiple contests
-    const shuffledSignups = secureShuffleArray(signups);
+    // Fair pairing: prefer opponents not yet faced in this tournament
+    const tournamentId = contest.iplGame?.tournamentId ?? '';
+    const pairs = await fairPairSignups(signups, tournamentId, id, prisma);
     
-    console.log(`   Shuffled order: ${shuffledSignups.map(s => s.user.username).join(', ')}`);
+    console.log(`   Pairs: ${pairs.map(([a, b]) => `${a.user.username} vs ${b.user.username}`).join(', ')}`);
     
     // Create head-to-head matchups
     const matchups = [];
-    for (let i = 0; i < shuffledSignups.length; i += 2) {
-      const user1 = shuffledSignups[i];
-      const user2 = shuffledSignups[i + 1];
+    for (const [user1, user2] of pairs) {
+      const u1 = user1 as typeof signups[0];
+      const u2 = user2 as typeof signups[0];
       
-      console.log(`   Creating matchup ${(i/2) + 1}: ${user1.user.username} vs ${user2.user.username}`);
+      console.log(`   Creating matchup: ${u1.user.username} vs ${u2.user.username}`);
       
       const matchup = await prisma.headToHeadMatchup.create({
         data: {
           contestId: contest.id,
-          user1Id: user1.id,
-          user2Id: user2.id,
+          user1Id: u1.id,
+          user2Id: u2.id,
           firstPickUser: null,
           status: 'WAITING_DRAFT'
         },

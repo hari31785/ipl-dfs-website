@@ -1,0 +1,90 @@
+import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
+
+export type SignupForPairing = {
+  id: string;     // ContestSignup.id
+  userId: string; // User.id
+};
+
+/** Cryptographically secure Fisher-Yates shuffle */
+function secureShuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(0, i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+/**
+ * Pairs signups for a contest, preferring to avoid rematches within the same
+ * tournament. Falls back to a rematch only when no fresh pairing is possible.
+ *
+ * Returns an ordered array of [user1, user2] pairs ready for matchup creation.
+ */
+export async function fairPairSignups(
+  signups: SignupForPairing[],
+  tournamentId: string,
+  currentContestId: string,
+  prisma: PrismaClient
+): Promise<[SignupForPairing, SignupForPairing][]> {
+  // Fetch all past USER-level pairings in this tournament (excluding current contest)
+  const pastMatchups = await prisma.headToHeadMatchup.findMany({
+    where: {
+      contest: {
+        iplGame: { tournamentId },
+      },
+      contestId: { not: currentContestId },
+    },
+    select: {
+      user1: { select: { userId: true } },
+      user2: { select: { userId: true } },
+    },
+  });
+
+  // Count how many times each pair has played (to prefer least-played pairings)
+  const pairCount = new Map<string, number>();
+  for (const m of pastMatchups) {
+    const key = [m.user1.userId, m.user2.userId].sort().join('|');
+    pairCount.set(key, (pairCount.get(key) ?? 0) + 1);
+  }
+
+  // Shuffle pool for base randomness
+  const pool = secureShuffleArray([...signups]);
+  const paired: [SignupForPairing, SignupForPairing][] = [];
+  const used = new Set<string>();
+
+  // Greedy pass: for each unmatched user, find the unmatched partner with
+  // fewest (ideally 0) previous meetings in this tournament.
+  for (let i = 0; i < pool.length; i++) {
+    if (used.has(pool[i].id)) continue;
+
+    let bestPartnerIdx = -1;
+    let bestCount = Infinity;
+
+    for (let j = i + 1; j < pool.length; j++) {
+      if (used.has(pool[j].id)) continue;
+      const key = [pool[i].userId, pool[j].userId].sort().join('|');
+      const count = pairCount.get(key) ?? 0;
+      if (count < bestCount) {
+        bestCount = count;
+        bestPartnerIdx = j;
+        if (count === 0) break; // can't do better than a fresh pairing
+      }
+    }
+
+    if (bestPartnerIdx !== -1) {
+      paired.push([pool[i], pool[bestPartnerIdx]]);
+      used.add(pool[i].id);
+      used.add(pool[bestPartnerIdx].id);
+    }
+  }
+
+  // Safety net: pair any remaining unpaired users (shouldn't happen with even counts)
+  const remaining = pool.filter(s => !used.has(s.id));
+  for (let i = 0; i < remaining.length - 1; i += 2) {
+    paired.push([remaining[i], remaining[i + 1]]);
+  }
+
+  return paired;
+}
