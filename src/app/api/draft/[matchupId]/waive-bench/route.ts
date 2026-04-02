@@ -52,23 +52,29 @@ export async function POST(
     }
 
     // Parse current waiver state
-    const { firstPick, user1WaivedBench, user2WaivedBench } = parseFirstPickUser(matchup.firstPickUser);
+    const { firstPick, user1WaivedBench, user2WaivedBench, user1HalfWaived, user2HalfWaived } = parseFirstPickUser(matchup.firstPickUser);
 
     if (!firstPick) {
       return NextResponse.json({ message: 'Toss has not been completed yet' }, { status: 400 });
     }
 
-    // Check not already waived
-    const alreadyWaived = isUser1 ? user1WaivedBench : user2WaivedBench;
+    // Check not already ended draft (either full or half waive)
+    const alreadyWaived = isUser1
+      ? (user1WaivedBench || user1HalfWaived)
+      : (user2WaivedBench || user2HalfWaived);
     if (alreadyWaived) {
-      return NextResponse.json({ message: 'Bench picks already waived' }, { status: 400 });
+      return NextResponse.json({ message: 'Draft already ended' }, { status: 400 });
     }
 
-    // Build new firstPickUser encoding with this user's waiver added
+    // Full waive (0 bench) when user has exactly 5 picks; half waive (1 bench kept) when ≥6
+    const waiveType = myPicks.length >= 6 ? 'half' : 'full';
+
     const newFirstPickUser = buildFirstPickUser(
       firstPick,
-      isUser1 ? true : user1WaivedBench,
-      isUser2 ? true : user2WaivedBench
+      user1WaivedBench || (isUser1 && waiveType === 'full'),
+      user2WaivedBench || (isUser2 && waiveType === 'full'),
+      user1HalfWaived  || (isUser1 && waiveType === 'half'),
+      user2HalfWaived  || (isUser2 && waiveType === 'half'),
     );
 
     await prisma.headToHeadMatchup.update({
@@ -99,7 +105,7 @@ export async function POST(
       const waivingUser = isUser1 ? matchup.user1.user : matchup.user2.user;
       sendToUser(nextPickerUser.id, {
         title: `🏏 Your Turn — Pick #${matchup.draftPicks.length + 1}`,
-        body: `${waivingUser.name} skipped their bench. It's your turn now!`,
+        body: `${waivingUser.name} ended their draft. It's your turn now!`,
         url: `/draft/${matchupId}`,
       }).catch(() => {});
     }

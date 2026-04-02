@@ -522,9 +522,13 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const currentPickOrder = matchup.draftPicks.length + 1;
 
   // Parse bench waiver state from firstPickUser encoding
-  const { user1WaivedBench, user2WaivedBench } = parseFirstPickUser(matchup.firstPickUser);
-  const myWaivedBench      = isUser1 ? user1WaivedBench : user2WaivedBench;
+  const { user1WaivedBench, user2WaivedBench, user1HalfWaived, user2HalfWaived } = parseFirstPickUser(matchup.firstPickUser);
+  const myWaivedBench       = isUser1 ? user1WaivedBench : user2WaivedBench;  // 0 bench
   const opponentWaivedBench = isUser1 ? user2WaivedBench : user1WaivedBench;
+  const myHalfWaived        = isUser1 ? user1HalfWaived  : user2HalfWaived;   // 1 bench
+  const opponentHalfWaived  = isUser1 ? user2HalfWaived  : user1HalfWaived;
+  const myEndedDraft        = myWaivedBench || myHalfWaived;
+  const opponentEndedDraft  = opponentWaivedBench || opponentHalfWaived;
 
   // Effective pick sequence (waived bench slots removed)
   const effectiveSlots = getEffectivePickSlots(matchup.firstPickUser, matchup.user1.id, matchup.user2.id);
@@ -532,7 +536,10 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const isDraftComplete = matchup.status === 'COMPLETED' || (effectiveSlots.length > 0 && matchup.draftPicks.length >= effectiveSlots.length);
 
   const handleWaiveBench = async () => {
-    if (!confirm('Skip your 2 bench picks?\n\nYour team will have only your 5 starters — no substitutes. If a starter is DNP, they score 0.')) return;
+    const confirmMsg = myPicks.length >= 6
+      ? 'End your draft now?\n\nYou already have 1 bench sub — your final bench slot will be skipped.'
+      : 'End your draft now?\n\nYour team will have only your 5 starters — no bench substitutes. If a starter is DNP, they score 0.';
+    if (!confirm(confirmMsg)) return;
     setWaivingBench(true);
     try {
       const res = await fetch(`/api/draft/${matchupId}/waive-bench`, {
@@ -895,12 +902,12 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           <div className="grid grid-cols-2 bg-orange-50 border-y border-orange-100">
             <div className="px-2 py-0.5">
               <span className="text-[9px] font-bold text-orange-600 uppercase tracking-wide">
-                {myWaivedBench ? '✅ No Bench' : '🪑 Bench'}
+                {myWaivedBench ? '✅ No Bench' : myHalfWaived ? '✅ 1 Sub' : '🪑 Bench'}
               </span>
             </div>
             <div className="px-2 py-0.5 border-l border-orange-100">
               <span className="text-[9px] font-bold text-orange-600 uppercase tracking-wide">
-                {opponentWaivedBench ? '✅ No Bench' : '🪑 Bench'}
+                {opponentWaivedBench ? '✅ No Bench' : opponentHalfWaived ? '✅ 1 Sub' : '🪑 Bench'}
               </span>
             </div>
           </div>
@@ -912,7 +919,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             return (
               <div key={i} className={`grid grid-cols-2 ${i === 5 ? 'border-b border-gray-100' : ''}`}>
                 <div className="px-2 py-1.5 flex items-center gap-1 min-w-0 bg-orange-50/30">
-                  {myWaivedBench ? (
+                  {myWaivedBench || (myHalfWaived && i === 6) ? (
                     <span className="text-[9px] text-gray-300 italic pl-5">—</span>
                   ) : (
                     <>
@@ -929,7 +936,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   )}
                 </div>
                 <div className="px-2 py-1.5 flex items-center gap-1 min-w-0 bg-orange-50/30 border-l border-gray-200">
-                  {opponentWaivedBench ? (
+                  {opponentWaivedBench || (opponentHalfWaived && i === 6) ? (
                     <span className="text-[9px] text-gray-300 italic pl-5">—</span>
                   ) : (
                     <>
@@ -958,6 +965,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               <div className="flex items-center gap-2">
                 {myWaivedBench && (
                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">No bench</span>
+                )}
+                {myHalfWaived && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">1 sub</span>
                 )}
                 <span className="bg-green-800 text-white px-3 py-1 rounded-full font-bold text-sm">
                   {myPicks.length}/7
@@ -1285,19 +1295,23 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 {makingPick ? 'Drafting...' : selectedPlayer ? 'Confirm Pick' : 'Select a Player'}
               </button>
             )}
-            {/* Skip Bench button — visible after 5 picks, before bench turns */}
-            {!isDraftComplete && !myWaivedBench && myPicks.length >= 5 && (
+            {/* End My Draft button — visible after 5+ picks, before draft is complete */}
+            {!isDraftComplete && !myEndedDraft && myPicks.length >= 5 && (
               <button
                 onClick={handleWaiveBench}
                 disabled={waivingBench}
                 className="w-full mt-3 bg-gray-50 hover:bg-gray-100 border-2 border-dashed border-gray-400 hover:border-gray-500 text-gray-600 hover:text-gray-800 px-4 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {waivingBench ? '⏳ Skipping...' : '⏭ Skip Bench — play with 5 starters only'}
+                {waivingBench
+                  ? '⏳ Ending draft...'
+                  : myPicks.length >= 6
+                    ? '🏁 End My Draft — keep 1 bench sub'
+                    : '🏁 End My Draft — play with 5 starters only'}
               </button>
             )}
-            {!isDraftComplete && myWaivedBench && (
+            {!isDraftComplete && myEndedDraft && (
               <div className="mt-3 text-center text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg py-2.5 font-medium">
-                ✅ Bench skipped — your 5 starters are set
+                {myWaivedBench ? '✅ Draft ended — 5 starters locked in' : '✅ Draft ended — 5 starters + 1 sub locked in'}
               </div>
             )}
           </div>
@@ -1309,6 +1323,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               <div className="flex items-center gap-2">
                 {opponentWaivedBench && (
                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">No bench</span>
+                )}
+                {opponentHalfWaived && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">1 sub</span>
                 )}
                 <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold text-sm">
                   {opponentPicks.length}/7
