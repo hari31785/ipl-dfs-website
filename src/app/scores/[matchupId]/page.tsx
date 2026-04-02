@@ -275,6 +275,17 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
               <div>
                 <h1 className="text-base sm:text-2xl md:text-3xl font-bold text-black">🏏 Contest Scores</h1>
                 <div className="text-gray-800 text-xs sm:text-sm mt-0.5 sm:mt-1 truncate max-w-[180px] sm:max-w-none">{matchup.contest.iplGame.title}</div>
+                <div className="flex items-center gap-1.5 mt-0.5 md:hidden">
+                  <span className="bg-secondary-500 text-black text-[10px] font-black px-1.5 py-0.5 rounded">
+                    {matchup.contest.coinValue}🪙
+                  </span>
+                  <span className="text-[10px] font-semibold text-gray-600">
+                    {matchup.contest.contestType === 'HIGH_ROLLER' ? 'High Roller' :
+                     matchup.contest.contestType === 'REGULAR' ? 'Regular' :
+                     matchup.contest.contestType === 'LOW_STAKES' ? 'Low Stakes' :
+                     matchup.contest.contestType}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="hidden md:flex flex-col items-end gap-2">
