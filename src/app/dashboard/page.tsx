@@ -989,17 +989,12 @@ export default function DashboardPage() {
                         
                         if (isNaN(signupDeadline.getTime())) return false;
                         
-                        // Check if this game has any contests that are open for signup
+                        // Check if this game has any contests that are open for signup AND deadline hasn't passed
                         const availableContests = game.contests.filter(contest => 
-                          contest.status === 'SIGNUP_OPEN'
+                          contest.status === 'SIGNUP_OPEN' && signupDeadline > now
                         );
                         
-                        // Show games if they have SIGNUP_OPEN contests OR if deadline hasn't passed
-                        // This ensures reopened contests are visible even if original deadline passed
-                        if (availableContests.length > 0) return true;
-                        
-                        // If no open contests, only show if deadline hasn't passed
-                        return signupDeadline > now;
+                        return availableContests.length > 0;
                       })
                     }))
                     .filter(tournament => tournament.games.length > 0); // Remove tournaments with no available games
@@ -1102,10 +1097,9 @@ export default function DashboardPage() {
                                 const now = new Date();
                                 const signupDeadline = new Date(game.signupDeadline);
                                 
-                                // Filter contests - show all SIGNUP_OPEN contests
-                                // If deadline has passed, admin may have manually reopened signups
+                                // Filter contests — only show SIGNUP_OPEN contests where deadline hasn't passed
                                 const availableContests = game.contests.filter(contest => 
-                                  contest.status === 'SIGNUP_OPEN'
+                                  contest.status === 'SIGNUP_OPEN' && new Date(game.signupDeadline) > now
                                 );
                                 
                                 return (

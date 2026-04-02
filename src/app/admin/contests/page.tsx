@@ -143,11 +143,13 @@ function ContestCard({
         )}
         
         {/* Close Signups */}
-        {contest.status === 'SIGNUP_OPEN' && contest._count.signups >= 1 && (
+        {contest.status === 'SIGNUP_OPEN' && (
           <button
             onClick={() => onCloseSignups(contest.id)}
             className="block w-full px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-sm font-medium"
-            title={contest._count.signups === 1
+            title={contest._count.signups === 0
+              ? 'Close contest (no signups)'
+              : contest._count.signups === 1
               ? `Close signups (Admin will be added)` 
               : contest._count.signups % 2 !== 0 
               ? `Close signups (Admin will join: ${contest._count.signups})` 
@@ -1277,11 +1279,13 @@ export default function ContestsPage() {
                   )}
                   
                   {/* Step 1: Close Signups */}
-                  {contest.status === 'SIGNUP_OPEN' && contest._count.signups >= 1 && (
+                  {contest.status === 'SIGNUP_OPEN' && (
                     <button
                       onClick={() => closeSignups(contest.id)}
                       className="block w-full px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
-                      title={contest._count.signups === 1
+                      title={contest._count.signups === 0
+                        ? 'Close contest (no signups)'
+                        : contest._count.signups === 1
                         ? `Close signups (Admin user will be added to make it 2)` 
                         : contest._count.signups % 2 !== 0 
                         ? `Close signups (Admin user will be added for odd count: ${contest._count.signups})` 

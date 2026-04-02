@@ -37,10 +37,15 @@ export async function POST(
     }
 
     if (contest._count.signups < 1) {
-      return NextResponse.json(
-        { message: 'At least 1 signup required to close signups (Admin will be added to make it 2)' },
-        { status: 400 }
-      );
+      // No signups — just close the contest without creating matchups
+      const closed = await prisma.contest.update({
+        where: { id },
+        data: { status: 'SIGNUP_CLOSED' }
+      });
+      return NextResponse.json({
+        message: 'Contest closed (no signups). No matchups generated.',
+        contest: closed
+      });
     }
 
     // Handle odd number of signups (including 1) by adding Admin user
