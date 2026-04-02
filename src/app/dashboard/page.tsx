@@ -1716,23 +1716,26 @@ export default function DashboardPage() {
                         })}
                         className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 p-3 text-left"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-lg">
-                            <div className="w-5 h-5 rounded-full border-2 border-white" style={{ backgroundColor: group.game.team1.color }}></div>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-lg shrink-0">
+                            <div className="w-4 h-4 rounded-full border-2 border-white" style={{ backgroundColor: group.game.team1.color }}></div>
                             <span className="font-bold text-sm text-white">{group.game.team1.shortName}</span>
                           </div>
-                          <span className="text-white font-bold text-sm">vs</span>
-                          <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-lg">
-                            <div className="w-5 h-5 rounded-full border-2 border-white" style={{ backgroundColor: group.game.team2.color }}></div>
+                          <span className="text-white font-bold text-xs shrink-0">vs</span>
+                          <div className="flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-lg shrink-0">
+                            <div className="w-4 h-4 rounded-full border-2 border-white" style={{ backgroundColor: group.game.team2.color }}></div>
                             <span className="font-bold text-sm text-white">{group.game.team2.shortName}</span>
                           </div>
-                          <span className="text-white/70 text-xs">
+                          <span className="hidden sm:inline text-white/70 text-xs shrink-0">
                             {new Date(group.game.gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
-                          <span className="text-white/60 text-xs">
+                          <span className="hidden sm:inline text-white/60 text-xs min-w-0 truncate">
                             {group.contests.length} contest{group.contests.length !== 1 ? 's' : ''} · {totalMatchups} matchup{totalMatchups !== 1 ? 's' : ''}
                           </span>
-                          <span className="ml-auto text-white/80">
+                          <span className="sm:hidden text-white/60 text-xs min-w-0 truncate">
+                            {totalMatchups} matchup{totalMatchups !== 1 ? 's' : ''}
+                          </span>
+                          <span className="ml-auto text-white/80 shrink-0">
                             {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                           </span>
                         </div>
@@ -1759,40 +1762,45 @@ export default function DashboardPage() {
                             {contest.matchups.length === 0 ? (
                               <div className="text-xs text-gray-400 italic py-1">No completed drafts yet</div>
                             ) : (
-                              <div className="space-y-1.5">
+                              <div className="space-y-2">
                                 {contest.matchups.map((matchup: any) => {
                                   const hasScores = matchup.user1Score > 0 || matchup.user2Score > 0
                                   const u1Wins = matchup.user1Score > matchup.user2Score
                                   const u2Wins = matchup.user2Score > matchup.user1Score
                                   return (
-                                    <div key={matchup.id} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                                      {/* User 1 */}
-                                      <div className={`flex-1 text-right ${u1Wins && hasScores ? 'font-bold' : ''}`}>
-                                        <div className="text-sm text-gray-900 truncate">{matchup.user1.user.name}</div>
-                                        <div className="text-xs text-gray-500">@{matchup.user1.user.username}</div>
+                                    <div key={matchup.id} className="bg-gray-50 rounded-lg px-3 py-2 space-y-1.5">
+                                      {/* Names + scores row */}
+                                      <div className="flex items-center gap-1.5 min-w-0">
+                                        {/* User 1 (right-aligned) */}
+                                        <div className={`min-w-0 flex-1 text-right ${u1Wins && hasScores ? 'font-bold' : ''}`}>
+                                          <div className="text-xs sm:text-sm text-gray-900 truncate">{matchup.user1.user.name}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 truncate">@{matchup.user1.user.username}</div>
+                                        </div>
+                                        {/* Scores */}
+                                        <div className="flex items-center gap-0.5 shrink-0 px-1">
+                                          <span className={`text-xs sm:text-sm font-black w-10 sm:w-14 text-right tabular-nums ${u1Wins && hasScores ? 'text-green-700' : 'text-gray-700'}`}>
+                                            {hasScores ? matchup.user1Score.toFixed(1) : '–'}
+                                          </span>
+                                          <span className="text-gray-400 font-bold text-[10px] px-0.5">vs</span>
+                                          <span className={`text-xs sm:text-sm font-black w-10 sm:w-14 tabular-nums ${u2Wins && hasScores ? 'text-green-700' : 'text-gray-700'}`}>
+                                            {hasScores ? matchup.user2Score.toFixed(1) : '–'}
+                                          </span>
+                                        </div>
+                                        {/* User 2 (left-aligned) */}
+                                        <div className={`min-w-0 flex-1 ${u2Wins && hasScores ? 'font-bold' : ''}`}>
+                                          <div className="text-xs sm:text-sm text-gray-900 truncate">{matchup.user2.user.name}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 truncate">@{matchup.user2.user.username}</div>
+                                        </div>
                                       </div>
-                                      {/* Scores */}
-                                      <div className="flex items-center gap-1.5 shrink-0">
-                                        <span className={`text-sm font-black w-16 text-right ${u1Wins && hasScores ? 'text-green-700' : 'text-gray-700'}`}>
-                                          {hasScores ? `⭐ ${matchup.user1Score.toFixed(1)}` : '–'}
-                                        </span>
-                                        <span className="text-gray-400 font-bold text-xs">vs</span>
-                                        <span className={`text-sm font-black w-16 ${u2Wins && hasScores ? 'text-green-700' : 'text-gray-700'}`}>
-                                          {hasScores ? `⭐ ${matchup.user2Score.toFixed(1)}` : '–'}
-                                        </span>
+                                      {/* Watch button — always on its own row so it's never clipped */}
+                                      <div className="flex justify-end">
+                                        <button
+                                          onClick={() => window.location.href = `/scores/${matchup.id}?from=spectate`}
+                                          className="bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold px-4 py-1 rounded-lg transition-colors"
+                                        >
+                                          👁 Watch
+                                        </button>
                                       </div>
-                                      {/* User 2 */}
-                                      <div className={`flex-1 ${u2Wins && hasScores ? 'font-bold' : ''}`}>
-                                        <div className="text-sm text-gray-900 truncate">{matchup.user2.user.name}</div>
-                                        <div className="text-xs text-gray-500">@{matchup.user2.user.username}</div>
-                                      </div>
-                                      {/* Watch button */}
-                                      <button
-                                        onClick={() => window.location.href = `/scores/${matchup.id}?from=spectate`}
-                                        className="shrink-0 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors"
-                                      >
-                                        👁 Watch
-                                      </button>
                                     </div>
                                   )
                                 })}
