@@ -16,10 +16,10 @@ import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
  */
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise<{ gameId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { gameId } = await params;
+    const { id: gameId } = await params;
 
     // Load all COMPLETED contests for this game, with their completed matchups
     const contests = await prisma.contest.findMany({
