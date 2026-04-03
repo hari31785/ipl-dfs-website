@@ -38,8 +38,8 @@ export async function POST(
     // Trigger 2: Notify both players — draft has started
     if (matchup) {
       const { firstPick } = parseFirstPickUser(firstPickUser);
-      const firstPickerUser = firstPick === matchup.user1.id ? matchup.user1.user : matchup.user2.user;
-      const secondPickerUser = firstPick === matchup.user1.id ? matchup.user2.user : matchup.user1.user;
+      const firstPickerUser = firstPick === 'user1' ? matchup.user1.user : matchup.user2.user;
+      const secondPickerUser = firstPick === 'user1' ? matchup.user2.user : matchup.user1.user;
       const draftUrl = `/draft/${matchupId}`;
       Promise.allSettled([
         sendToUser(firstPickerUser.id, {
