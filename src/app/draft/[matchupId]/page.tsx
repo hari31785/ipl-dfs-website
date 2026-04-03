@@ -1295,8 +1295,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 {makingPick ? 'Drafting...' : selectedPlayer ? 'Confirm Pick' : 'Select a Player'}
               </button>
             )}
-            {/* End My Draft button — visible after 5+ picks, before draft is complete */}
-            {!isDraftComplete && !myEndedDraft && myPicks.length >= 5 && (
+            {/* End My Draft button — visible after 5+ picks, but only before all 7 picks are made */}
+            {!isDraftComplete && !myEndedDraft && myPicks.length >= 5 && myPicks.length < 7 && (
               <button
                 onClick={handleWaiveBench}
                 disabled={waivingBench}
