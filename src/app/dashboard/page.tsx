@@ -880,92 +880,40 @@ export default function DashboardPage() {
           )
         })()}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Card */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
-              {/* Mobile: compact horizontal layout | Desktop: original centered layout */}
-              <div className="flex items-center gap-3 lg:flex-col lg:items-center lg:text-center lg:mb-6">
-                <div className="w-12 h-12 lg:w-20 lg:h-20 bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-full flex items-center justify-center shrink-0 lg:mx-auto lg:mb-4">
-                  <User className="h-6 w-6 lg:h-10 lg:w-10 text-white" />
-                </div>
-                <div className="min-w-0 flex-1 lg:flex-none">
-                  <h2 className="text-base lg:text-2xl font-bold text-primary-800 truncate">{user.name}</h2>
-                  <p className="text-xs lg:text-sm text-gray-500">@{user.username}</p>
-                </div>
-                {/* Mobile-only: stats inline */}
-                <div className="flex gap-3 text-center shrink-0 lg:hidden">
-                  <div>
-                    <p className="text-sm font-bold text-primary-800">{user.totalMatches}</p>
-                    <p className="text-[10px] text-gray-500">Matches</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">{user.totalWins}</p>
-                    <p className="text-[10px] text-gray-500">Wins</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">{user.winPercentage.toFixed(0)}%</p>
-                    <p className="text-[10px] text-gray-500">Win%</p>
-                  </div>
-                </div>
-                {/* Mobile-only: edit button */}
-                <button
-                  onClick={openEditProfile}
-                  className="shrink-0 lg:hidden flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors"
-                  title="Edit Profile"
-                >
-                  <Settings className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Desktop only: contact info, edit button, stats */}
-              <div className="hidden lg:block space-y-4">
-                <div className="flex items-center gap-3 text-gray-700">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                  <span>{user.email}</span>
-                </div>
-                {user.phone && (
-                  <div className="flex items-center gap-3 text-gray-700">
-                    <Phone className="h-5 w-5 text-gray-400" />
-                    <span>{user.phone}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 text-gray-700">
-                  <Calendar className="h-5 w-5 text-gray-400" />
-                  <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-
-              <div className="hidden lg:block mt-6 pt-6 border-t border-gray-200">
-                <button
-                  onClick={openEditProfile}
-                  className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors"
-                >
-                  <Settings className="h-4 w-4" />
-                  Edit Profile
-                </button>
-              </div>
-
-              {/* Stats — desktop only (mobile shown inline above) */}
-              <div className="hidden lg:grid mt-6 pt-6 border-t border-gray-200 grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-primary-800">{user.totalMatches}</p>
-                  <p className="text-xs text-gray-600">Matches</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{user.totalWins}</p>
-                  <p className="text-xs text-gray-600">Wins</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{user.winPercentage.toFixed(0)}%</p>
-                  <p className="text-xs text-gray-600">Win Rate</p>
-                </div>
-              </div>
+        {/* Profile Strip — full width, horizontal */}
+        <div className="bg-white rounded-xl shadow border border-gray-100 px-4 py-3 flex items-center gap-4">
+          <div className="w-11 h-11 bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-full flex items-center justify-center shrink-0">
+            <User className="h-5 w-5 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-bold text-primary-800 truncate">{user.name}</h2>
+            <p className="text-xs text-gray-500">@{user.username}</p>
+          </div>
+          <div className="flex gap-4 text-center shrink-0">
+            <div>
+              <p className="text-sm font-bold text-primary-800">{user.totalMatches}</p>
+              <p className="text-[10px] text-gray-500">Matches</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">{user.totalWins}</p>
+              <p className="text-[10px] text-gray-500">Wins</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">{user.winPercentage.toFixed(0)}%</p>
+              <p className="text-[10px] text-gray-500">Win%</p>
             </div>
           </div>
+          <button
+            onClick={openEditProfile}
+            className="shrink-0 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors"
+            title="Edit Profile"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+        </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Main Content — full width */}
+        <div className="space-y-6">
             {/* Tab Navigation */}
             <div className="flex gap-4 border-b border-gray-200">
               <button
