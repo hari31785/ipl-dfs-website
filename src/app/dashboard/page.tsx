@@ -1549,19 +1549,32 @@ export default function DashboardPage() {
                     <div key={`${signup.id}-${signup.matchup?.id ?? 'none'}`} className="bg-white rounded-lg shadow border border-gray-200 p-3">
                       {/* Compact Header with Team Badges */}
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
-                            <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team1.color }}></div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 rounded-lg">
+                            <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team1.color }}></div>
                             <span className="font-bold text-sm text-gray-900">{signup.contest.iplGame.team1.shortName}</span>
                           </div>
-                          <span className="text-gray-600 text-sm font-bold">vs</span>
-                          <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
-                            <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team2.color }}></div>
+                          <span className="text-gray-500 text-xs font-bold">vs</span>
+                          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 rounded-lg">
+                            <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team2.color }}></div>
                             <span className="font-bold text-sm text-gray-900">{signup.contest.iplGame.team2.shortName}</span>
                           </div>
+                          {/* Contest type + coin inline on mobile */}
+                          <span className="text-xs text-gray-500 ml-1 hidden xs:inline">
+                            {signup.contest.contestType === 'HIGH_ROLLER' ? '100🪙' :
+                             signup.contest.contestType === 'REGULAR' ? '50🪙' :
+                             signup.contest.contestType === 'LOW_STAKES' ? '25🪙' :
+                             `${signup.contest.coinValue}🪙`}
+                          </span>
                         </div>
-                        <div className="text-right">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-gray-500 xs:hidden">
+                            {signup.contest.contestType === 'HIGH_ROLLER' ? '100🪙' :
+                             signup.contest.contestType === 'REGULAR' ? '50🪙' :
+                             signup.contest.contestType === 'LOW_STAKES' ? '25🪙' :
+                             `${signup.contest.coinValue}🪙`}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                             signup.contest.iplGame.status === 'LIVE' ? 'bg-red-100 text-red-700' :
                             signup.contest.iplGame.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
                             'bg-green-100 text-green-700'
@@ -1571,67 +1584,42 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Contest Info */}
-                      <div className="flex items-center justify-between p-2 bg-secondary-50 rounded mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold text-sm text-gray-900">
-                            {signup.contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100)' : 
-                             signup.contest.contestType === 'REGULAR' ? 'Regular (50)' : 
-                             signup.contest.contestType === 'LOW_STAKES' ? 'Low Stakes (25)' : 
-                             signup.contest.contestType}
-                          </span>
-                          <span className="text-xs text-gray-600">{signup.contest.coinValue} coins/pt</span>
-                        </div>
-                        <div className="text-right text-xs text-gray-500">
-                          <div>{new Date(signup.contest.iplGame.gameDate).toLocaleString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric',
-                            hour: 'numeric', 
-                            minute: '2-digit',
-                            hour12: true
-                          })}</div>
-                          <div className="text-orange-600 text-[10px]">
-                            Signup: {new Date(signup.contest.iplGame.signupDeadline).toLocaleString('en-US', { 
-                              month: 'numeric', 
-                              day: 'numeric',
-                              hour: 'numeric', 
-                              minute: '2-digit',
-                              hour12: true
-                            })}
-                          </div>
-                        </div>
+                      {/* Contest Info — single compact line */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2 px-1">
+                        <span className="font-medium text-gray-700">
+                          {signup.contest.contestType === 'HIGH_ROLLER' ? 'High Roller' :
+                           signup.contest.contestType === 'REGULAR' ? 'Regular' :
+                           signup.contest.contestType === 'LOW_STAKES' ? 'Low Stakes' :
+                           signup.contest.contestType}
+                          <span className="text-gray-400 font-normal"> · {signup.contest.coinValue} coins/pt</span>
+                        </span>
+                        <span>
+                          {new Date(signup.contest.iplGame.gameDate).toLocaleString('en-US', {
+                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+                          })}
+                        </span>
                       </div>
 
                       {/* Status - Only show for upcoming/drafted tabs, not active/completed */}
                       {contestSubTab !== 'active' && (
-                        <div className={`border rounded p-2 mb-2 ${
+                        <div className={`rounded px-2 py-1.5 mb-2 text-xs font-medium ${
                           signup.matchup 
                             ? signup.matchup.status === 'DRAFTING' 
-                              ? 'bg-blue-50 border-blue-200' 
-                              : 'bg-green-50 border-green-200'
-                            : 'bg-yellow-50 border-yellow-200'
+                              ? 'bg-blue-50 border border-blue-200 text-blue-800' 
+                              : 'bg-green-50 border border-green-200 text-green-800'
+                            : 'bg-yellow-50 border border-yellow-200 text-yellow-800'
                         }`}>
-                          <p className="text-xs font-medium">
-                            {signup.matchup ? (
-                              signup.matchup.status === 'DRAFTING' ? (
-                                <span className="text-blue-800">
-                                  ✍️ Drafting vs {signup.matchup.opponent.name}
-                                </span>
-                              ) : signup.matchup.status === 'COMPLETED' ? (
-                                <span className="text-green-800">
-                                  ✅ Draft Complete - Ready for game
-                                </span>
-                              ) : (
-                                <span className="text-yellow-800">
-                                  ⏳ Matched with {signup.matchup.opponent.name} - Draft starting soon
-                                </span>
-                              )
+                          {signup.matchup ? (
+                            signup.matchup.status === 'DRAFTING' ? (
+                              <>✍️ Drafting vs {signup.matchup.opponent.name}</>
+                            ) : signup.matchup.status === 'COMPLETED' ? (
+                              <>✅ Draft Complete — Ready for game</>
                             ) : (
-                              <span className="text-yellow-800">
-                                ⏳ Waiting for matchup assignment
-                              </span>
-                            )}
-                          </p>
+                              <>⏳ Matched with {signup.matchup.opponent.name} — Draft starting soon</>
+                            )
+                          ) : (
+                            <>⏳ Waiting for matchup assignment</>
+                          )}
                         </div>
                       )}
 
