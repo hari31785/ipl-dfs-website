@@ -129,6 +129,9 @@ export default function DashboardPage() {
   const [spectateLoading, setSpectateLoading] = useState(false)
   const [expandedSpectateGames, setExpandedSpectateGames] = useState<Set<string>>(new Set())
   const [expandedCompletedGames, setExpandedCompletedGames] = useState<Set<string>>(new Set())
+  const [completedSearchQuery, setCompletedSearchQuery] = useState('')
+  const [completedPage, setCompletedPage] = useState(1)
+  const COMPLETED_GAMES_PER_PAGE = 5
   const [myContestsTournamentFilter, setMyContestsTournamentFilter] = useState<string>('all')
   const [joiningContest, setJoiningContest] = useState<string | null>(null)
   const [leavingContest, setLeavingContest] = useState<string | null>(null)
@@ -1337,7 +1340,7 @@ export default function DashboardPage() {
 
                     // Completed tab: group by game with collapsible headers + compact inner cards
                     if (contestSubTab === 'completed') {
-                      const gameGroups = filteredContests
+                      const allGameGroups = filteredContests
                         .sort((a, b) => new Date(b.contest.iplGame.gameDate).getTime() - new Date(a.contest.iplGame.gameDate).getTime())
                         .reduce((groups: Record<string, { game: any; signups: any[] }>, signup) => {
                           const gameId = signup.contest.iplGame.id
@@ -1346,7 +1349,42 @@ export default function DashboardPage() {
                           return groups
                         }, {})
 
-                      return Object.values(gameGroups).map((group: any) => {
+                      const allGroupsArray: any[] = Object.values(allGameGroups)
+
+                      // Filter by search query (team names)
+                      const searchLower = completedSearchQuery.toLowerCase().trim()
+                      const filteredGroups = searchLower
+                        ? allGroupsArray.filter((group: any) =>
+                            group.game.team1.shortName.toLowerCase().includes(searchLower) ||
+                            group.game.team1.name.toLowerCase().includes(searchLower) ||
+                            group.game.team2.shortName.toLowerCase().includes(searchLower) ||
+                            group.game.team2.name.toLowerCase().includes(searchLower)
+                          )
+                        : allGroupsArray
+
+                      const totalPages = Math.ceil(filteredGroups.length / COMPLETED_GAMES_PER_PAGE)
+                      const safePage = Math.min(completedPage, Math.max(1, totalPages))
+                      const pagedGroups = filteredGroups.slice((safePage - 1) * COMPLETED_GAMES_PER_PAGE, safePage * COMPLETED_GAMES_PER_PAGE)
+
+                      return (
+                        <>
+                          {/* Search bar */}
+                          <div className="relative mb-3">
+                            <input
+                              type="text"
+                              placeholder="Search by team (e.g. MI, RCB...)"
+                              value={completedSearchQuery}
+                              onChange={e => { setCompletedSearchQuery(e.target.value); setCompletedPage(1) }}
+                              className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                            />
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" /></svg>
+                            {completedSearchQuery && (
+                              <button onClick={() => { setCompletedSearchQuery(''); setCompletedPage(1) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+                            )}
+                          </div>
+
+                          {/* Game cards for current page */}
+                          {pagedGroups.map((group: any) => {
                         const isExpanded = expandedCompletedGames.has(group.game.id)
                         const wins = group.signups.filter((s: any) => s.matchup && s.matchup.myScore !== undefined && s.matchup.myScore > s.matchup.opponentScore).length
                         const losses = group.signups.filter((s: any) => s.matchup && s.matchup.myScore !== undefined && s.matchup.myScore < s.matchup.opponentScore).length
@@ -1440,7 +1478,37 @@ export default function DashboardPage() {
                             )}
                           </div>
                         )
-                      })
+                      })}
+
+                          {/* No results message */}
+                          {filteredGroups.length === 0 && (
+                            <div className="text-center py-8 text-gray-400 text-sm">No games found{completedSearchQuery ? ` for "${completedSearchQuery}"` : ''}</div>
+                          )}
+
+                          {/* Pagination */}
+                          {totalPages > 1 && (
+                            <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-200">
+                              <button
+                                onClick={() => setCompletedPage(p => Math.max(1, p - 1))}
+                                disabled={safePage <= 1}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                              >
+                                <ChevronRight className="h-4 w-4 rotate-180" /> Prev
+                              </button>
+                              <span className="text-xs text-gray-500 font-medium">
+                                Page {safePage} of {totalPages} · {filteredGroups.length} game{filteredGroups.length !== 1 ? 's' : ''}
+                              </span>
+                              <button
+                                onClick={() => setCompletedPage(p => Math.min(totalPages, p + 1))}
+                                disabled={safePage >= totalPages}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                              >
+                                Next <ChevronRight className="h-4 w-4" />
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )
                     }
 
                     return filteredContests
