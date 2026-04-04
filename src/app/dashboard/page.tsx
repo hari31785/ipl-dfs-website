@@ -1112,15 +1112,15 @@ export default function DashboardPage() {
                                                  hasJoined ? '✓ In' : 'Join'}
                                               </span>
                                             </button>
+                                            {/* Unjoin — tiny absolute badge on top-right corner of the button */}
                                             {hasJoined && unjoiningContest !== contest.id && (
-                                              new Date() > new Date(game.signupDeadline) ? (
-                                                <p className="mt-0.5 w-full text-center text-[9px] text-gray-400 font-medium">🔒 Locked</p>
-                                              ) : (
+                                              new Date() > new Date(game.signupDeadline) ? null : (
                                                 <button
                                                   onClick={(e) => { e.stopPropagation(); handleUnjoinContest(contest.id); }}
-                                                  className="mt-0.5 w-full text-center text-[9px] text-red-500 hover:text-red-700 font-semibold transition-colors"
+                                                  className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white text-[8px] font-bold rounded-full border border-white shadow transition-colors"
+                                                  title="Unjoin"
                                                 >
-                                                  ✕ Unjoin
+                                                  ✕
                                                 </button>
                                               )
                                             )}
