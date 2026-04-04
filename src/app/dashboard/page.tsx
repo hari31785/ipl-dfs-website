@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, ChevronDown, Ticket, Coins, Bell, BellOff, RefreshCw } from "lucide-react"
 import { useLoading } from '@/contexts/LoadingContext'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { getEffectivePickSlots } from '@/lib/draftUtils'
 
 interface UserData {
   id: string
@@ -769,10 +770,9 @@ export default function DashboardPage() {
                 uc.matchup.firstPickUser !== null &&
                 uc.matchup.draftPicksCount < 14
               ) {
-                const isUser1 = uc.id === uc.matchup.user1Id
-                const firstPickIsUser1 = uc.matchup.firstPickUser?.startsWith('user1') ?? false
-                const firstPickIsMe = (firstPickIsUser1 && isUser1) || (!firstPickIsUser1 && !isUser1)
-                const isMyTurn = (uc.matchup.draftPicksCount % 2 === 0) === firstPickIsMe
+                const effectiveSlots = getEffectivePickSlots(uc.matchup.firstPickUser, uc.matchup.user1Id, uc.matchup.user2Id)
+                const nextPickerSignupId = effectiveSlots[uc.matchup.draftPicksCount] ?? null
+                const isMyTurn = nextPickerSignupId === uc.id
                 const pickNumber = uc.matchup.draftPicksCount + 1
                 const type = isMyTurn ? 'my-turn' : 'started'
                 return [{ type, matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id, pickNumber }]
