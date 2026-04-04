@@ -1083,46 +1083,74 @@ export default function DashboardPage() {
                                         
                                         return (
                                           <div key={contest.id} className="relative">
-                                            <button 
-                                              onClick={() => !hasJoined && handleJoinContest(contest.id, game.id)}
-                                              disabled={joiningContest === contest.id || hasJoined || unjoiningContest === contest.id}
-                                              className={`w-full flex items-center justify-between gap-1.5 px-2.5 py-2 border-2 rounded-lg transition-all shadow-sm hover:shadow-md disabled:cursor-not-allowed ${
-                                                hasJoined
-                                                  ? 'bg-gradient-to-br from-green-400 to-green-500 border-green-600 text-white cursor-default'
-                                                  : 'bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 border-yellow-600 text-gray-900'
-                                              }`}
-                                            >
-                                              <div className="flex flex-col items-start min-w-0">
-                                                <span className={`font-bold text-xs leading-tight truncate ${hasJoined ? 'text-white' : 'text-gray-900'}`}>
-                                                  {(() => {
-                                                    const type = contest.contestType;
-                                                    return type === 'HIGH_ROLLER' ? 'High Roller' : 
-                                                           type === 'REGULAR' ? 'Regular' : 
-                                                           type === 'LOW_STAKES' ? 'Low Stakes' : 
-                                                           `${contest.coinValue}🪙`;
-                                                  })()} 
-                                                </span>
-                                                <span className={`text-[9px] leading-tight ${hasJoined ? 'text-green-100' : 'text-gray-600'}`}>
-                                                  {contest._count.signups}/{contest.maxParticipants}
-                                                </span>
+                                            {hasJoined ? (
+                                              /* Split button: joined (left) + unjoin (right) */
+                                              <div className={`w-full flex items-stretch border-2 rounded-lg overflow-hidden shadow-sm ${
+                                                new Date() > new Date(game.signupDeadline) ? 'border-green-600' : 'border-green-600'
+                                              }`}>
+                                                {/* Left: joined info */}
+                                                <div className="flex-1 flex items-center justify-between gap-1 px-2.5 py-2 bg-gradient-to-br from-green-400 to-green-500">
+                                                  <div className="flex flex-col items-start min-w-0">
+                                                    <span className="font-bold text-xs text-white leading-tight truncate">
+                                                      {(() => {
+                                                        const type = contest.contestType;
+                                                        return type === 'HIGH_ROLLER' ? 'High Roller' :
+                                                               type === 'REGULAR' ? 'Regular' :
+                                                               type === 'LOW_STAKES' ? 'Low Stakes' :
+                                                               `${contest.coinValue}🪙`;
+                                                      })()}
+                                                    </span>
+                                                    <span className="text-[9px] text-green-100 leading-tight">
+                                                      {contest._count.signups}/{contest.maxParticipants}
+                                                    </span>
+                                                  </div>
+                                                  <span className="text-[10px] font-bold text-white shrink-0">
+                                                    {unjoiningContest === contest.id ? '...' : '✓ In'}
+                                                  </span>
+                                                </div>
+                                                {/* Divider */}
+                                                <div className="w-px bg-green-600/40" />
+                                                {/* Right: unjoin strip */}
+                                                {new Date() > new Date(game.signupDeadline) ? (
+                                                  <div className="flex items-center justify-center px-2 bg-green-500/60">
+                                                    <span className="text-[9px] text-green-100">🔒</span>
+                                                  </div>
+                                                ) : (
+                                                  <button
+                                                    onClick={(e) => { e.stopPropagation(); handleUnjoinContest(contest.id); }}
+                                                    disabled={unjoiningContest === contest.id}
+                                                    className="flex items-center justify-center px-2.5 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
+                                                    title="Leave contest"
+                                                  >
+                                                    <span className="text-[11px] font-bold text-white">✕</span>
+                                                  </button>
+                                                )}
                                               </div>
-                                              <span className={`text-[10px] font-bold shrink-0 ${hasJoined ? 'text-white' : 'text-gray-900'}`}>
-                                                {joiningContest === contest.id ? '...' :
-                                                 unjoiningContest === contest.id ? '...' :
-                                                 hasJoined ? '✓ In' : 'Join'}
-                                              </span>
-                                            </button>
-                                            {/* Unjoin — tiny absolute badge on top-right corner of the button */}
-                                            {hasJoined && unjoiningContest !== contest.id && (
-                                              new Date() > new Date(game.signupDeadline) ? null : (
-                                                <button
-                                                  onClick={(e) => { e.stopPropagation(); handleUnjoinContest(contest.id); }}
-                                                  className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white text-[8px] font-bold rounded-full border border-white shadow transition-colors"
-                                                  title="Unjoin"
-                                                >
-                                                  ✕
-                                                </button>
-                                              )
+                                            ) : (
+                                              /* Not joined: normal join button */
+                                              <button
+                                                onClick={() => handleJoinContest(contest.id, game.id)}
+                                                disabled={joiningContest === contest.id}
+                                                className="w-full flex items-center justify-between gap-1.5 px-2.5 py-2 border-2 border-yellow-600 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                              >
+                                                <div className="flex flex-col items-start min-w-0">
+                                                  <span className="font-bold text-xs text-gray-900 leading-tight truncate">
+                                                    {(() => {
+                                                      const type = contest.contestType;
+                                                      return type === 'HIGH_ROLLER' ? 'High Roller' :
+                                                             type === 'REGULAR' ? 'Regular' :
+                                                             type === 'LOW_STAKES' ? 'Low Stakes' :
+                                                             `${contest.coinValue}🪙`;
+                                                    })()}
+                                                  </span>
+                                                  <span className="text-[9px] text-gray-600 leading-tight">
+                                                    {contest._count.signups}/{contest.maxParticipants}
+                                                  </span>
+                                                </div>
+                                                <span className="text-[10px] font-bold text-gray-900 shrink-0">
+                                                  {joiningContest === contest.id ? '...' : 'Join'}
+                                                </span>
+                                              </button>
                                             )}
                                           </div>
                                         );
