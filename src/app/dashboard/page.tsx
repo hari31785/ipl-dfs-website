@@ -1914,9 +1914,24 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Links */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 mt-6">
-          <h3 className="text-lg font-bold text-primary-800 mb-4">Quick Links</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mt-6 px-4 py-3 md:p-6">
+          <h3 className="text-sm md:text-lg font-bold text-primary-800 mb-3 md:mb-4">Quick Links</h3>
+          {/* Mobile: compact icon pills in a row | Desktop: original large cards */}
+          <div className="flex gap-2 md:hidden">
+            <a href="/how-to-play" className="flex-1 flex flex-col items-center gap-1 py-2.5 bg-green-50 border border-green-200 rounded-xl hover:bg-green-100 transition-colors">
+              <Target className="h-5 w-5 text-green-600" />
+              <span className="text-[11px] font-semibold text-green-800 text-center leading-tight">How to Play</span>
+            </a>
+            <a href="/rules" className="flex-1 flex flex-col items-center gap-1 py-2.5 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors">
+              <Settings className="h-5 w-5 text-blue-600" />
+              <span className="text-[11px] font-semibold text-blue-800 text-center leading-tight">Rules</span>
+            </a>
+            <a href="/scoring" className="flex-1 flex flex-col items-center gap-1 py-2.5 bg-orange-50 border border-orange-200 rounded-xl hover:bg-orange-100 transition-colors">
+              <Zap className="h-5 w-5 text-orange-600" />
+              <span className="text-[11px] font-semibold text-orange-800 text-center leading-tight">Scoring</span>
+            </a>
+          </div>
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4">
             <a 
               href="/how-to-play"
               className="flex items-center justify-between p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl hover:shadow-md transition-all group"
@@ -1932,7 +1947,6 @@ export default function DashboardPage() {
               </div>
               <ChevronRight className="h-4 w-4 text-green-600 group-hover:translate-x-1 transition-transform" />
             </a>
-
             <a 
               href="/rules"
               className="flex items-center justify-between p-4 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl hover:shadow-md transition-all group"
@@ -1948,7 +1962,6 @@ export default function DashboardPage() {
               </div>
               <ChevronRight className="h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
             </a>
-
             <a 
               href="/scoring"
               className="flex items-center justify-between p-4 bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200 rounded-xl hover:shadow-md transition-all group"
