@@ -1008,57 +1008,42 @@ export default function DashboardPage() {
                           <p className="text-gray-500 text-center py-4">No upcoming games</p>
                         ) : (
                           tournament.games.map((game) => (
-                            <div key={game.id} className="border border-gray-200 rounded-lg p-3 hover:border-secondary-300 transition-colors bg-white">
+                            <div key={game.id} className="border border-gray-200 rounded-lg p-2.5 hover:border-secondary-300 transition-colors bg-white">
                               {/* Compact Game Info */}
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
-                                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team1.color }}></div>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1.5 rounded-lg">
+                                    <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team1.color }}></div>
                                     <span className="font-bold text-sm text-gray-900">{game.team1.shortName}</span>
                                   </div>
-                                  <span className="text-gray-600 text-sm font-bold">vs</span>
-                                  <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
-                                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team2.color }}></div>
+                                  <span className="text-gray-500 text-xs font-bold">vs</span>
+                                  <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1.5 rounded-lg">
+                                    <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team2.color }}></div>
                                     <span className="font-bold text-sm text-gray-900">{game.team2.shortName}</span>
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="flex items-center gap-1 text-xs text-gray-600">
+                                  <div className="flex items-center gap-1 text-xs text-gray-500">
                                     <Clock className="h-3 w-3" />
-                                    <span className="font-medium">Match Start: {new Date(game.gameDate).toLocaleString('en-US', { 
-                                      month: 'short', 
-                                      day: 'numeric', 
-                                      year: 'numeric',
-                                      hour: 'numeric', 
-                                      minute: '2-digit',
-                                      hour12: true,
-                                      timeZoneName: 'short'
+                                    <span>{new Date(game.gameDate).toLocaleString('en-US', { 
+                                      month: 'short', day: 'numeric',
+                                      hour: 'numeric', minute: '2-digit', hour12: true
                                     })}</span>
                                   </div>
-                                  <div className="flex items-center gap-1 text-xs text-orange-600 mt-1">
+                                  <div className="flex items-center gap-1 text-xs text-orange-500 mt-0.5">
                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span className="font-medium">Signups close: {new Date(game.signupDeadline).toLocaleString('en-US', { 
-                                      month: 'short', 
-                                      day: 'numeric',
-                                      year: 'numeric',
-                                      hour: 'numeric', 
-                                      minute: '2-digit',
-                                      hour12: true,
-                                      timeZoneName: 'short'
+                                    <span>Closes: {new Date(game.signupDeadline).toLocaleString('en-US', { 
+                                      month: 'short', day: 'numeric',
+                                      hour: 'numeric', minute: '2-digit', hour12: true
                                     })}</span>
                                     {(() => {
                                       const now = new Date();
                                       const signupDeadline = new Date(game.signupDeadline);
                                       const hasOpenContests = game.contests?.some(c => c.status === 'SIGNUP_OPEN');
-                                      
                                       if (signupDeadline <= now && hasOpenContests) {
-                                        return (
-                                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            📢 Reopened
-                                          </span>
-                                        );
+                                        return <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">📢 Reopened</span>;
                                       }
                                       return null;
                                     })()}
@@ -1081,8 +1066,8 @@ export default function DashboardPage() {
                                 );
                                 
                                 return (
-                                  <div className="space-y-2">
-                                    <p className="text-xs font-semibold text-gray-700 mb-2">Available Contests:</p>
+                                  <div className="space-y-1.5">
+                                    <p className="text-xs font-semibold text-gray-600">Available Contests:</p>
                                     <div className={`grid gap-2 ${
                                       availableContests.length === 1 
                                         ? 'grid-cols-1' 
@@ -1101,42 +1086,42 @@ export default function DashboardPage() {
                                             <button 
                                               onClick={() => !hasJoined && handleJoinContest(contest.id, game.id)}
                                               disabled={joiningContest === contest.id || hasJoined || unjoiningContest === contest.id}
-                                              className={`w-full flex flex-col items-center justify-center gap-1 px-4 py-3 border-2 rounded-lg transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed ${
+                                              className={`w-full flex flex-col items-center justify-center gap-0.5 px-3 py-2.5 border-2 rounded-lg transition-all shadow-sm hover:shadow-md disabled:cursor-not-allowed ${
                                                 hasJoined
                                                   ? 'bg-gradient-to-br from-green-400 to-green-500 border-green-600 text-white cursor-default'
                                                   : 'bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 border-yellow-600 text-gray-900'
                                               }`}
                                             >
-                                              <span className={`font-bold text-base ${hasJoined ? 'text-white' : 'text-gray-900'}`}>
+                                              <span className={`font-bold text-sm leading-tight ${hasJoined ? 'text-white' : 'text-gray-900'}`}>
                                                 {(() => {
                                                   const type = contest.contestType;
-                                                  return type === 'HIGH_ROLLER' ? 'High Roller (100)' : 
-                                                         type === 'REGULAR' ? 'Regular (50)' : 
-                                                         type === 'LOW_STAKES' ? 'Low Stakes (25)' : 
-                                                         `${contest.coinValue} Coins`;
+                                                  return type === 'HIGH_ROLLER' ? 'High Roller' : 
+                                                         type === 'REGULAR' ? 'Regular' : 
+                                                         type === 'LOW_STAKES' ? 'Low Stakes' : 
+                                                         `${contest.coinValue}🪙`;
                                                 })()} 
                                               </span>
-                                              <span className={`text-xs ${hasJoined ? 'text-green-100' : 'text-gray-800'}`}>
+                                              <span className={`text-[10px] ${hasJoined ? 'text-green-100' : 'text-gray-700'}`}>
                                                 {contest._count.signups}/{contest.maxParticipants} joined
                                               </span>
                                               {joiningContest === contest.id ? (
-                                                <span className="text-xs text-gray-900 font-medium">Joining...</span>
+                                                <span className="text-[10px] text-gray-900 font-medium">Joining...</span>
                                               ) : unjoiningContest === contest.id ? (
-                                                <span className="text-xs text-white font-medium">Leaving...</span>
+                                                <span className="text-[10px] text-white font-medium">Leaving...</span>
                                               ) : hasJoined ? (
-                                                <span className="text-xs font-bold text-white flex items-center gap-1">
+                                                <span className="text-[10px] font-bold text-white flex items-center gap-0.5">
                                                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                   </svg>
                                                   JOINED
                                                 </span>
                                               ) : (
-                                                <span className="text-xs font-bold text-gray-900">JOIN NOW</span>
+                                                <span className="text-[10px] font-bold text-gray-900">JOIN NOW</span>
                                               )}
                                             </button>
                                             {hasJoined && unjoiningContest !== contest.id && (
                                               new Date() > new Date(game.signupDeadline) ? (
-                                                <p className="mt-1 w-full text-center text-xs text-gray-400 font-medium py-1">
+                                                <p className="mt-1 w-full text-center text-[10px] text-gray-400 font-medium py-0.5">
                                                   🔒 Deadline Passed
                                                 </p>
                                               ) : (
@@ -1145,7 +1130,7 @@ export default function DashboardPage() {
                                                     e.stopPropagation();
                                                     handleUnjoinContest(contest.id);
                                                   }}
-                                                  className="mt-1 w-full px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded border border-red-600 transition-colors"
+                                                  className="mt-1 w-full px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-[10px] font-semibold rounded border border-red-600 transition-colors"
                                                 >
                                                   ✕ Unjoin
                                                 </button>
