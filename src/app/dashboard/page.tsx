@@ -1027,7 +1027,7 @@ export default function DashboardPage() {
                                     <Clock className="h-3 w-3" />
                                     <span>{new Date(game.gameDate).toLocaleString('en-US', { 
                                       month: 'short', day: 'numeric',
-                                      hour: 'numeric', minute: '2-digit', hour12: true
+                                      hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short'
                                     })}</span>
                                   </div>
                                   <div className="flex items-center gap-1 text-xs text-orange-500 mt-0.5">
@@ -1036,7 +1036,7 @@ export default function DashboardPage() {
                                     </svg>
                                     <span>Closes: {new Date(game.signupDeadline).toLocaleString('en-US', { 
                                       month: 'short', day: 'numeric',
-                                      hour: 'numeric', minute: '2-digit', hour12: true
+                                      hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short'
                                     })}</span>
                                     {(() => {
                                       const now = new Date();
@@ -1528,7 +1528,7 @@ export default function DashboardPage() {
                         </span>
                         <span>
                           {new Date(signup.contest.iplGame.gameDate).toLocaleString('en-US', {
-                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short'
                           })}
                         </span>
                       </div>
