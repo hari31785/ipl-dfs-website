@@ -1094,9 +1094,9 @@ export default function DashboardPage() {
                                                     <span className="font-bold text-xs text-white leading-tight truncate">
                                                       {(() => {
                                                         const type = contest.contestType;
-                                                        return type === 'HIGH_ROLLER' ? 'High Roller' :
-                                                               type === 'REGULAR' ? 'Regular' :
-                                                               type === 'LOW_STAKES' ? 'Low Stakes' :
+                                                        return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
+                                                               type === 'REGULAR' ? 'Regular (50c)' :
+                                                               type === 'LOW_STAKES' ? 'Low Stakes (25c)' :
                                                                `${contest.coinValue}🪙`;
                                                       })()}
                                                     </span>
@@ -1137,9 +1137,9 @@ export default function DashboardPage() {
                                                   <span className="font-bold text-xs text-gray-900 leading-tight truncate">
                                                     {(() => {
                                                       const type = contest.contestType;
-                                                      return type === 'HIGH_ROLLER' ? 'High Roller' :
-                                                             type === 'REGULAR' ? 'Regular' :
-                                                             type === 'LOW_STAKES' ? 'Low Stakes' :
+                                                      return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
+                                                             type === 'REGULAR' ? 'Regular (50c)' :
+                                                             type === 'LOW_STAKES' ? 'Low Stakes (25c)' :
                                                              `${contest.coinValue}🪙`;
                                                     })()}
                                                   </span>
