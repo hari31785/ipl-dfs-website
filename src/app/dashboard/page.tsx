@@ -1003,34 +1003,34 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Games List */}
-                      <div className="p-3 space-y-2">
+                      <div className="p-3 md:p-5 space-y-2 md:space-y-4">
                         {tournament.games.length === 0 ? (
                           <p className="text-gray-500 text-center py-4">No upcoming games</p>
                         ) : (
                           tournament.games.map((game) => (
                             <div key={game.id} className="border border-gray-200 rounded-lg p-2.5 md:p-4 hover:border-secondary-300 transition-colors bg-white">
                               {/* Compact Game Info */}
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1.5 rounded-lg">
-                                    <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team1.color }}></div>
-                                    <span className="font-bold text-sm text-gray-900">{game.team1.shortName}</span>
+                              <div className="flex items-center justify-between mb-2 md:mb-3">
+                                <div className="flex items-center gap-2 md:gap-3">
+                                  <div className="flex items-center gap-1.5 md:gap-2 bg-gray-100 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
+                                    <div className="w-5 h-5 md:w-7 md:h-7 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team1.color }}></div>
+                                    <span className="font-bold text-sm md:text-lg text-gray-900">{game.team1.shortName}</span>
                                   </div>
-                                  <span className="text-gray-500 text-xs font-bold">vs</span>
-                                  <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1.5 rounded-lg">
-                                    <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team2.color }}></div>
-                                    <span className="font-bold text-sm text-gray-900">{game.team2.shortName}</span>
+                                  <span className="text-gray-500 text-xs md:text-sm font-bold">vs</span>
+                                  <div className="flex items-center gap-1.5 md:gap-2 bg-gray-100 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
+                                    <div className="w-5 h-5 md:w-7 md:h-7 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team2.color }}></div>
+                                    <span className="font-bold text-sm md:text-lg text-gray-900">{game.team2.shortName}</span>
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                                    <Clock className="h-3 w-3" />
+                                  <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500">
+                                    <Clock className="h-3 w-3 md:h-4 md:w-4" />
                                     <span>{new Date(game.gameDate).toLocaleString('en-US', { 
                                       month: 'short', day: 'numeric',
                                       hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short'
                                     })}</span>
                                   </div>
-                                  <div className="flex items-center gap-1 text-xs text-orange-500 mt-0.5">
+                                  <div className="flex items-center gap-1 text-xs md:text-sm text-orange-500 mt-0.5">
                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -1066,13 +1066,13 @@ export default function DashboardPage() {
                                 );
                                 
                                 return (
-                                  <div className="space-y-1.5">
-                                    <p className="text-xs font-semibold text-gray-600">Available Contests:</p>
-                                    <div className={`grid gap-2 ${
-                                      availableContests.length === 1 
-                                        ? 'grid-cols-1' 
-                                        : availableContests.length === 2 
-                                        ? 'grid-cols-2' 
+                                  <div className="space-y-1.5 md:space-y-2">
+                                    <p className="text-xs md:text-sm font-semibold text-gray-600">Available Contests:</p>
+                                    <div className={`grid gap-2 md:gap-3 ${
+                                      availableContests.length === 1
+                                        ? 'grid-cols-1'
+                                        : availableContests.length === 2
+                                        ? 'grid-cols-2'
                                         : 'grid-cols-3'
                                     }`}>
                                       {availableContests.map((contest) => {
@@ -1089,9 +1089,9 @@ export default function DashboardPage() {
                                                 new Date() > new Date(game.signupDeadline) ? 'border-green-600' : 'border-green-600'
                                               }`}>
                                                 {/* Left: joined info */}
-                                                <div className="flex-1 flex items-center justify-between gap-1.5 px-2 md:px-3 py-2 bg-gradient-to-br from-green-400 to-green-500">
+                                                <div className="flex-1 flex items-center justify-between gap-1.5 px-2 md:px-4 py-2 md:py-3 bg-gradient-to-br from-green-400 to-green-500">
                                                   <div className="flex flex-col items-start min-w-0">
-                                                    <span className="font-bold text-[10px] md:text-xs text-white leading-tight truncate">
+                                                    <span className="font-bold text-[10px] md:text-sm text-white leading-tight truncate">
                                                       {(() => {
                                                         const type = contest.contestType;
                                                         return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
@@ -1100,11 +1100,11 @@ export default function DashboardPage() {
                                                                `${contest.coinValue}🪙`;
                                                       })()}
                                                     </span>
-                                                    <span className="text-[9px] md:text-[10px] text-green-100 leading-tight">
+                                                    <span className="text-[9px] md:text-xs text-green-100 leading-tight">
                                                       {contest._count.signups}/{contest.maxParticipants}
                                                     </span>
                                                   </div>
-                                                  <span className="text-[10px] md:text-xs font-bold text-white shrink-0 min-w-[28px] md:min-w-0 text-right">
+                                                  <span className="text-[10px] md:text-sm font-bold text-white shrink-0 min-w-[28px] md:min-w-0 text-right">
                                                     {unjoiningContest === contest.id ? '...' : '✓ In'}
                                                   </span>
                                                 </div>
@@ -1112,17 +1112,17 @@ export default function DashboardPage() {
                                                 <div className="w-px bg-green-600/40" />
                                                 {/* Right: unjoin strip */}
                                                 {new Date() > new Date(game.signupDeadline) ? (
-                                                  <div className="flex items-center justify-center px-2 bg-green-500/60">
-                                                    <span className="text-[9px] text-green-100">🔒</span>
+                                                  <div className="flex items-center justify-center px-2 md:px-3 bg-green-500/60">
+                                                    <span className="text-[9px] md:text-sm text-green-100">🔒</span>
                                                   </div>
                                                 ) : (
                                                   <button
                                                     onClick={(e) => { e.stopPropagation(); handleUnjoinContest(contest.id); }}
                                                     disabled={unjoiningContest === contest.id}
-                                                    className="flex items-center justify-center px-2.5 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
+                                                    className="flex items-center justify-center px-2.5 md:px-4 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
                                                     title="Leave contest"
                                                   >
-                                                    <span className="text-[11px] font-bold text-white">✕</span>
+                                                    <span className="text-[11px] md:text-base font-bold text-white">✕</span>
                                                   </button>
                                                 )}
                                               </div>
@@ -1131,10 +1131,10 @@ export default function DashboardPage() {
                                               <button
                                                 onClick={() => handleJoinContest(contest.id, game.id)}
                                                 disabled={joiningContest === contest.id}
-                                                className="w-full flex items-center justify-between gap-1.5 px-2.5 md:px-3 py-2 border-2 border-yellow-600 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="w-full flex items-center justify-between gap-1.5 px-2.5 md:px-4 py-2 md:py-3 border-2 border-yellow-600 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                               >
                                                 <div className="flex flex-col items-start min-w-0">
-                                                  <span className="font-bold text-[10px] md:text-xs text-gray-900 leading-tight truncate">
+                                                  <span className="font-bold text-[10px] md:text-sm text-gray-900 leading-tight truncate">
                                                     {(() => {
                                                       const type = contest.contestType;
                                                       return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
@@ -1143,11 +1143,11 @@ export default function DashboardPage() {
                                                              `${contest.coinValue}🪙`;
                                                     })()}
                                                   </span>
-                                                  <span className="text-[9px] md:text-[10px] text-gray-600 leading-tight">
+                                                  <span className="text-[9px] md:text-xs text-gray-600 leading-tight">
                                                     {contest._count.signups}/{contest.maxParticipants}
                                                   </span>
                                                 </div>
-                                                <span className="text-[10px] md:text-xs font-bold text-gray-900 shrink-0">
+                                                <span className="text-[10px] md:text-sm font-bold text-gray-900 shrink-0">
                                                   {joiningContest === contest.id ? '...' : 'Join'}
                                                 </span>
                                               </button>
@@ -1374,31 +1374,31 @@ export default function DashboardPage() {
                                 else next.add(group.game.id)
                                 return next
                               })}
-                              className="w-full bg-gradient-to-r from-gray-600 to-gray-700 p-3 text-left"
+                              className="w-full bg-gradient-to-r from-gray-600 to-gray-700 p-3 md:p-4 text-left"
                             >
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <div className="flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-lg">
-                                  <div className="w-4 h-4 rounded-full border border-white/60" style={{ backgroundColor: group.game.team1.color }}></div>
-                                  <span className="font-bold text-xs text-white">{group.game.team1.shortName}</span>
+                              <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                                <div className="flex items-center gap-1.5 md:gap-2 bg-white/20 px-2 md:px-3 py-1 md:py-1.5 rounded-lg">
+                                  <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border border-white/60" style={{ backgroundColor: group.game.team1.color }}></div>
+                                  <span className="font-bold text-xs md:text-sm text-white">{group.game.team1.shortName}</span>
                                 </div>
-                                <span className="text-white/70 text-xs font-bold">vs</span>
-                                <div className="flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-lg">
-                                  <div className="w-4 h-4 rounded-full border border-white/60" style={{ backgroundColor: group.game.team2.color }}></div>
-                                  <span className="font-bold text-xs text-white">{group.game.team2.shortName}</span>
+                                <span className="text-white/70 text-xs md:text-sm font-bold">vs</span>
+                                <div className="flex items-center gap-1.5 md:gap-2 bg-white/20 px-2 md:px-3 py-1 md:py-1.5 rounded-lg">
+                                  <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border border-white/60" style={{ backgroundColor: group.game.team2.color }}></div>
+                                  <span className="font-bold text-xs md:text-sm text-white">{group.game.team2.shortName}</span>
                                 </div>
-                                <span className="text-white/60 text-xs ml-1">
+                                <span className="text-white/60 text-xs md:text-sm ml-1">
                                   {new Date(group.game.gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 </span>
-                                <span className="text-white/60 text-xs">·</span>
-                                <span className="text-white/80 text-xs">{group.signups.length} contest{group.signups.length !== 1 ? 's' : ''}</span>
+                                <span className="text-white/60 text-xs md:text-sm">·</span>
+                                <span className="text-white/80 text-xs md:text-sm">{group.signups.length} contest{group.signups.length !== 1 ? 's' : ''}</span>
                                 {(wins > 0 || losses > 0) && (
                                   <>
-                                    <span className="text-green-300 text-xs font-bold ml-1">{wins}W</span>
-                                    <span className="text-red-300 text-xs font-bold">{losses}L</span>
+                                    <span className="text-green-300 text-xs md:text-sm font-bold ml-1">{wins}W</span>
+                                    <span className="text-red-300 text-xs md:text-sm font-bold">{losses}L</span>
                                   </>
                                 )}
                                 <span className="ml-auto text-white/80">
-                                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                  {isExpanded ? <ChevronDown className="h-4 w-4 md:h-5 md:w-5" /> : <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />}
                                 </span>
                               </div>
                             </button>
@@ -1415,34 +1415,34 @@ export default function DashboardPage() {
                                   const coinVal = signup.contest.coinValue
                                   const oppName = signup.matchup?.opponent?.name ?? signup.matchup?.opponentUsername ?? '—'
                                   return (
-                                    <div key={signup.id} className="flex items-center gap-2 px-3 py-1.5">
+                                    <div key={signup.id} className="flex items-center gap-2 md:gap-4 px-3 md:px-5 py-1.5 md:py-3">
                                       {/* Win/Loss indicator strip */}
-                                      <div className={`w-1 self-stretch rounded-full shrink-0 ${iWon ? 'bg-green-400' : iLost ? 'bg-red-400' : 'bg-gray-200'}`} />
+                                      <div className={`w-1 md:w-1.5 self-stretch rounded-full shrink-0 ${iWon ? 'bg-green-400' : iLost ? 'bg-red-400' : 'bg-gray-200'}`} />
                                       {/* Contest info */}
                                       <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                          <span className="text-[11px] font-bold text-gray-800">{coinVal}🪙</span>
-                                          <span className="text-[10px] text-gray-400">vs @{oppName}</span>
+                                        <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                                          <span className="text-[11px] md:text-sm font-bold text-gray-800">{coinVal}🪙</span>
+                                          <span className="text-[10px] md:text-sm text-gray-400">vs @{oppName}</span>
                                           {hasScores && myScore !== oppScore && (
-                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${iWon ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            <span className={`text-[9px] md:text-xs font-bold px-1.5 py-0.5 rounded-full ${iWon ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                               {iWon ? 'WON' : 'LOST'}
                                             </span>
                                           )}
                                         </div>
                                         {hasScores && (
-                                          <div className="text-[10px] font-mono text-gray-500 mt-0.5">
+                                          <div className="text-[10px] md:text-sm font-mono text-gray-500 mt-0.5">
                                             <span className={iWon ? 'text-green-700 font-bold' : iLost ? 'text-red-700' : ''}>{myScore.toFixed(1)}</span>
                                             <span className="text-gray-300 mx-1">–</span>
                                             <span className={iLost ? 'text-green-700 font-bold' : iWon ? 'text-red-700' : ''}>{oppScore.toFixed(1)}</span>
                                           </div>
                                         )}
-                                        {!hasScores && <div className="text-[10px] text-gray-400 mt-0.5">No scores yet</div>}
+                                        {!hasScores && <div className="text-[10px] md:text-sm text-gray-400 mt-0.5">No scores yet</div>}
                                       </div>
                                       {/* View button */}
                                       {signup.matchup?.status === 'COMPLETED' && (
                                         <button
                                           onClick={() => window.location.href = `/scores/${signup.matchup?.id}?from=completed`}
-                                          className="shrink-0 bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-[10px] font-semibold transition-colors"
+                                          className="shrink-0 bg-green-500 hover:bg-green-600 text-white px-2 md:px-4 py-1 md:py-2 rounded text-[10px] md:text-sm font-semibold transition-colors"
                                         >
                                           Scores →
                                         </button>
