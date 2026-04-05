@@ -881,34 +881,34 @@ export default function DashboardPage() {
         })()}
 
         {/* Profile Strip — full width, horizontal */}
-        <div className="bg-white rounded-xl shadow border border-gray-100 px-4 py-3 flex items-center gap-4">
-          <div className="w-11 h-11 bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-full flex items-center justify-center shrink-0">
-            <User className="h-5 w-5 text-white" />
+        <div className="bg-white rounded-xl shadow border border-gray-100 px-4 py-3 md:px-6 md:py-4 flex items-center gap-4 md:gap-6">
+          <div className="w-11 h-11 md:w-14 md:h-14 bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-full flex items-center justify-center shrink-0">
+            <User className="h-5 w-5 md:h-7 md:w-7 text-white" />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-bold text-primary-800 truncate">{user.name}</h2>
-            <p className="text-xs text-gray-500">@{user.username}</p>
+            <h2 className="text-sm md:text-xl font-bold text-primary-800 truncate">{user.name}</h2>
+            <p className="text-xs md:text-sm text-gray-500">@{user.username}</p>
           </div>
-          <div className="flex gap-4 text-center shrink-0">
+          <div className="flex gap-4 md:gap-8 text-center shrink-0">
             <div>
-              <p className="text-sm font-bold text-primary-800">{user.totalMatches}</p>
-              <p className="text-[10px] text-gray-500">Matches</p>
+              <p className="text-sm md:text-xl font-bold text-primary-800">{user.totalMatches}</p>
+              <p className="text-[10px] md:text-xs text-gray-500">Matches</p>
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-900">{user.totalWins}</p>
-              <p className="text-[10px] text-gray-500">Wins</p>
+              <p className="text-sm md:text-xl font-bold text-gray-900">{user.totalWins}</p>
+              <p className="text-[10px] md:text-xs text-gray-500">Wins</p>
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-900">{user.winPercentage.toFixed(0)}%</p>
-              <p className="text-[10px] text-gray-500">Win%</p>
+              <p className="text-sm md:text-xl font-bold text-gray-900">{user.winPercentage.toFixed(0)}%</p>
+              <p className="text-[10px] md:text-xs text-gray-500">Win%</p>
             </div>
           </div>
           <button
             onClick={openEditProfile}
-            className="shrink-0 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors"
+            className="shrink-0 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 md:p-3 rounded-lg transition-colors"
             title="Edit Profile"
           >
-            <Settings className="h-4 w-4" />
+            <Settings className="h-4 w-4 md:h-5 md:w-5" />
           </button>
         </div>
 
@@ -1008,7 +1008,7 @@ export default function DashboardPage() {
                           <p className="text-gray-500 text-center py-4">No upcoming games</p>
                         ) : (
                           tournament.games.map((game) => (
-                            <div key={game.id} className="border border-gray-200 rounded-lg p-2.5 hover:border-secondary-300 transition-colors bg-white">
+                            <div key={game.id} className="border border-gray-200 rounded-lg p-2.5 md:p-4 hover:border-secondary-300 transition-colors bg-white">
                               {/* Compact Game Info */}
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
@@ -1202,7 +1202,7 @@ export default function DashboardPage() {
                           <button
                             key={tab.key}
                             onClick={() => setContestSubTab(tab.key)}
-                            className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 px-2 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                            className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 px-2 md:px-6 py-2.5 md:py-3 text-xs md:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                               isActive ? tab.activeCls : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                           >
@@ -1211,7 +1211,7 @@ export default function DashboardPage() {
                               <span>{tab.label}</span>
                             </div>
                             {tab.count > 0 && (
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none ${isActive ? tab.badgeCls : 'bg-gray-100 text-gray-500'}`}>
+                              <span className={`text-[10px] md:text-xs px-1.5 py-0.5 rounded-full font-bold leading-none ${isActive ? tab.badgeCls : 'bg-gray-100 text-gray-500'}`}>
                                 {tab.count}
                               </span>
                             )}
@@ -1495,18 +1495,18 @@ export default function DashboardPage() {
                         return dateA.getTime() - dateB.getTime() // Earliest first for upcoming/active
                       })
                       .map((signup) => (
-                    <div key={`${signup.id}-${signup.matchup?.id ?? 'none'}`} className="bg-white rounded-lg shadow border border-gray-200 p-3">
+                    <div key={`${signup.id}-${signup.matchup?.id ?? 'none'}`} className="bg-white rounded-lg shadow border border-gray-200 p-3 md:p-5">
                       {/* Compact Header with Team Badges */}
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 rounded-lg">
-                            <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team1.color }}></div>
-                            <span className="font-bold text-sm text-gray-900">{signup.contest.iplGame.team1.shortName}</span>
+                          <div className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 md:py-2 bg-gray-100 rounded-lg">
+                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team1.color }}></div>
+                            <span className="font-bold text-sm md:text-base text-gray-900">{signup.contest.iplGame.team1.shortName}</span>
                           </div>
-                          <span className="text-gray-500 text-xs font-bold">vs</span>
-                          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-100 rounded-lg">
-                            <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team2.color }}></div>
-                            <span className="font-bold text-sm text-gray-900">{signup.contest.iplGame.team2.shortName}</span>
+                          <span className="text-gray-500 text-xs md:text-sm font-bold">vs</span>
+                          <div className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 md:py-2 bg-gray-100 rounded-lg">
+                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team2.color }}></div>
+                            <span className="font-bold text-sm md:text-base text-gray-900">{signup.contest.iplGame.team2.shortName}</span>
                           </div>
                           {/* Contest type + coin inline on mobile */}
                           <span className="text-xs text-gray-500 ml-1 hidden xs:inline">
@@ -1628,14 +1628,14 @@ export default function DashboardPage() {
                                 setSelectedDraftedContest(signup)
                                 setShowDraftedTeamsModal(true)
                               }}
-                              className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                              className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors"
                             >
                               View Drafted Teams
                             </button>
                           ) : (
                             <button 
                               onClick={() => window.location.href = `/scores/${signup.matchup?.id}?from=${contestSubTab}`}
-                              className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                              className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors"
                             >
                               View Scores
                             </button>
@@ -1649,7 +1649,7 @@ export default function DashboardPage() {
                                new Date() <= new Date(signup.contest.iplGame.signupDeadline))
                             }
                             onClick={() => window.location.href = `/draft/${signup.matchup?.id}`}
-                            className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                            className={`flex-1 px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors ${
                               signup.matchup && (
                                 signup.matchup.status === 'DRAFTING' || 
                                 signup.matchup.status === 'COMPLETED' ||
@@ -1680,7 +1680,7 @@ export default function DashboardPage() {
                             <button 
                               onClick={() => handleLeaveContest(signup.id)}
                               disabled={leavingContest === signup.id}
-                              className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {leavingContest === signup.id ? 'Leaving...' : 'Leave Contest'}
                             </button>
