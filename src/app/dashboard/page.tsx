@@ -1089,9 +1089,9 @@ export default function DashboardPage() {
                                                 new Date() > new Date(game.signupDeadline) ? 'border-green-600' : 'border-green-600'
                                               }`}>
                                                 {/* Left: joined info */}
-                                                <div className="flex-1 flex items-center justify-between gap-1 px-2.5 py-2 bg-gradient-to-br from-green-400 to-green-500">
+                                                <div className="flex-1 flex items-center justify-between gap-1.5 px-2 py-2 bg-gradient-to-br from-green-400 to-green-500">
                                                   <div className="flex flex-col items-start min-w-0">
-                                                    <span className="font-bold text-xs text-white leading-tight truncate">
+                                                    <span className="font-bold text-[10px] text-white leading-tight truncate">
                                                       {(() => {
                                                         const type = contest.contestType;
                                                         return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
@@ -1104,7 +1104,7 @@ export default function DashboardPage() {
                                                       {contest._count.signups}/{contest.maxParticipants}
                                                     </span>
                                                   </div>
-                                                  <span className="text-[10px] font-bold text-white shrink-0">
+                                                  <span className="text-[10px] font-bold text-white shrink-0 min-w-[28px] text-right">
                                                     {unjoiningContest === contest.id ? '...' : '✓ In'}
                                                   </span>
                                                 </div>
