@@ -1208,19 +1208,19 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <div
                   key={player.id}
                   onClick={() => isMyTurn && !isDraftComplete && setSelectedPlayer(player.id)}
-                  className={`px-2.5 py-1.5 rounded-lg cursor-pointer transition-all border-2 flex items-center justify-between gap-2 ${
+                  className={`px-2.5 py-1.5 rounded-lg cursor-pointer transition-all border-2 ${
                     selectedPlayer === player.id
                       ? 'bg-gradient-to-r from-secondary-100 to-orange-100 border-secondary-500 shadow-lg scale-105'
                       : 'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300 hover:shadow-md'
                   } ${!isMyTurn || isDraftComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <div className="font-semibold text-sm text-black truncate min-w-0">{player.name}</div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className="text-xs font-semibold text-gray-700 bg-white px-1.5 py-0.5 rounded border border-gray-300">
+                  <div className="font-semibold text-sm text-black leading-tight mb-1">{player.name}</div>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <span className="text-xs font-semibold text-gray-700 bg-white px-1.5 py-0.5 rounded border border-gray-300 leading-none">
                       {player.role}
                     </span>
                     <span 
-                      className="text-xs font-bold px-1.5 py-0.5 rounded border-2" 
+                      className="text-xs font-bold px-1.5 py-0.5 rounded border-2 leading-none" 
                       style={{ 
                         backgroundColor: player.iplTeam.color + '20', 
                         color: player.iplTeam.color,
@@ -1232,13 +1232,14 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     {ptsStyle && (
                       <>
                         <span 
-                          className={`text-xs font-bold px-1.5 py-0.5 rounded border-2 ${ptsStyle.bg} ${ptsStyle.text} ${ptsStyle.border}`}
+                          className={`text-xs font-bold px-1.5 py-0.5 rounded border-2 leading-none ${ptsStyle.bg} ${ptsStyle.text} ${ptsStyle.border}`}
                         >
                           ⭐ {playerGrade!.weightedScore} pts
                         </span>
                         <button
                           onClick={(e) => { e.stopPropagation(); setStatsModalPlayer(player.id); }}
-                          className="px-2 py-0.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors leading-none cursor-pointer"
+                          className="px-2 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors cursor-pointer border-0 leading-none"
+                          style={{ paddingTop: '0.125rem', paddingBottom: '0.125rem', lineHeight: '1rem' }}
                           title="View match history"
                         >
                           i
@@ -1246,7 +1247,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                       </>
                     )}
                     {showGrades && (!playerGrade || playerGrade.matchesPlayed === 0) && (
-                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-300">
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-300 leading-none">
                         No data
                       </span>
                     )}
