@@ -121,12 +121,10 @@ export async function POST(request: NextRequest) {
           }
 
           // Check if Admin is already signed up
-          const existingAdminSignup = await prisma.contestSignup.findUnique({
+          const existingAdminSignup = await prisma.contestSignup.findFirst({
             where: {
-              contestId_userId: {
-                contestId: contest.id,
-                userId: adminUser.id
-              }
+              contestId: contest.id,
+              userId: adminUser.id
             }
           });
 
@@ -134,7 +132,8 @@ export async function POST(request: NextRequest) {
             await prisma.contestSignup.create({
               data: {
                 contestId: contest.id,
-                userId: adminUser.id
+                userId: adminUser.id,
+                entryNumber: 1
               }
             });
             console.log('✅ Added Admin user to contest signups');
@@ -212,12 +211,10 @@ export async function POST(request: NextRequest) {
           }
 
           // Add admin if not already signed up
-          const existingAdminSignup = await prisma.contestSignup.findUnique({
+          const existingAdminSignup = await prisma.contestSignup.findFirst({
             where: {
-              contestId_userId: {
-                contestId: contest.id,
-                userId: adminUser.id
-              }
+              contestId: contest.id,
+              userId: adminUser.id
             }
           });
 
@@ -225,7 +222,8 @@ export async function POST(request: NextRequest) {
             await prisma.contestSignup.create({
               data: {
                 contestId: contest.id,
-                userId: adminUser.id
+                userId: adminUser.id,
+                entryNumber: 1
               }
             });
             console.log('✅ Added Admin user to balance odd signups');
