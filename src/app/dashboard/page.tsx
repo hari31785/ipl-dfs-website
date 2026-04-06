@@ -973,7 +973,7 @@ export default function DashboardPage() {
                         );
                         
                         return availableContests.length > 0;
-                      })
+                      }).sort((a, b) => new Date(a.gameDate).getTime() - new Date(b.gameDate).getTime())
                     }))
                     .filter(tournament => tournament.games.length > 0); // Remove tournaments with no available games
 
