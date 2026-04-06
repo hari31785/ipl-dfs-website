@@ -73,13 +73,8 @@ export async function POST(
       }
 
       // Check if Admin is already signed up
-      const existingSignup = await prisma.contestSignup.findUnique({
-        where: {
-          contestId_userId: {
-            contestId: contest.id,
-            userId: adminUser.id
-          }
-        }
+      const existingSignup = await prisma.contestSignup.findFirst({
+        where: { contestId: contest.id, userId: adminUser.id }
       });
 
       if (!existingSignup) {
@@ -87,7 +82,8 @@ export async function POST(
         await prisma.contestSignup.create({
           data: {
             contestId: contest.id,
-            userId: adminUser.id
+            userId: adminUser.id,
+            entryNumber: 1
           }
         });
         console.log(`✅ Added Admin user to contest ${contest.id}. New signup count: ${contest._count.signups + 1}`);

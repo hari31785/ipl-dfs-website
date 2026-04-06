@@ -282,10 +282,11 @@ model ContestEntry {
 
 // Contest signups for head-to-head system
 model ContestSignup {
-  id        String   @id @default(cuid())
-  contestId String
-  userId    String
-  signupAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  contestId   String
+  userId      String
+  entryNumber Int      @default(1) // 1 = first entry, 2 = second entry, etc. (max 5)
+  signupAt    DateTime @default(now())
   
   // Relations
   contest   Contest  @relation(fields: [contestId], references: [id])
@@ -293,7 +294,7 @@ model ContestSignup {
   matchupsAsUser1 HeadToHeadMatchup[] @relation("MatchupUser1")
   matchupsAsUser2 HeadToHeadMatchup[] @relation("MatchupUser2")
   
-  @@unique([contestId, userId])
+  @@unique([contestId, userId, entryNumber])
   @@map("contest_signups")
 }
 

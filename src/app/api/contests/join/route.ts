@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from '@/lib/prisma'
 
+const MAX_ENTRIES_PER_USER = 5;
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,20 +15,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already signed up for this contest
-    const existingSignup = await prisma.contestSignup.findFirst({
-      where: {
-        contestId,
-        userId
-      }
+    // Count existing entries for this user in this contest
+    const existingEntries = await prisma.contestSignup.findMany({
+      where: { contestId, userId },
+      orderBy: { entryNumber: 'asc' }
     })
 
-    if (existingSignup) {
+    if (existingEntries.length >= MAX_ENTRIES_PER_USER) {
       return NextResponse.json(
-        { message: "You have already joined this contest" },
+        { message: `You can enter a maximum of ${MAX_ENTRIES_PER_USER} times per contest` },
         { status: 400 }
       )
     }
+
+    const entryNumber = existingEntries.length + 1;
 
     // Get contest details to check if it's still open
     const contest = await prisma.contest.findUnique({
@@ -71,7 +72,8 @@ export async function POST(request: NextRequest) {
     const signup = await prisma.contestSignup.create({
       data: {
         contestId,
-        userId
+        userId,
+        entryNumber
       },
       include: {
         contest: {
@@ -98,9 +100,13 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    const isReEntry = entryNumber > 1;
     return NextResponse.json({
-      message: "Successfully joined contest! You'll receive a matchup once signups close.",
-      signup
+      message: isReEntry
+        ? `Entry #${entryNumber} added! You now have ${entryNumber} entries in this contest.`
+        : "Successfully joined contest! You'll receive a matchup once signups close.",
+      signup,
+      entryNumber
     }, { status: 201 })
 
   } catch (error) {

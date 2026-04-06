@@ -1076,18 +1076,18 @@ export default function DashboardPage() {
                                         : 'grid-cols-3'
                                     }`}>
                                       {availableContests.map((contest) => {
-                                        // Check if user has already joined this contest
-                                        const hasJoined = userContests.some(
+                                        // Count how many times user has joined this contest
+                                        const entryCount = userContests.filter(
                                           uc => uc.contest.id === contest.id
-                                        );
+                                        ).length;
+                                        const hasJoined = entryCount > 0;
+                                        const canJoinAgain = entryCount > 0 && entryCount < 5 && contest.status === 'SIGNUP_OPEN' && new Date() <= new Date(game.signupDeadline);
                                         
                                         return (
                                           <div key={contest.id} className="relative">
                                             {hasJoined ? (
                                               /* Split button: joined (left) + unjoin (right) */
-                                              <div className={`w-full flex items-stretch border-2 rounded-lg overflow-hidden shadow-sm ${
-                                                new Date() > new Date(game.signupDeadline) ? 'border-green-600' : 'border-green-600'
-                                              }`}>
+                                              <div className={`w-full flex items-stretch border-2 rounded-lg overflow-hidden shadow-sm border-green-600`}>
                                                 {/* Left: joined info */}
                                                 <div className="flex-1 flex items-center justify-between gap-1.5 px-2 md:px-4 py-2 md:py-3 bg-gradient-to-br from-green-400 to-green-500">
                                                   <div className="flex flex-col items-start min-w-0">
@@ -1104,12 +1104,35 @@ export default function DashboardPage() {
                                                       {contest._count.signups}/{contest.maxParticipants}
                                                     </span>
                                                   </div>
-                                                  <span className="text-[10px] md:text-base font-bold text-white shrink-0 min-w-[28px] md:min-w-0 text-right">
-                                                    {unjoiningContest === contest.id ? '...' : '✓ In'}
-                                                  </span>
+                                                  <div className="flex flex-col items-end shrink-0">
+                                                    <span className="text-[10px] md:text-base font-bold text-white">
+                                                      {unjoiningContest === contest.id ? '...' : '✓ In'}
+                                                    </span>
+                                                    {entryCount > 1 && (
+                                                      <span className="text-[9px] md:text-xs text-green-100 font-semibold">
+                                                        {entryCount} entries
+                                                      </span>
+                                                    )}
+                                                  </div>
                                                 </div>
                                                 {/* Divider */}
                                                 <div className="w-px bg-green-600/40" />
+                                                {/* Middle: Join Again button (if < 5 entries and still open) */}
+                                                {canJoinAgain && (
+                                                  <>
+                                                    <button
+                                                      onClick={(e) => { e.stopPropagation(); handleJoinContest(contest.id, game.id); }}
+                                                      disabled={joiningContest === contest.id}
+                                                      className="flex items-center justify-center px-2 md:px-3 bg-yellow-400 hover:bg-yellow-500 transition-colors disabled:opacity-50 border-l border-green-600/40"
+                                                      title={`Add entry #${entryCount + 1} (max 5)`}
+                                                    >
+                                                      <span className="text-[10px] md:text-xs font-bold text-gray-900 whitespace-nowrap">
+                                                        {joiningContest === contest.id ? '...' : '+1'}
+                                                      </span>
+                                                    </button>
+                                                    <div className="w-px bg-green-600/40" />
+                                                  </>
+                                                )}
                                                 {/* Right: unjoin strip */}
                                                 {new Date() > new Date(game.signupDeadline) ? (
                                                   <div className="flex items-center justify-center px-2 md:px-3 bg-green-500/60">
@@ -1120,7 +1143,7 @@ export default function DashboardPage() {
                                                     onClick={(e) => { e.stopPropagation(); handleUnjoinContest(contest.id); }}
                                                     disabled={unjoiningContest === contest.id}
                                                     className="flex items-center justify-center px-2.5 md:px-6 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
-                                                    title="Leave contest"
+                                                    title={entryCount > 1 ? `Remove latest entry (${entryCount} → ${entryCount - 1})` : 'Leave contest'}
                                                   >
                                                     <span className="text-[11px] md:hidden font-bold text-white">✕</span>
                                                     <span className="hidden md:inline text-sm font-bold text-white">

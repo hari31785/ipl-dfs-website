@@ -64,6 +64,8 @@ export async function fairPairSignups(
 
     for (let j = i + 1; j < pool.length; j++) {
       if (used.has(pool[j].id)) continue;
+      // Never pair a user against themselves (multi-entry guard)
+      if (pool[j].userId === pool[i].userId) continue;
       const key = [pool[i].userId, pool[j].userId].sort().join('|');
       const count = pairCount.get(key) ?? 0;
       if (count < bestCount) {

@@ -65,14 +65,10 @@ export async function DELETE(
       );
     }
 
-    // Find the signup
-    const signup = await prisma.contestSignup.findUnique({
-      where: {
-        contestId_userId: {
-          contestId,
-          userId: user.id
-        }
-      }
+    // Find the most recent entry for this user (latest signup = highest entryNumber)
+    const signup = await prisma.contestSignup.findFirst({
+      where: { contestId, userId: user.id },
+      orderBy: { signupAt: 'desc' }
     });
 
     if (!signup) {
@@ -116,14 +112,9 @@ export async function DELETE(
         });
       }
 
-      // Delete the signup
+      // Delete this specific signup entry
       await tx.contestSignup.delete({
-        where: {
-          contestId_userId: {
-            contestId,
-            userId: user.id
-          }
-        }
+        where: { id: signup.id }
       });
 
       // Decrease totalSignups
