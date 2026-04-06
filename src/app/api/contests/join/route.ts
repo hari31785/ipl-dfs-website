@@ -17,8 +17,7 @@ export async function POST(request: NextRequest) {
 
     // Count existing entries for this user in this contest
     const existingEntries = await prisma.contestSignup.findMany({
-      where: { contestId, userId },
-      orderBy: { entryNumber: 'asc' }
+      where: { contestId, userId }
     })
 
     if (existingEntries.length >= MAX_ENTRIES_PER_USER) {
