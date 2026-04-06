@@ -87,13 +87,13 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [waivingBench, setWaivingBench] = useState(false);
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterRole, setFilterRole] = useState<string>('all');
-  const [filterGrade, setFilterGrade] = useState<string>('all');
   const [searchName, setSearchName] = useState<string>('');
   const [playerStats, setPlayerStats] = useState<Record<string, number>>({});
   const [isDraftingPhase, setIsDraftingPhase] = useState(false);
-  const [playerGrades, setPlayerGrades] = useState<Record<string, { grade: string; weightedScore: number; matchesPlayed: number }>>({});
+  const [playerGrades, setPlayerGrades] = useState<Record<string, { grade: string; weightedScore: number; matchesPlayed: number; recentMatches: { gameId: string; points: number; opponent: string; date: string }[] }>>({});
   const [showGrades, setShowGrades] = useState(false);
   const [loadingGrades, setLoadingGrades] = useState(false);
+  const [statsModalPlayer, setStatsModalPlayer] = useState<string | null>(null);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   
   // Toss states
@@ -113,7 +113,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     if (userData) {
       setCurrentUser(JSON.parse(userData));
     }
-    fetchMatchupDetails();
+    fetchMatchupDetails(true);
   }, [matchupId]);
 
   // Check if we need to show the toss, or auto-dismiss it when the result arrives
@@ -190,13 +190,29 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     return isPastSignupDeadline && isDraftableContest;
   };
 
-  const fetchMatchupDetails = async () => {
+  const fetchMatchupDetails = async (autoFetchGrades = false) => {
     try {
       const response = await fetch(`/api/draft/${matchupId}`);
       if (response.ok) {
         const data = await response.json();
         setMatchup(data.matchup);
         setAvailablePlayers(data.availablePlayers);
+        if (autoFetchGrades && data.matchup?.contest?.iplGame?.id) {
+          // Kick off grade fetch in background — don't await
+          fetch(`/api/grades/calculate?iplGameId=${data.matchup.contest.iplGame.id}`)
+            .then(r => r.json())
+            .then(gradeData => {
+              if (gradeData.grades) {
+                const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number; recentMatches: { gameId: string; points: number; opponent: string; date: string }[] }> = {};
+                gradeData.grades.forEach((g: any) => {
+                  gradesMap[g.playerId] = { grade: g.grade, weightedScore: g.weightedScore, matchesPlayed: g.matchesPlayed, recentMatches: g.recentMatches || [] };
+                });
+                setPlayerGrades(gradesMap);
+                setShowGrades(true);
+              }
+            })
+            .catch(() => {/* silently fail — not critical */});
+        }
       }
     } catch (error) {
       console.error('Error fetching matchup:', error);
@@ -214,45 +230,32 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       if (response.ok) {
         const data = await response.json();
         // Convert grades array to object keyed by playerId
-        const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number }> = {};
+        const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number; recentMatches: { gameId: string; points: number; opponent: string; date: string }[] }> = {};
         data.grades.forEach((g: any) => {
           gradesMap[g.playerId] = {
             grade: g.grade,
             weightedScore: g.weightedScore,
-            matchesPlayed: g.matchesPlayed
+            matchesPlayed: g.matchesPlayed,
+            recentMatches: g.recentMatches || []
           };
         });
         setPlayerGrades(gradesMap);
         setShowGrades(true);
       } else {
         console.error('Failed to fetch grades');
-        alert('Failed to calculate grades. Please try again.');
       }
     } catch (error) {
       console.error('Error fetching grades:', error);
-      alert('Error calculating grades. Please try again.');
     } finally {
       setLoadingGrades(false);
     }
   };
 
-  const getGradeStyle = (grade: string) => {
-    switch (grade) {
-      case 'A+':
-        return { bg: 'bg-green-600', text: 'text-white', border: 'border-green-700' };
-      case 'A':
-        return { bg: 'bg-green-500', text: 'text-white', border: 'border-green-600' };
-      case 'B':
-        return { bg: 'bg-blue-500', text: 'text-white', border: 'border-blue-600' };
-      case 'C':
-        return { bg: 'bg-yellow-500', text: 'text-black', border: 'border-yellow-600' };
-      case 'D':
-        return { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-600' };
-      case 'E':
-        return { bg: 'bg-red-500', text: 'text-white', border: 'border-red-600' };
-      default:
-        return { bg: 'bg-gray-400', text: 'text-white', border: 'border-gray-500' };
-    }
+  const getAvgPtsStyle = (score: number) => {
+    if (score >= 60) return { bg: 'bg-green-500', text: 'text-white', border: 'border-green-600' };
+    if (score >= 45) return { bg: 'bg-yellow-400', text: 'text-gray-900', border: 'border-yellow-500' };
+    if (score >= 30) return { bg: 'bg-orange-400', text: 'text-white', border: 'border-orange-500' };
+    return { bg: 'bg-red-500', text: 'text-white', border: 'border-red-600' };
   };
 
   const handleDraftPick = async () => {
@@ -748,7 +751,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                   <h4 className="font-bold text-orange-800 mb-2 flex items-center gap-2">👥 3. Player Selection</h4>
                   <ul className="text-sm space-y-1 text-orange-700">
-                    <li>• Filter by Team, Role, Grade, or search by name</li>
+                    <li>• Filter by Team, Role, or search by name</li>
                     <li>• Click to select, then confirm your pick</li>
                     <li>• Can only pick from available players</li>
                     <li>• Consider role balance: Batsmen, Bowlers, All-rounders, Keepers</li>
@@ -758,10 +761,10 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                   <h4 className="font-bold text-purple-800 mb-2 flex items-center gap-2">📊 4. Player Grades</h4>
                   <ul className="text-sm space-y-1 text-purple-700">
-                    <li>• Click "Calculate & Publish Grades" to see player performance</li>
-                    <li>• Grades based on last 5 matches (A+ to E)</li>
-                    <li>• Filter by grade to find top performers</li>
-                    <li>• Hover over grades for detailed stats</li>
+                    <li>• Players are automatically sorted by avg points (highest first)</li>
+                    <li>• ⭐ badge shows weighted avg pts from last 5 matches</li>
+                    <li>• Green ≥60, Yellow ≥45, Orange ≥30, Red below 30</li>
+                    <li>• Hover the badge for exact stats and match count</li>
                   </ul>
                 </div>
               </div>
@@ -1082,33 +1085,21 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
           {/* Available Players — full width on mobile (order-first), middle col on desktop */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 order-first lg:order-none col-span-1">
-            <h3 className="font-bold text-xl text-primary-800 mb-4">Available Players</h3>
-            
-            {/* Calculate Grades Button */}
-            <div className="mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-xl text-primary-800">Available Players</h3>
               <button
                 onClick={fetchPlayerGrades}
                 disabled={loadingGrades || !matchup}
-                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-4 py-3 rounded-lg font-bold text-sm shadow-lg transition-all transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-semibold disabled:opacity-50 transition-colors"
+                title="Refresh player stats"
               >
-                {loadingGrades ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Calculating Grades...
-                  </>
-                ) : (
-                  <>
-                    🏆 Calculate & Publish Grades
-                  </>
-                )}
+                {loadingGrades ? '⟳ Loading...' : '↻ Refresh Stats'}
               </button>
-              {showGrades && (
-                <div className="mt-2 text-center text-sm text-green-600 font-medium">
-                  ✅ Player grades calculated and displayed below
-                </div>
-              )}
             </div>
-            
+            <p className="text-xs text-gray-400 -mt-3 mb-4">
+              ⭐ badge = weighted avg pts · (Ng) = no. of recent games used
+            </p>
+
             {/* Filters */}
             <div className="mb-4">
               <div className="grid grid-cols-2 gap-3 mb-2">
@@ -1145,30 +1136,6 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 </div>
               </div>
               
-              {/* Grade Filter Row */}
-              <div className="mt-3">
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Filter by Grade</label>
-                <select
-                  value={filterGrade}
-                  onChange={(e) => setFilterGrade(e.target.value)}
-                  disabled={!showGrades}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none bg-white text-black disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-                >
-                  <option value="all">{showGrades ? 'All Grades' : 'Calculate grades first'}</option>
-                  {showGrades && (
-                    <>
-                      <option value="A+">A+ (Excellent)</option>
-                      <option value="A">A (Very Good)</option>
-                      <option value="B">B (Good)</option>
-                      <option value="C">C (Average)</option>
-                      <option value="D">D (Below Average)</option>
-                      <option value="E">E (Poor)</option>
-                      <option value="No Data">No Data</option>
-                    </>
-                  )}
-                </select>
-              </div>
-              
               {/* Search by Name */}
               <div className="mt-3">
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">Search by Name</label>
@@ -1181,9 +1148,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 />
               </div>
               
-              {(filterTeam !== 'all' || filterRole !== 'all' || filterGrade !== 'all' || searchName) && (
+              {(filterTeam !== 'all' || filterRole !== 'all' || searchName) && (
                 <button
-                  onClick={() => { setFilterTeam('all'); setFilterRole('all'); setFilterGrade('all'); setSearchName(''); }}
+                  onClick={() => { setFilterTeam('all'); setFilterRole('all'); setSearchName(''); }}
                   className="text-xs font-semibold text-secondary-500 hover:text-secondary-600 underline mt-2"
                 >
                   Clear All Filters
@@ -1213,34 +1180,30 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     return player.role.toUpperCase() === filterRole.toUpperCase();
                   })
                   .filter(player => {
-                    // Grade filter
-                    if (filterGrade === 'all') return true;
-                    if (!showGrades) return true; // If grades not shown, don't filter
-                    
-                    const playerGrade = playerGrades[player.id];
-                    if (filterGrade === 'No Data') {
-                      return !playerGrade || playerGrade.matchesPlayed === 0;
-                    }
-                    return playerGrade && playerGrade.matchesPlayed > 0 && playerGrade.grade === filterGrade;
-                  })
-                  .filter(player => {
                     // Name search filter
                     if (!searchName) return true;
                     return player.name.toLowerCase().includes(searchName.toLowerCase());
+                  })
+                  .sort((a, b) => {
+                    const aGrade = playerGrades[a.id];
+                    const bGrade = playerGrades[b.id];
+                    const aScore = aGrade && aGrade.matchesPlayed > 0 ? aGrade.weightedScore : -1;
+                    const bScore = bGrade && bGrade.matchesPlayed > 0 ? bGrade.weightedScore : -1;
+                    return bScore - aScore;
                   });
                 
                 if (filteredPlayers.length === 0) {
                   return (
                     <div className="text-center py-8 text-gray-500">
                       <div className="text-lg mb-2">No players match your filters</div>
-                      <div className="text-sm">Try adjusting your team, role, grade, or name filters</div>
+                      <div className="text-sm">Try adjusting your team, role, or name filters</div>
                     </div>
                   );
                 }
                 
                 return filteredPlayers.map(player => {
                   const playerGrade = playerGrades[player.id];
-                  const gradeStyle = playerGrade ? getGradeStyle(playerGrade.grade) : null;
+                  const ptsStyle = playerGrade && playerGrade.matchesPlayed > 0 ? getAvgPtsStyle(playerGrade.weightedScore) : null;
                   
                   return (
                 <div
@@ -1267,17 +1230,25 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     >
                       {player.iplTeam.shortName}
                     </span>
-                    {showGrades && playerGrade && (
-                      <span 
-                        className={`text-xs font-bold px-2 py-1 rounded border-2 ${gradeStyle?.bg} ${gradeStyle?.text} ${gradeStyle?.border}`}
-                        title={`Grade: ${playerGrade.grade} | Score: ${playerGrade.weightedScore} | Matches: ${playerGrade.matchesPlayed}`}
-                      >
-                        📊 {playerGrade.grade}
-                      </span>
+                    {ptsStyle && (
+                      <>
+                        <span 
+                          className={`text-xs font-bold px-2 py-1 rounded border-2 ${ptsStyle.bg} ${ptsStyle.text} ${ptsStyle.border}`}
+                        >
+                          ⭐ {playerGrade!.weightedScore} pts
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setStatsModalPlayer(player.id); }}
+                          className="flex items-center justify-center w-5 h-5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors leading-none"
+                          title="View match history"
+                        >
+                          i
+                        </button>
+                      </>
                     )}
                     {showGrades && (!playerGrade || playerGrade.matchesPlayed === 0) && (
                       <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-300">
-                        No Data
+                        No data
                       </span>
                     )}
                   </div>
@@ -1512,6 +1483,94 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           </div>
         </div>
       )}
+
+      {/* Player Stats Modal */}
+      {statsModalPlayer && (() => {
+        const modalPlayer = availablePlayers.find(p => p.id === statsModalPlayer);
+        const modalGrade = playerGrades[statsModalPlayer];
+        if (!modalPlayer || !modalGrade) return null;
+        const ptsStyle = getAvgPtsStyle(modalGrade.weightedScore);
+        return (
+          <div
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+            onClick={() => setStatsModalPlayer(null)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-black text-lg text-gray-900">{modalPlayer.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs font-semibold text-gray-500">{modalPlayer.role}</span>
+                    <span
+                      className="text-xs font-bold px-1.5 py-0.5 rounded"
+                      style={{ backgroundColor: modalPlayer.iplTeam.color + '20', color: modalPlayer.iplTeam.color }}
+                    >
+                      {modalPlayer.iplTeam.shortName}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-black px-3 py-1.5 rounded-lg border-2 ${ptsStyle.bg} ${ptsStyle.text} ${ptsStyle.border}`}>
+                    ⭐ {modalGrade.weightedScore} avg pts
+                  </span>
+                  <button
+                    onClick={() => setStatsModalPlayer(null)}
+                    className="text-gray-400 hover:text-gray-700 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Table */}
+              {modalGrade.recentMatches.length > 0 ? (
+                <div className="overflow-hidden rounded-xl border border-gray-200">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="text-left px-4 py-2.5 font-semibold text-gray-600 text-xs uppercase tracking-wide">#</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-gray-600 text-xs uppercase tracking-wide">Opponent</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-gray-600 text-xs uppercase tracking-wide">Date</th>
+                        <th className="text-right px-4 py-2.5 font-semibold text-gray-600 text-xs uppercase tracking-wide">Pts</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {modalGrade.recentMatches.map((m, i) => (
+                        <tr key={m.gameId} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-4 py-2.5 font-semibold text-gray-800">vs {m.opponent}</td>
+                          <td className="px-4 py-2.5 text-gray-500 text-xs">{m.date}</td>
+                          <td className="px-4 py-2.5 text-right">
+                            <span className={`font-black text-sm ${m.points >= 60 ? 'text-green-600' : m.points >= 40 ? 'text-yellow-600' : 'text-red-500'}`}>
+                              {m.points}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-gray-200 bg-gray-50">
+                        <td colSpan={3} className="px-4 py-2.5 font-bold text-gray-700 text-xs uppercase tracking-wide">Weighted Avg</td>
+                        <td className="px-4 py-2.5 text-right font-black text-base text-purple-700">{modalGrade.weightedScore}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400 italic text-sm">No match data available</div>
+              )}
+
+              <p className="text-xs text-gray-400 mt-3 text-center">Recent matches shown · newer games weighted higher</p>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

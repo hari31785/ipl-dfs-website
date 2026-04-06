@@ -65,6 +65,10 @@ export async function GET(request: NextRequest) {
         },
         status: 'COMPLETED' // Only completed games have stats
       },
+      include: {
+        team1: { select: { shortName: true } },
+        team2: { select: { shortName: true } }
+      },
       orderBy: {
         gameDate: 'desc' // Most recent first
       }
@@ -124,11 +128,21 @@ export async function GET(request: NextRequest) {
         totalWeightedScore += stat.points * weight;
         totalWeight += weight;
 
+        const matchGame = completedGames.find(g => g.id === stat.iplGameId);
+        const opponent = matchGame
+          ? (matchGame.team1Id === player.iplTeamId ? matchGame.team2.shortName : matchGame.team1.shortName)
+          : 'Unknown';
+        const date = matchGame
+          ? matchGame.gameDate.toISOString().split('T')[0]
+          : '';
+
         return {
           gameId: stat.iplGameId,
           points: stat.points,
           weight: weight,
-          weightedPoints: stat.points * weight
+          weightedPoints: stat.points * weight,
+          opponent,
+          date
         };
       });
 
@@ -141,7 +155,7 @@ export async function GET(request: NextRequest) {
         teamName: player.iplTeam.shortName,
         role: player.role,
         matchesPlayed: playerStats.length,
-        weightedScore: Math.round(weightedScore * 100) / 100, // Round to 2 decimals
+        weightedScore: Math.round(weightedScore),
         grade: grade,
         recentMatches: recentMatches
       };
