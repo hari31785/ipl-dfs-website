@@ -4,8 +4,9 @@
 -- Step 1: Add the new column with default value 1 (all existing signups become Entry #1)
 ALTER TABLE contest_signups ADD COLUMN entry_number INTEGER NOT NULL DEFAULT 1;
 
--- Step 2: Drop the old unique constraint (contestId + userId)
-ALTER TABLE contest_signups DROP CONSTRAINT IF EXISTS contest_signups_contestId_userId_key;
+-- Step 2: Drop the old unique constraint AND index (contestId + userId)
+ALTER TABLE contest_signups DROP CONSTRAINT IF EXISTS "contest_signups_contestId_userId_key";
+DROP INDEX IF EXISTS "contest_signups_contestId_userId_key";
 
 -- Step 3: Add new unique constraint (contestId + userId + entryNumber)
 ALTER TABLE contest_signups ADD CONSTRAINT contest_signups_contestId_userId_entryNumber_key
