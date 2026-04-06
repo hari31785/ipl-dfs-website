@@ -1090,14 +1090,13 @@ export default function DashboardPage() {
                                               <div className={`w-full flex items-stretch border-2 rounded-lg overflow-hidden shadow-sm border-green-600`}>
                                                 {/* Left: joined info */}
                                                 <div className="flex-1 min-w-0 flex items-center justify-between gap-1.5 px-2 md:px-4 py-2 md:py-3 bg-gradient-to-br from-green-400 to-green-500">
-                                                  <div className="flex flex-col items-start min-w-0">
-                                                    <span className="font-bold text-[10px] md:text-base text-white leading-tight truncate">
+                                                  <div className="flex flex-col items-start min-w-0 overflow-hidden">
+                                                    <span className="font-bold text-[10px] md:text-base text-white leading-tight w-full truncate">
                                                       {(() => {
                                                         const type = contest.contestType;
-                                                        return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
-                                                               type === 'REGULAR' ? 'Regular (50c)' :
-                                                               type === 'LOW_STAKES' ? 'Low Stakes (25c)' :
-                                                               `${contest.coinValue}🪙`;
+                                                        const short = type === 'HIGH_ROLLER' ? '100c' : type === 'REGULAR' ? '50c' : type === 'LOW_STAKES' ? '25c' : `${contest.coinValue}c`;
+                                                        const full = type === 'HIGH_ROLLER' ? 'High Roller (100c)' : type === 'REGULAR' ? 'Regular (50c)' : type === 'LOW_STAKES' ? 'Low Stakes (25c)' : `${contest.coinValue}🪙`;
+                                                        return <><span className="md:hidden">{short}</span><span className="hidden md:inline">{full}</span></>;
                                                       })()}
                                                     </span>
                                                     <span className="text-[9px] md:text-sm text-green-100 leading-tight">
@@ -1159,14 +1158,13 @@ export default function DashboardPage() {
                                                 disabled={joiningContest === contest.id}
                                                 className="w-full flex items-center justify-between gap-1.5 px-2.5 md:px-4 py-2 md:py-3 border-2 border-yellow-600 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                               >
-                                                <div className="flex flex-col items-start min-w-0">
-                                                  <span className="font-bold text-[10px] md:text-base text-gray-900 leading-tight truncate">
+                                                <div className="flex flex-col items-start min-w-0 overflow-hidden">
+                                                  <span className="font-bold text-[10px] md:text-base text-gray-900 leading-tight w-full truncate">
                                                     {(() => {
                                                       const type = contest.contestType;
-                                                      return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
-                                                             type === 'REGULAR' ? 'Regular (50c)' :
-                                                             type === 'LOW_STAKES' ? 'Low Stakes (25c)' :
-                                                             `${contest.coinValue}🪙`;
+                                                      const short = type === 'HIGH_ROLLER' ? '100c' : type === 'REGULAR' ? '50c' : type === 'LOW_STAKES' ? '25c' : `${contest.coinValue}c`;
+                                                      const full = type === 'HIGH_ROLLER' ? 'High Roller (100c)' : type === 'REGULAR' ? 'Regular (50c)' : type === 'LOW_STAKES' ? 'Low Stakes (25c)' : `${contest.coinValue}🪙`;
+                                                      return <><span className="md:hidden">{short}</span><span className="hidden md:inline">{full}</span></>;
                                                     })()}
                                                   </span>
                                                   <span className="text-[9px] md:text-sm text-gray-600 leading-tight">
