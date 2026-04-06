@@ -94,6 +94,7 @@ export default function BulkStatsPage() {
   const [selectedScoreDbGameId, setSelectedScoreDbGameId] = useState<number | null>(null);
   const [loadingScoreDbGames, setLoadingScoreDbGames] = useState(false);
   const [bridgeAvailable, setBridgeAvailable] = useState<boolean | null>(null); // null = not checked yet
+  const [isAbandoning, setIsAbandoning] = useState(false);
 
   useEffect(() => {
     fetchTournaments();
@@ -413,9 +414,36 @@ export default function BulkStatsPage() {
     }
   };
 
+  const handleAbandonGame = async () => {
+    if (!selectedGame) return;
+    const game = games.find(g => g.id === selectedGame);
+    if (!game) return;
+
+    if (!confirm(`⚠️ ABANDON GAME: "${game.title}"\n\nThis will:\n• Mark the game as CANCELLED\n• Mark all contests as COMPLETED\n• Cancel all matchups\n\nNo coins will be moved. This cannot be undone.\n\nProceed?`)) return;
+
+    setIsAbandoning(true);
+    try {
+      const response = await fetch(`/api/admin/games/${selectedGame}/abandon`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(`✅ ${data.message}`);
+        fetchGames();
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+    } catch (e) {
+      alert('Failed to abandon game. Check console.');
+      console.error(e);
+    } finally {
+      setIsAbandoning(false);
+    }
+  };
+
   const handleDeleteAllStats = async () => {
     if (!selectedGame) return;
-    
+
     if (!confirm(`Are you sure you want to delete ALL stats for this game? This action cannot be undone.`)) {
       return;
     }
@@ -750,14 +778,31 @@ export default function BulkStatsPage() {
               </select>
             </div>
             {selectedGame && (
-              <button
-                onClick={handleFetchScoresClick}
-                disabled={isFetchingScores || loadingScoreDbGames}
-                className="flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
-              >
-                <Download className="h-4 w-4 md:h-5 md:w-5" />
-                {loadingScoreDbGames ? 'Loading...' : isFetchingScores ? 'Fetching...' : <><span className="hidden sm:inline">Fetch Scores from API</span><span className="sm:hidden">Fetch Scores</span></>}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleFetchScoresClick}
+                  disabled={isFetchingScores || loadingScoreDbGames}
+                  className="flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
+                >
+                  <Download className="h-4 w-4 md:h-5 md:w-5" />
+                  {loadingScoreDbGames ? 'Loading...' : isFetchingScores ? 'Fetching...' : <><span className="hidden sm:inline">Fetch Scores from API</span><span className="sm:hidden">Fetch Scores</span></>}
+                </button>
+                {(() => {
+                  const game = games.find(g => g.id === selectedGame);
+                  const canAbandon = game && game.status !== 'COMPLETED' && game.status !== 'CANCELLED';
+                  return canAbandon ? (
+                    <button
+                      onClick={handleAbandonGame}
+                      disabled={isAbandoning}
+                      className="flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
+                      title="Mark this game as abandoned — completes all contests with no score settlement"
+                    >
+                      <X className="h-4 w-4 md:h-5 md:w-5" />
+                      {isAbandoning ? 'Abandoning...' : <><span className="hidden sm:inline">Abandon Game</span><span className="sm:hidden">Abandon</span></>}
+                    </button>
+                  ) : null;
+                })()}
+              </div>
             )}
           </div>
           
