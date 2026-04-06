@@ -65,10 +65,10 @@ export async function DELETE(
       );
     }
 
-    // Find the most recent entry for this user (latest signup = highest entryNumber)
+    // Find the most recent entry for this user (highest entryNumber)
     const signup = await prisma.contestSignup.findFirst({
       where: { contestId, userId: user.id },
-      orderBy: { signupAt: 'desc' }
+      orderBy: { entryNumber: 'desc' }
     });
 
     if (!signup) {

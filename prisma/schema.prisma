@@ -285,7 +285,7 @@ model ContestSignup {
   id          String   @id @default(cuid())
   contestId   String
   userId      String
-  entryNumber Int      @default(1) // 1 = first entry, 2 = second entry, etc. (max 5)
+  entryNumber Int      @default(1) @map("entry_number") // 1 = first entry, 2 = second entry, etc. (max 5)
   signupAt    DateTime @default(now())
   
   // Relations
