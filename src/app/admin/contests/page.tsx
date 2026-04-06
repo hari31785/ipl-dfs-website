@@ -1575,7 +1575,12 @@ export default function ContestsPage() {
                             <tr key={signup.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">{signup.user.name}</div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-medium text-gray-900">{signup.user.name}</div>
+                                  {signup.entryNumber > 1 && (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-800">#{signup.entryNumber}</span>
+                                  )}
+                                </div>
                                 <div className="text-xs text-gray-500">@{signup.user.username}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{signup.user.email}</td>
@@ -1608,7 +1613,12 @@ export default function ContestsPage() {
                         <div key={signup.id} className="py-3 flex items-center gap-3">
                           <div className="text-xs font-bold text-gray-400 w-5 shrink-0">{index + 1}</div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 truncate">{signup.user.name}</div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="text-sm font-semibold text-gray-900 truncate">{signup.user.name}</div>
+                              {signup.entryNumber > 1 && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-800 shrink-0">#{signup.entryNumber}</span>
+                              )}
+                            </div>
                             <div className="text-xs text-gray-500">@{signup.user.username}</div>
                             <div className="text-xs text-gray-400 truncate">{signup.user.email}</div>
                           </div>

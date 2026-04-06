@@ -44,6 +44,7 @@ export async function GET(
             coins: true
           }
         },
+        // entryNumber is included via the model field automatically
         matchupsAsUser1: {
           select: {
             id: true,
