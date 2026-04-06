@@ -789,7 +789,7 @@ export default function BulkStatsPage() {
                 </button>
                 {(() => {
                   const game = games.find(g => g.id === selectedGame);
-                  const canAbandon = game && game.status !== 'COMPLETED' && game.status !== 'CANCELLED';
+                  const canAbandon = game && game.status !== 'CANCELLED';
                   return canAbandon ? (
                     <button
                       onClick={handleAbandonGame}

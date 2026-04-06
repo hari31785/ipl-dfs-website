@@ -31,13 +31,6 @@ export async function POST(
       return NextResponse.json({ message: 'Game is already cancelled' }, { status: 400 });
     }
 
-    if (game.status === 'COMPLETED') {
-      return NextResponse.json(
-        { message: 'Game is already completed and settled. Cannot abandon.' },
-        { status: 400 }
-      );
-    }
-
     const contestIds = game.contests.map(c => c.id);
 
     // Single transaction: cancel game, complete contests, cancel matchups
