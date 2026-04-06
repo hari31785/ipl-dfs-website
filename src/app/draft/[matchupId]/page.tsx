@@ -1236,14 +1236,14 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                         >
                           ⭐ {playerGrade!.weightedScore} pts
                         </span>
-                        <button
+                        <span
+                          role="button"
                           onClick={(e) => { e.stopPropagation(); setStatsModalPlayer(player.id); }}
-                          className="px-2 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors cursor-pointer border-0 leading-none"
-                          style={{ paddingTop: '0.125rem', paddingBottom: '0.125rem', lineHeight: '1rem' }}
+                          className="px-2 py-0.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs leading-none cursor-pointer select-none"
                           title="View match history"
                         >
                           i
-                        </button>
+                        </span>
                       </>
                     )}
                     {showGrades && (!playerGrade || playerGrade.matchesPlayed === 0) && (
