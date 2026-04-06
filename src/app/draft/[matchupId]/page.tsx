@@ -764,7 +764,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     <li>• Players are automatically sorted by avg points (highest first)</li>
                     <li>• ⭐ badge shows weighted avg pts from last 5 matches</li>
                     <li>• Green ≥60, Yellow ≥45, Orange ≥30, Red below 30</li>
-                    <li>• Hover the badge for exact stats and match count</li>
+                    <li>• Tap the <span className="inline-flex items-center px-1.5 rounded bg-purple-600 text-white font-bold text-xs">i</span> button next to the badge to see full match history</li>
                   </ul>
                 </div>
               </div>
@@ -782,17 +782,16 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   <div>
                     <p className="font-medium mb-1">Player Performance:</p>
                     <ul className="space-y-1">
-                      <li>• Higher grades = better recent form</li>
+                      <li>• Higher avg pts = better recent form</li>
                       <li>• Consider both teams in the match</li>
-                      <li>• Check player roles and specialties</li>
+                      <li>• Tap ℹ to see a player's last 5 games</li>
                     </ul>
                   </div>
                 </div>
               </div>
               
               <div className="text-center text-sm text-gray-600 bg-gray-50 rounded p-3">
-                💡 <strong>Pro Tip:</strong> Use the grade filter to quickly find A+ and A grade players for your starting 5, 
-                then fill substitutes with good value picks!
+                💡 <strong>Pro Tip:</strong> Players are sorted by avg pts — pick from the top of the list for your starting 5, then fill substitutes with good value picks!
               </div>
             </div>
           )}
@@ -1209,14 +1208,14 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <div
                   key={player.id}
                   onClick={() => isMyTurn && !isDraftComplete && setSelectedPlayer(player.id)}
-                  className={`px-3 py-2.5 rounded-lg cursor-pointer transition-all border-2 ${
+                  className={`px-2.5 py-1.5 rounded-lg cursor-pointer transition-all border-2 flex items-center justify-between gap-2 ${
                     selectedPlayer === player.id
                       ? 'bg-gradient-to-r from-secondary-100 to-orange-100 border-secondary-500 shadow-lg scale-105'
                       : 'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300 hover:shadow-md'
                   } ${!isMyTurn || isDraftComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <div className="font-semibold text-sm text-black leading-tight">{player.name}</div>
-                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <div className="font-semibold text-sm text-black truncate min-w-0">{player.name}</div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <span className="text-xs font-semibold text-gray-700 bg-white px-1.5 py-0.5 rounded border border-gray-300">
                       {player.role}
                     </span>
@@ -1239,7 +1238,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                         </span>
                         <button
                           onClick={(e) => { e.stopPropagation(); setStatsModalPlayer(player.id); }}
-                          className="flex items-center justify-center px-1.5 py-0.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors leading-none"
+                          className="px-2 py-0.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors leading-none cursor-pointer"
                           title="View match history"
                         >
                           i
