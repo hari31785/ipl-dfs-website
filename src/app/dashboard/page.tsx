@@ -1119,10 +1119,13 @@ export default function DashboardPage() {
                                                   <button
                                                     onClick={(e) => { e.stopPropagation(); handleUnjoinContest(contest.id); }}
                                                     disabled={unjoiningContest === contest.id}
-                                                    className="flex items-center justify-center px-2.5 md:px-4 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
+                                                    className="flex items-center justify-center px-2.5 md:px-6 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
                                                     title="Leave contest"
                                                   >
-                                                    <span className="text-[11px] md:text-base font-bold text-white">✕</span>
+                                                    <span className="text-[11px] md:hidden font-bold text-white">✕</span>
+                                                    <span className="hidden md:inline text-sm font-bold text-white">
+                                                      {unjoiningContest === contest.id ? '...' : 'UnJoin'}
+                                                    </span>
                                                   </button>
                                                 )}
                                               </div>
