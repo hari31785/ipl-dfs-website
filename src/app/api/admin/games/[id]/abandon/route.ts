@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendToUser } from '@/lib/pushNotifications';
 
 // POST /api/admin/games/[id]/abandon
 // Marks the IPL game as CANCELLED, all its contests as COMPLETED,
@@ -15,9 +16,17 @@ export async function POST(
     const game = await prisma.iPLGame.findUnique({
       where: { id: gameId },
       include: {
+        team1: true,
+        team2: true,
         contests: {
           include: {
-            _count: { select: { matchups: true, signups: true } }
+            _count: { select: { matchups: true, signups: true } },
+            matchups: {
+              include: {
+                user1: { include: { user: true } },
+                user2: { include: { user: true } }
+              }
+            }
           }
         }
       }
@@ -58,15 +67,40 @@ export async function POST(
 
     const totalSignups = game.contests.reduce((sum, c) => sum + c._count.signups, 0);
     const totalMatchups = game.contests.reduce((sum, c) => sum + c._count.matchups, 0);
+    const gameTitle = `${game.team1?.shortName ?? ''} vs ${game.team2?.shortName ?? ''}`;
 
-    console.log(`✅ Game ${game.title} abandoned: ${game.contests.length} contests completed, ${totalMatchups} matchups cancelled`);
+    // Send push notifications to all affected users
+    const notifiedUserIds = new Set<string>();
+    for (const contest of game.contests) {
+      for (const matchup of contest.matchups) {
+        const u1 = matchup.user1.user;
+        const u2 = matchup.user2.user;
+        const payload = {
+          title: '🚫 Game Abandoned',
+          body: `${gameTitle} has been called off. Your contest has been cancelled — no coins have been deducted.`,
+          icon: '/icon-192.png',
+          url: '/dashboard',
+        };
+        if (!notifiedUserIds.has(u1.id)) {
+          await sendToUser(u1.id, payload);
+          notifiedUserIds.add(u1.id);
+        }
+        if (!notifiedUserIds.has(u2.id)) {
+          await sendToUser(u2.id, payload);
+          notifiedUserIds.add(u2.id);
+        }
+      }
+    }
+
+    console.log(`✅ Game ${game.title} abandoned: ${game.contests.length} contests completed, ${totalMatchups} matchups cancelled, ${notifiedUserIds.size} users notified`);
 
     return NextResponse.json({
-      message: `Game "${game.title}" has been abandoned. ${game.contests.length} contest(s) marked as completed, ${totalMatchups} matchup(s) cancelled. ${totalSignups} signup(s) affected (no coins deducted).`,
+      message: `Game "${game.title}" has been abandoned. ${game.contests.length} contest(s) marked as completed, ${totalMatchups} matchup(s) cancelled. ${totalSignups} signup(s) affected (no coins deducted). ${notifiedUserIds.size} user(s) notified.`,
       gameId,
       contestsCompleted: game.contests.length,
       matchupsCancelled: totalMatchups,
-      signupsAffected: totalSignups
+      signupsAffected: totalSignups,
+      usersNotified: notifiedUserIds.size
     });
 
   } catch (error) {
