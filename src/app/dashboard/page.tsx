@@ -1124,7 +1124,7 @@ export default function DashboardPage() {
                                                   >
                                                     <span className="text-[11px] md:hidden font-bold text-white">✕</span>
                                                     <span className="hidden md:inline text-sm font-bold text-white">
-                                                      {unjoiningContest === contest.id ? '...' : 'UnJoin'}
+                                                      {unjoiningContest === contest.id ? '...' : 'Unjoin'}
                                                     </span>
                                                   </button>
                                                 )}
