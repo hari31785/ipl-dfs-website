@@ -1091,7 +1091,7 @@ export default function DashboardPage() {
                                                 {/* Left: joined info */}
                                                 <div className="flex-1 flex items-center justify-between gap-1.5 px-2 md:px-4 py-2 md:py-3 bg-gradient-to-br from-green-400 to-green-500">
                                                   <div className="flex flex-col items-start min-w-0">
-                                                    <span className="font-bold text-[10px] md:text-sm text-white leading-tight truncate">
+                                                    <span className="font-bold text-[10px] md:text-base text-white leading-tight truncate">
                                                       {(() => {
                                                         const type = contest.contestType;
                                                         return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
@@ -1100,11 +1100,11 @@ export default function DashboardPage() {
                                                                `${contest.coinValue}🪙`;
                                                       })()}
                                                     </span>
-                                                    <span className="text-[9px] md:text-xs text-green-100 leading-tight">
+                                                    <span className="text-[9px] md:text-sm text-green-100 leading-tight">
                                                       {contest._count.signups}/{contest.maxParticipants}
                                                     </span>
                                                   </div>
-                                                  <span className="text-[10px] md:text-sm font-bold text-white shrink-0 min-w-[28px] md:min-w-0 text-right">
+                                                  <span className="text-[10px] md:text-base font-bold text-white shrink-0 min-w-[28px] md:min-w-0 text-right">
                                                     {unjoiningContest === contest.id ? '...' : '✓ In'}
                                                   </span>
                                                 </div>
@@ -1134,7 +1134,7 @@ export default function DashboardPage() {
                                                 className="w-full flex items-center justify-between gap-1.5 px-2.5 md:px-4 py-2 md:py-3 border-2 border-yellow-600 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                               >
                                                 <div className="flex flex-col items-start min-w-0">
-                                                  <span className="font-bold text-[10px] md:text-sm text-gray-900 leading-tight truncate">
+                                                  <span className="font-bold text-[10px] md:text-base text-gray-900 leading-tight truncate">
                                                     {(() => {
                                                       const type = contest.contestType;
                                                       return type === 'HIGH_ROLLER' ? 'High Roller (100c)' :
@@ -1143,11 +1143,11 @@ export default function DashboardPage() {
                                                              `${contest.coinValue}🪙`;
                                                     })()}
                                                   </span>
-                                                  <span className="text-[9px] md:text-xs text-gray-600 leading-tight">
+                                                  <span className="text-[9px] md:text-sm text-gray-600 leading-tight">
                                                     {contest._count.signups}/{contest.maxParticipants}
                                                   </span>
                                                 </div>
-                                                <span className="text-[10px] md:text-sm font-bold text-gray-900 shrink-0">
+                                                <span className="text-[10px] md:text-base font-bold text-gray-900 shrink-0">
                                                   {joiningContest === contest.id ? '...' : 'Join'}
                                                 </span>
                                               </button>
