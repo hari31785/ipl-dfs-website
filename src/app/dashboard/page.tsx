@@ -1089,7 +1089,7 @@ export default function DashboardPage() {
                                               /* Split button: joined (left) + unjoin (right) */
                                               <div className={`w-full flex items-stretch border-2 rounded-lg overflow-hidden shadow-sm border-green-600`}>
                                                 {/* Left: joined info */}
-                                                <div className="flex-1 flex items-center justify-between gap-1.5 px-2 md:px-4 py-2 md:py-3 bg-gradient-to-br from-green-400 to-green-500">
+                                                <div className="flex-1 min-w-0 flex items-center justify-between gap-1.5 px-2 md:px-4 py-2 md:py-3 bg-gradient-to-br from-green-400 to-green-500">
                                                   <div className="flex flex-col items-start min-w-0">
                                                     <span className="font-bold text-[10px] md:text-base text-white leading-tight truncate">
                                                       {(() => {
@@ -1123,7 +1123,7 @@ export default function DashboardPage() {
                                                     <button
                                                       onClick={(e) => { e.stopPropagation(); handleJoinContest(contest.id, game.id); }}
                                                       disabled={joiningContest === contest.id}
-                                                      className="flex items-center justify-center px-2 md:px-3 bg-yellow-400 hover:bg-yellow-500 transition-colors disabled:opacity-50 border-l border-green-600/40"
+                                                      className="shrink-0 flex items-center justify-center px-2 md:px-3 bg-yellow-400 hover:bg-yellow-500 transition-colors disabled:opacity-50 border-l border-green-600/40"
                                                       title={`Add entry #${entryCount + 1} (max 5)`}
                                                     >
                                                       <span className="text-[10px] md:text-xs font-bold text-gray-900 whitespace-nowrap">
@@ -1142,7 +1142,7 @@ export default function DashboardPage() {
                                                   <button
                                                     onClick={(e) => { e.stopPropagation(); handleUnjoinContest(contest.id); }}
                                                     disabled={unjoiningContest === contest.id}
-                                                    className="flex items-center justify-center px-2.5 md:px-6 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
+                                                    className="shrink-0 flex items-center justify-center px-2.5 md:px-6 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
                                                     title={entryCount > 1 ? `Remove latest entry (${entryCount} → ${entryCount - 1})` : 'Leave contest'}
                                                   >
                                                     <span className="text-[11px] md:hidden font-bold text-white">✕</span>
