@@ -141,6 +141,17 @@ function ContestCard({
             👁️ View Matchups ({contest._count.matchups})
           </a>
         )}
+
+        {/* Manage Drafts */}
+        {contest._count.matchups > 0 && contest.matchupStats &&
+         (contest.matchupStats.drafting > 0 || contest.matchupStats.waiting > 0 || contest.matchupStats.completed > 0) && (
+          <a
+            href={`/admin/drafts?contest=${contest.id}`}
+            className="block w-full px-3 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 transition text-center text-sm font-medium"
+          >
+            ✍️ Manage Drafts
+          </a>
+        )}
         
         {/* Close Signups */}
         {contest.status === 'SIGNUP_OPEN' && (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Home, ArrowLeft, Target, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface HeadToHeadMatchup {
@@ -71,6 +72,9 @@ interface Contest {
 }
 
 export default function DraftPage() {
+  const searchParams = useSearchParams();
+  const contestParam = searchParams.get('contest');
+
   const [contests, setContests] = useState<Contest[]>([]);
   const [matchups, setMatchups] = useState<HeadToHeadMatchup[]>([]);
   const [selectedContest, setSelectedContest] = useState<string>('');
@@ -100,6 +104,13 @@ export default function DraftPage() {
           ['SIGNUP_CLOSED', 'DRAFT_PHASE', 'LIVE', 'COMPLETED'].includes(c.status)
         );
         setContests(draftableContests);
+        // Auto-select contest from URL param
+        if (contestParam && draftableContests.find((c: Contest) => c.id === contestParam)) {
+          setSelectedContest(contestParam);
+          // If it's completed, expand that section
+          const c = draftableContests.find((c: Contest) => c.id === contestParam);
+          if (c?.status === 'COMPLETED') setShowCompletedDrafts(true);
+        }
       }
     } catch (error) {
       console.error('Error fetching contests:', error);
@@ -194,11 +205,11 @@ export default function DraftPage() {
           <div className="flex items-center justify-between py-3 md:py-6">
             <div className="flex items-center gap-4">
               <a
-                href="/admin/dashboard"
+                href={contestParam ? '/admin/contests' : '/admin/dashboard'}
                 className="flex items-center gap-2 text-white hover:text-pink-200 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="hidden sm:inline">{contestParam ? 'Back to Contests' : 'Back to Dashboard'}</span>
               </a>
               <div className="w-px h-6 bg-white/30"></div>
               <div className="flex items-center gap-3">
