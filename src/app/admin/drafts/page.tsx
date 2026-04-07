@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Home, ArrowLeft, Target, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -71,7 +71,7 @@ interface Contest {
   };
 }
 
-export default function DraftPage() {
+function DraftPageInner() {
   const searchParams = useSearchParams();
   const contestParam = searchParams.get('contest');
 
@@ -525,5 +525,13 @@ export default function DraftPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DraftPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <DraftPageInner />
+    </Suspense>
   );
 }
