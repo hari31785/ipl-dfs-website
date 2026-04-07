@@ -143,7 +143,8 @@ function ContestCard({
         )}
 
         {/* Manage Drafts */}
-        {contest._count.matchups > 0 && contest.matchupStats &&
+        {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') &&
+         contest._count.matchups > 0 && contest.matchupStats &&
          (contest.matchupStats.drafting > 0 || contest.matchupStats.waiting > 0 || contest.matchupStats.completed > 0) && (
           <a
             href={`/admin/drafts?contest=${contest.id}`}
