@@ -116,6 +116,15 @@ function ContestCard({
             <div className="text-gray-500">
               {contest.matchupStats.totalDraftPicks}/50 picks
             </div>
+            {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') &&
+             (contest.matchupStats.drafting > 0 || contest.matchupStats.waiting > 0 || contest.matchupStats.completed > 0) && (
+              <a
+                href={`/admin/drafts?contest=${contest.id}`}
+                className="inline-flex items-center gap-1 mt-1 px-2 py-1 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded text-xs font-semibold transition"
+              >
+                ✍️ Manage Drafts →
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -142,18 +151,6 @@ function ContestCard({
           </a>
         )}
 
-        {/* Manage Drafts */}
-        {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') &&
-         contest._count.matchups > 0 && contest.matchupStats &&
-         (contest.matchupStats.drafting > 0 || contest.matchupStats.waiting > 0 || contest.matchupStats.completed > 0) && (
-          <a
-            href={`/admin/drafts?contest=${contest.id}`}
-            className="block w-full px-3 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 transition text-center text-sm font-medium"
-          >
-            ✍️ Manage Drafts
-          </a>
-        )}
-        
         {/* Close Signups */}
         {contest.status === 'SIGNUP_OPEN' && (
           <button
