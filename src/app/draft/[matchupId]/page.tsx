@@ -1271,7 +1271,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               <button
                 onClick={handleWaiveBench}
                 disabled={waivingBench}
-                className="w-full mt-3 bg-gray-50 hover:bg-gray-100 border-2 border-dashed border-gray-400 hover:border-gray-500 text-gray-600 hover:text-gray-800 px-4 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-3 bg-transparent hover:bg-red-50 border-2 border-red-400 hover:border-red-500 text-red-600 hover:text-red-700 px-4 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {waivingBench
                   ? '⏳ Ending draft...'
