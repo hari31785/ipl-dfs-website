@@ -729,6 +729,7 @@ function DraftPageInner() {
                                     return { ...prev, [pick.id]: val };
                                   });
                                 }}
+                                style={{ color: '#111827' }}
                                 className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-orange-400"
                               >
                                 <option value="">— keep current —</option>
@@ -805,6 +806,7 @@ function DraftPageInner() {
                       <select
                         value={addPickPlayer}
                         onChange={e => setAddPickPlayer(e.target.value)}
+                        style={{ color: '#111827' }}
                         className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
                       >
                         <option value="">{editSearch ? `Search: "${editSearch}"` : 'Select player to add...'}</option>
@@ -822,6 +824,7 @@ function DraftPageInner() {
                       <select
                         value={addPickUser}
                         onChange={e => setAddPickUser(e.target.value as 'user1' | 'user2')}
+                        style={{ color: '#111827' }}
                         className="border border-gray-300 rounded px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
                       >
                         <option value="user1">For A ({selectedMatchup.user1.user.name})</option>
