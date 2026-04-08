@@ -9,7 +9,7 @@ export async function POST(
   try {
     const { id: matchupId } = await params;
     const body = await request.json();
-    const { playerId, userSignupId } = body;
+    const { playerId, userSignupId, adminOverride } = body;
 
     // Validate input
     if (!playerId || !userSignupId) {
@@ -65,11 +65,14 @@ export async function POST(
       );
     }
 
-    // Determine the next pick order
-    const nextPickOrder = matchup.draftPicks.length + 1;
+    // Determine the next pick order — use max existing order + 1 to avoid unique-constraint
+    // collisions after admin deletes a mid-draft pick (e.g. deleting #10 leaves gap, so
+    // length-based calculation would collide with existing pick #14)
+    const maxExistingOrder = matchup.draftPicks.reduce((m, p) => Math.max(m, p.pickOrder), 0);
+    const nextPickOrder = maxExistingOrder + 1;
 
-    // Check hard cap at 14 picks
-    if (nextPickOrder > 14) {
+    // Hard cap at 14 picks — bypass when admin is explicitly overriding
+    if (!adminOverride && nextPickOrder > 14) {
       return NextResponse.json(
         { error: 'Draft is already complete (14 picks maximum)' },
         { status: 400 }
@@ -82,8 +85,8 @@ export async function POST(
       ? getEffectivePickSlots(matchup.firstPickUser, matchup.user1Id, matchup.user2Id)
       : null;
 
-    // Additional cap: respect bench waivers (effectiveSlots.length could be 12 or 13)
-    if (effectiveSlots && nextPickOrder > effectiveSlots.length) {
+    // Additional cap: respect bench waivers — bypass when admin is overriding
+    if (!adminOverride && effectiveSlots && nextPickOrder > effectiveSlots.length) {
       return NextResponse.json(
         { error: `Draft is already complete (${effectiveSlots.length} picks)` },
         { status: 400 }

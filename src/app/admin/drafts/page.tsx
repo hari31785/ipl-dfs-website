@@ -270,7 +270,7 @@ function DraftPageInner() {
         const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/add-pick`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ playerId: addition.playerId, userSignupId: addition.userSignupId }),
+          body: JSON.stringify({ playerId: addition.playerId, userSignupId: addition.userSignupId, adminOverride: true }),
         });
         if (res.ok) successCount++;
         else { const err = await res.json(); errors.push(err.error || 'Add failed'); }
