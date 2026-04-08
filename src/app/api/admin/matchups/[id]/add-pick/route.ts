@@ -9,7 +9,7 @@ export async function POST(
   try {
     const { id: matchupId } = await params;
     const body = await request.json();
-    const { playerId, userSignupId, adminOverride } = body;
+    const { playerId, userSignupId, adminOverride, isBench: explicitIsBench } = body;
 
     // Validate input
     if (!playerId || !userSignupId) {
@@ -94,15 +94,17 @@ export async function POST(
     }
 
     // Determine isBench:
-    // If toss is done, count starter slots from effective slots; otherwise use pick count
+    // When adminOverride is set and isBench is explicitly provided, trust the admin's intent.
+    // Otherwise auto-compute from effective slots or pick counts.
     let isBench: boolean;
-    if (effectiveSlots) {
+    if (adminOverride && typeof explicitIsBench === 'boolean') {
+      isBench = explicitIsBench;
+    } else if (effectiveSlots) {
       const starterSlots = effectiveSlots.slice(0, 10);
       const myStarterCount = starterSlots.filter(id => id === userSignupId).length;
       const myPicksSoFar = matchup.draftPicks.filter(p => p.pickedByUserId === userSignupId).length;
       isBench = myPicksSoFar >= myStarterCount;
     } else {
-      // Fallback: starters are picks 1-5 per user (first 10 overall)
       const myPicksSoFar = matchup.draftPicks.filter(p => p.pickedByUserId === userSignupId).length;
       isBench = myPicksSoFar >= 5;
     }

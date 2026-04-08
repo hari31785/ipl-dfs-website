@@ -99,11 +99,12 @@ function DraftPageInner() {
   const [allPlayers, setAllPlayers] = useState<AvailablePlayer[]>([]);
   const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({}); // pickId -> newPlayerId
   const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set()); // pickIds to delete
-  const [pendingAdditions, setPendingAdditions] = useState<Array<{ playerId: string; userSignupId: string }>>([]); // picks to add
+  const [pendingAdditions, setPendingAdditions] = useState<Array<{ playerId: string; userSignupId: string; isBench: boolean }>>([]); // picks to add
   const [savingPicks, setSavingPicks] = useState(false);
   const [editSearch, setEditSearch] = useState('');
   const [addPickPlayer, setAddPickPlayer] = useState('');
   const [addPickUser, setAddPickUser] = useState<'user1' | 'user2'>('user1');
+  const [addPickIsBench, setAddPickIsBench] = useState(false);
   const [benchOrderOverride, setBenchOrderOverride] = useState<Record<string, string[]>>({}); // userId → ordered bench pickIds
 
   useEffect(() => {
@@ -171,6 +172,7 @@ function DraftPageInner() {
     setPendingAdditions([]);
     setAddPickPlayer('');
     setAddPickUser('user1');
+    setAddPickIsBench(false);
     setEditSearch('');
     setShowEditPicks(true);
     try {
@@ -270,7 +272,7 @@ function DraftPageInner() {
         const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/add-pick`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ playerId: addition.playerId, userSignupId: addition.userSignupId, adminOverride: true }),
+          body: JSON.stringify({ playerId: addition.playerId, userSignupId: addition.userSignupId, isBench: addition.isBench, adminOverride: true }),
         });
         if (res.ok) successCount++;
         else { const err = await res.json(); errors.push(err.error || 'Add failed'); }
@@ -728,7 +730,7 @@ function DraftPageInner() {
                   </div>
                 </div>
                 <button
-                  onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); setPendingAdditions([]); setAddPickPlayer(''); setBenchOrderOverride({}); }}
+                  onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); setPendingAdditions([]); setAddPickPlayer(''); setAddPickIsBench(false); setBenchOrderOverride({}); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors text-xl"
                 >×</button>
               </div>
@@ -899,7 +901,7 @@ function DraftPageInner() {
                           </div>
                           <div className="col-span-2"></div>
                           <div className="col-span-4">
-                            <span className="text-xs text-purple-600 font-medium italic">will be added</span>
+                            <span className="text-xs text-purple-600 font-medium italic">will be added as {addition.isBench ? '🪑 bench' : '⭐ starter'}</span>
                           </div>
                           <div className="col-span-1 flex justify-center">
                             <button
@@ -916,12 +918,12 @@ function DraftPageInner() {
                   {/* Add Pick form */}
                   <div className="mb-6 p-3 rounded-lg border border-dashed border-purple-300 bg-purple-50/40">
                     <div className="text-xs font-semibold text-purple-700 mb-2">➕ Add a Pick</div>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-2 items-center flex-wrap">
                       <select
                         value={addPickPlayer}
                         onChange={e => setAddPickPlayer(e.target.value)}
                         style={{ color: '#111827' }}
-                        className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
+                        className="flex-1 min-w-0 border border-gray-300 rounded px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
                       >
                         <option value="">{editSearch ? `Search: "${editSearch}"` : 'Select player to add...'}</option>
                         {allPlayers
@@ -944,6 +946,18 @@ function DraftPageInner() {
                         <option value="user1">For A ({selectedMatchup.user1.user.name})</option>
                         <option value="user2">For B ({selectedMatchup.user2.user.name})</option>
                       </select>
+                      {/* Starter / Bench toggle */}
+                      <button
+                        onClick={() => setAddPickIsBench(b => !b)}
+                        title={addPickIsBench ? 'Adding as Bench — click to make Starter' : 'Adding as Starter — click to make Bench'}
+                        className={`text-[11px] font-bold px-2 py-1.5 rounded border transition-all whitespace-nowrap ${
+                          addPickIsBench
+                            ? 'bg-indigo-100 border-indigo-300 text-indigo-700 hover:bg-indigo-200'
+                            : 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100'
+                        }`}
+                      >
+                        {addPickIsBench ? '🪑 Bench' : '⭐ Starter'}
+                      </button>
                       <button
                         disabled={!addPickPlayer}
                         onClick={() => {
@@ -951,8 +965,10 @@ function DraftPageInner() {
                           setPendingAdditions(prev => [...prev, {
                             playerId: addPickPlayer,
                             userSignupId: addPickUser === 'user1' ? selectedMatchup.user1.id : selectedMatchup.user2.id,
+                            isBench: addPickIsBench,
                           }]);
                           setAddPickPlayer('');
+                          setAddPickIsBench(false);
                         }}
                         className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 rounded transition whitespace-nowrap"
                       >+ Add</button>
@@ -973,7 +989,7 @@ function DraftPageInner() {
                     </div>
                     <div className="flex gap-3">
                       <button
-                        onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); setPendingAdditions([]); setAddPickPlayer(''); setBenchOrderOverride({}); }}
+                        onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); setPendingAdditions([]); setAddPickPlayer(''); setAddPickIsBench(false); setBenchOrderOverride({}); }}
                         className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                       >
                         Cancel
