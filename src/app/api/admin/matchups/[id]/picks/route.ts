@@ -118,3 +118,37 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update pick' }, { status: 500 });
   }
 }
+
+// DELETE /api/admin/matchups/[id]/picks - Delete a single draft pick
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: matchupId } = await params;
+    const { pickId } = await request.json();
+
+    if (!pickId) {
+      return NextResponse.json({ error: 'pickId is required' }, { status: 400 });
+    }
+
+    // Verify the pick belongs to this matchup
+    const pick = await prisma.draftPick.findUnique({
+      where: { id: pickId },
+      include: { player: true }
+    });
+
+    if (!pick || pick.matchupId !== matchupId) {
+      return NextResponse.json({ error: 'Pick not found in this matchup' }, { status: 404 });
+    }
+
+    await prisma.draftPick.delete({ where: { id: pickId } });
+
+    console.log(`🗑️ Admin deleted pick #${pick.pickOrder} (${pick.player.name}) from matchup ${matchupId}`);
+
+    return NextResponse.json({ message: `Pick #${pick.pickOrder} (${pick.player.name}) deleted` });
+  } catch (error) {
+    console.error('Error deleting pick:', error);
+    return NextResponse.json({ error: 'Failed to delete pick' }, { status: 500 });
+  }
+}

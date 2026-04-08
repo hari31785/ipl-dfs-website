@@ -97,6 +97,7 @@ function DraftPageInner() {
   const [editPicksLoading, setEditPicksLoading] = useState(false);
   const [allPlayers, setAllPlayers] = useState<AvailablePlayer[]>([]);
   const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({}); // pickId -> newPlayerId
+  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set()); // pickIds to delete
   const [savingPicks, setSavingPicks] = useState(false);
   const [editSearch, setEditSearch] = useState('');
 
@@ -150,6 +151,7 @@ function DraftPageInner() {
   const openEditPicks = async (matchupId: string) => {
     setEditPicksLoading(true);
     setPendingChanges({});
+    setPendingDeletes(new Set());
     setEditSearch('');
     setShowEditPicks(true);
     try {
@@ -170,34 +172,44 @@ function DraftPageInner() {
   };
 
   const savePickChanges = async () => {
-    if (!selectedMatchup || Object.keys(pendingChanges).length === 0) {
+    const hasChanges = Object.keys(pendingChanges).length > 0 || pendingDeletes.size > 0;
+    if (!selectedMatchup || !hasChanges) {
       setShowEditPicks(false);
       return;
     }
     setSavingPicks(true);
     try {
-      const entries = Object.entries(pendingChanges);
       let successCount = 0;
       const errors: string[] = [];
-      for (const [pickId, newPlayerId] of entries) {
+
+      // Process deletions first
+      for (const pickId of pendingDeletes) {
+        const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/picks`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pickId }),
+        });
+        if (res.ok) successCount++;
+        else { const err = await res.json(); errors.push(err.error || 'Delete failed'); }
+      }
+
+      // Process replacements (skip any also marked for delete)
+      for (const [pickId, newPlayerId] of Object.entries(pendingChanges)) {
+        if (pendingDeletes.has(pickId)) continue;
         const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/picks`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pickId, newPlayerId }),
         });
-        if (res.ok) {
-          successCount++;
-        } else {
-          const err = await res.json();
-          errors.push(err.error || 'Unknown error');
-        }
+        if (res.ok) successCount++;
+        else { const err = await res.json(); errors.push(err.error || 'Unknown error'); }
       }
+
       if (errors.length > 0) {
-        alert(`${successCount} pick(s) updated. Errors:\n${errors.join('\n')}`);
+        alert(`${successCount} change(s) applied. Errors:\n${errors.join('\n')}`);
       } else {
-        alert(`✅ ${successCount} pick(s) updated successfully.`);
+        alert(`✅ ${successCount} change(s) applied successfully.`);
       }
-      // Refresh matchup list
       if (selectedContest) fetchMatchups(selectedContest);
       setShowEditPicks(false);
       setSelectedMatchup(null);
@@ -622,7 +634,7 @@ function DraftPageInner() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowEditPicks(false)}
+                  onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors text-xl"
                 >×</button>
               </div>
@@ -647,46 +659,79 @@ function DraftPageInner() {
                     <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">
                       <div className="col-span-1">#</div>
                       <div className="col-span-1">By</div>
-                      <div className="col-span-4">Current Player</div>
+                      <div className="col-span-3">Current Player</div>
                       <div className="col-span-6">Replace With</div>
+                      <div className="col-span-1"></div>
                     </div>
                     {selectedMatchup.draftPicks.map((pick) => {
                       const isUser1Pick = pick.pickedByUserId === selectedMatchup.user1.id;
                       const selectedNewId = pendingChanges[pick.id];
+                      const markedForDelete = pendingDeletes.has(pick.id);
                       const filteredPlayers = allPlayers.filter(p =>
                         p.id !== pick.player.id &&
                         !selectedMatchup.draftPicks.some(dp => dp.id !== pick.id && (pendingChanges[dp.id] ?? dp.player.id) === p.id) &&
                         (editSearch === '' || p.name.toLowerCase().includes(editSearch.toLowerCase()) || p.iplTeam.shortName.toLowerCase().includes(editSearch.toLowerCase()))
                       );
                       return (
-                        <div key={pick.id} className={`grid grid-cols-12 gap-2 items-center p-2 rounded-lg border ${selectedNewId ? 'border-orange-300 bg-orange-50' : 'border-gray-100 bg-gray-50'}`}>
+                        <div key={pick.id} className={`grid grid-cols-12 gap-2 items-center p-2 rounded-lg border ${
+                          markedForDelete ? 'border-red-300 bg-red-50' : selectedNewId ? 'border-orange-300 bg-orange-50' : 'border-gray-100 bg-gray-50'
+                        }`}>
                           <div className="col-span-1 text-xs font-bold text-gray-500">#{pick.pickOrder}</div>
                           <div className={`col-span-1 text-xs font-bold px-1 py-0.5 rounded text-center ${isUser1Pick ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
                             {isUser1Pick ? 'A' : 'B'}
                           </div>
-                          <div className="col-span-4 min-w-0">
-                            <div className={`text-xs font-semibold truncate ${selectedNewId ? 'line-through text-gray-400' : 'text-gray-900'}`}>{pick.player.name}</div>
+                          <div className="col-span-3 min-w-0">
+                            <div className={`text-xs font-semibold truncate ${
+                              markedForDelete ? 'line-through text-red-400' : selectedNewId ? 'line-through text-gray-400' : 'text-gray-900'
+                            }`}>{pick.player.name}</div>
                             <div className="text-[10px] text-gray-400">{pick.player.role} · {pick.player.iplTeam.shortName}</div>
                           </div>
                           <div className="col-span-6">
-                            <select
-                              value={selectedNewId || ''}
-                              onChange={e => {
-                                const val = e.target.value;
-                                setPendingChanges(prev => {
-                                  if (!val) { const next = { ...prev }; delete next[pick.id]; return next; }
-                                  return { ...prev, [pick.id]: val };
+                            {markedForDelete ? (
+                              <span className="text-xs text-red-500 italic font-medium">will be deleted</span>
+                            ) : (
+                              <select
+                                value={selectedNewId || ''}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setPendingChanges(prev => {
+                                    if (!val) { const next = { ...prev }; delete next[pick.id]; return next; }
+                                    return { ...prev, [pick.id]: val };
+                                  });
+                                }}
+                                className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-orange-400"
+                              >
+                                <option value="">— keep current —</option>
+                                {filteredPlayers.map(p => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name} ({p.role} · {p.iplTeam.shortName})
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                          <div className="col-span-1 flex justify-center">
+                            <button
+                              onClick={() => {
+                                setPendingDeletes(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(pick.id)) {
+                                    next.delete(pick.id);
+                                  } else {
+                                    next.add(pick.id);
+                                    // Clear any pending replacement for this pick
+                                    setPendingChanges(p => { const n = { ...p }; delete n[pick.id]; return n; });
+                                  }
+                                  return next;
                                 });
                               }}
-                              className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-orange-400"
+                              title={markedForDelete ? 'Undo deletion' : 'Mark for deletion'}
+                              className={`text-base transition-colors ${
+                                markedForDelete ? 'text-red-500 hover:text-red-700' : 'text-gray-300 hover:text-red-400'
+                              }`}
                             >
-                              <option value="">— keep current —</option>
-                              {filteredPlayers.map(p => (
-                                <option key={p.id} value={p.id}>
-                                  {p.name} ({p.role} · {p.iplTeam.shortName})
-                                </option>
-                              ))}
-                            </select>
+                              🗑️
+                            </button>
                           </div>
                         </div>
                       );
@@ -699,23 +744,28 @@ function DraftPageInner() {
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                     <div className="text-sm text-gray-500">
-                      {Object.keys(pendingChanges).length > 0
-                        ? <span className="text-orange-600 font-semibold">{Object.keys(pendingChanges).length} change(s) pending</span>
-                        : 'No changes'}
+                      {(Object.keys(pendingChanges).length > 0 || pendingDeletes.size > 0) ? (
+                        <span className="text-orange-600 font-semibold">
+                          {Object.keys(pendingChanges).length > 0 && `${Object.keys(pendingChanges).length} replacement(s)`}
+                          {Object.keys(pendingChanges).length > 0 && pendingDeletes.size > 0 && ', '}
+                          {pendingDeletes.size > 0 && <span className="text-red-600">{pendingDeletes.size} deletion(s)</span>}
+                          {' pending'}
+                        </span>
+                      ) : 'No changes'}
                     </div>
                     <div className="flex gap-3">
                       <button
-                        onClick={() => setShowEditPicks(false)}
+                        onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); }}
                         className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={savePickChanges}
-                        disabled={savingPicks || Object.keys(pendingChanges).length === 0}
+                        disabled={savingPicks || (Object.keys(pendingChanges).length === 0 && pendingDeletes.size === 0)}
                         className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 rounded-lg transition"
                       >
-                        {savingPicks ? 'Saving...' : `Save ${Object.keys(pendingChanges).length || ''} Change(s)`}
+                        {savingPicks ? 'Saving...' : `Save ${Object.keys(pendingChanges).length + pendingDeletes.size || ''} Change(s)`}
                       </button>
                     </div>
                   </div>
