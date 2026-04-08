@@ -629,9 +629,17 @@ function DraftPageInner() {
               <div className="flex justify-between items-start mb-5 pb-4 border-b border-gray-200">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">✏️ Edit Draft Picks</h2>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    {selectedMatchup.user1.user.name} vs {selectedMatchup.user2.user.name}
-                  </p>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <span className="inline-flex items-center gap-1.5 text-sm">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold bg-blue-100 text-blue-700">A</span>
+                      <span className="font-medium text-gray-800">{selectedMatchup.user1.user.name}</span>
+                    </span>
+                    <span className="text-gray-400 text-xs">vs</span>
+                    <span className="inline-flex items-center gap-1.5 text-sm">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold bg-green-100 text-green-700">B</span>
+                      <span className="font-medium text-gray-800">{selectedMatchup.user2.user.name}</span>
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); }}
