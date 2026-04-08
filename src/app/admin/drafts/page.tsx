@@ -805,7 +805,7 @@ function DraftPageInner() {
                       <select
                         value={addPickPlayer}
                         onChange={e => setAddPickPlayer(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
+                        className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
                       >
                         <option value="">{editSearch ? `Search: "${editSearch}"` : 'Select player to add...'}</option>
                         {allPlayers
@@ -822,7 +822,7 @@ function DraftPageInner() {
                       <select
                         value={addPickUser}
                         onChange={e => setAddPickUser(e.target.value as 'user1' | 'user2')}
-                        className="border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
+                        className="border border-gray-300 rounded px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
                       >
                         <option value="user1">For A ({selectedMatchup.user1.user.name})</option>
                         <option value="user2">For B ({selectedMatchup.user2.user.name})</option>
