@@ -50,14 +50,46 @@ export async function GET(
   }
 }
 
-// PATCH /api/admin/matchups/[id]/picks - Replace a single draft pick
+// PATCH /api/admin/matchups/[id]/picks - Replace player, update isBench, or swap bench priority
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: matchupId } = await params;
-    const { pickId, newPlayerId } = await request.json();
+    const body = await request.json();
+    const { pickId, newPlayerId, isBench, swapPickOrders } = body;
+
+    // Operation: swap pickOrders between two bench picks (bench priority reorder)
+    if (swapPickOrders && Array.isArray(swapPickOrders) && swapPickOrders.length === 2) {
+      const [id1, id2] = swapPickOrders as [string, string];
+      const [pick1, pick2] = await Promise.all([
+        prisma.draftPick.findUnique({ where: { id: id1 } }),
+        prisma.draftPick.findUnique({ where: { id: id2 } }),
+      ]);
+      if (!pick1 || !pick2 || pick1.matchupId !== matchupId || pick2.matchupId !== matchupId) {
+        return NextResponse.json({ error: 'Pick(s) not found in this matchup' }, { status: 404 });
+      }
+      // Swap using -999 as temp to avoid unique constraint violation
+      await prisma.$transaction([
+        prisma.draftPick.update({ where: { id: id1 }, data: { pickOrder: -999 } }),
+        prisma.draftPick.update({ where: { id: id2 }, data: { pickOrder: pick1.pickOrder } }),
+        prisma.draftPick.update({ where: { id: id1 }, data: { pickOrder: pick2.pickOrder } }),
+      ]);
+      console.log(`🔄 Admin swapped bench priority picks ${id1} ↔ ${id2} in matchup ${matchupId}`);
+      return NextResponse.json({ message: 'Bench priority swapped' });
+    }
+
+    // Operation: update isBench status on a pick
+    if (pickId && typeof isBench === 'boolean') {
+      const pick = await prisma.draftPick.findUnique({ where: { id: pickId } });
+      if (!pick || pick.matchupId !== matchupId) {
+        return NextResponse.json({ error: 'Pick not found in this matchup' }, { status: 404 });
+      }
+      const updated = await prisma.draftPick.update({ where: { id: pickId }, data: { isBench } });
+      console.log(`⭐ Admin set pick ${pickId} isBench=${isBench} in matchup ${matchupId}`);
+      return NextResponse.json({ pick: updated, message: `Pick isBench set to ${isBench}` });
+    }
 
     if (!pickId || !newPlayerId) {
       return NextResponse.json({ error: 'pickId and newPlayerId are required' }, { status: 400 });

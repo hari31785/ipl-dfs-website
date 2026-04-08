@@ -47,6 +47,7 @@ interface DraftPick {
   id: string;
   pickOrder: number;
   pickedByUserId: string;
+  isBench: boolean;
   player: {
     id: string;
     name: string;
@@ -103,6 +104,7 @@ function DraftPageInner() {
   const [editSearch, setEditSearch] = useState('');
   const [addPickPlayer, setAddPickPlayer] = useState('');
   const [addPickUser, setAddPickUser] = useState<'user1' | 'user2'>('user1');
+  const [benchOrderOverride, setBenchOrderOverride] = useState<Record<string, string[]>>({}); // userId → ordered bench pickIds
 
   useEffect(() => {
     fetchContests();
@@ -152,6 +154,17 @@ function DraftPageInner() {
   };
 
   const openEditPicks = async (matchupId: string) => {
+    // Initialize bench order from currently selected matchup
+    if (selectedMatchup) {
+      const initOrder: Record<string, string[]> = {};
+      for (const uid of [selectedMatchup.user1.id, selectedMatchup.user2.id]) {
+        initOrder[uid] = selectedMatchup.draftPicks
+          .filter(p => p.pickedByUserId === uid && p.isBench)
+          .sort((a, b) => a.pickOrder - b.pickOrder)
+          .map(p => p.id);
+      }
+      setBenchOrderOverride(initOrder);
+    }
     setEditPicksLoading(true);
     setPendingChanges({});
     setPendingDeletes(new Set());
@@ -178,11 +191,29 @@ function DraftPageInner() {
   };
 
   const savePickChanges = async () => {
-    const hasChanges = Object.keys(pendingChanges).length > 0 || pendingDeletes.size > 0 || pendingAdditions.length > 0;
-    if (!selectedMatchup || !hasChanges) {
-      setShowEditPicks(false);
-      return;
+    if (!selectedMatchup) return;
+
+    // Compute bench changes vs original matchup state
+    type BenchChange = { type: 'swap'; ids: [string, string] } | { type: 'flip'; pickId: string; isBench: boolean };
+    const benchChanges: BenchChange[] = [];
+    for (const uid of [selectedMatchup.user1.id, selectedMatchup.user2.id]) {
+      const orig = selectedMatchup.draftPicks
+        .filter(p => p.pickedByUserId === uid && p.isBench)
+        .sort((a, b) => a.pickOrder - b.pickOrder)
+        .map(p => p.id);
+      const intended = benchOrderOverride[uid] ?? orig;
+      for (const id of intended) { if (!orig.includes(id) && !pendingDeletes.has(id)) benchChanges.push({ type: 'flip', pickId: id, isBench: true }); }
+      for (const id of orig) { if (!intended.includes(id) && !pendingDeletes.has(id)) benchChanges.push({ type: 'flip', pickId: id, isBench: false }); }
+      const still = orig.filter(id => intended.includes(id) && !pendingDeletes.has(id));
+      if (still.length === 2) {
+        const intStill = intended.filter(id => still.includes(id));
+        if (intStill.length === 2 && intStill[0] !== still[0]) benchChanges.push({ type: 'swap', ids: [still[0], still[1]] });
+      }
     }
+
+    const hasChanges = Object.keys(pendingChanges).length > 0 || pendingDeletes.size > 0 || pendingAdditions.length > 0 || benchChanges.length > 0;
+    if (!hasChanges) { setShowEditPicks(false); return; }
+
     setSavingPicks(true);
     try {
       let successCount = 0;
@@ -199,7 +230,30 @@ function DraftPageInner() {
         else { const err = await res.json(); errors.push(err.error || 'Delete failed'); }
       }
 
-      // 2. Replacements (skip any also marked for delete)
+      // 2. Bench priority swaps (before flips to avoid conflicts)
+      for (const c of benchChanges.filter(c => c.type === 'swap')) {
+        const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/picks`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ swapPickOrders: (c as { type: 'swap'; ids: [string, string] }).ids }),
+        });
+        if (res.ok) successCount++;
+        else { const err = await res.json(); errors.push(err.error || 'Bench reorder failed'); }
+      }
+
+      // 3. Bench status flips
+      for (const c of benchChanges.filter(c => c.type === 'flip')) {
+        const fc = c as { type: 'flip'; pickId: string; isBench: boolean };
+        const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/picks`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pickId: fc.pickId, isBench: fc.isBench }),
+        });
+        if (res.ok) successCount++;
+        else { const err = await res.json(); errors.push(err.error || 'Bench flip failed'); }
+      }
+
+      // 4. Replacements (skip deleted picks)
       for (const [pickId, newPlayerId] of Object.entries(pendingChanges)) {
         if (pendingDeletes.has(pickId)) continue;
         const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/picks`, {
@@ -211,7 +265,7 @@ function DraftPageInner() {
         else { const err = await res.json(); errors.push(err.error || 'Unknown error'); }
       }
 
-      // 3. Additions
+      // 5. Additions
       for (const addition of pendingAdditions) {
         const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/add-pick`, {
           method: 'POST',
@@ -300,6 +354,21 @@ function DraftPageInner() {
       .filter(pick => pick.pickedByUserId === userId)
       .sort((a, b) => a.pickOrder - b.pickOrder);
   };
+
+  // Computed bench change count vs original matchup state (for footer display)
+  const benchChangeCount = (() => {
+    if (!selectedMatchup || !showEditPicks) return 0;
+    let n = 0;
+    for (const uid of [selectedMatchup.user1.id, selectedMatchup.user2.id]) {
+      const orig = selectedMatchup.draftPicks.filter(p => p.pickedByUserId === uid && p.isBench).sort((a, b) => a.pickOrder - b.pickOrder).map(p => p.id);
+      const intended = benchOrderOverride[uid] ?? orig;
+      for (const id of intended) { if (!orig.includes(id) && !pendingDeletes.has(id)) n++; }
+      for (const id of orig) { if (!intended.includes(id) && !pendingDeletes.has(id)) n++; }
+      const still = orig.filter(id => intended.includes(id) && !pendingDeletes.has(id));
+      if (still.length === 2) { const is = intended.filter(id => still.includes(id)); if (is.length === 2 && is[0] !== still[0]) n++; }
+    }
+    return n;
+  })();
 
   if (loading) return <div>Loading...</div>;
 
@@ -659,7 +728,7 @@ function DraftPageInner() {
                   </div>
                 </div>
                 <button
-                  onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); setPendingAdditions([]); setAddPickPlayer(''); }}
+                  onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); setPendingAdditions([]); setAddPickPlayer(''); setBenchOrderOverride({}); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors text-xl"
                 >×</button>
               </div>
@@ -681,17 +750,27 @@ function DraftPageInner() {
 
                   {/* Picks table */}
                   <div className="space-y-2 mb-6">
-                    <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">
+                    <div className="grid grid-cols-12 gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">
                       <div className="col-span-1">#</div>
                       <div className="col-span-1">By</div>
-                      <div className="col-span-3">Current Player</div>
-                      <div className="col-span-6">Replace With</div>
+                      <div className="col-span-3">Player</div>
+                      <div className="col-span-2">Bench?</div>
+                      <div className="col-span-4">Replace With</div>
                       <div className="col-span-1"></div>
                     </div>
                     {selectedMatchup.draftPicks.map((pick) => {
                       const isUser1Pick = pick.pickedByUserId === selectedMatchup.user1.id;
                       const selectedNewId = pendingChanges[pick.id];
                       const markedForDelete = pendingDeletes.has(pick.id);
+                      const uid = pick.pickedByUserId;
+                      const origBench = selectedMatchup.draftPicks
+                        .filter(p => p.pickedByUserId === uid && p.isBench)
+                        .sort((a, b) => a.pickOrder - b.pickOrder)
+                        .map(p => p.id);
+                      const effectiveBenchOrder = benchOrderOverride[uid] ?? origBench;
+                      const isBenchEffective = effectiveBenchOrder.includes(pick.id);
+                      const benchIdx = effectiveBenchOrder.indexOf(pick.id); // -1 if starter
+                      const canPromote = benchIdx > 0;
                       const filteredPlayers = allPlayers.filter(p =>
                         p.id !== pick.player.id &&
                         !selectedMatchup.draftPicks.some(dp =>
@@ -703,7 +782,7 @@ function DraftPageInner() {
                         (editSearch === '' || p.name.toLowerCase().includes(editSearch.toLowerCase()) || p.iplTeam.shortName.toLowerCase().includes(editSearch.toLowerCase()))
                       );
                       return (
-                        <div key={pick.id} className={`grid grid-cols-12 gap-2 items-center p-2 rounded-lg border ${
+                        <div key={pick.id} className={`grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border ${
                           markedForDelete ? 'border-red-300 bg-red-50' : selectedNewId ? 'border-orange-300 bg-orange-50' : 'border-gray-100 bg-gray-50'
                         }`}>
                           <div className="col-span-1 text-xs font-bold text-gray-500">#{pick.pickOrder}</div>
@@ -716,7 +795,42 @@ function DraftPageInner() {
                             }`}>{pick.player.name}</div>
                             <div className="text-[10px] text-gray-400">{pick.player.role} · {pick.player.iplTeam.shortName}</div>
                           </div>
-                          <div className="col-span-6">
+                          {/* Bench status */}
+                          <div className="col-span-2 flex items-center gap-0.5 min-w-0">
+                            {!markedForDelete && (
+                              <button
+                                title={isBenchEffective
+                                  ? `Bench ${benchIdx + 1} (preference ${benchIdx + 1}) — click to make starter`
+                                  : 'Starter — click to make bench'}
+                                onClick={() => setBenchOrderOverride(prev => {
+                                  const cur = prev[uid] ?? origBench;
+                                  return cur.includes(pick.id)
+                                    ? { ...prev, [uid]: cur.filter(id => id !== pick.id) }
+                                    : { ...prev, [uid]: [...cur, pick.id] };
+                                })}
+                                className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-all whitespace-nowrap ${
+                                  isBenchEffective
+                                    ? 'bg-indigo-100 border-indigo-300 text-indigo-700 hover:bg-indigo-200'
+                                    : 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100'
+                                }`}
+                              >
+                                {isBenchEffective ? `🪺${benchIdx + 1}` : '⭐St'}
+                              </button>
+                            )}
+                            {isBenchEffective && canPromote && !markedForDelete && (
+                              <button
+                                title="Promote to higher bench priority (B2→B1)"
+                                onClick={() => setBenchOrderOverride(prev => {
+                                  const cur = [...(prev[uid] ?? origBench)];
+                                  const idx = cur.indexOf(pick.id);
+                                  if (idx > 0) [cur[idx - 1], cur[idx]] = [cur[idx], cur[idx - 1]];
+                                  return { ...prev, [uid]: cur };
+                                })}
+                                className="text-indigo-400 hover:text-indigo-700 font-bold text-xs leading-none transition-colors"
+                              >↑</button>
+                            )}
+                          </div>
+                          <div className="col-span-4">
                             {markedForDelete ? (
                               <span className="text-xs text-red-500 italic font-medium">will be deleted</span>
                             ) : (
@@ -750,7 +864,6 @@ function DraftPageInner() {
                                     next.delete(pick.id);
                                   } else {
                                     next.add(pick.id);
-                                    // Clear any pending replacement for this pick
                                     setPendingChanges(p => { const n = { ...p }; delete n[pick.id]; return n; });
                                   }
                                   return next;
@@ -775,7 +888,7 @@ function DraftPageInner() {
                       const player = allPlayers.find(p => p.id === addition.playerId);
                       const isUser1 = addition.userSignupId === selectedMatchup.user1.id;
                       return (
-                        <div key={`add-${idx}`} className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg border border-purple-300 bg-purple-50">
+                        <div key={`add-${idx}`} className="grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border border-purple-300 bg-purple-50">
                           <div className="col-span-1 text-xs font-bold text-purple-400">+</div>
                           <div className={`col-span-1 text-xs font-bold px-1 py-0.5 rounded text-center ${isUser1 ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
                             {isUser1 ? 'A' : 'B'}
@@ -784,7 +897,8 @@ function DraftPageInner() {
                             <div className="text-xs font-semibold text-purple-700 truncate">{player?.name}</div>
                             <div className="text-[10px] text-purple-400">{player?.role} · {player?.iplTeam.shortName}</div>
                           </div>
-                          <div className="col-span-6">
+                          <div className="col-span-2"></div>
+                          <div className="col-span-4">
                             <span className="text-xs text-purple-600 font-medium italic">will be added</span>
                           </div>
                           <div className="col-span-1 flex justify-center">
@@ -848,27 +962,28 @@ function DraftPageInner() {
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                     <div className="text-sm text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
-                      {Object.keys(pendingChanges).length === 0 && pendingDeletes.size === 0 && pendingAdditions.length === 0
+                      {Object.keys(pendingChanges).length === 0 && pendingDeletes.size === 0 && pendingAdditions.length === 0 && benchChangeCount === 0
                         ? 'No changes'
                         : <>
                           {Object.keys(pendingChanges).length > 0 && <span className="text-orange-600 font-semibold">{Object.keys(pendingChanges).length} swap(s)</span>}
                           {pendingDeletes.size > 0 && <span className="text-red-600 font-semibold">{pendingDeletes.size} delete(s)</span>}
                           {pendingAdditions.length > 0 && <span className="text-purple-600 font-semibold">{pendingAdditions.length} add(s)</span>}
+                          {benchChangeCount > 0 && <span className="text-indigo-600 font-semibold">{benchChangeCount} bench(es)</span>}
                         </>}
                     </div>
                     <div className="flex gap-3">
                       <button
-                        onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); setPendingAdditions([]); setAddPickPlayer(''); }}
+                        onClick={() => { setShowEditPicks(false); setPendingChanges({}); setPendingDeletes(new Set()); setPendingAdditions([]); setAddPickPlayer(''); setBenchOrderOverride({}); }}
                         className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={savePickChanges}
-                        disabled={savingPicks || (Object.keys(pendingChanges).length === 0 && pendingDeletes.size === 0 && pendingAdditions.length === 0)}
+                        disabled={savingPicks || (Object.keys(pendingChanges).length === 0 && pendingDeletes.size === 0 && pendingAdditions.length === 0 && benchChangeCount === 0)}
                         className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 rounded-lg transition"
                       >
-                        {savingPicks ? 'Saving...' : `Save ${Object.keys(pendingChanges).length + pendingDeletes.size + pendingAdditions.length || ''} Change(s)`}
+                        {savingPicks ? 'Saving...' : `Save ${Object.keys(pendingChanges).length + pendingDeletes.size + pendingAdditions.length + benchChangeCount || ''} Change(s)`}
                       </button>
                     </div>
                   </div>
