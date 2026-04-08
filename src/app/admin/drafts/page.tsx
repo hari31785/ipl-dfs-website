@@ -48,6 +48,7 @@ interface DraftPick {
   pickOrder: number;
   pickedByUserId: string;
   player: {
+    id: string;
     name: string;
     role: string;
     iplTeam: {
@@ -71,6 +72,13 @@ interface Contest {
   };
 }
 
+interface AvailablePlayer {
+  id: string;
+  name: string;
+  role: string;
+  iplTeam: { shortName: string; id: string };
+}
+
 function DraftPageInner() {
   const searchParams = useSearchParams();
   const contestParam = searchParams.get('contest');
@@ -83,6 +91,14 @@ function DraftPageInner() {
   const [showActiveDrafts, setShowActiveDrafts] = useState(true);
   const [showCompletedDrafts, setShowCompletedDrafts] = useState(false);
   const [markingComplete, setMarkingComplete] = useState(false);
+
+  // Edit picks state
+  const [showEditPicks, setShowEditPicks] = useState(false);
+  const [editPicksLoading, setEditPicksLoading] = useState(false);
+  const [allPlayers, setAllPlayers] = useState<AvailablePlayer[]>([]);
+  const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({}); // pickId -> newPlayerId
+  const [savingPicks, setSavingPicks] = useState(false);
+  const [editSearch, setEditSearch] = useState('');
 
   useEffect(() => {
     fetchContests();
@@ -128,6 +144,67 @@ function DraftPageInner() {
       }
     } catch (error) {
       console.error('Error fetching matchups:', error);
+    }
+  };
+
+  const openEditPicks = async (matchupId: string) => {
+    setEditPicksLoading(true);
+    setPendingChanges({});
+    setEditSearch('');
+    setShowEditPicks(true);
+    try {
+      const res = await fetch(`/api/admin/matchups/${matchupId}/picks`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllPlayers(data.allPlayers);
+      } else {
+        alert('Failed to load player data');
+        setShowEditPicks(false);
+      }
+    } catch {
+      alert('Error loading player data');
+      setShowEditPicks(false);
+    } finally {
+      setEditPicksLoading(false);
+    }
+  };
+
+  const savePickChanges = async () => {
+    if (!selectedMatchup || Object.keys(pendingChanges).length === 0) {
+      setShowEditPicks(false);
+      return;
+    }
+    setSavingPicks(true);
+    try {
+      const entries = Object.entries(pendingChanges);
+      let successCount = 0;
+      const errors: string[] = [];
+      for (const [pickId, newPlayerId] of entries) {
+        const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}/picks`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pickId, newPlayerId }),
+        });
+        if (res.ok) {
+          successCount++;
+        } else {
+          const err = await res.json();
+          errors.push(err.error || 'Unknown error');
+        }
+      }
+      if (errors.length > 0) {
+        alert(`${successCount} pick(s) updated. Errors:\n${errors.join('\n')}`);
+      } else {
+        alert(`✅ ${successCount} pick(s) updated successfully.`);
+      }
+      // Refresh matchup list
+      if (selectedContest) fetchMatchups(selectedContest);
+      setShowEditPicks(false);
+      setSelectedMatchup(null);
+    } catch {
+      alert('Failed to save changes');
+    } finally {
+      setSavingPicks(false);
     }
   };
 
@@ -420,6 +497,12 @@ function DraftPageInner() {
                   <p className="text-sm text-gray-500 mt-0.5">{selectedMatchup.contest.iplGame.title}</p>
                 </div>
                 <div className="flex items-center gap-3 ml-4">
+                  <button
+                    onClick={() => openEditPicks(selectedMatchup.id)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                  >
+                    ✏️ Edit Picks
+                  </button>
                   {selectedMatchup.status !== 'COMPLETED' && (
                     <button
                       onClick={() => markDraftComplete(selectedMatchup.id)}
@@ -520,6 +603,124 @@ function DraftPageInner() {
                   <div><span className="text-gray-500">Status:</span> <span className={`inline-flex px-2 py-0.5 text-xs font-bold rounded-full ${getMatchupStatusColor(selectedMatchup.status)}`}>{selectedMatchup.status.replace('_', ' ')}</span></div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Picks Modal (stacked on top of matchup modal) */}
+      {showEditPicks && selectedMatchup && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-60">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex justify-between items-start mb-5 pb-4 border-b border-gray-200">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">✏️ Edit Draft Picks</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {selectedMatchup.user1.user.name} vs {selectedMatchup.user2.user.name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowEditPicks(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors text-xl"
+                >×</button>
+              </div>
+
+              {editPicksLoading ? (
+                <div className="py-12 text-center text-gray-500">Loading players...</div>
+              ) : (
+                <>
+                  {/* Search */}
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      placeholder="Search replacement players..."
+                      value={editSearch}
+                      onChange={e => setEditSearch(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    />
+                  </div>
+
+                  {/* Picks table */}
+                  <div className="space-y-2 mb-6">
+                    <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">
+                      <div className="col-span-1">#</div>
+                      <div className="col-span-1">By</div>
+                      <div className="col-span-4">Current Player</div>
+                      <div className="col-span-6">Replace With</div>
+                    </div>
+                    {selectedMatchup.draftPicks.map((pick) => {
+                      const isUser1Pick = pick.pickedByUserId === selectedMatchup.user1.id;
+                      const selectedNewId = pendingChanges[pick.id];
+                      const filteredPlayers = allPlayers.filter(p =>
+                        p.id !== pick.player.id &&
+                        !selectedMatchup.draftPicks.some(dp => dp.id !== pick.id && (pendingChanges[dp.id] ?? dp.player.id) === p.id) &&
+                        (editSearch === '' || p.name.toLowerCase().includes(editSearch.toLowerCase()) || p.iplTeam.shortName.toLowerCase().includes(editSearch.toLowerCase()))
+                      );
+                      return (
+                        <div key={pick.id} className={`grid grid-cols-12 gap-2 items-center p-2 rounded-lg border ${selectedNewId ? 'border-orange-300 bg-orange-50' : 'border-gray-100 bg-gray-50'}`}>
+                          <div className="col-span-1 text-xs font-bold text-gray-500">#{pick.pickOrder}</div>
+                          <div className={`col-span-1 text-xs font-bold px-1 py-0.5 rounded text-center ${isUser1Pick ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                            {isUser1Pick ? 'A' : 'B'}
+                          </div>
+                          <div className="col-span-4 min-w-0">
+                            <div className={`text-xs font-semibold truncate ${selectedNewId ? 'line-through text-gray-400' : 'text-gray-900'}`}>{pick.player.name}</div>
+                            <div className="text-[10px] text-gray-400">{pick.player.role} · {pick.player.iplTeam.shortName}</div>
+                          </div>
+                          <div className="col-span-6">
+                            <select
+                              value={selectedNewId || ''}
+                              onChange={e => {
+                                const val = e.target.value;
+                                setPendingChanges(prev => {
+                                  if (!val) { const next = { ...prev }; delete next[pick.id]; return next; }
+                                  return { ...prev, [pick.id]: val };
+                                });
+                              }}
+                              className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-orange-400"
+                            >
+                              <option value="">— keep current —</option>
+                              {filteredPlayers.map(p => (
+                                <option key={p.id} value={p.id}>
+                                  {p.name} ({p.role} · {p.iplTeam.shortName})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {selectedMatchup.draftPicks.length === 0 && (
+                      <div className="text-center py-6 text-gray-400 text-sm">No picks have been made yet.</div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div className="text-sm text-gray-500">
+                      {Object.keys(pendingChanges).length > 0
+                        ? <span className="text-orange-600 font-semibold">{Object.keys(pendingChanges).length} change(s) pending</span>
+                        : 'No changes'}
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setShowEditPicks(false)}
+                        className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={savePickChanges}
+                        disabled={savingPicks || Object.keys(pendingChanges).length === 0}
+                        className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 rounded-lg transition"
+                      >
+                        {savingPicks ? 'Saving...' : `Save ${Object.keys(pendingChanges).length || ''} Change(s)`}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
