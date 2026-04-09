@@ -197,52 +197,50 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center gap-3">
-              <Users className="w-10 h-10 text-blue-600" />
-              <div>
-                <p className="text-sm text-gray-600">Total Players</p>
-                <p className="text-2xl font-bold text-gray-900">{leaderboard.length}</p>
-              </div>
+        {/* Stats strip — compact 3-col on mobile, spacious cards on desktop */}
+        <div className="grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-6 mb-4 md:mb-8">
+          {/* Total Players */}
+          <div className="bg-white rounded-lg shadow-sm md:shadow-md px-3 py-2 md:p-6 flex flex-col md:flex-row items-center md:items-center gap-0 md:gap-3 text-center md:text-left">
+            <Users className="w-5 h-5 md:w-10 md:h-10 text-blue-600 mb-0.5 md:mb-0 shrink-0" />
+            <div>
+              <p className="text-[10px] md:text-sm text-gray-500 leading-tight">Players</p>
+              <p className="text-base md:text-2xl font-bold text-gray-900 leading-tight">{leaderboard.length}</p>
             </div>
           </div>
 
-          {leaderboard.length > 0 && (
-            <>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-10 h-10 text-green-600" />
-                  <div>
-                    <p className="text-sm text-green-700">Top Player</p>
-                    <p className="text-2xl font-bold text-green-900">{leaderboard[0].username}</p>
-                    <p className="text-sm text-green-700">V̶₵{leaderboard[0].netVC.toFixed(2)}</p>
-                  </div>
+          {/* Top Player */}
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-sm md:shadow-md px-3 py-2 md:p-6 flex flex-col md:flex-row items-center md:items-center gap-0 md:gap-3 text-center md:text-left">
+            <TrendingUp className="w-5 h-5 md:w-10 md:h-10 text-green-600 mb-0.5 md:mb-0 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] md:text-sm text-green-700 leading-tight">Top Player</p>
+              <p className="text-sm md:text-2xl font-bold text-green-900 leading-tight truncate">
+                {leaderboard.length > 0 ? leaderboard[0].username : '—'}
+              </p>
+              {leaderboard.length > 0 && (
+                <p className="text-[10px] md:text-sm text-green-700 leading-tight">V̶₵{leaderboard[0].netVC.toFixed(2)}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Biggest Single Win */}
+          {(() => {
+            const maxWin = leaderboard.length > 0 ? Math.max(...leaderboard.map(e => e.biggestSingleWin || 0)) : 0
+            const biggestWinner = leaderboard.find(e => (e.biggestSingleWin || 0) === maxWin)
+            return (
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-sm md:shadow-md px-3 py-2 md:p-6 flex flex-col md:flex-row items-center md:items-center gap-0 md:gap-3 text-center md:text-left">
+                <Trophy className="w-5 h-5 md:w-10 md:h-10 text-yellow-600 mb-0.5 md:mb-0 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] md:text-sm text-yellow-700 leading-tight">Best Win</p>
+                  <p className="text-sm md:text-2xl font-bold text-yellow-900 leading-tight">
+                    {maxWin > 0 ? `V̶₵${maxWin.toFixed(2)}` : '—'}
+                  </p>
+                  {maxWin > 0 && biggestWinner && (
+                    <p className="text-[10px] md:text-xs text-yellow-600 leading-tight truncate">@{biggestWinner.username}</p>
+                  )}
                 </div>
               </div>
-
-              {(() => {
-                const maxWin = Math.max(...leaderboard.map(e => e.biggestSingleWin || 0))
-                const biggestWinner = leaderboard.find(e => (e.biggestSingleWin || 0) === maxWin)
-                return (
-                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-md p-6">
-                    <div className="flex items-center gap-3">
-                      <Trophy className="w-10 h-10 text-yellow-600" />
-                      <div>
-                        <p className="text-sm text-yellow-700">Biggest Single Win</p>
-                        <p className="text-2xl font-bold text-yellow-900">
-                          {maxWin > 0 ? `V̶₵${maxWin.toFixed(2)}` : '—'}
-                        </p>
-                        {maxWin > 0 && biggestWinner && (
-                          <p className="text-xs text-yellow-600">by @{biggestWinner.username}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()}
-            </>
-          )}
+            )
+          })()}
         </div>
 
         {/* Mobile Card List */}
