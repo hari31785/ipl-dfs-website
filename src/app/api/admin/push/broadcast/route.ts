@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendToAll, sendToUser } from '@/lib/pushNotifications';
 import { prisma } from '@/lib/prisma';
 
+// GET /api/admin/push/broadcast — subscription stats for the admin panel
+export async function GET() {
+  const [totalUsers, subs] = await Promise.all([
+    prisma.user.count(),
+    prisma.pushSubscription.findMany({ select: { userId: true } }),
+  ]);
+  const subscribedUserIds = new Set(subs.map(s => s.userId));
+  return NextResponse.json({
+    totalUsers,
+    subscribedUsers: subscribedUserIds.size,
+    totalDevices: subs.length,
+    unsubscribedUsers: totalUsers - subscribedUserIds.size,
+  });
+}
+
 // POST /api/admin/push/broadcast — send a push notification to all or specific users
 export async function POST(request: NextRequest) {
   try {

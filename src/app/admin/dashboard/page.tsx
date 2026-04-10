@@ -37,6 +37,7 @@ export default function AdminDashboard() {
   const [selectedUsers, setSelectedUsers] = useState<UserSearchResult[]>([])
   const [searchingUsers, setSearchingUsers] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const [pushStats, setPushStats] = useState<{ totalUsers: number; subscribedUsers: number; totalDevices: number; unsubscribedUsers: number } | null>(null)
 
   useEffect(() => {
     // Get admin data from localStorage
@@ -47,6 +48,7 @@ export default function AdminDashboard() {
       cleanupPastDueContests().then(() => {
         fetchDashboardStats() // Fetch stats after cleanup
       })
+      fetch('/api/admin/push/broadcast').then(r => r.json()).then(setPushStats).catch(() => {})
     } else {
       // Redirect to admin login if no admin data
       window.location.href = '/admin/login'
@@ -135,6 +137,8 @@ export default function AdminDashboard() {
       if (res.ok) {
         setPushForm({ title: '', body: '', url: '' })
         if (pushAudience === 'specific') setSelectedUsers([])
+        // Refresh subscription stats (expired subs may have been pruned)
+        fetch('/api/admin/push/broadcast').then(r => r.json()).then(setPushStats).catch(() => {})
       }
     } catch {
       setPushResult({ sent: 0, failed: 0, message: 'Network error' })
@@ -447,7 +451,23 @@ export default function AdminDashboard() {
               <Bell className="h-6 w-6 text-indigo-500" />
               Push Notifications
             </h3>
-            <p className="text-gray-500 text-sm mb-5">Send a custom notification to all users or specific individuals.</p>
+            <p className="text-gray-500 text-sm mb-4">Send a custom notification to all users or specific individuals.</p>
+
+            {/* Subscription stats bar */}
+            {pushStats && (
+              <div className="mb-5 flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm">
+                <span className="font-semibold text-gray-700">📱 Reach:</span>
+                <span className="text-green-700 font-bold">{pushStats.subscribedUsers} subscribed</span>
+                <span className="text-gray-400">·</span>
+                <span className="text-gray-500">{pushStats.totalDevices} device{pushStats.totalDevices !== 1 ? 's' : ''}</span>
+                {pushStats.unsubscribedUsers > 0 && (
+                  <>
+                    <span className="text-gray-400">·</span>
+                    <span className="text-amber-600 font-medium">⚠️ {pushStats.unsubscribedUsers} users have no notifications enabled</span>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Audience toggle */}
             <div className="flex gap-2 mb-5">
