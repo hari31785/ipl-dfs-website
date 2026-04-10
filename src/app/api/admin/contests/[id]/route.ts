@@ -83,6 +83,45 @@ export async function PUT(
       );
     }
 
+    // Push notification when contest moves to DRAFT_PHASE (draft room opens)
+    if (status === 'DRAFT_PHASE') {
+      const gameTitle = `${contest.iplGame.team1.shortName} vs ${contest.iplGame.team2.shortName}`;
+      const contestTypeLabel =
+        contest.contestType === 'HIGH_ROLLER' ? 'High Roller (100 coins)' :
+        contest.contestType === 'REGULAR'     ? 'Regular (50 coins)' :
+        contest.contestType === 'LOW_STAKES'  ? 'Low Stakes (25 coins)' :
+        `${contest.coinValue} coins`;
+
+      // Build userId → opponent username map from matchups
+      const matchupsForDraft = await prisma.headToHeadMatchup.findMany({
+        where: { contestId: id },
+        include: {
+          user1: { include: { user: { select: { id: true, username: true } } } },
+          user2: { include: { user: { select: { id: true, username: true } } } },
+        },
+      });
+      const draftOpponentMap = new Map<string, string>();
+      for (const m of matchupsForDraft) {
+        draftOpponentMap.set(m.user1.user.id, m.user2.user.username);
+        draftOpponentMap.set(m.user2.user.id, m.user1.user.username);
+      }
+
+      await Promise.all(
+        contest.signups.map((s) => {
+          const opponentUsername = draftOpponentMap.get(s.userId);
+          const body = opponentUsername
+            ? `You're up against @${opponentUsername} in ${gameTitle} — head to your dashboard to draft your team!`
+            : `${gameTitle} draft is now open — head to your dashboard and draft your team!`;
+          return sendToUser(s.userId, {
+            title: `⚡ Draft Open · ${contestTypeLabel}`,
+            body,
+            icon: '/icon-192.png',
+            url: '/dashboard?tab=my-contests&sub=upcoming',
+          });
+        })
+      );
+    }
+
     return NextResponse.json(contest);
   } catch (error) {
     console.error('Error updating contest:', error);
