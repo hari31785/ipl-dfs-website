@@ -152,47 +152,69 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Dashboard
-          </button>
-          
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                <Trophy className="w-8 h-8 text-yellow-500" />
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Leaderboard
-                </h1>
-              </div>
-              
-              {/* Tournament Selector */}
-              {tournaments.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">Tournament:</label>
-                  <select
-                    value={tournamentId}
-                    onChange={(e) => router.push(`/leaderboard/${e.target.value}`)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 font-medium"
-                  >
-                    {tournaments.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+        <div className="mb-4 md:mb-8">
+          {/* Mobile: single compact bar with back + title + selector all inline */}
+          <div className="flex items-center gap-2 md:hidden mb-3">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="flex items-center gap-1 text-blue-600 hover:text-blue-700 shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back</span>
+            </button>
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
+              <h1 className="text-lg font-bold text-gray-900 truncate">Leaderboard</h1>
             </div>
-            <p className="text-gray-600">
-              Rankings based on total Virtual Credits (V̶₵) earned throughout the tournament
-            </p>
+            {tournaments.length > 0 && (
+              <select
+                value={tournamentId}
+                onChange={(e) => router.push(`/leaderboard/${e.target.value}`)}
+                className="text-xs border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 shrink-0 max-w-[130px]"
+              >
+                {tournaments.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Desktop: original full header card */}
+          <div className="hidden md:block">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Dashboard
+            </button>
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-8 h-8 text-yellow-500" />
+                  <h1 className="text-3xl font-bold text-gray-900">Leaderboard</h1>
+                </div>
+                {tournaments.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">Tournament:</label>
+                    <select
+                      value={tournamentId}
+                      onChange={(e) => router.push(`/leaderboard/${e.target.value}`)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 font-medium"
+                    >
+                      {tournaments.map((t) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+              <p className="text-gray-600">
+                Rankings based on total Virtual Credits (V̶₵) earned throughout the tournament
+              </p>
+            </div>
           </div>
         </div>
 
