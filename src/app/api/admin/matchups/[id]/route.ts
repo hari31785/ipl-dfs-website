@@ -46,11 +46,13 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Get the matchup with draft picks
+    // Get the matchup with draft picks and both users' profiles
     const matchup = await prisma.headToHeadMatchup.findUnique({
       where: { id },
       include: {
         draftPicks: true,
+        user1: { select: { userId: true } },
+        user2: { select: { userId: true } },
         _count: {
           select: {
             draftPicks: true
@@ -87,11 +89,22 @@ export async function DELETE(
       where: { id }
     });
 
-    console.log(`✅ Successfully deleted matchup ${id}`);
+    // Remove contest signups for both users so they no longer see this contest
+    // in their dashboard (stale signup with no matchup would show as a ghost entry)
+    const affectedUserIds = [matchup.user1.userId, matchup.user2.userId];
+    const { count: signupsDeleted } = await prisma.contestSignup.deleteMany({
+      where: {
+        contestId: matchup.contestId,
+        userId: { in: affectedUserIds },
+      },
+    });
+
+    console.log(`✅ Successfully deleted matchup ${id}, ${signupsDeleted} signup(s) cleaned up`);
 
     return NextResponse.json({
       message: 'Matchup deleted successfully',
-      draftPicksDeleted: matchup._count.draftPicks
+      draftPicksDeleted: matchup._count.draftPicks,
+      signupsRemoved: signupsDeleted,
     });
 
   } catch (error) {

@@ -1310,7 +1310,10 @@ export default function DashboardPage() {
                     } else if (contestSubTab === 'active') {
                       filteredContests = filteredContests.filter(contest => 
                         // Active: Contest has been started by admin (LIVE or ACTIVE status)
-                        contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE'
+                        // Must also have a matchup — guards against stale signups where admin
+                        // deleted the matchup but the signup was not cleaned up
+                        (contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE') &&
+                        contest.matchup !== null
                       )
                     } else if (contestSubTab === 'completed') {
                       filteredContests = filteredContests.filter(contest => 
