@@ -216,6 +216,14 @@ export default function DashboardPage() {
     setLoading(false)
   }, [])
 
+  // Option A: silently resubscribe if permission is granted but subscription was lost
+  // (common on iOS when the browser drops the SW subscription in the background)
+  useEffect(() => {
+    if (permission === 'granted' && !isSubscribed && !pushLoading && user?.id) {
+      subscribe(user.id);
+    }
+  }, [permission, isSubscribed, pushLoading, user?.id]);
+
   // Option C: re-fetch on tab resume (>2min stale) + force reload on bfcache restore
   useEffect(() => {
     const STALE_MS = 2 * 60 * 1000 // 2 minutes

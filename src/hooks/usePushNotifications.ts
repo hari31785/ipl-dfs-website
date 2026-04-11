@@ -35,7 +35,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     }
     setPermission(Notification.permission as PermissionState);
 
-    // Register service worker
+    // Register service worker and check initial subscription state
     navigator.serviceWorker
       .register('/sw.js')
       .then(async (reg) => {
@@ -43,6 +43,24 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         setIsSubscribed(!!existing);
       })
       .catch((err) => console.error('SW registration failed:', err));
+
+    // Option B: re-check subscription state when user returns to the app.
+    // iOS can silently drop the push subscription while the app is in the
+    // background, so we re-read it on every visibility restore.
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        setPermission(Notification.permission as PermissionState);
+        setIsSubscribed(!!existing);
+      } catch {
+        // ignore
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const subscribe = useCallback(async (userId: string) => {
