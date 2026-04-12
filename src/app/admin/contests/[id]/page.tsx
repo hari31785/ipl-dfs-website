@@ -767,7 +767,31 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
         {showCreateMatchup && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Create Custom H2H Matchup</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Create Custom H2H Matchup</h3>
+
+              {/* Contest context banner */}
+              {contest && (
+                <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-indigo-900 text-sm truncate">
+                      {contest.iplGame.team1.shortName} vs {contest.iplGame.team2.shortName}
+                    </div>
+                    <div className="text-xs text-indigo-600 mt-0.5">
+                      {new Date(contest.iplGame.gameDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </div>
+                  </div>
+                  <span className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                    contest.contestType === 'HIGH_ROLLER'
+                      ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+                      : contest.contestType === 'REGULAR'
+                      ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                      : 'bg-green-100 text-green-800 border border-green-300'
+                  }`}>
+                    {contest.coinValue}c · {contest.contestType === 'HIGH_ROLLER' ? 'High Roller' : contest.contestType === 'REGULAR' ? 'Regular' : 'Low Stakes'}
+                  </span>
+                </div>
+              )}
+
               <p className="text-sm text-gray-600 mb-4">
                 Search and select 2 active users. They will be automatically signed up if not already.
               </p>
