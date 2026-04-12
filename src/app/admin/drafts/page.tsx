@@ -634,61 +634,61 @@ function DraftPageInner() {
               </div>
 
               {/* Picks Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Team A Picks */}
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                  <h3 className="font-bold text-blue-800 mb-3 text-sm">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Team A Picks — col 1 always */}
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 lg:p-4 order-1">
+                  <h3 className="font-bold text-blue-800 mb-2 text-xs lg:text-sm leading-tight">
                     {selectedMatchup.user1.user.name}
-                    <span className="ml-2 text-xs font-medium text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
-                      {(selectedMatchup.firstPickUser?.split(':')[0] === 'user1') ? 'Picks First' : 'Picks Second'}
+                    <span className="ml-1.5 text-xs font-medium text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
+                      {(selectedMatchup.firstPickUser?.split(':')[0] === 'user1') ? '1st' : '2nd'}
                     </span>
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {getUserPicks(selectedMatchup, selectedMatchup.user1.id).map((pick) => (
-                      <div key={pick.id} className="bg-white border border-blue-100 rounded-lg p-2.5 text-sm">
+                      <div key={pick.id} className="bg-white border border-blue-100 rounded-lg px-2 py-1.5 text-xs">
                         <div className="font-semibold text-gray-900">#{pick.pickOrder} {pick.player.name}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{pick.player.role} · {pick.player.iplTeam.shortName}</div>
+                        <div className="text-gray-500 mt-0.5">{pick.player.role} · {pick.player.iplTeam.shortName}</div>
                       </div>
                     ))}
                     {getUserPicks(selectedMatchup, selectedMatchup.user1.id).length === 0 && (
-                      <div className="text-blue-400 text-sm italic">No picks yet</div>
+                      <div className="text-blue-400 text-xs italic">No picks yet</div>
                     )}
                   </div>
                 </div>
 
-                {/* Snake Order */}
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <h3 className="font-bold text-gray-800 mb-3 text-sm">Snake Draft Order</h3>
-                  <div className="space-y-1 text-xs text-gray-700">
+                {/* Team B Picks — col 2 on mobile, col 3 on desktop */}
+                <div className="bg-green-50 border border-green-100 rounded-xl p-3 lg:p-4 order-2 lg:order-3">
+                  <h3 className="font-bold text-green-800 mb-2 text-xs lg:text-sm leading-tight">
+                    {selectedMatchup.user2.user.name}
+                    <span className="ml-1.5 text-xs font-medium text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+                      {(selectedMatchup.firstPickUser?.split(':')[0] === 'user2') ? '1st' : '2nd'}
+                    </span>
+                  </h3>
+                  <div className="space-y-1.5">
+                    {getUserPicks(selectedMatchup, selectedMatchup.user2.id).map((pick) => (
+                      <div key={pick.id} className="bg-white border border-green-100 rounded-lg px-2 py-1.5 text-xs">
+                        <div className="font-semibold text-gray-900">#{pick.pickOrder} {pick.player.name}</div>
+                        <div className="text-gray-500 mt-0.5">{pick.player.role} · {pick.player.iplTeam.shortName}</div>
+                      </div>
+                    ))}
+                    {getUserPicks(selectedMatchup, selectedMatchup.user2.id).length === 0 && (
+                      <div className="text-green-400 text-xs italic">No picks yet</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Snake Order — full-width row below teams on mobile, middle col on desktop */}
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 lg:p-4 order-3 lg:order-2 col-span-2 lg:col-span-1">
+                  <h3 className="font-bold text-gray-800 mb-2 text-xs lg:text-sm">🐍 Snake Draft Order</h3>
+                  <div className="grid grid-cols-2 lg:grid-cols-1 gap-x-4 gap-y-0 text-xs text-gray-700">
                     {getSnakeOrder().map((order, index) => (
-                      <div key={index} className="py-1.5 border-b border-gray-200 last:border-0">
+                      <div key={index} className="py-1 border-b border-gray-200 last:border-0 lg:last:border-0">
                         {order}
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
-                    <strong>Note:</strong> Each team picks 7 total (5 starters + 2 bench). Pick order reverses each round.
-                  </div>
-                </div>
-
-                {/* Team B Picks */}
-                <div className="bg-green-50 border border-green-100 rounded-xl p-4">
-                  <h3 className="font-bold text-green-800 mb-3 text-sm">
-                    {selectedMatchup.user2.user.name}
-                    <span className="ml-2 text-xs font-medium text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
-                      {(selectedMatchup.firstPickUser?.split(':')[0] === 'user2') ? 'Picks First' : 'Picks Second'}
-                    </span>
-                  </h3>
-                  <div className="space-y-2">
-                    {getUserPicks(selectedMatchup, selectedMatchup.user2.id).map((pick) => (
-                      <div key={pick.id} className="bg-white border border-green-100 rounded-lg p-2.5 text-sm">
-                        <div className="font-semibold text-gray-900">#{pick.pickOrder} {pick.player.name}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{pick.player.role} · {pick.player.iplTeam.shortName}</div>
-                      </div>
-                    ))}
-                    {getUserPicks(selectedMatchup, selectedMatchup.user2.id).length === 0 && (
-                      <div className="text-green-400 text-sm italic">No picks yet</div>
-                    )}
+                  <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                    <strong>Note:</strong> 5 starters + 2 bench each. Order reverses each round.
                   </div>
                 </div>
               </div>
