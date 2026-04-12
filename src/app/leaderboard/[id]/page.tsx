@@ -332,7 +332,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                   <th className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-16">
                     Rank
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-36">
                     Player
                   </th>
                   <th className="px-3 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-20">
@@ -378,16 +378,16 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                         hover:bg-blue-50 transition-colors
                       `}
                     >
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-2 whitespace-nowrap">
                         <div className="flex items-center justify-center">
                           {getRankDisplay(entry.rank)}
                         </div>
                       </td>
-                      <td className="px-3 py-3">
-                        <div className="text-sm font-bold text-gray-900 leading-tight">{entry.name}</div>
-                        <div className="text-xs text-gray-400">@{entry.username} · {entry.totalWins}/{entry.totalMatches}W</div>
+                      <td className="px-3 py-2 max-w-[160px]">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{entry.name}</div>
+                        <div className="text-xs text-gray-400 truncate">@{entry.username} · {entry.totalWins}/{entry.totalMatches}W</div>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-center">
+                      <td className="px-3 py-2 whitespace-nowrap text-center">
                         <button
                           onClick={() => openContestHistory(entry.userId, entry.username)}
                           className="px-2 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 ring-1 ring-blue-300 hover:bg-blue-600 hover:text-white hover:ring-blue-600 transition-all cursor-pointer"
@@ -397,17 +397,17 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                           <Eye className="w-3 h-3" />
                         </button>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-right">
+                      <td className="px-3 py-2 whitespace-nowrap text-right">
                         <span className="text-sm font-bold text-green-600">
                           V̶₵{entry.totalVCWon.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-right">
+                      <td className="px-3 py-2 whitespace-nowrap text-right">
                         <span className="text-sm font-bold text-red-600">
                           V̶₵{entry.totalVCLost.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-right">
+                      <td className="px-3 py-2 whitespace-nowrap text-right">
                         {entry.encashedVC > 0 ? (
                           <span className="text-sm font-bold text-blue-600">
                             -V̶₵{entry.encashedVC.toFixed(2)}
@@ -420,14 +420,14 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                           <span className="text-gray-400">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-right">
+                      <td className="px-3 py-2 whitespace-nowrap text-right">
                         <span className={`text-base font-bold ${
                           entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'
                         }`}>
                           {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-right">
+                      <td className="px-3 py-2 whitespace-nowrap text-right">
                         <span className={`text-sm font-semibold ${
                           entry.netCoins > 0 ? 'text-green-700' : entry.netCoins < 0 ? 'text-red-700' : 'text-gray-700'
                         }`}>
