@@ -14,9 +14,13 @@ interface LeaderboardEntry {
   totalMatches: number
   totalVCWon: number
   totalVCLost: number
+  encashedVC: number
+  refilledVC: number
   netVC: number
   totalCoinsWon: number
   totalCoinsLost: number
+  encashedCoins: number
+  refilledCoins: number
   netCoins: number
   totalPointsWon: number
   totalPointsLost: number
@@ -304,6 +308,9 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 {/* Row 2: VC + Coins inline */}
                 <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100 text-xs">
                   <span className="text-gray-400">Won <span className="text-green-600 font-semibold">{entry.totalVCWon.toFixed(2)}</span></span>
+                  {entry.encashedVC > 0 && (
+                    <span className="text-gray-400">Enc <span className="text-blue-600 font-semibold">-{entry.encashedVC.toFixed(2)}</span></span>
+                  )}
                   <span className={`font-black text-sm ${entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'}`}>
                     {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
                   </span>
@@ -342,6 +349,9 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     V̶₵ Lost
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                    Encashed
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                     Net V̶₵
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
@@ -358,7 +368,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
               <tbody className="bg-white divide-y divide-gray-200">
                 {leaderboard.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-lg">No completed contests yet</p>
                       <p className="text-sm">The leaderboard will populate as contests are completed</p>
@@ -414,6 +424,19 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                             V̶₵{entry.totalVCLost.toFixed(2)}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        {entry.encashedVC > 0 ? (
+                          <span className="text-sm font-bold text-blue-600">
+                            -V̶₵{entry.encashedVC.toFixed(2)}
+                          </span>
+                        ) : entry.refilledVC > 0 ? (
+                          <span className="text-sm font-bold text-purple-600">
+                            +V̶₵{entry.refilledVC.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <span className={`text-lg font-bold ${

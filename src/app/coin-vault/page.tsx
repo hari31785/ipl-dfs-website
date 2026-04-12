@@ -34,6 +34,17 @@ interface CoinTransaction {
   }
 }
 
+interface Settlement {
+  id: string
+  type: 'ENCASH' | 'REFILL'
+  amount: number
+  balanceBefore: number
+  balanceAfter: number
+  adminUsername: string
+  notes?: string | null
+  createdAt: string
+}
+
 interface Tournament {
   id: string
   name: string
@@ -52,6 +63,7 @@ export default function CoinVaultPage() {
   const [selectedTournament, setSelectedTournament] = useState<string>('')
   const [balance, setBalance] = useState(0)
   const [transactions, setTransactions] = useState<CoinTransaction[]>([])
+  const [settlements, setSettlements] = useState<Settlement[]>([])
   const [loading, setLoading] = useState(true)
   const [totalWinnings, setTotalWinnings] = useState(0)
   const [totalLosses, setTotalLosses] = useState(0)
@@ -111,6 +123,7 @@ export default function CoinVaultPage() {
       if (response.ok) {
         setBalance(data.balance)
         setTransactions(data.transactions)
+        setSettlements(data.settlements || [])
         
         // Calculate totals
         const winnings = data.transactions
@@ -274,30 +287,62 @@ export default function CoinVaultPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shrink-0">
-                <TrendingUp className="h-5 w-5 text-white" />
+        {(() => {
+          const totalEncashed = settlements.filter(s => s.type === 'ENCASH').reduce((sum, s) => sum + s.amount, 0)
+          const totalRefilled = settlements.filter(s => s.type === 'REFILL').reduce((sum, s) => sum + s.amount, 0)
+          return (
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shrink-0">
+                    <TrendingUp className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-green-700 font-medium">Total Winnings</p>
+                    <p className="text-xl font-bold text-green-900">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-green-700 font-medium">Total Winnings</p>
-                <p className="text-xl font-bold text-green-900">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 bg-red-500 rounded-full flex items-center justify-center shrink-0">
+                    <TrendingDown className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-red-700 font-medium">Total Losses</p>
+                    <p className="text-xl font-bold text-red-900">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
               </div>
+              {totalEncashed > 0 && (
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center shrink-0">
+                      <Coins className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-blue-700 font-medium">Total Encashed</p>
+                      <p className="text-xl font-bold text-blue-900">V̶₵{(totalEncashed / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {totalRefilled > 0 && (
+                <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-purple-600 rounded-full flex items-center justify-center shrink-0">
+                      <Coins className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-purple-700 font-medium">Total Refilled</p>
+                      <p className="text-xl font-bold text-purple-900">V̶₵{(totalRefilled / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-red-500 rounded-full flex items-center justify-center shrink-0">
-                <TrendingDown className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-xs text-red-700 font-medium">Total Losses</p>
-                <p className="text-xl font-bold text-red-900">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+          )
+        })()}
 
         {/* Transaction Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -320,6 +365,26 @@ export default function CoinVaultPage() {
             <>
               {/* ── Mobile card list (< md) ── */}
               <div className="divide-y divide-gray-100 md:hidden">
+                {/* Settlement rows */}
+                {settlements.map((s) => (
+                  <div key={s.id} className={`px-4 py-3 ${s.type === 'ENCASH' ? 'bg-blue-50' : 'bg-purple-50'}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          s.type === 'ENCASH' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                        }`}>{s.type === 'ENCASH' ? '🏦 Encashed' : '💰 Refilled'}</span>
+                        <span className="text-xs text-gray-500">by {s.adminUsername}</span>
+                      </div>
+                      <span className={`text-sm font-bold ${
+                        s.type === 'ENCASH' ? 'text-blue-700' : 'text-purple-700'
+                      }`}>{s.type === 'ENCASH' ? '-' : '+'}V̶₵{(s.amount / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(s.createdAt).toLocaleDateString()} · Balance: V̶₵{(s.balanceBefore / 100).toFixed(2)} → V̶₵{(s.balanceAfter / 100).toFixed(2)}
+                    </div>
+                    {s.notes && <div className="text-xs text-gray-400 mt-0.5 italic">{s.notes}</div>}
+                  </div>
+                ))}
                 {transactions.map((transaction) => {
                   const isWin = transaction.type === 'WIN'
                   const coinsWon = isWin ? transaction.amount : 0
@@ -391,6 +456,27 @@ export default function CoinVaultPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
+                    {/* Settlement rows */}
+                    {settlements.map((s) => (
+                      <tr key={s.id} className={s.type === 'ENCASH' ? 'bg-blue-50' : 'bg-purple-50'}>
+                        <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">{new Date(s.createdAt).toLocaleDateString()}</td>
+                        <td className="px-3 py-2 text-xs text-gray-900" colSpan={2}>
+                          <div className="font-semibold">{s.type === 'ENCASH' ? '🏦 VC Encashment' : '💰 VC Refill'}</div>
+                          <div className="text-gray-500">Admin: {s.adminUsername} · Balance: V̶₵{(s.balanceBefore / 100).toFixed(2)} → V̶₵{(s.balanceAfter / 100).toFixed(2)}</div>
+                          {s.notes && <div className="text-gray-400 italic">{s.notes}</div>}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-right" colSpan={2}>
+                          <span className={`text-sm font-bold ${
+                            s.type === 'ENCASH' ? 'text-blue-700' : 'text-purple-700'
+                          }`}>{s.type === 'ENCASH' ? '-' : '+'}V̶₵{(s.amount / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-right">
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            s.type === 'ENCASH' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                          }`}>{s.type}</span>
+                        </td>
+                      </tr>
+                    ))}
                     {transactions.map((transaction) => {
                       const isWin = transaction.type === 'WIN'
                       const coinsWon = isWin ? transaction.amount : 0

@@ -116,6 +116,20 @@ export async function GET(request: Request) {
     return NextResponse.json({
       balance: tournamentBalance.balance,
       transactions: enrichedTransactions,
+      settlements: await prisma.settlement.findMany({
+        where: { userId, tournamentId },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          balanceBefore: true,
+          balanceAfter: true,
+          adminUsername: true,
+          notes: true,
+          createdAt: true,
+        },
+      }),
     })
   } catch (error) {
     console.error("Error fetching coin data:", error)

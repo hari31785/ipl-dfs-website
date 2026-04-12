@@ -55,9 +55,13 @@ export async function GET(
       totalMatches: number
       totalVCWon: number
       totalVCLost: number
+      encashedVC: number
+      refilledVC: number
       netVC: number
       totalCoinsWon: number
       totalCoinsLost: number
+      encashedCoins: number
+      refilledCoins: number
       netCoins: number
       totalPointsWon: number
       totalPointsLost: number
@@ -78,9 +82,13 @@ export async function GET(
         totalMatches: transaction.user.totalMatches,
         totalVCWon: 0,
         totalVCLost: 0,
+        encashedVC: 0,
+        refilledVC: 0,
         netVC: 0,
         totalCoinsWon: 0,
         totalCoinsLost: 0,
+        encashedCoins: 0,
+        refilledCoins: 0,
         netCoins: 0,
         totalPointsWon: 0,
         totalPointsLost: 0,
@@ -109,6 +117,27 @@ export async function GET(
 
       userStatsMap.set(transaction.userId, existing)
     })
+
+    // Fetch all settlements for this tournament and overlay onto user stats
+    const settlements = await prisma.settlement.findMany({
+      where: { tournamentId: id },
+      select: { userId: true, type: true, amount: true },
+    })
+    for (const s of settlements) {
+      const existing = userStatsMap.get(s.userId)
+      if (!existing) continue
+      if (s.type === 'ENCASH') {
+        existing.encashedVC += s.amount / 100
+        existing.encashedCoins += s.amount
+      } else if (s.type === 'REFILL') {
+        existing.refilledVC += s.amount / 100
+        existing.refilledCoins += s.amount
+      }
+      // Adjust net to account for settlements:
+      // netVC = won - lost - encashed (taken out) + refilled (topped up)
+      existing.netVC = existing.totalVCWon - existing.totalVCLost - existing.encashedVC + existing.refilledVC
+      existing.netCoins = existing.totalCoinsWon - existing.totalCoinsLost - existing.encashedCoins + existing.refilledCoins
+    }
 
     // Count contests per user
     const contestSignups = await prisma.contestSignup.findMany({
