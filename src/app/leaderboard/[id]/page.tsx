@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Trophy, Medal, TrendingUp, TrendingDown, Users, ArrowLeft, Coins, Eye } from "lucide-react"
+import { Trophy, Medal, TrendingUp, Users, ArrowLeft, Coins, Eye } from "lucide-react"
 import { calculateFinalLineup, calculateTotalPointsWithSwap } from "@/lib/benchSwapUtils"
 
 interface LeaderboardEntry {
@@ -326,41 +326,34 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
 
         {/* Leaderboard Table — desktop only */}
         <div className="hidden md:block bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-blue-600 to-purple-600">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-16">
                     Rank
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                     Player
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-20">
                     <div className="flex items-center justify-center gap-1">
-                      <span>Contests</span>
+                      <span>Played</span>
                       <Eye className="w-3 h-3 opacity-70" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-24">
                     V̶₵ Won
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-24">
                     V̶₵ Lost
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-24">
                     Encashed
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-28">
                     Net V̶₵
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                    Coins Won
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                    Coins Lost
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-28">
                     Net Coins
                   </th>
                 </tr>
@@ -368,7 +361,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
               <tbody className="bg-white divide-y divide-gray-200">
                 {leaderboard.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-lg">No completed contests yet</p>
                       <p className="text-sm">The leaderboard will populate as contests are completed</p>
@@ -385,47 +378,36 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                         hover:bg-blue-50 transition-colors
                       `}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center justify-center w-12">
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <div className="flex items-center justify-center">
                           {getRankDisplay(entry.rank)}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-bold text-gray-900">{entry.name}</div>
-                          <div className="text-sm text-gray-500">@{entry.username}</div>
-                          <div className="text-xs text-gray-500">
-                            {entry.totalWins}/{entry.totalMatches} wins
-                          </div>
-                        </div>
+                      <td className="px-3 py-3">
+                        <div className="text-sm font-bold text-gray-900 leading-tight">{entry.name}</div>
+                        <div className="text-xs text-gray-400">@{entry.username} · {entry.totalWins}/{entry.totalMatches}W</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-3 py-3 whitespace-nowrap text-center">
                         <button
                           onClick={() => openContestHistory(entry.userId, entry.username)}
-                          className="px-3 py-1 inline-flex items-center gap-1.5 text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 ring-1 ring-blue-300 hover:bg-blue-600 hover:text-white hover:ring-blue-600 transition-all cursor-pointer"
+                          className="px-2 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 ring-1 ring-blue-300 hover:bg-blue-600 hover:text-white hover:ring-blue-600 transition-all cursor-pointer"
                           title={`View ${entry.username}'s contest history`}
                         >
                           {entry.contestsPlayed}
                           <Eye className="w-3 h-3" />
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-bold text-green-600">
-                            V̶₵{entry.totalVCWon.toFixed(2)}
-                          </span>
-                        </div>
+                      <td className="px-3 py-3 whitespace-nowrap text-right">
+                        <span className="text-sm font-bold text-green-600">
+                          V̶₵{entry.totalVCWon.toFixed(2)}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <TrendingDown className="w-4 h-4 text-red-600" />
-                          <span className="text-sm font-bold text-red-600">
-                            V̶₵{entry.totalVCLost.toFixed(2)}
-                          </span>
-                        </div>
+                      <td className="px-3 py-3 whitespace-nowrap text-right">
+                        <span className="text-sm font-bold text-red-600">
+                          V̶₵{entry.totalVCLost.toFixed(2)}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-3 py-3 whitespace-nowrap text-right">
                         {entry.encashedVC > 0 ? (
                           <span className="text-sm font-bold text-blue-600">
                             -V̶₵{entry.encashedVC.toFixed(2)}
@@ -438,24 +420,14 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                           <span className="text-gray-400">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className={`text-lg font-bold ${
+                      <td className="px-3 py-3 whitespace-nowrap text-right">
+                        <span className={`text-base font-bold ${
                           entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'
                         }`}>
                           {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-sm text-green-700">
-                          {entry.totalCoinsWon.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-sm text-red-700">
-                          {entry.totalCoinsLost.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-3 py-3 whitespace-nowrap text-right">
                         <span className={`text-sm font-semibold ${
                           entry.netCoins > 0 ? 'text-green-700' : entry.netCoins < 0 ? 'text-red-700' : 'text-gray-700'
                         }`}>
@@ -467,7 +439,6 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 )}
               </tbody>
             </table>
-          </div>
         </div>
 
         {/* Coin Vault CTA */}
