@@ -292,29 +292,29 @@ export default function CoinVaultPage() {
           const totalRefilled = settlements.filter(s => s.type === 'REFILL').reduce((sum, s) => sum + s.amount, 0)
           const cols = 2 + (totalEncashed > 0 ? 1 : 0) + (totalRefilled > 0 ? 1 : 0)
           return (
-            <div className={`grid gap-2 mb-4 ${cols === 4 ? 'grid-cols-4' : cols === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-              <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 flex flex-col items-center text-center">
-                <TrendingUp className="h-4 w-4 text-green-600 mb-0.5" />
-                <p className="text-xs text-green-700 font-medium leading-tight">Won</p>
-                <p className="text-sm font-bold text-green-900 leading-tight">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <div className={`grid gap-3 mb-4 ${cols === 4 ? 'grid-cols-4' : cols === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 md:p-5 flex flex-col items-center text-center">
+                <TrendingUp className="h-5 w-5 md:h-7 md:w-7 text-green-600 mb-1" />
+                <p className="text-xs md:text-sm text-green-700 font-medium">Won</p>
+                <p className="text-sm md:text-xl font-bold text-green-900 mt-0.5">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 flex flex-col items-center text-center">
-                <TrendingDown className="h-4 w-4 text-red-600 mb-0.5" />
-                <p className="text-xs text-red-700 font-medium leading-tight">Lost</p>
-                <p className="text-sm font-bold text-red-900 leading-tight">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 md:p-5 flex flex-col items-center text-center">
+                <TrendingDown className="h-5 w-5 md:h-7 md:w-7 text-red-600 mb-1" />
+                <p className="text-xs md:text-sm text-red-700 font-medium">Lost</p>
+                <p className="text-sm md:text-xl font-bold text-red-900 mt-0.5">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               {totalEncashed > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5 flex flex-col items-center text-center">
-                  <Coins className="h-4 w-4 text-blue-600 mb-0.5" />
-                  <p className="text-xs text-blue-700 font-medium leading-tight">Settled</p>
-                  <p className="text-sm font-bold text-blue-900 leading-tight">V̶₵{(totalEncashed / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 md:p-5 flex flex-col items-center text-center">
+                  <Coins className="h-5 w-5 md:h-7 md:w-7 text-blue-600 mb-1" />
+                  <p className="text-xs md:text-sm text-blue-700 font-medium">Settled</p>
+                  <p className="text-sm md:text-xl font-bold text-blue-900 mt-0.5">V̶₵{(totalEncashed / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               )}
               {totalRefilled > 0 && (
-                <div className="bg-purple-50 border border-purple-200 rounded-xl p-2.5 flex flex-col items-center text-center">
-                  <Coins className="h-4 w-4 text-purple-600 mb-0.5" />
-                  <p className="text-xs text-purple-700 font-medium leading-tight">Refilled</p>
-                  <p className="text-sm font-bold text-purple-900 leading-tight">V̶₵{(totalRefilled / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 md:p-5 flex flex-col items-center text-center">
+                  <Coins className="h-5 w-5 md:h-7 md:w-7 text-purple-600 mb-1" />
+                  <p className="text-xs md:text-sm text-purple-700 font-medium">Refilled</p>
+                  <p className="text-sm md:text-xl font-bold text-purple-900 mt-0.5">V̶₵{(totalRefilled / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               )}
             </div>
