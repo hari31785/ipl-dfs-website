@@ -290,54 +290,31 @@ export default function CoinVaultPage() {
         {(() => {
           const totalEncashed = settlements.filter(s => s.type === 'ENCASH').reduce((sum, s) => sum + s.amount, 0)
           const totalRefilled = settlements.filter(s => s.type === 'REFILL').reduce((sum, s) => sum + s.amount, 0)
+          const cols = 2 + (totalEncashed > 0 ? 1 : 0) + (totalRefilled > 0 ? 1 : 0)
           return (
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shrink-0">
-                    <TrendingUp className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-green-700 font-medium">Total Winnings</p>
-                    <p className="text-xl font-bold text-green-900">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  </div>
-                </div>
+            <div className={`grid gap-2 mb-4 ${cols === 4 ? 'grid-cols-4' : cols === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 flex flex-col items-center text-center">
+                <TrendingUp className="h-4 w-4 text-green-600 mb-0.5" />
+                <p className="text-xs text-green-700 font-medium leading-tight">Won</p>
+                <p className="text-sm font-bold text-green-900 leading-tight">V̶₵{(totalWinnings / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 bg-red-500 rounded-full flex items-center justify-center shrink-0">
-                    <TrendingDown className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-red-700 font-medium">Total Losses</p>
-                    <p className="text-xl font-bold text-red-900">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  </div>
-                </div>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 flex flex-col items-center text-center">
+                <TrendingDown className="h-4 w-4 text-red-600 mb-0.5" />
+                <p className="text-xs text-red-700 font-medium leading-tight">Lost</p>
+                <p className="text-sm font-bold text-red-900 leading-tight">V̶₵{(totalLosses / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               {totalEncashed > 0 && (
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center shrink-0">
-                      <Coins className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-blue-700 font-medium">Total Encashed</p>
-                      <p className="text-xl font-bold text-blue-900">V̶₵{(totalEncashed / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                    </div>
-                  </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5 flex flex-col items-center text-center">
+                  <Coins className="h-4 w-4 text-blue-600 mb-0.5" />
+                  <p className="text-xs text-blue-700 font-medium leading-tight">Settled</p>
+                  <p className="text-sm font-bold text-blue-900 leading-tight">V̶₵{(totalEncashed / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               )}
               {totalRefilled > 0 && (
-                <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 bg-purple-600 rounded-full flex items-center justify-center shrink-0">
-                      <Coins className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-purple-700 font-medium">Total Refilled</p>
-                      <p className="text-xl font-bold text-purple-900">V̶₵{(totalRefilled / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                    </div>
-                  </div>
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-2.5 flex flex-col items-center text-center">
+                  <Coins className="h-4 w-4 text-purple-600 mb-0.5" />
+                  <p className="text-xs text-purple-700 font-medium leading-tight">Refilled</p>
+                  <p className="text-sm font-bold text-purple-900 leading-tight">V̶₵{(totalRefilled / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               )}
             </div>
