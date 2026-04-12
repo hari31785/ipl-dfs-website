@@ -309,7 +309,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100 text-xs">
                   <span className="text-gray-400">Won <span className="text-green-600 font-semibold">{entry.totalVCWon.toFixed(2)}</span></span>
                   {entry.encashedVC > 0 && (
-                    <span className="text-gray-400">Enc <span className="text-blue-600 font-semibold">-{entry.encashedVC.toFixed(2)}</span></span>
+                    <span className="text-gray-400">Sttl <span className="text-blue-600 font-semibold">-{entry.encashedVC.toFixed(2)}</span></span>
                   )}
                   <span className={`font-black text-sm ${entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'}`}>
                     {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
@@ -348,7 +348,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     V̶₵ Lost
                   </th>
                   <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-24">
-                    Encashed
+                    Settled
                   </th>
                   <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-28">
                     Net V̶₵
