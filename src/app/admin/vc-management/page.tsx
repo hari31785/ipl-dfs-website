@@ -374,25 +374,28 @@ export default function VCManagementPage() {
                 {/* Mobile cards */}
                 <div className="md:hidden bg-white rounded-lg border border-green-200 divide-y divide-gray-100">
                   {group.winners.map((balance) => (
-                    <div key={balance.id} className="p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-sm text-gray-900">{balance.user.name}</p>
-                          <p className="text-xs text-gray-500">@{balance.user.username}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-green-600">+V̶₵{(balance.netBalance / 100).toFixed(2)}</p>
-                          <p className="text-xs text-gray-400">Settled: V̶₵{(balance.totalSettled / 100).toFixed(2)}</p>
-                        </div>
-                      </div>
+                    <div key={balance.id} className="px-3 py-2">
                       {settlingUser === balance.id ? (
                         <div className="flex gap-1.5 items-center">
-                          <input type="number" placeholder="V̶₵ amt" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 flex-1 text-sm" max={balance.netBalance / 100} step="0.01" />
-                          <button onClick={() => handleSettle(balance, 'ENCASH')} className="bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap">💰 Encash</button>
-                          <button onClick={() => { setSettlingUser(null); setSettleAmount(''); setSettleNotes(''); }} className="bg-gray-400 text-white px-2 py-1.5 rounded text-sm">✕</button>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-gray-900 truncate">{balance.user.name}</p>
+                            <p className="text-xs text-gray-500">+V̶₵{(balance.netBalance / 100).toFixed(2)}</p>
+                          </div>
+                          <input type="number" placeholder="V̶₵" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-20 text-sm" max={balance.netBalance / 100} step="0.01" />
+                          <button onClick={() => handleSettle(balance, 'ENCASH')} className="bg-green-600 text-white px-2 py-1.5 rounded text-xs font-medium whitespace-nowrap">💰</button>
+                          <button onClick={() => { setSettlingUser(null); setSettleAmount(''); setSettleNotes(''); }} className="bg-gray-400 text-white px-2 py-1.5 rounded text-xs">✕</button>
                         </div>
                       ) : (
-                        <button onClick={() => setSettlingUser(balance.id)} className="w-full bg-green-600 hover:bg-green-500 text-white py-1.5 rounded text-sm font-medium">💰 Encash</button>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-gray-900 truncate">{balance.user.name}</p>
+                            <p className="text-xs text-gray-500">@{balance.user.username} · Sttl: V̶₵{(balance.totalSettled / 100).toFixed(2)}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-bold text-green-600">+V̶₵{(balance.netBalance / 100).toFixed(2)}</span>
+                            <button onClick={() => setSettlingUser(balance.id)} className="bg-green-600 hover:bg-green-500 text-white px-2.5 py-1 rounded text-xs font-medium">💰 Encash</button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   ))}
@@ -442,25 +445,28 @@ export default function VCManagementPage() {
                 {/* Mobile cards */}
                 <div className="md:hidden bg-white rounded-lg border border-red-200 divide-y divide-gray-100">
                   {group.losers.map((balance) => (
-                    <div key={balance.id} className="p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-sm text-gray-900">{balance.user.name}</p>
-                          <p className="text-xs text-gray-500">@{balance.user.username}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-red-600">-V̶₵{(Math.abs(balance.netBalance) / 100).toFixed(2)}</p>
-                          <p className="text-xs text-gray-400">Settled: V̶₵{(balance.totalSettled / 100).toFixed(2)}</p>
-                        </div>
-                      </div>
+                    <div key={balance.id} className="px-3 py-2">
                       {settlingUser === balance.id ? (
                         <div className="flex gap-1.5 items-center">
-                          <input type="number" placeholder="V̶₵ amt" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 flex-1 text-sm" max={Math.abs(balance.netBalance) / 100} step="0.01" />
-                          <button onClick={() => handleSettle(balance, 'REFILL')} className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap">💳 Refill</button>
-                          <button onClick={() => { setSettlingUser(null); setSettleAmount(''); setSettleNotes(''); }} className="bg-gray-400 text-white px-2 py-1.5 rounded text-sm">✕</button>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-gray-900 truncate">{balance.user.name}</p>
+                            <p className="text-xs text-red-500">-V̶₵{(Math.abs(balance.netBalance) / 100).toFixed(2)}</p>
+                          </div>
+                          <input type="number" placeholder="V̶₵" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} className="bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-20 text-sm" max={Math.abs(balance.netBalance) / 100} step="0.01" />
+                          <button onClick={() => handleSettle(balance, 'REFILL')} className="bg-blue-600 text-white px-2 py-1.5 rounded text-xs font-medium whitespace-nowrap">💳</button>
+                          <button onClick={() => { setSettlingUser(null); setSettleAmount(''); setSettleNotes(''); }} className="bg-gray-400 text-white px-2 py-1.5 rounded text-xs">✕</button>
                         </div>
                       ) : (
-                        <button onClick={() => setSettlingUser(balance.id)} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-1.5 rounded text-sm font-medium">💳 Refill</button>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-gray-900 truncate">{balance.user.name}</p>
+                            <p className="text-xs text-gray-500">@{balance.user.username} · Sttl: V̶₵{(balance.totalSettled / 100).toFixed(2)}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-bold text-red-600">-V̶₵{(Math.abs(balance.netBalance) / 100).toFixed(2)}</span>
+                            <button onClick={() => setSettlingUser(balance.id)} className="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-xs font-medium">💳 Refill</button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   ))}
