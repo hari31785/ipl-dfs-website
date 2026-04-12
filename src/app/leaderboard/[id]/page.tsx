@@ -308,9 +308,11 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 {/* Row 2: VC + Coins inline */}
                 <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100 text-xs">
                   <span className="text-gray-400">Won <span className="text-green-600 font-semibold">{entry.totalVCWon.toFixed(2)}</span></span>
-                  {entry.encashedVC > 0 && (
+                  {entry.encashedVC > 0 ? (
                     <span className="text-gray-400">Sttl <span className="text-blue-600 font-semibold">-{entry.encashedVC.toFixed(2)}</span></span>
-                  )}
+                  ) : entry.refilledVC > 0 ? (
+                    <span className="text-gray-400">Sttl <span className="text-purple-600 font-semibold">+{entry.refilledVC.toFixed(2)}</span></span>
+                  ) : null}
                   <span className={`font-black text-sm ${entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'}`}>
                     {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
                   </span>
