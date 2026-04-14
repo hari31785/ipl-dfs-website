@@ -50,6 +50,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         // Fire-and-forget: verify server still has this endpoint; if not, re-save it.
         const storedUser = localStorage.getItem('currentUser');
         const storedUserId = storedUser ? JSON.parse(storedUser).id : null;
+        const storedEndpoint = localStorage.getItem('pushEndpoint');
+        // Update localStorage to match whatever pushManager reports
+        localStorage.setItem('pushEndpoint', existing.endpoint);
         fetch('/api/push/check', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -58,12 +61,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           if (res.ok) {
             const { found, userId } = await res.json();
             if (!found && userId) {
-              // Server lost our subscription (deleted by 404/410 cleanup or
-              // another device's subscribe call) — silently re-register.
+              // Server lost our subscription — silently re-register.
+              // Send previousEndpoint so server replaces stale slot instead of accumulating.
+              const prevEndpoint = storedEndpoint !== existing.endpoint ? storedEndpoint : null;
               await fetch('/api/push/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, subscription: existing.toJSON() }),
+                body: JSON.stringify({ userId, subscription: existing.toJSON(), previousEndpoint: prevEndpoint }),
               });
             }
           }
@@ -86,6 +90,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         if (existing) {
           const storedUser = localStorage.getItem('currentUser');
           const storedUserId = storedUser ? JSON.parse(storedUser).id : null;
+          const storedEndpoint = localStorage.getItem('pushEndpoint');
+          localStorage.setItem('pushEndpoint', existing.endpoint);
           fetch('/api/push/check', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -94,10 +100,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
             if (res.ok) {
               const { found, userId } = await res.json();
               if (!found && userId) {
+                const prevEndpoint = storedEndpoint !== existing.endpoint ? storedEndpoint : null;
                 await fetch('/api/push/subscribe', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ userId, subscription: existing.toJSON() }),
+                  body: JSON.stringify({ userId, subscription: existing.toJSON(), previousEndpoint: prevEndpoint }),
                 });
               }
             }
@@ -126,12 +133,17 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
 
+      // Read previous endpoint for this device slot before overwriting
+      const previousEndpoint = localStorage.getItem('pushEndpoint') || null;
+
       await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, subscription }),
+        body: JSON.stringify({ userId, subscription, previousEndpoint }),
       });
 
+      // Save new endpoint so next rotation can clean up this one
+      localStorage.setItem('pushEndpoint', subscription.endpoint);
       setIsSubscribed(true);
     } catch (err) {
       console.error('Push subscription failed:', err);
@@ -153,6 +165,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           body: JSON.stringify({ endpoint: subscription.endpoint }),
         });
         await subscription.unsubscribe();
+        localStorage.removeItem('pushEndpoint');
         setIsSubscribed(false);
       }
     } catch (err) {
