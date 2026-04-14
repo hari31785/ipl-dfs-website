@@ -120,7 +120,7 @@ export async function POST(
       });
       // Trigger 4: Notify both players — draft is done
       const draftUrl = `/draft/${matchupId}`;
-      Promise.allSettled([
+      await Promise.allSettled([
         sendToUser(matchup.user1.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
         sendToUser(matchup.user2.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
       ]).catch(() => {});
@@ -130,7 +130,7 @@ export async function POST(
       if (nextPickerSignupId && nextPickerSignupId !== userSignupId) {
         const nextPickerUser = nextPickerSignupId === matchup.user1.id ? matchup.user1.user : matchup.user2.user;
         const pickerName = matchup.user1.user.id === userId ? matchup.user1.user.name : matchup.user2.user.name;
-        sendToUser(nextPickerUser.id, {
+        await sendToUser(nextPickerUser.id, {
           title: `🏏 Your Turn — Pick #${currentPickOrder + 1}`,
           body: `${pickerName} just picked ${draftPick.player.name}. Go now!`,
           url: `/draft/${matchupId}`,

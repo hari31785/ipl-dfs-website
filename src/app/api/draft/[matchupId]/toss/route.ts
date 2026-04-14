@@ -41,7 +41,7 @@ export async function POST(
       const firstPickerUser = firstPick === 'user1' ? matchup.user1.user : matchup.user2.user;
       const secondPickerUser = firstPick === 'user1' ? matchup.user2.user : matchup.user1.user;
       const draftUrl = `/draft/${matchupId}`;
-      Promise.allSettled([
+      await Promise.allSettled([
         sendToUser(firstPickerUser.id, {
           title: '🏆 Draft Started — You Pick First!',
           body: 'The toss is done. Make your first pick now!',
