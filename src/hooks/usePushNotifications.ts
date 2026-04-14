@@ -35,12 +35,39 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     }
     setPermission(Notification.permission as PermissionState);
 
-    // Register service worker and check initial subscription state
+    // Register service worker and check initial subscription state.
+    // Also verify against the server — if the server deleted our endpoint
+    // (e.g. after a 404/410 from the push service), re-register it silently.
     navigator.serviceWorker
       .register('/sw.js')
       .then(async (reg) => {
         const existing = await reg.pushManager.getSubscription();
-        setIsSubscribed(!!existing);
+        if (!existing) {
+          setIsSubscribed(false);
+          return;
+        }
+        setIsSubscribed(true);
+        // Fire-and-forget: verify server still has this endpoint; if not, re-save it.
+        const storedUser = localStorage.getItem('currentUser');
+        const storedUserId = storedUser ? JSON.parse(storedUser).id : null;
+        fetch('/api/push/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: existing.endpoint, userId: storedUserId }),
+        }).then(async (res) => {
+          if (res.ok) {
+            const { found, userId } = await res.json();
+            if (!found && userId) {
+              // Server lost our subscription (deleted by 404/410 cleanup or
+              // another device's subscribe call) — silently re-register.
+              await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, subscription: existing.toJSON() }),
+              });
+            }
+          }
+        }).catch(() => {/* ignore network errors */});
       })
       .catch((err) => console.error('SW registration failed:', err));
 
@@ -54,6 +81,28 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         const existing = await reg.pushManager.getSubscription();
         setPermission(Notification.permission as PermissionState);
         setIsSubscribed(!!existing);
+
+        // Also heal server-side subscription loss silently
+        if (existing) {
+          const storedUser = localStorage.getItem('currentUser');
+          const storedUserId = storedUser ? JSON.parse(storedUser).id : null;
+          fetch('/api/push/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint: existing.endpoint, userId: storedUserId }),
+          }).then(async (res) => {
+            if (res.ok) {
+              const { found, userId } = await res.json();
+              if (!found && userId) {
+                await fetch('/api/push/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId, subscription: existing.toJSON() }),
+                });
+              }
+            }
+          }).catch(() => {});
+        }
       } catch {
         // ignore
       }
