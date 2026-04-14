@@ -13,13 +13,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch all requested matchups
+    // Fetch all requested matchups (include signup IDs for cleanup)
     const matchups = await prisma.headToHeadMatchup.findMany({
       where: { id: { in: matchupIds } },
       include: {
         _count: { select: { draftPicks: true } }
       }
     });
+    // Collect the specific ContestSignup IDs referenced by these matchups
+    const signupIdsToDelete = matchups.flatMap(m => [m.user1Id, m.user2Id]);
 
     const completedMatchups = matchups.filter(m => m.status === 'COMPLETED');
     if (completedMatchups.length > 0) {
@@ -35,24 +37,28 @@ export async function POST(request: NextRequest) {
     const eligibleIds = matchups.map(m => m.id);
     const totalDraftPicks = matchups.reduce((sum, m) => sum + m._count.draftPicks, 0);
 
-    // Delete draft picks first
-    if (totalDraftPicks > 0) {
-      await prisma.draftPick.deleteMany({
-        where: { matchupId: { in: eligibleIds } }
+    // Run all deletes atomically
+    const { count, signupsRemoved } = await prisma.$transaction(async (tx) => {
+      // 1. Delete draft picks
+      if (totalDraftPicks > 0) {
+        await tx.draftPick.deleteMany({ where: { matchupId: { in: eligibleIds } } });
+      }
+      // 2. Delete matchups
+      const { count } = await tx.headToHeadMatchup.deleteMany({ where: { id: { in: eligibleIds } } });
+      // 3. Delete the specific ContestSignup records so users don't see ghost entries
+      const { count: signupsRemoved } = await tx.contestSignup.deleteMany({
+        where: { id: { in: signupIdsToDelete } },
       });
-    }
-
-    // Delete matchups
-    const { count } = await prisma.headToHeadMatchup.deleteMany({
-      where: { id: { in: eligibleIds } }
+      return { count, signupsRemoved };
     });
 
-    console.log(`✅ Bulk deleted ${count} matchups and ${totalDraftPicks} draft picks`);
+    console.log(`✅ Bulk deleted ${count} matchups, ${totalDraftPicks} draft picks, ${signupsRemoved} signups`);
 
     return NextResponse.json({
       message: `Successfully deleted ${count} matchup(s)`,
       deletedCount: count,
-      draftPicksDeleted: totalDraftPicks
+      draftPicksDeleted: totalDraftPicks,
+      signupsRemoved,
     });
 
   } catch (error) {

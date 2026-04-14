@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     const gameDay = new Date(game.gameDate).toLocaleDateString('en-IN', {
       weekday: 'short', month: 'short', day: 'numeric'
     });
-    sendToAll({
+    await sendToAll({
       title: `🏏 New Contest · ${matchupLabel}`,
       body: `Contests are now open for ${matchupLabel} on ${gameDay} — sign up now!`,
       icon: '/icon-192.png',

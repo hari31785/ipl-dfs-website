@@ -65,6 +65,8 @@ export async function sendToAll(payload: PushPayload): Promise<{ sent: number; f
         const status = (err as { statusCode?: number }).statusCode;
         if (status === 404 || status === 410) {
           await prisma.pushSubscription.deleteMany({ where: { endpoint: sub.endpoint } });
+        } else {
+          console.error(`Push failed [${status}] for endpoint ${sub.endpoint.slice(0, 60)}:`, err);
         }
         failed++;
       }

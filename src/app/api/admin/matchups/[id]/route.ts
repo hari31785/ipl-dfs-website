@@ -46,17 +46,12 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Get the matchup with draft picks and both users' profiles
+    // Get the matchup with draft pick count
     const matchup = await prisma.headToHeadMatchup.findUnique({
       where: { id },
       include: {
-        draftPicks: true,
-        user1: { select: { userId: true } },
-        user2: { select: { userId: true } },
         _count: {
-          select: {
-            draftPicks: true
-          }
+          select: { draftPicks: true }
         }
       }
     });
@@ -76,27 +71,25 @@ export async function DELETE(
       );
     }
 
-    // Delete all draft picks first (if any)
-    if (matchup._count.draftPicks > 0) {
-      await prisma.draftPick.deleteMany({
-        where: { matchupId: id }
+    // Run everything in a transaction so partial failures don't leave orphaned data
+    const signupsDeleted = await prisma.$transaction(async (tx) => {
+      // 1. Delete draft picks first
+      if (matchup._count.draftPicks > 0) {
+        await tx.draftPick.deleteMany({ where: { matchupId: id } });
+        console.log(`🗑️ Deleted ${matchup._count.draftPicks} draft picks for matchup ${id}`);
+      }
+
+      // 2. Delete the matchup
+      await tx.headToHeadMatchup.delete({ where: { id } });
+
+      // 3. Delete only the specific ContestSignup records referenced by this matchup.
+      //    Using user1Id/user2Id (the ContestSignup PKs) avoids accidentally deleting
+      //    other signups the same user may have in the same contest, which would cause
+      //    an FK violation on any other matchup that references those signup rows.
+      const { count } = await tx.contestSignup.deleteMany({
+        where: { id: { in: [matchup.user1Id, matchup.user2Id] } },
       });
-      console.log(`🗑️ Deleted ${matchup._count.draftPicks} draft picks for matchup ${id}`);
-    }
-
-    // Delete the matchup
-    await prisma.headToHeadMatchup.delete({
-      where: { id }
-    });
-
-    // Remove contest signups for both users so they no longer see this contest
-    // in their dashboard (stale signup with no matchup would show as a ghost entry)
-    const affectedUserIds = [matchup.user1.userId, matchup.user2.userId];
-    const { count: signupsDeleted } = await prisma.contestSignup.deleteMany({
-      where: {
-        contestId: matchup.contestId,
-        userId: { in: affectedUserIds },
-      },
+      return count;
     });
 
     console.log(`✅ Successfully deleted matchup ${id}, ${signupsDeleted} signup(s) cleaned up`);
