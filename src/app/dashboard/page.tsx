@@ -162,6 +162,8 @@ export default function DashboardPage() {
   const [selectedDraftedContest, setSelectedDraftedContest] = useState<UserContest | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [dismissedPushBanner, setDismissedPushBanner] = useState(false)
+  const [showIosPwaGuide, setShowIosPwaGuide] = useState(false)
+  const [dismissedIosBanner, setDismissedIosBanner] = useState(false)
 
   const lastFetchedAt = useRef<number>(0)
   const [isDashRefreshing, setIsDashRefreshing] = useState(false)
@@ -196,6 +198,18 @@ export default function DashboardPage() {
     // Restore push banner dismissed state
     if (localStorage.getItem('pushBannerDismissed') === '1') {
       setDismissedPushBanner(true)
+    }
+    if (localStorage.getItem('iosPwaBannerDismissed') === '1') {
+      setDismissedIosBanner(true)
+    }
+
+    // Detect iOS Safari (non-PWA) — notifications require Add to Home Screen
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      ('standalone' in window.navigator && (window.navigator as Navigator & { standalone?: boolean }).standalone === true)
+    if (isIos && !isStandalone) {
+      setShowIosPwaGuide(true)
     }
 
     // Get user data from localStorage (simple auth for now)
@@ -672,7 +686,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Push Notification Bell — first */}
-              {permission !== 'unsupported' && (
+              {permission !== 'unsupported' ? (
                 <button
                   onClick={() => {
                     if (isSubscribed) {
@@ -693,7 +707,16 @@ export default function DashboardPage() {
                 >
                   {isSubscribed ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
                 </button>
-              )}
+              ) : showIosPwaGuide ? (
+                /* iOS Safari: bell icon tapping toggles the guide banner */
+                <button
+                  onClick={() => setDismissedIosBanner(d => !d)}
+                  title="Add to Home Screen to enable notifications"
+                  className="p-3 rounded-lg transition-colors shadow-md bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  <BellOff className="h-5 w-5" />
+                </button>
+              ) : null}
               <button
                 onClick={() => window.location.href = '/coin-vault'}
                 className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-3 sm:px-5 py-3 rounded-lg transition-colors shadow-md font-semibold"
@@ -726,6 +749,31 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* iOS PWA Guide Banner — shown on iPhone/iPad Safari (non-standalone) */}
+        {showIosPwaGuide && !dismissedIosBanner && (
+          <div className="mb-4 flex items-center justify-between gap-4 bg-orange-500 text-white rounded-xl px-5 py-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <Bell className="h-6 w-6 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-sm">📱 Enable notifications on iPhone</p>
+                <p className="text-xs text-orange-100 mt-0.5">
+                  Tap <strong>Share</strong> → <strong>Add to Home Screen</strong>, then open the app from your Home Screen and enable notifications.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setDismissedIosBanner(true);
+                localStorage.setItem('iosPwaBannerDismissed', '1');
+              }}
+              className="text-orange-200 hover:text-white text-xl font-bold leading-none px-1 flex-shrink-0"
+              title="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Push Notification Opt-in Banner */}
         {!dismissedPushBanner && !isSubscribed && permission !== 'denied' && permission !== 'unsupported' && (
           <div className="mb-4 flex items-center justify-between gap-4 bg-indigo-600 text-white rounded-xl px-5 py-4 shadow-lg">
