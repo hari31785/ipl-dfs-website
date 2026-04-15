@@ -23,16 +23,19 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     (async () => {
-      // For draft notifications only: suppress if user is actively looking at that page
+      // For draft notifications only: suppress if user is actively looking at that page.
+      // Use client.focused (not visibilityState) — on iOS PWA, backgrounded pages
+      // can still report visibilityState === 'visible', causing silent suppression.
+      // client.focused is only true when the window is literally in the foreground.
       if (isDraftNotif) {
         const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-        const isOnDraftPageAndVisible = allClients.some((client) => {
+        const isOnDraftPageAndFocused = allClients.some((client) => {
           const clientPath = new URL(client.url).pathname;
           const notifPath = new URL(notifUrl, self.location.origin).pathname;
-          // Same draft page AND user is currently looking at it
-          return clientPath === notifPath && client.visibilityState === 'visible';
+          // Same draft page AND user is actively focused on it
+          return clientPath === notifPath && client.focused === true;
         });
-        if (isOnDraftPageAndVisible) return; // Already watching — skip notification
+        if (isOnDraftPageAndFocused) return; // Actively watching — skip notification
       }
       await self.registration.showNotification(payload.title || 'IPL DFS', options);
     })()
