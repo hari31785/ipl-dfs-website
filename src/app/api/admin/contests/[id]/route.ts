@@ -39,7 +39,7 @@ export async function PUT(
           }
         },
         signups: {
-          select: { userId: true }
+          select: { id: true, userId: true }
         }
       }
     });
@@ -53,7 +53,9 @@ export async function PUT(
         contest.contestType === 'LOW_STAKES'  ? 'Low Stakes (25 coins)' :
         `${contest.coinValue} coins`;
 
-      // Build userId → opponent username map from matchups
+      // Build signupId → opponent username map from matchups.
+      // Keyed by ContestSignup ID (not userId) so users with multiple entries
+      // in the same contest each get the correct opponent.
       const matchupsForNotif = await prisma.headToHeadMatchup.findMany({
         where: { contestId: id },
         include: {
@@ -63,13 +65,13 @@ export async function PUT(
       });
       const opponentMap = new Map<string, string>();
       for (const m of matchupsForNotif) {
-        opponentMap.set(m.user1.user.id, m.user2.user.username);
-        opponentMap.set(m.user2.user.id, m.user1.user.username);
+        opponentMap.set(m.user1Id, m.user2.user.username);
+        opponentMap.set(m.user2Id, m.user1.user.username);
       }
 
       await Promise.all(
         contest.signups.map((s) => {
-          const opponentUsername = opponentMap.get(s.userId);
+          const opponentUsername = opponentMap.get(s.id);
           const body = opponentUsername
             ? `${gameTitle} is underway — you're up against @${opponentUsername}. Check your active contest!`
             : `${gameTitle} is underway. Check your active contest!`;
@@ -92,7 +94,8 @@ export async function PUT(
         contest.contestType === 'LOW_STAKES'  ? 'Low Stakes (25 coins)' :
         `${contest.coinValue} coins`;
 
-      // Build userId → opponent username map from matchups
+      // Build signupId → opponent username map from matchups.
+      // Keyed by ContestSignup ID so multiple entries per user get correct opponents.
       const matchupsForDraft = await prisma.headToHeadMatchup.findMany({
         where: { contestId: id },
         include: {
@@ -102,13 +105,13 @@ export async function PUT(
       });
       const draftOpponentMap = new Map<string, string>();
       for (const m of matchupsForDraft) {
-        draftOpponentMap.set(m.user1.user.id, m.user2.user.username);
-        draftOpponentMap.set(m.user2.user.id, m.user1.user.username);
+        draftOpponentMap.set(m.user1Id, m.user2.user.username);
+        draftOpponentMap.set(m.user2Id, m.user1.user.username);
       }
 
       await Promise.all(
         contest.signups.map((s) => {
-          const opponentUsername = draftOpponentMap.get(s.userId);
+          const opponentUsername = draftOpponentMap.get(s.id);
           const body = opponentUsername
             ? `You're up against @${opponentUsername} in ${gameTitle} — head to your dashboard to draft your team!`
             : `${gameTitle} draft is now open — head to your dashboard and draft your team!`;

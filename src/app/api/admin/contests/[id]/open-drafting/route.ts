@@ -83,7 +83,8 @@ export async function POST(
       updatedContest.contestType === 'LOW_STAKES'  ? 'Low Stakes (25 coins)' :
       `${updatedContest.coinValue} coins`;
 
-    // Build userId → opponent username map from matchups
+    // Build signupId → opponent username map from matchups.
+    // Keyed by ContestSignup ID so users with multiple entries get correct opponents.
     const matchupsForNotif = await prisma.headToHeadMatchup.findMany({
       where: { contestId: id },
       include: {
@@ -93,17 +94,17 @@ export async function POST(
     });
     const opponentMap = new Map<string, string>();
     for (const m of matchupsForNotif) {
-      opponentMap.set(m.user1.user.id, m.user2.user.username);
-      opponentMap.set(m.user2.user.id, m.user1.user.username);
+      opponentMap.set(m.user1Id, m.user2.user.username);
+      opponentMap.set(m.user2Id, m.user1.user.username);
     }
 
     const signups = await prisma.contestSignup.findMany({
       where: { contestId: id },
-      select: { userId: true },
+      select: { id: true, userId: true },
     });
     await Promise.all(
       signups.map((s) => {
-        const opponentUsername = opponentMap.get(s.userId);
+        const opponentUsername = opponentMap.get(s.id);
         const body = opponentUsername
           ? `You're up against @${opponentUsername} in ${gameTitle} — draft your team now!`
           : `Your draft for ${gameTitle} is open — draft your team now!`;
