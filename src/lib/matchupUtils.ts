@@ -53,6 +53,9 @@ export async function fairPairSignups(
   const pool = secureShuffleArray([...signups]);
   const paired: [SignupForPairing, SignupForPairing][] = [];
   const used = new Set<string>();
+  // Track user-level pairs committed in this session so multi-entry users
+  // don't face the same opponent across their two entries.
+  const sessionUserPairs = new Set<string>();
 
   // Greedy pass: for each unmatched user, find the unmatched partner with
   // fewest (ideally 0) previous meetings in this tournament.
@@ -66,7 +69,10 @@ export async function fairPairSignups(
       if (used.has(pool[j].id)) continue;
       // Never pair a user against themselves (multi-entry guard)
       if (pool[j].userId === pool[i].userId) continue;
-      const key = [pool[i].userId, pool[j].userId].sort().join('|');
+      // Skip if these two users are already matched elsewhere in this session
+      const sessionKey = [pool[i].userId, pool[j].userId].sort().join('|');
+      if (sessionUserPairs.has(sessionKey)) continue;
+      const key = sessionKey;
       const count = pairCount.get(key) ?? 0;
       if (count < bestCount) {
         bestCount = count;
@@ -79,6 +85,8 @@ export async function fairPairSignups(
       paired.push([pool[i], pool[bestPartnerIdx]]);
       used.add(pool[i].id);
       used.add(pool[bestPartnerIdx].id);
+      const sessionKey = [pool[i].userId, pool[bestPartnerIdx].userId].sort().join('|');
+      sessionUserPairs.add(sessionKey);
     }
   }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { fairPairSignups } from '@/lib/matchupUtils'
 
 const prisma = new PrismaClient()
 
@@ -162,17 +163,13 @@ export async function POST(request: NextRequest) {
         }
         
         else if (signups.length >= 2 && signups.length % 2 === 0) {
-          // Even number of signups - generate matchups normally
-          console.log(`🎲 Generating matchups for ${signups.length} signups...`);
+          // Even number of signups - generate matchups with fair pairing
+          console.log(`🎲 Generating matchups for ${signups.length} signups (fair pairing)...`);
           
-          // Shuffle signups randomly
-          const shuffledSignups = [...signups].sort(() => Math.random() - 0.5);
+          const tournamentId = contest.iplGame?.tournament?.id ?? '';
+          const pairs = await fairPairSignups(signups, tournamentId, contest.id, prisma);
           
-          // Create head-to-head matchups
-          for (let i = 0; i < shuffledSignups.length; i += 2) {
-            const user1 = shuffledSignups[i];
-            const user2 = shuffledSignups[i + 1];
-            
+          for (const [user1, user2] of pairs) {
             await prisma.headToHeadMatchup.create({
               data: {
                 contestId: contest.id,
@@ -235,12 +232,10 @@ export async function POST(request: NextRequest) {
             include: { user: true }
           });
 
-          const shuffledSignups = [...finalSignups].sort(() => Math.random() - 0.5);
+          const tournamentId = contest.iplGame?.tournament?.id ?? '';
+          const pairs = await fairPairSignups(finalSignups, tournamentId, contest.id, prisma);
           
-          for (let i = 0; i < shuffledSignups.length; i += 2) {
-            const user1 = shuffledSignups[i];
-            const user2 = shuffledSignups[i + 1];
-            
+          for (const [user1, user2] of pairs) {
             await prisma.headToHeadMatchup.create({
               data: {
                 contestId: contest.id,
