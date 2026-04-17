@@ -111,23 +111,15 @@ export async function GET(request: NextRequest) {
           teamName: player.iplTeam.shortName,
           role: player.role,
           matchesPlayed: 0,
+          matchesAppeared: 0,
           weightedScore: 0,
           grade: 'N/A',
           recentMatches: []
         };
       }
 
-      // Calculate weighted score
-      // Weights: 5, 4, 3, 2, 1 for most recent to least recent
-      const weights = [5, 4, 3, 2, 1];
-      let totalWeightedScore = 0;
-      let totalWeight = 0;
-
+      // Build recentMatches for display (includes DNPs so the ℹ modal shows them)
       const recentMatches = playerStats.map((stat, index) => {
-        const weight = weights[index] || 1;
-        totalWeightedScore += stat.points * weight;
-        totalWeight += weight;
-
         const matchGame = completedGames.find(g => g.id === stat.iplGameId);
         const opponent = matchGame
           ? (matchGame.team1Id === player.iplTeamId ? matchGame.team2.shortName : matchGame.team1.shortName)
@@ -139,11 +131,28 @@ export async function GET(request: NextRequest) {
         return {
           gameId: stat.iplGameId,
           points: stat.points,
-          weight: weight,
-          weightedPoints: stat.points * weight,
+          didNotPlay: stat.didNotPlay,
+          weight: 0, // filled below for played games
+          weightedPoints: 0,
           opponent,
           date
         };
+      });
+
+      // Weighted average uses only games the player actually played (DNP excluded)
+      const playedStats = playerStats.filter(s => !s.didNotPlay);
+      const weights = [5, 4, 3, 2, 1];
+      let totalWeightedScore = 0;
+      let totalWeight = 0;
+
+      playedStats.forEach((stat, index) => {
+        const weight = weights[index] || 1;
+        totalWeightedScore += stat.points * weight;
+        totalWeight += weight;
+
+        // Back-fill weight into recentMatches for the modal
+        const rm = recentMatches.find(r => r.gameId === stat.iplGameId);
+        if (rm) { rm.weight = weight; rm.weightedPoints = stat.points * weight; }
       });
 
       const weightedScore = totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
@@ -154,7 +163,8 @@ export async function GET(request: NextRequest) {
         playerName: player.name,
         teamName: player.iplTeam.shortName,
         role: player.role,
-        matchesPlayed: playerStats.length,
+        matchesPlayed: playedStats.length,       // games actually played (used for avg)
+        matchesAppeared: playerStats.length,     // total squad appearances incl. DNP
         weightedScore: Math.round(weightedScore),
         grade: grade,
         recentMatches: recentMatches

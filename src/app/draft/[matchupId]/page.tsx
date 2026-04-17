@@ -90,7 +90,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [searchName, setSearchName] = useState<string>('');
   const [playerStats, setPlayerStats] = useState<Record<string, number>>({});
   const [isDraftingPhase, setIsDraftingPhase] = useState(false);
-  const [playerGrades, setPlayerGrades] = useState<Record<string, { grade: string; weightedScore: number; matchesPlayed: number; recentMatches: { gameId: string; points: number; opponent: string; date: string }[] }>>({});
+  const [playerGrades, setPlayerGrades] = useState<Record<string, { grade: string; weightedScore: number; matchesPlayed: number; matchesAppeared: number; recentMatches: { gameId: string; points: number; didNotPlay?: boolean; opponent: string; date: string }[] }>>({});
   const [showGrades, setShowGrades] = useState(false);
   const [loadingGrades, setLoadingGrades] = useState(false);
   const [statsModalPlayer, setStatsModalPlayer] = useState<string | null>(null);
@@ -203,9 +203,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             .then(r => r.json())
             .then(gradeData => {
               if (gradeData.grades) {
-                const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number; recentMatches: { gameId: string; points: number; opponent: string; date: string }[] }> = {};
+                const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number; matchesAppeared: number; recentMatches: { gameId: string; points: number; didNotPlay?: boolean; opponent: string; date: string }[] }> = {};
                 gradeData.grades.forEach((g: any) => {
-                  gradesMap[g.playerId] = { grade: g.grade, weightedScore: g.weightedScore, matchesPlayed: g.matchesPlayed, recentMatches: g.recentMatches || [] };
+                  gradesMap[g.playerId] = { grade: g.grade, weightedScore: g.weightedScore, matchesPlayed: g.matchesPlayed, matchesAppeared: g.matchesAppeared ?? g.matchesPlayed, recentMatches: g.recentMatches || [] };
                 });
                 setPlayerGrades(gradesMap);
                 setShowGrades(true);
@@ -230,12 +230,13 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       if (response.ok) {
         const data = await response.json();
         // Convert grades array to object keyed by playerId
-        const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number; recentMatches: { gameId: string; points: number; opponent: string; date: string }[] }> = {};
+        const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number; matchesAppeared: number; recentMatches: { gameId: string; points: number; didNotPlay?: boolean; opponent: string; date: string }[] }> = {};
         data.grades.forEach((g: any) => {
           gradesMap[g.playerId] = {
             grade: g.grade,
             weightedScore: g.weightedScore,
             matchesPlayed: g.matchesPlayed,
+            matchesAppeared: g.matchesAppeared ?? g.matchesPlayed,
             recentMatches: g.recentMatches || []
           };
         });
@@ -1559,21 +1560,33 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     </thead>
                     <tbody>
                       {modalGrade.recentMatches.map((m, i) => (
-                        <tr key={m.gameId} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <tr key={m.gameId} className={m.didNotPlay ? 'bg-gray-100 opacity-60' : i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                           <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
-                          <td className="px-4 py-2.5 font-semibold text-gray-800">vs {m.opponent}</td>
+                          <td className="px-4 py-2.5 font-semibold text-gray-800">
+                            vs {m.opponent}
+                            {m.didNotPlay && <span className="ml-1.5 text-xs font-bold bg-gray-300 text-gray-600 px-1.5 py-0.5 rounded">DNP</span>}
+                          </td>
                           <td className="px-4 py-2.5 text-gray-500 text-xs">{m.date}</td>
                           <td className="px-4 py-2.5 text-right">
-                            <span className={`font-black text-sm ${m.points >= 60 ? 'text-green-600' : m.points >= 40 ? 'text-yellow-600' : 'text-red-500'}`}>
-                              {m.points}
-                            </span>
+                            {m.didNotPlay ? (
+                              <span className="text-xs text-gray-400 italic">—</span>
+                            ) : (
+                              <span className={`font-black text-sm ${m.points >= 60 ? 'text-green-600' : m.points >= 40 ? 'text-yellow-600' : 'text-red-500'}`}>
+                                {m.points}
+                              </span>
+                            )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-gray-200 bg-gray-50">
-                        <td colSpan={3} className="px-4 py-2.5 font-bold text-gray-700 text-xs uppercase tracking-wide">Weighted Avg</td>
+                        <td colSpan={3} className="px-4 py-2.5 font-bold text-gray-700 text-xs uppercase tracking-wide">
+                          Weighted Avg
+                          {modalGrade.matchesAppeared > modalGrade.matchesPlayed && (
+                            <span className="ml-1 text-gray-400 font-normal normal-case">(played {modalGrade.matchesPlayed}g)</span>
+                          )}
+                        </td>
                         <td className="px-4 py-2.5 text-right font-black text-base text-purple-700">{modalGrade.weightedScore}</td>
                       </tr>
                     </tfoot>
@@ -1583,7 +1596,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <div className="text-center py-8 text-gray-400 italic text-sm">No match data available</div>
               )}
 
-              <p className="text-xs text-gray-400 mt-3 text-center">Recent matches shown · newer games weighted higher</p>
+              <p className="text-xs text-gray-400 mt-3 text-center">Last 5 appearances · DNP rows excluded from avg · newer games weighted higher</p>
             </div>
           </div>
         );
