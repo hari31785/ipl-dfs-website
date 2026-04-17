@@ -250,6 +250,9 @@ export default function ContestsPage() {
   const [showSignupsModal, setShowSignupsModal] = useState(false);
   const [selectedContestSignups, setSelectedContestSignups] = useState<any>(null);
   const [loadingSignups, setLoadingSignups] = useState(false);
+  const [addUserInput, setAddUserInput] = useState('');
+  const [addingUser, setAddingUser] = useState(false);
+  const [addUserError, setAddUserError] = useState('');
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [reopenContestId, setReopenContestId] = useState<string | null>(null);
   const [reopenDeadline, setReopenDeadline] = useState('');
@@ -370,6 +373,31 @@ export default function ContestsPage() {
       console.error('Error removing user:', error);
       setGlobalLoading(false);
       alert('Failed to remove user from contest');
+    }
+  };
+
+  const addUserToContest = async () => {
+    if (!addUserInput.trim() || !selectedContestSignups) return;
+    setAddingUser(true);
+    setAddUserError('');
+    try {
+      const response = await fetch(`/api/admin/contests/${selectedContestSignups.contest.id}/signups`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: addUserInput.trim() }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setAddUserInput('');
+        await fetchContestSignups(selectedContestSignups.contest.id);
+        await fetchContests();
+      } else {
+        setAddUserError(result.message || 'Failed to add user');
+      }
+    } catch (error) {
+      setAddUserError('Failed to add user');
+    } finally {
+      setAddingUser(false);
     }
   };
 
@@ -1651,13 +1679,33 @@ export default function ContestsPage() {
               )}
             </div>
             
-            <div className="bg-gray-50 px-4 md:px-6 py-3 md:py-4 flex justify-end">
-              <button
-                onClick={() => { setShowSignupsModal(false); setSelectedContestSignups(null); }}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition text-sm"
-              >
-                Close
-              </button>
+            <div className="bg-gray-50 px-4 md:px-6 py-3 md:py-4 space-y-3">
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  placeholder="Username to add..."
+                  value={addUserInput}
+                  onChange={(e) => { setAddUserInput(e.target.value); setAddUserError(''); }}
+                  onKeyDown={(e) => e.key === 'Enter' && addUserToContest()}
+                  className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                <button
+                  onClick={addUserToContest}
+                  disabled={!addUserInput.trim() || addingUser}
+                  className="px-4 py-1.5 bg-teal-600 text-white rounded text-sm font-medium hover:bg-teal-700 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {addingUser ? 'Adding...' : '+ Add User'}
+                </button>
+                <button
+                  onClick={() => { setShowSignupsModal(false); setSelectedContestSignups(null); setAddUserInput(''); setAddUserError(''); }}
+                  className="px-4 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700 transition text-sm whitespace-nowrap"
+                >
+                  Close
+                </button>
+              </div>
+              {addUserError && (
+                <p className="text-xs text-red-600 font-medium">{addUserError}</p>
+              )}
             </div>
           </div>
         </div>
