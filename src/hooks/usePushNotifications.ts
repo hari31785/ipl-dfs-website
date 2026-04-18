@@ -28,6 +28,29 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Silent re-subscribe: called when permission is already granted but iOS has
+  // dropped the subscription (pushManager.getSubscription() === null).
+  // Does NOT call Notification.requestPermission() — that would show a dialog.
+  const silentResubscribe = useCallback(async (userId: string) => {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+      const previousEndpoint = localStorage.getItem('pushEndpoint') || null;
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, subscription: subscription.toJSON(), previousEndpoint }),
+      });
+      localStorage.setItem('pushEndpoint', subscription.endpoint);
+      setIsSubscribed(true);
+    } catch {
+      // Silently fail — user can re-enable manually
+    }
+  }, []);
+
   useEffect(() => {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setPermission('unsupported');
@@ -42,10 +65,20 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       .register('/sw.js')
       .then(async (reg) => {
         const existing = await reg.pushManager.getSubscription();
+
         if (!existing) {
           setIsSubscribed(false);
+          // iOS may have silently dropped the subscription while the app was
+          // closed. If permission is still granted and we know who the user is,
+          // re-subscribe without prompting.
+          if (Notification.permission === 'granted') {
+            const storedUser = localStorage.getItem('currentUser');
+            const storedUserId = storedUser ? JSON.parse(storedUser).id : null;
+            if (storedUserId) await silentResubscribe(storedUserId);
+          }
           return;
         }
+
         setIsSubscribed(true);
         // Fire-and-forget: verify server still has this endpoint; if not, re-save it.
         const storedUser = localStorage.getItem('currentUser');
@@ -86,30 +119,38 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         setPermission(Notification.permission as PermissionState);
         setIsSubscribed(!!existing);
 
-        // Also heal server-side subscription loss silently
-        if (existing) {
-          const storedUser = localStorage.getItem('currentUser');
-          const storedUserId = storedUser ? JSON.parse(storedUser).id : null;
-          const storedEndpoint = localStorage.getItem('pushEndpoint');
-          localStorage.setItem('pushEndpoint', existing.endpoint);
-          fetch('/api/push/check', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ endpoint: existing.endpoint, userId: storedUserId }),
-          }).then(async (res) => {
-            if (res.ok) {
-              const { found, userId } = await res.json();
-              if (!found && userId) {
-                const prevEndpoint = storedEndpoint !== existing.endpoint ? storedEndpoint : null;
-                await fetch('/api/push/subscribe', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ userId, subscription: existing.toJSON(), previousEndpoint: prevEndpoint }),
-                });
-              }
-            }
-          }).catch(() => {});
+        if (!existing) {
+          // iOS dropped the subscription while app was backgrounded — heal silently
+          if (Notification.permission === 'granted') {
+            const storedUser = localStorage.getItem('currentUser');
+            const storedUserId = storedUser ? JSON.parse(storedUser).id : null;
+            if (storedUserId) await silentResubscribe(storedUserId);
+          }
+          return;
         }
+
+        // Also heal server-side subscription loss silently
+        const storedUser = localStorage.getItem('currentUser');
+        const storedUserId = storedUser ? JSON.parse(storedUser).id : null;
+        const storedEndpoint = localStorage.getItem('pushEndpoint');
+        localStorage.setItem('pushEndpoint', existing.endpoint);
+        fetch('/api/push/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: existing.endpoint, userId: storedUserId }),
+        }).then(async (res) => {
+          if (res.ok) {
+            const { found, userId } = await res.json();
+            if (!found && userId) {
+              const prevEndpoint = storedEndpoint !== existing.endpoint ? storedEndpoint : null;
+              await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, subscription: existing.toJSON(), previousEndpoint: prevEndpoint }),
+              });
+            }
+          }
+        }).catch(() => {});
       } catch {
         // ignore
       }
@@ -117,7 +158,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  }, [silentResubscribe]);
 
   const subscribe = useCallback(async (userId: string) => {
     if (!('serviceWorker' in navigator)) return;
