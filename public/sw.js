@@ -64,3 +64,48 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+// iOS (and other browsers) fire this event when the push subscription is
+// rotated or invalidated — including when the app is fully killed.
+// Handling it here ensures the new endpoint reaches the server without
+// requiring the user to open the app first.
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      // Try to re-subscribe with the same VAPID key
+      let newSubscription = null;
+      try {
+        // event.newSubscription may already be provided by the browser
+        newSubscription = event.newSubscription || await self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: event.oldSubscription?.options?.applicationServerKey,
+        });
+      } catch {
+        // Cannot re-subscribe (e.g. user revoked permission) — nothing to do
+        return;
+      }
+
+      if (!newSubscription) return;
+
+      // Read userId and previousEndpoint from IndexedDB or fall back to a
+      // lightweight SW-accessible store. We use a dedicated SW key store via
+      // the Clients API postMessage when the page is open, but for the killed
+      // state we POST with userId=null — the server will match by previousEndpoint.
+      const oldEndpoint = event.oldSubscription?.endpoint || null;
+
+      try {
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: null,          // server will find the row by previousEndpoint
+            subscription: newSubscription.toJSON(),
+            previousEndpoint: oldEndpoint,
+          }),
+        });
+      } catch {
+        // Network unavailable — the next app open will heal via silentResubscribe
+      }
+    })()
+  );
+});
