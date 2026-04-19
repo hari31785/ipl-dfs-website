@@ -89,6 +89,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [filterRole, setFilterRole] = useState<string>('all');
   const [searchName, setSearchName] = useState<string>('');
   const [playerStats, setPlayerStats] = useState<Record<string, number>>({});
+  const [playerStatsMap, setPlayerStatsMap] = useState<Record<string, { points: number; runs: number; wickets: number; catches: number }>>({});
   const [isDraftingPhase, setIsDraftingPhase] = useState(false);
   const [playerGrades, setPlayerGrades] = useState<Record<string, { grade: string; weightedScore: number; matchesPlayed: number; matchesAppeared: number; recentMatches: { gameId: string; points: number; didNotPlay?: boolean; opponent: string; date: string }[] }>>({});
   const [showGrades, setShowGrades] = useState(false);
@@ -198,8 +199,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         setMatchup(data.matchup);
         setAvailablePlayers(data.availablePlayers);
         if (autoFetchGrades && data.matchup?.contest?.iplGame?.id) {
+          const iplGameId = data.matchup.contest.iplGame.id;
           // Kick off grade fetch in background — don't await
-          fetch(`/api/grades/calculate?iplGameId=${data.matchup.contest.iplGame.id}`)
+          fetch(`/api/grades/calculate?iplGameId=${iplGameId}`)
             .then(r => r.json())
             .then(gradeData => {
               if (gradeData.grades) {
@@ -212,6 +214,13 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               }
             })
             .catch(() => {/* silently fail — not critical */});
+          // Kick off stats fetch in background — cached at edge, only hits DB once per game
+          fetch(`/api/draft/stats/${iplGameId}`)
+            .then(r => r.json())
+            .then((statsMap: Record<string, { points: number; runs: number; wickets: number; catches: number }>) => {
+              setPlayerStatsMap(statsMap);
+            })
+            .catch(() => {/* silently fail */});
         }
       }
     } catch (error) {
@@ -514,12 +523,12 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   // Calculate total points for each team
   const myTotalPoints = myPicks.reduce((sum, pick) => {
-    const playerPoints = pick.player.stats && pick.player.stats.length > 0 ? pick.player.stats[0].points : 0;
+    const playerPoints = playerStatsMap[pick.player.id]?.points ?? 0;
     return sum + playerPoints;
   }, 0);
   
   const opponentTotalPoints = opponentPicks.reduce((sum, pick) => {
-    const playerPoints = pick.player.stats && pick.player.stats.length > 0 ? pick.player.stats[0].points : 0;
+    const playerPoints = playerStatsMap[pick.player.id]?.points ?? 0;
     return sum + playerPoints;
   }, 0);
 
@@ -1022,9 +1031,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                               >
                                 {pick.player.iplTeam.shortName}
                               </span>
-                              {pick.player.stats && pick.player.stats.length > 0 && (
+                              {playerStatsMap[pick.player.id] && (
                                 <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
-                                  ⭐ {pick.player.stats[0].points.toFixed(1)} pts
+                                  ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                 </span>
                               )}
                             </div>
@@ -1066,9 +1075,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                                 >
                                   {pick.player.iplTeam.shortName}
                                 </span>
-                                {pick.player.stats && pick.player.stats.length > 0 && (
+                                {playerStatsMap[pick.player.id] && (
                                   <span className="text-sm font-black text-black bg-gradient-to-r from-orange-300 to-amber-300 px-3 py-1.5 rounded-md shadow-md border-2 border-orange-600">
-                                    ⭐ {pick.player.stats[0].points.toFixed(1)} pts
+                                    ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                   </span>
                                 )}
                               </div>
@@ -1366,9 +1375,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                               >
                                 {pick.player.iplTeam.shortName}
                               </span>
-                              {pick.player.stats && pick.player.stats.length > 0 && (
+                              {playerStatsMap[pick.player.id] && (
                                 <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
-                                  ⭐ {pick.player.stats[0].points.toFixed(1)} pts
+                                  ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                 </span>
                               )}
                             </div>
@@ -1410,9 +1419,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                                 >
                                   {pick.player.iplTeam.shortName}
                                 </span>
-                                {pick.player.stats && pick.player.stats.length > 0 && (
+                                {playerStatsMap[pick.player.id] && (
                                   <span className="text-sm font-black text-black bg-gradient-to-r from-orange-300 to-amber-300 px-3 py-1.5 rounded-md shadow-md border-2 border-orange-600">
-                                    ⭐ {pick.player.stats[0].points.toFixed(1)} pts
+                                    ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                   </span>
                                 )}
                               </div>

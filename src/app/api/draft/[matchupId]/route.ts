@@ -48,8 +48,7 @@ export async function GET(
           include: {
             player: {
               include: {
-                iplTeam: true,
-                stats: true
+                iplTeam: true
               }
             }
           },
@@ -109,19 +108,6 @@ export async function GET(
       );
     }
 
-    // Filter stats to only include the current game
-    const gameId = matchup.contest.iplGame.id;
-    const matchupWithFilteredStats = {
-      ...matchup,
-      draftPicks: matchup.draftPicks.map(pick => ({
-        ...pick,
-        player: {
-          ...pick.player,
-          stats: pick.player.stats.filter(stat => stat.iplGameId === gameId)
-        }
-      }))
-    };
-
     // Get all players from both teams for the specific tournament
     const team1Id = matchup.contest.iplGame.team1Id;
     const team2Id = matchup.contest.iplGame.team2Id;
@@ -145,7 +131,7 @@ export async function GET(
     const availablePlayers = allPlayers.filter(player => !pickedPlayerIds.includes(player.id));
 
     return NextResponse.json({
-      matchup: matchupWithFilteredStats,
+      matchup,
       availablePlayers
     });
 
