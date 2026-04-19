@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from '@/lib/prisma'
 
+// Games and signup counts update on match days but not per-second.
+// 5-min cache cuts repeated DB hits while staying fresh enough.
+export const revalidate = 300; // 5 minutes
 
 export async function GET(request: NextRequest) {
   try {

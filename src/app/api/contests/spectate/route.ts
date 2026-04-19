@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
 
+// Spectate view shows live contest scores — 5 min cache is a reasonable
+// trade-off between freshness and DB load.
+export const revalidate = 300; // 5 minutes
+
 // GET /api/contests/spectate - Returns all LIVE/ACTIVE contests with matchups and scores
 // Accessible to any authenticated user (no auth check here; UI is behind the dashboard login)
 export async function GET() {

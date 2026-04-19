@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { prisma } from '@/lib/prisma'
 
+// Tournaments change ~every 6 months. Cache aggressively at the edge.
+export const revalidate = 5184000; // 60 days
+
 export async function GET(request: Request) {
   try {
     // Check if this is for coin vault (show all active tournaments)
