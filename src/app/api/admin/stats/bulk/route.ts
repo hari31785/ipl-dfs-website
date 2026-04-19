@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
 
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
       return createdOrUpdated;
     }, { timeout: 30000 });
 
+    revalidatePath(`/api/draft/stats/${iplGameId}`);
     return NextResponse.json({
       success: true,
       count: results.length,

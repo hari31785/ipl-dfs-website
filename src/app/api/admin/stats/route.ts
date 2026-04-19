@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
 
@@ -130,8 +131,8 @@ export async function POST(request: NextRequest) {
         }
       });
       
+      revalidatePath(`/api/draft/stats/${iplGameId}`);
       return NextResponse.json(updatedStats);
-    } else {
       // Create new stats
       const newStats = await prisma.playerStat.create({
         data: {
@@ -154,6 +155,7 @@ export async function POST(request: NextRequest) {
         }
       });
 
+      revalidatePath(`/api/draft/stats/${iplGameId}`);
       return NextResponse.json(newStats, { status: 201 });
     }
   } catch (error) {
