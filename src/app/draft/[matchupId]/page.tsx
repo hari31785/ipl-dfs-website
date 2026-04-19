@@ -154,12 +154,23 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     if (!matchup || !currentUser || matchup.draftPicks.length >= 14) return;
 
     const pollInterval = setInterval(() => {
-      // Skip the DB hit entirely when it is our own turn — nothing to wait for
-      if (!isMyTurnRef.current) fetchMatchupDetails();
-    }, 6000); // Poll every 6 seconds; paused on own turn so effective server load halves again
+      // Skip the DB hit when it is our own turn (push notification already sent to us)
+      // or when the tab is hidden (user will get a push when opponent picks)
+      if (!isMyTurnRef.current && !document.hidden) fetchMatchupDetails();
+    }, 6000); // Poll every 6 seconds; no-op when tab hidden or own turn
 
     return () => clearInterval(pollInterval);
   }, [matchup, currentUser]);
+
+  // When user returns to the tab, fetch immediately so they don't wait up to 6s
+  useEffect(() => {
+    if (!matchup || !currentUser || matchup.draftPicks.length >= 14) return;
+    const onVisible = () => {
+      if (!document.hidden && !isMyTurnRef.current) fetchMatchupDetails();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [matchup, currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cleanup toss polling on unmount
   useEffect(() => {
