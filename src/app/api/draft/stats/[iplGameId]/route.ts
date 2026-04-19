@@ -31,17 +31,23 @@ export async function GET(
         runs: true,
         wickets: true,
         catches: true,
+        didNotPlay: true,
+        runOuts: true,
+        stumpings: true,
       },
     });
 
     // Key by playerId for O(1) client-side lookup
-    const statsMap: Record<string, { points: number; runs: number; wickets: number; catches: number }> = {};
+    const statsMap: Record<string, { points: number; runs: number; wickets: number; catches: number; didNotPlay: boolean; runOuts: number; stumpings: number }> = {};
     for (const s of stats) {
       statsMap[s.playerId] = {
         points: s.points,
         runs: s.runs,
         wickets: s.wickets,
         catches: s.catches,
+        didNotPlay: s.didNotPlay,
+        runOuts: s.runOuts,
+        stumpings: s.stumpings,
       };
     }
 

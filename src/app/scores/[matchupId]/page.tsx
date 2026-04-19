@@ -99,6 +99,7 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedPlayerStats, setSelectedPlayerStats] = useState<{ player: Player; pickOrder: number } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [playerStatsMap, setPlayerStatsMap] = useState<Record<string, { points: number; runs: number; wickets: number; catches: number; didNotPlay: boolean; runOuts: number; stumpings: number }>>({});
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -120,6 +121,14 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
       if (response.ok) {
         const data = await response.json();
         setMatchup(data.matchup);
+        // Fetch stats from the cached endpoint (separate from the poll route)
+        const gameId = data.matchup?.contest?.iplGame?.id;
+        if (gameId) {
+          fetch(`/api/draft/stats/${gameId}`)
+            .then(r => r.ok ? r.json() : {})
+            .then(map => setPlayerStatsMap(map))
+            .catch(() => {});
+        }
       }
     } catch (error) {
       console.error('Error fetching matchup:', error);
@@ -182,19 +191,16 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
   const didIWin = myTotalPoints > opponentTotalPoints;
   const isTie = myTotalPoints === opponentTotalPoints;
   
-  // Check if any player has stats entered (not just if scores > 0)
-  const hasAnyStats = matchup.draftPicks.some(pick => {
-    const playerStats = pick.player.stats.find((s: any) => s.iplGameId === gameId);
-    return playerStats !== undefined;
-  });
-  const hasScores = hasAnyStats; // Show scores as soon as any stats are entered
+  // Check if any player has stats entered
+  const hasAnyStats = matchup.draftPicks.some(pick => playerStatsMap[pick.player.id] !== undefined);
+  const hasScores = hasAnyStats;
 
   // Helper function to render a player card
   const gameIsCompleted = matchup.contest.iplGame.status === 'COMPLETED';
 
   const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean, swappedOut?: boolean, replacedBy?: string) => {
     const gameId = matchup.contest.iplGame.id;
-    const playerStats = pick.player.stats.find((s: any) => s.iplGameId === gameId);
+    const playerStats = playerStatsMap[pick.player.id];
     const playerPoints = playerStats?.points || 0;
     const didNotPlay = playerStats?.didNotPlay || false;
     const showScoreBadge = (!!playerStats && !didNotPlay) || (!playerStats && gameIsCompleted);
@@ -532,66 +538,59 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
                 </button>
               </div>
 
-              {selectedPlayerStats.player.stats && selectedPlayerStats.player.stats.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="bg-gradient-to-r from-cricket-500 to-green-600 rounded-lg p-4 text-center">
-                    <div className="text-white text-sm font-semibold uppercase tracking-wider opacity-90 mb-1">Total Points</div>
-                    <div className="text-white font-black text-3xl">⭐ {selectedPlayerStats.player.stats[0].points.toFixed(1)}</div>
+              {(() => {
+                const s = playerStatsMap[selectedPlayerStats.player.id];
+                if (!s) return <div className="text-center py-8 text-gray-500">No stats available</div>;
+                return (
+                  <div className="space-y-3">
+                    <div className="bg-gradient-to-r from-cricket-500 to-green-600 rounded-lg p-4 text-center">
+                      <div className="text-white text-sm font-semibold uppercase tracking-wider opacity-90 mb-1">Total Points</div>
+                      <div className="text-white font-black text-3xl">⭐ {s.points.toFixed(1)}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <h4 className="font-bold text-sm text-gray-700 uppercase tracking-wide mb-3">Performance Breakdown</h4>
+                      <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span className="text-sm font-semibold text-gray-700">🏏 Runs Scored</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-black text-black">{s.runs}</span>
+                          <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(s.runs * 1).toFixed(1)} pts</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span className="text-sm font-semibold text-gray-700">🎯 Wickets Taken</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-black text-black">{s.wickets}</span>
+                          <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(s.wickets * 20).toFixed(1)} pts</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span className="text-sm font-semibold text-gray-700">🧤 Catches</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-black text-black">{s.catches}</span>
+                          <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(s.catches * 5).toFixed(1)} pts</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span className="text-sm font-semibold text-gray-700">🏃 Run Outs</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-black text-black">{s.runOuts}</span>
+                          <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(s.runOuts * 5).toFixed(1)} pts</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-sm font-semibold text-gray-700">🥊 Stumpings</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-black text-black">{s.stumpings}</span>
+                          <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(s.stumpings * 5).toFixed(1)} pts</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 text-center mt-4">
+                      Points: Runs (1pt), Wickets (20pts), Catches/RunOuts/Stumpings (5pts each)
+                    </div>
                   </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                    <h4 className="font-bold text-sm text-gray-700 uppercase tracking-wide mb-3">Performance Breakdown</h4>
-                    
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-sm font-semibold text-gray-700">🏏 Runs Scored</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-black text-black">{selectedPlayerStats.player.stats[0].runs}</span>
-                        <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(selectedPlayerStats.player.stats[0].runs * 1).toFixed(1)} pts</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-sm font-semibold text-gray-700">🎯 Wickets Taken</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-black text-black">{selectedPlayerStats.player.stats[0].wickets}</span>
-                        <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(selectedPlayerStats.player.stats[0].wickets * 20).toFixed(1)} pts</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-sm font-semibold text-gray-700">🧤 Catches</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-black text-black">{selectedPlayerStats.player.stats[0].catches}</span>
-                        <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(selectedPlayerStats.player.stats[0].catches * 5).toFixed(1)} pts</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-sm font-semibold text-gray-700">🏃 Run Outs</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-black text-black">{selectedPlayerStats.player.stats[0].runOuts}</span>
-                        <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(selectedPlayerStats.player.stats[0].runOuts * 5).toFixed(1)} pts</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-sm font-semibold text-gray-700">🥊 Stumpings</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-black text-black">{selectedPlayerStats.player.stats[0].stumpings}</span>
-                        <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-1 rounded min-w-[70px] text-right">+{(selectedPlayerStats.player.stats[0].stumpings * 5).toFixed(1)} pts</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-gray-500 text-center mt-4">
-                    Points: Runs (1pt), Wickets (20pts), Catches/RunOuts/Stumpings (5pts each)
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No stats available
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
         )}
