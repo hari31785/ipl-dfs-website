@@ -106,8 +106,6 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [tossWinner, setTossWinner] = useState<string | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
   
-  // Ref to store polling interval for toss result
-  const tossPollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   // Ref so the poll callback can always read the latest isMyTurn without being in its dep array
   const isMyTurnRef = useRef(false);
 
@@ -131,11 +129,6 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
     // Toss result just came in via the main poll while waiting user is still on the "calling" screen
     if (matchup.firstPickUser && showToss && tossPhase === 'calling') {
-      // Stop the dedicated toss poll — main poll already caught it
-      if (tossPollingIntervalRef.current) {
-        clearInterval(tossPollingIntervalRef.current);
-        tossPollingIntervalRef.current = null;
-      }
       // Show the result to the waiting user before closing
       const winnerUserId = matchup.firstPickUser === 'user1'
         ? matchup.user1.user.id
@@ -171,16 +164,6 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [matchup, currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Cleanup toss polling on unmount
-  useEffect(() => {
-    return () => {
-      if (tossPollingIntervalRef.current) {
-        clearInterval(tossPollingIntervalRef.current);
-        tossPollingIntervalRef.current = null;
-      }
-    };
-  }, []);
 
   const checkDraftAccess = () => {
     if (!matchup) return false;
@@ -324,10 +307,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         console.log(`📞 Calling user: ${data.callingUserName} (${data.callingUserId})`);
         console.log(`👤 Current user: ${currentUser.name} (${currentUser.id})`);
         
-        // If this user is not the caller, start polling for toss result
         if (data.callingUserId !== currentUser.id) {
-          console.log('⏳ This user is NOT calling - starting poll for result...');
-          startPollingForTossResult();
+          console.log('⏳ This user is NOT calling - main poll will detect toss result...');
         } else {
           console.log('📲 This user IS calling - waiting for their input...');
         }
@@ -335,62 +316,6 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     } catch (error) {
       console.error('Error fetching toss caller:', error);
     }
-  };
-
-  const startPollingForTossResult = () => {
-    console.log('🔄 Non-calling user: Starting to poll for toss result...');
-    
-    // Clear any existing interval
-    if (tossPollingIntervalRef.current) {
-      clearInterval(tossPollingIntervalRef.current);
-    }
-    
-    tossPollingIntervalRef.current = setInterval(async () => {
-      try {
-        console.log('🔍 Polling for toss result...');
-        const response = await fetch(`/api/draft/${matchupId}`);
-        if (response.ok) {
-          const data = await response.json();
-          // Check if firstPickUser has been set (toss completed)
-          if (data.matchup && data.matchup.firstPickUser) {
-            console.log('✅ Toss result found! Winner picks first:', data.matchup.firstPickUser);
-            
-            // Clear the polling interval
-            if (tossPollingIntervalRef.current) {
-              clearInterval(tossPollingIntervalRef.current);
-              tossPollingIntervalRef.current = null;
-            }
-            
-            // Show the result to the waiting user before closing
-            const winnerUserId = data.matchup.firstPickUser === 'user1'
-              ? data.matchup.user1.user.id
-              : data.matchup.user2.user.id;
-            setTossWinner(winnerUserId);
-            setTossPhase('result');
-
-            // Update matchup data
-            await fetchMatchupDetails();
-            
-            // Auto-dismiss after showing result
-            setTimeout(() => {
-              setShowToss(false);
-              setTossPhase('complete');
-            }, 4000);
-          }
-        }
-      } catch (error) {
-        console.error('Error polling for toss result:', error);
-      }
-    }, 2000); // Poll every 2 seconds
-
-    // Clean up after 120 seconds
-    setTimeout(() => {
-      if (tossPollingIntervalRef.current) {
-        console.log('⏱️ Polling timeout - stopping after 120 seconds');
-        clearInterval(tossPollingIntervalRef.current);
-        tossPollingIntervalRef.current = null;
-      }
-    }, 120000);
   };
 
   const handleTossCall = async (call: 'HEADS' | 'TAILS') => {
