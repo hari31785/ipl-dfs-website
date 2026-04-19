@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-import { fairPairSignups } from '@/lib/matchupUtils'
+import { fairPairSignups, extractPairKeys } from '@/lib/matchupUtils'
 
 const prisma = new PrismaClient()
 
@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
     console.log(`📋 Found ${expiredContests.length} expired contest(s) to process`);
     
     const results = [];
+    // Track user-pair keys committed so far in this cron run, keyed by tournamentId.
+    // Passed as seedPairs to each subsequent fairPairSignups call so same-day
+    // rematches across different contests in the same batch are prevented.
+    const batchPairs = new Map<string, Set<string>>();
 
     for (const contest of expiredContests) {
       try {
@@ -167,8 +171,16 @@ export async function POST(request: NextRequest) {
           console.log(`🎲 Generating matchups for ${signups.length} signups (fair pairing)...`);
           
           const tournamentId = contest.iplGame?.tournament?.id ?? '';
-          const pairs = await fairPairSignups(signups, tournamentId, contest.id, prisma);
+          const seedPairs = batchPairs.get(tournamentId);
+          const pairs = await fairPairSignups(signups, tournamentId, contest.id, prisma, seedPairs);
           
+          // Accumulate committed pairs into the batch map so subsequent
+          // contests in this cron run avoid the same pairings.
+          const newKeys = extractPairKeys(pairs);
+          const existing = batchPairs.get(tournamentId) ?? new Set<string>();
+          for (const k of newKeys) existing.add(k);
+          batchPairs.set(tournamentId, existing);
+
           for (const [user1, user2] of pairs) {
             await prisma.headToHeadMatchup.create({
               data: {
@@ -233,8 +245,14 @@ export async function POST(request: NextRequest) {
           });
 
           const tournamentId = contest.iplGame?.tournament?.id ?? '';
-          const pairs = await fairPairSignups(finalSignups, tournamentId, contest.id, prisma);
+          const seedPairsOdd = batchPairs.get(tournamentId);
+          const pairs = await fairPairSignups(finalSignups, tournamentId, contest.id, prisma, seedPairsOdd);
           
+          const newKeysOdd = extractPairKeys(pairs);
+          const existingOdd = batchPairs.get(tournamentId) ?? new Set<string>();
+          for (const k of newKeysOdd) existingOdd.add(k);
+          batchPairs.set(tournamentId, existingOdd);
+
           for (const [user1, user2] of pairs) {
             await prisma.headToHeadMatchup.create({
               data: {

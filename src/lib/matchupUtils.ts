@@ -20,14 +20,21 @@ function secureShuffleArray<T>(array: T[]): T[] {
  * Pairs signups for a contest, preferring to avoid rematches within the same
  * tournament. Falls back to a rematch only when no fresh pairing is possible.
  *
+ * @param seedPairs - Optional set of user-pair keys ("uid1|uid2" sorted) that
+ *   were already committed in a previous contest during the same batch run.
+ *   These are treated as if they already happened today (high penalty).
+ *
  * Returns an ordered array of [user1, user2] pairs ready for matchup creation.
  */
 export async function fairPairSignups(
   signups: SignupForPairing[],
   tournamentId: string,
   currentContestId: string,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  seedPairs?: Set<string>
 ): Promise<[SignupForPairing, SignupForPairing][]> {
+  const SAME_DAY_PENALTY = 1000; // effectively ban same-day rematches
+
   // Fetch all past USER-level pairings in this tournament (excluding current contest)
   const pastMatchups = await prisma.headToHeadMatchup.findMany({
     where: {
@@ -39,14 +46,29 @@ export async function fairPairSignups(
     select: {
       user1: { select: { userId: true } },
       user2: { select: { userId: true } },
+      createdAt: true,
     },
   });
 
-  // Count how many times each pair has played (to prefer least-played pairings)
+  // Count how many times each pair has played (to prefer least-played pairings).
+  // Pairings created TODAY get a large penalty to prevent same-day rematches
+  // even when two contests are closed in rapid succession.
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
   const pairCount = new Map<string, number>();
   for (const m of pastMatchups) {
     const key = [m.user1.userId, m.user2.userId].sort().join('|');
-    pairCount.set(key, (pairCount.get(key) ?? 0) + 1);
+    const weight = m.createdAt >= todayStart ? SAME_DAY_PENALTY : 1;
+    pairCount.set(key, (pairCount.get(key) ?? 0) + weight);
+  }
+
+  // Also apply the same-day penalty to any pairs passed in from the calling
+  // batch (e.g. auto-close processing multiple contests in one cron run).
+  if (seedPairs) {
+    for (const key of seedPairs) {
+      pairCount.set(key, (pairCount.get(key) ?? 0) + SAME_DAY_PENALTY);
+    }
   }
 
   // Shuffle pool for base randomness
@@ -97,4 +119,18 @@ export async function fairPairSignups(
   }
 
   return paired;
+}
+
+/**
+ * Extracts the set of user-level pair keys ("uid1|uid2" sorted) from a list
+ * of committed pairs. Useful for building a cross-contest accumulator.
+ */
+export function extractPairKeys(
+  pairs: [SignupForPairing, SignupForPairing][]
+): Set<string> {
+  const keys = new Set<string>();
+  for (const [a, b] of pairs) {
+    keys.add([a.userId, b.userId].sort().join('|'));
+  }
+  return keys;
 }
