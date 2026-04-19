@@ -200,20 +200,6 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         setAvailablePlayers(data.availablePlayers);
         if (autoFetchGrades && data.matchup?.contest?.iplGame?.id) {
           const iplGameId = data.matchup.contest.iplGame.id;
-          // Kick off grade fetch in background — don't await
-          fetch(`/api/grades/calculate?iplGameId=${iplGameId}`)
-            .then(r => r.json())
-            .then(gradeData => {
-              if (gradeData.grades) {
-                const gradesMap: Record<string, { grade: string; weightedScore: number; matchesPlayed: number; matchesAppeared: number; recentMatches: { gameId: string; points: number; didNotPlay?: boolean; opponent: string; date: string }[] }> = {};
-                gradeData.grades.forEach((g: any) => {
-                  gradesMap[g.playerId] = { grade: g.grade, weightedScore: g.weightedScore, matchesPlayed: g.matchesPlayed, matchesAppeared: g.matchesAppeared ?? g.matchesPlayed, recentMatches: g.recentMatches || [] };
-                });
-                setPlayerGrades(gradesMap);
-                setShowGrades(true);
-              }
-            })
-            .catch(() => {/* silently fail — not critical */});
           // Kick off stats fetch in background — cached at edge, only hits DB once per game
           fetch(`/api/draft/stats/${iplGameId}`)
             .then(r => r.json())
@@ -1100,9 +1086,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 onClick={fetchPlayerGrades}
                 disabled={loadingGrades || !matchup}
                 className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-semibold disabled:opacity-50 transition-colors"
-                title="Refresh player stats"
+                title={showGrades ? 'Refresh historical avg pts' : 'Load historical avg pts for all players'}
               >
-                {loadingGrades ? '⟳ Loading...' : '↻ Refresh Stats'}
+                {loadingGrades ? '⟳ Loading...' : showGrades ? '↻ Refresh Avg Pts' : '📊 Load Avg Pts'}
               </button>
             </div>
             <p className="text-xs text-gray-400 -mt-3 mb-4">
@@ -1255,6 +1241,11 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                           i
                         </span>
                       </>
+                    )}
+                    {!showGrades && (
+                      <span className="text-xs font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-dashed border-gray-300 leading-none">
+                        — avg pts
+                      </span>
                     )}
                     {showGrades && (!playerGrade || playerGrade.matchesPlayed === 0) && (
                       <span className="text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-300 leading-none">

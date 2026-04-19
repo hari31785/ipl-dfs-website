@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// Cache at the edge for 1 hour — grades are based on past completed games only.
+// The game being drafted for hasn't been played yet, so nothing changes during
+// the draft window. All concurrent draft sessions for the same game share 1 DB hit.
+export const revalidate = 3600;
+
 // Grade thresholds
 const GRADE_THRESHOLDS = {
   'A+': 75,
