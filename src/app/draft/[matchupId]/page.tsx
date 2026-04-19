@@ -108,6 +108,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   
   // Ref to store polling interval for toss result
   const tossPollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Ref so the poll callback can always read the latest isMyTurn without being in its dep array
+  const isMyTurnRef = useRef(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
@@ -152,8 +154,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     if (!matchup || !currentUser || matchup.draftPicks.length >= 14) return;
 
     const pollInterval = setInterval(() => {
-      fetchMatchupDetails();
-    }, 3000); // Poll every 3 seconds during draft
+      // Skip the DB hit entirely when it is our own turn — nothing to wait for
+      if (!isMyTurnRef.current) fetchMatchupDetails();
+    }, 6000); // Poll every 6 seconds; paused on own turn so effective server load halves again
 
     return () => clearInterval(pollInterval);
   }, [matchup, currentUser]);
@@ -532,6 +535,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   // Effective pick sequence (waived bench slots removed)
   const effectiveSlots = getEffectivePickSlots(matchup.firstPickUser, matchup.user1.id, matchup.user2.id);
   const isMyTurn = effectiveSlots.length > 0 && currentPickOrder <= effectiveSlots.length && effectiveSlots[currentPickOrder - 1] === mySignupId;
+  isMyTurnRef.current = isMyTurn; // keep ref in sync so poll interval can read it without re-subscribing
   const isDraftComplete = matchup.status === 'COMPLETED' || (effectiveSlots.length > 0 && matchup.draftPicks.length >= effectiveSlots.length);
 
   const handleWaiveBench = async () => {
