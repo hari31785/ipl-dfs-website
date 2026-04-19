@@ -181,12 +181,27 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
 
   // Calculate total points using bench swap logic
   const gameId = matchup.contest.iplGame.id;
-  const myTotalPoints = calculateTotalPointsWithSwap(myPicks, gameId);
-  const opponentTotalPoints = calculateTotalPointsWithSwap(opponentPicks, gameId);
+
+  // Inject stats from playerStatsMap into picks so benchSwapUtils can read pick.player.stats
+  const injectStats = (picks: DraftPick[]) => picks.map(pick => ({
+    ...pick,
+    player: {
+      ...pick.player,
+      stats: playerStatsMap[pick.player.id]
+        ? [{ iplGameId: gameId, ...playerStatsMap[pick.player.id] }]
+        : [],
+    },
+  }));
+
+  const myPicksWithStats = injectStats(myPicks);
+  const opponentPicksWithStats = injectStats(opponentPicks);
+
+  const myTotalPoints = calculateTotalPointsWithSwap(myPicksWithStats, gameId);
+  const opponentTotalPoints = calculateTotalPointsWithSwap(opponentPicksWithStats, gameId);
 
   // Get final lineups with bench swaps applied
-  const { finalLineup: myFinalLineup, benchPlayers: myBenchPlayers } = calculateFinalLineup(myPicks, gameId);
-  const { finalLineup: opponentFinalLineup, benchPlayers: opponentBenchPlayers } = calculateFinalLineup(opponentPicks, gameId);
+  const { finalLineup: myFinalLineup, benchPlayers: myBenchPlayers } = calculateFinalLineup(myPicksWithStats, gameId);
+  const { finalLineup: opponentFinalLineup, benchPlayers: opponentBenchPlayers } = calculateFinalLineup(opponentPicksWithStats, gameId);
 
   const didIWin = myTotalPoints > opponentTotalPoints;
   const isTie = myTotalPoints === opponentTotalPoints;
