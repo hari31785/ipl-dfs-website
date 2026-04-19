@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
 import { sendToUser } from '@/lib/pushNotifications';
@@ -367,6 +368,10 @@ export async function POST(
         url: `/scores/${matchup.id}?from=completed`,
       });
     }
+
+    // Purge the leaderboard edge cache for this tournament so the next
+    // request fetches fresh standings (leaderboard only changes on contest end)
+    revalidatePath(`/api/tournaments/${contest.iplGame.tournament.id}/leaderboard`);
 
     return NextResponse.json({
       success: true,

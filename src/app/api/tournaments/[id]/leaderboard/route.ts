@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+export const revalidate = 86400; // 24 hours — invalidated on-demand when a contest ends
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
