@@ -134,6 +134,15 @@ export async function GET(request: NextRequest) {
       });
     });
 
+    // Sort by game date descending (most recent first) after fan-out.
+    // The flatMap over matchups can break the original signupAt order,
+    // so we re-sort explicitly here.
+    signupsWithMatchup.sort((a: any, b: any) => {
+      const dateA = new Date(a.contest?.iplGame?.gameDate ?? 0).getTime();
+      const dateB = new Date(b.contest?.iplGame?.gameDate ?? 0).getTime();
+      return dateB - dateA;
+    });
+
     return NextResponse.json(signupsWithMatchup)
   } catch (error) {
     console.error("Error fetching user contests:", error)
