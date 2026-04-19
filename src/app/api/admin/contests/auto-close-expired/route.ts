@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { fairPairSignups, extractPairKeys } from '@/lib/matchupUtils'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 // POST /api/admin/contests/auto-close-expired - Automatically close expired signups and generate matchups
 export async function POST(request: NextRequest) {
