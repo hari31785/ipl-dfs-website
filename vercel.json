@@ -4,6 +4,21 @@
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
+    },
+    "app/api/user/*.ts": {
+      "maxDuration": 10
+    },
+    "app/api/messages/*.ts": {
+      "maxDuration": 10
+    },
+    "app/api/messages/**/*.ts": {
+      "maxDuration": 10
+    },
+    "app/api/tournaments/route.ts": {
+      "maxDuration": 10
+    },
+    "app/api/games/route.ts": {
+      "maxDuration": 10
     }
   },
   "env": {

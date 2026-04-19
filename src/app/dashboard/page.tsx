@@ -249,7 +249,7 @@ export default function DashboardPage() {
       if (!userData) return
       const parsedUser = JSON.parse(userData)
       fetchUserData(parsedUser.id)
-      fetchTournaments()
+      // fetchTournaments removed — edge-cached 60 days, no need to re-fetch on tab focus
       fetchLeaderboardTournament()
       fetchUserContests(parsedUser.id)
       lastFetchedAt.current = Date.now()
