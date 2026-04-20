@@ -30,6 +30,12 @@ export async function PUT(
     }
 
     const needsSignups = status === 'LIVE' || status === 'ACTIVE' || status === 'DRAFT_PHASE';
+
+    type ContestWithSignups = Awaited<ReturnType<typeof prisma.contest.update>> & {
+      iplGame: { team1: { shortName: string; id: string }; team2: { shortName: string; id: string } };
+      signups?: Array<{ id: string; userId: string }>;
+    };
+
     const contest = await prisma.contest.update({
       where: { id },
       data: { status },
@@ -42,7 +48,7 @@ export async function PUT(
         },
         ...(needsSignups ? { signups: { select: { id: true, userId: true } } } : {})
       }
-    }) as typeof contest & { signups?: Array<{ id: string; userId: string }> };
+    }) as ContestWithSignups;
 
     // Push notification when contest goes LIVE
     if (status === 'LIVE' || status === 'ACTIVE') {
@@ -70,7 +76,7 @@ export async function PUT(
       }
 
       await Promise.all(
-        contest.signups.map((s) => {
+        contest.signups!.map((s) => {
           const opponentUsername = opponentMap.get(s.id);
           const body = opponentUsername
             ? `${gameTitle} is underway — you're up against @${opponentUsername}. Check your active contest!`
@@ -110,7 +116,7 @@ export async function PUT(
       }
 
       await Promise.all(
-        contest.signups.map((s) => {
+        contest.signups!.map((s) => {
           const opponentUsername = draftOpponentMap.get(s.id);
           const body = opponentUsername
             ? `You're up against @${opponentUsername} in ${gameTitle} — head to your dashboard to draft your team!`
