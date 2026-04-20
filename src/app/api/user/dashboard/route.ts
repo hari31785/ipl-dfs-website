@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
           id: true,
           contest: {
             select: {
+              id: true,
               status: true,
               coinValue: true,
               iplGame: {
