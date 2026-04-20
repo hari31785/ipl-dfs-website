@@ -57,9 +57,7 @@ export async function GET(request: NextRequest) {
                   }
                 }
               }
-            },
-            user1Score: true,
-            user2Score: true,
+            }
           }
         },
         matchupsAsUser2: {
@@ -85,9 +83,7 @@ export async function GET(request: NextRequest) {
                   }
                 }
               }
-            },
-            user1Score: true,
-            user2Score: true,
+            }
           }
         }
       }
