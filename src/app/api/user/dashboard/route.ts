@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils'
 
 // GET /api/user/dashboard - Returns user profile + active contests in one round-trip.
 // Replaces two separate mount fetches (/api/user + /api/user/contests?excludeCompleted=true)
@@ -92,6 +93,69 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Collect all matchup IDs and game IDs for LIVE contests so we can compute live scores
+    const liveMatchupIds: string[] = []
+    const liveGameIds: string[] = []
+    for (const signup of activeSignups) {
+      if (signup.contest.status !== 'LIVE') continue
+      for (const m of [...signup.matchupsAsUser1, ...signup.matchupsAsUser2]) {
+        liveMatchupIds.push(m.id)
+      }
+      liveGameIds.push(signup.contest.iplGame.id)
+    }
+
+    // Fetch draft picks + player stats for LIVE matchups in parallel
+    const [livePicksRows, liveStatsRows] = liveMatchupIds.length > 0
+      ? await Promise.all([
+          prisma.draftPick.findMany({
+            where: { matchupId: { in: liveMatchupIds } },
+            select: {
+              id: true,
+              matchupId: true,
+              playerId: true,
+              pickOrder: true,
+              pickedByUserId: true,
+              isBench: true,
+              player: { select: { id: true, name: true } },
+            },
+          }),
+          prisma.playerStat.findMany({
+            where: { iplGameId: { in: [...new Set(liveGameIds)] } },
+            select: { playerId: true, iplGameId: true, points: true, didNotPlay: true },
+          }),
+        ])
+      : [[], []]
+
+    // Build lookup: matchupId -> picks[], playerId -> stat
+    const picksByMatchup = new Map<string, typeof livePicksRows>()
+    for (const pick of livePicksRows) {
+      const arr = picksByMatchup.get(pick.matchupId) ?? []
+      arr.push(pick)
+      picksByMatchup.set(pick.matchupId, arr)
+    }
+    const statByPlayer = new Map<string, { points: number; didNotPlay: boolean; iplGameId: string }>()
+    for (const s of liveStatsRows) {
+      statByPlayer.set(s.playerId, { points: s.points, didNotPlay: s.didNotPlay, iplGameId: s.iplGameId })
+    }
+
+    // Compute live score for one side of a matchup
+    const computeScore = (matchupId: string, signupId: string, gameId: string): number | null => {
+      const picks = picksByMatchup.get(matchupId)
+      if (!picks || picks.length === 0) return null
+      const myPicks = picks.filter(p => p.pickedByUserId === signupId)
+      if (myPicks.length === 0) return null
+      const picksWithStats = myPicks.map(p => ({
+        ...p,
+        player: {
+          ...p.player,
+          stats: statByPlayer.has(p.playerId)
+            ? [{ ...statByPlayer.get(p.playerId)!, iplGameId: gameId }]
+            : [],
+        },
+      }))
+      return calculateTotalPointsWithSwap(picksWithStats, gameId)
+    }
+
     // Fan-out matchups (same logic as user/contests route)
     const contests = activeSignups.flatMap((signup: any) => {
       const allMatchups = [...signup.matchupsAsUser1, ...signup.matchupsAsUser2]
@@ -107,6 +171,19 @@ export async function GET(request: NextRequest) {
             else if (u2 > u1) effectiveWinnerId = matchup.user2Id
           }
         }
+
+        // For LIVE contests compute live scores; fall back to stored scores for COMPLETED
+        const isLive = signup.contest.status === 'LIVE'
+        const gameId = signup.contest.iplGame.id
+        const mySignupId = isUser1 ? matchup.user1Id : matchup.user2Id
+        const oppSignupId = isUser1 ? matchup.user2Id : matchup.user1Id
+        const myScore = isLive
+          ? computeScore(matchup.id, mySignupId, gameId)
+          : (isUser1 ? matchup.user1Score : matchup.user2Score)
+        const opponentScore = isLive
+          ? computeScore(matchup.id, oppSignupId, gameId)
+          : (isUser1 ? matchup.user2Score : matchup.user1Score)
+
         return {
           ...signup,
           matchup: {
@@ -121,8 +198,8 @@ export async function GET(request: NextRequest) {
             opponentUsername: isUser1
               ? matchup.user2?.user?.username
               : matchup.user1?.user?.username,
-            myScore: isUser1 ? matchup.user1Score : matchup.user2Score,
-            opponentScore: isUser1 ? matchup.user2Score : matchup.user1Score,
+            myScore,
+            opponentScore,
           },
         }
       })
