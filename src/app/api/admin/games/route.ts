@@ -7,19 +7,19 @@ import { sendToAll } from '@/lib/pushNotifications';
 export async function GET() {
   try {
     const games = await prisma.iPLGame.findMany({
-      include: {
-        tournament: true,
-        team1: true,
-        team2: true,
-        _count: {
-          select: {
-            contests: true
-          }
-        }
+      select: {
+        id: true,
+        title: true,
+        gameDate: true,
+        signupDeadline: true,
+        status: true,
+        tournamentId: true,
+        team1: { select: { id: true, name: true, shortName: true, color: true } },
+        team2: { select: { id: true, name: true, shortName: true, color: true } },
+        tournament: { select: { id: true, name: true } },
+        _count: { select: { contests: true } },
       },
-      orderBy: {
-        gameDate: 'desc'
-      }
+      orderBy: { gameDate: 'desc' },
     });
 
     return NextResponse.json(games);

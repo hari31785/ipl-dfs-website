@@ -97,10 +97,10 @@ export default function BulkStatsPage() {
   const [isAbandoning, setIsAbandoning] = useState(false);
 
   useEffect(() => {
-    fetchTournaments();
-    fetchGames();
-    checkScoreProviderStatus();
-    checkBridgeStatus();
+    // Parallelise the two independent mount fetches
+    Promise.all([fetchTournaments(), fetchGames()]);
+    // Bridge + score-provider status only checked when admin opens that panel,
+    // not on every page mount — see checkBridgeStatus / checkScoreProviderStatus calls below
   }, []);
 
   // Handle gameId query parameter after games are loaded
@@ -118,19 +118,14 @@ export default function BulkStatsPage() {
 
   useEffect(() => {
     if (selectedGame) {
-      fetchStats(selectedGame);
-      fetchDraftedPlayers(selectedGame);
-      const game = games.find(g => g.id === selectedGame);
-      if (game && game.tournamentId) {
-        fetchPlayersForTournament(game.tournamentId);
-      }
+      fetchGameData(selectedGame);
     } else {
       setPlayers([]);
       setExistingStats([]);
       setBulkStats({});
       setDraftedPlayerIds(new Set());
     }
-  }, [selectedGame, games]);
+  }, [selectedGame]);
 
   const fetchTournaments = async () => {
     try {
@@ -158,18 +153,22 @@ export default function BulkStatsPage() {
     }
   };
 
-  const fetchPlayersForTournament = async (tournamentId: string) => {
+  // Combined fetch: stats + players + drafted IDs in one round-trip (replaces 3 separate calls)
+  const fetchGameData = async (gameId: string) => {
     try {
-      const response = await fetch(`/api/admin/players?tournamentId=${tournamentId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setPlayers(data.players || []);
+      const res = await fetch(`/api/admin/stats/game-data?gameId=${gameId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setExistingStats(data.stats ?? []);
+        setPlayers(data.players ?? []);
+        setDraftedPlayerIds(new Set(data.draftedPlayerIds ?? []));
       }
     } catch (error) {
-      console.error('Error fetching players:', error);
+      console.error('Error fetching game data:', error);
     }
   };
 
+  // Keep individual refresh helpers for post-save refetch (stats only)
   const fetchStats = async (gameId: string) => {
     try {
       const response = await fetch(`/api/admin/stats?gameId=${gameId}`);
@@ -179,19 +178,6 @@ export default function BulkStatsPage() {
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
-    }
-  };
-
-  const fetchDraftedPlayers = async (gameId: string) => {
-    try {
-      const response = await fetch(`/api/admin/games/${gameId}/drafted-players`);
-      if (response.ok) {
-        const data = await response.json();
-        setDraftedPlayerIds(new Set(data.playerIds || []));
-      }
-    } catch (error) {
-      console.error('Error fetching drafted players:', error);
-      setDraftedPlayerIds(new Set());
     }
   };
 

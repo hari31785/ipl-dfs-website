@@ -258,13 +258,20 @@ export default function ContestsPage() {
   const [reopenDeadline, setReopenDeadline] = useState('');
 
   useEffect(() => {
-    // First run cleanup for past due contests
-    cleanupPastDueContests().then(() => {
-      // Then fetch the updated contests
-      fetchContests();
-      fetchGames();
-      fetchTournaments();
-    });
+    // Throttle cleanup to once per hour per admin session to avoid hitting the DB on every page load
+    const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+    const lastCleanup = parseInt(sessionStorage.getItem('adminLastCleanup') ?? '0', 10);
+    const shouldCleanup = Date.now() - lastCleanup > CLEANUP_INTERVAL_MS;
+
+    const init = async () => {
+      if (shouldCleanup) {
+        await cleanupPastDueContests();
+        sessionStorage.setItem('adminLastCleanup', String(Date.now()));
+      }
+      // All three fetches are independent — run in parallel
+      await Promise.all([fetchContests(), fetchGames(), fetchTournaments()]);
+    };
+    init();
   }, []);
 
   const cleanupPastDueContests = async () => {
