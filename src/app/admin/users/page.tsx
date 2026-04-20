@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, ArrowLeft, Home, Search, Filter, Calendar, Mail, Phone, CheckCircle, Activity, Bell } from "lucide-react"
+import { Users, ArrowLeft, Home, Search, Filter, Calendar, Mail, Phone, CheckCircle, Bell } from "lucide-react"
 import Link from "next/link"
 
 interface User {
@@ -244,7 +244,6 @@ export default function AdminUsersPage() {
                   {users.reduce((sum, user) => sum + user._count.contestSignups, 0)}
                 </p>
               </div>
-              <Activity className="hidden md:block h-8 w-8 text-purple-500" />
             </div>
           </div>
         </div>
@@ -308,7 +307,6 @@ export default function AdminUsersPage() {
                     <tr>
                       <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">User</th>
                       <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
-                      <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
                       <th className="px-4 py-4 text-center text-sm font-medium text-gray-600">Push</th>
                       <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
                       <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
@@ -342,16 +340,6 @@ export default function AdminUsersPage() {
                           {!user.email && !user.phone && (
                             <span className="text-sm text-gray-500">No contact info</span>
                           )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="space-y-1">
-                          <div className="text-sm text-gray-600">
-                            {user._count.contestSignups} signups
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {user._count.coinTransactions} transactions
-                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">
@@ -415,10 +403,6 @@ export default function AdminUsersPage() {
                   {/* Row 2: stats + actions */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span>{user._count.contestSignups} signups</span>
-                      <span className="text-gray-300">·</span>
-                      <span>{user._count.coinTransactions} txns</span>
-                      <span className="text-gray-300">·</span>
                       {user._count.pushSubscriptions > 0 ? (
                         <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
                           <Bell className="h-2.5 w-2.5" /> Push
