@@ -28,18 +28,17 @@ export async function GET(request: NextRequest) {
             iplGame: {
               include: {
                 team1: true,
-                team2: true,
-                tournament: true
+                team2: true
               }
             }
           }
         },
-        user: true,
+        user: { select: { id: true, name: true, username: true } },
         matchupsAsUser1: {
           include: {
             user2: {
               include: {
-                user: true
+                user: { select: { id: true, name: true, username: true } }
               }
             },
             draftPicks: {
@@ -67,7 +66,7 @@ export async function GET(request: NextRequest) {
           include: {
             user1: {
               include: {
-                user: true
+                user: { select: { id: true, name: true, username: true } }
               }
             },
             draftPicks: {

@@ -188,22 +188,34 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     return isPastSignupDeadline && isDraftableContest;
   };
 
-  const fetchMatchupDetails = async (autoFetchGrades = false) => {
+  const fetchMatchupDetails = async (fullLoad = false) => {
     try {
-      const response = await fetch(`/api/draft/${matchupId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setMatchup(data.matchup);
-        setAvailablePlayers(data.availablePlayers);
-        if (autoFetchGrades && data.matchup?.contest?.iplGame?.id) {
-          const iplGameId = data.matchup.contest.iplGame.id;
+      if (fullLoad) {
+        // Full load: fetch complete matchup tree (user, contest, iplGame, availablePlayers)
+        const response = await fetch(`/api/draft/${matchupId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setMatchup(data.matchup);
+          setAvailablePlayers(data.availablePlayers);
           // Kick off stats fetch in background — cached at edge, only hits DB once per game
-          fetch(`/api/draft/stats/${iplGameId}`)
-            .then(r => r.json())
-            .then((statsMap: Record<string, { points: number; runs: number; wickets: number; catches: number }>) => {
-              setPlayerStatsMap(statsMap);
-            })
-            .catch(() => {/* silently fail */});
+          const iplGameId = data.matchup?.contest?.iplGame?.id;
+          if (iplGameId) {
+            fetch(`/api/draft/stats/${iplGameId}`)
+              .then(r => r.json())
+              .then((statsMap: Record<string, { points: number; runs: number; wickets: number; catches: number }>) => {
+                setPlayerStatsMap(statsMap);
+              })
+              .catch(() => {/* silently fail */});
+          }
+        }
+      } else {
+        // Lightweight poll: only fetch the fields that change during a draft
+        const response = await fetch(`/api/draft/${matchupId}/poll`);
+        if (response.ok) {
+          const poll = await response.json();
+          setMatchup(prev => prev ? { ...prev, status: poll.status, firstPickUser: poll.firstPickUser, draftPicks: poll.draftPicks } : prev);
+          // Recompute available players from the updated picks
+          setAvailablePlayers(prev => prev.filter(p => !poll.draftPicks.some((dp: any) => dp.playerId === p.id)));
         }
       }
     } catch (error) {
