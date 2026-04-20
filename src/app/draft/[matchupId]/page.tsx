@@ -1067,6 +1067,37 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               ⭐ badge = weighted avg pts · (Ng) = no. of recent games used
             </p>
 
+            {/* End My Draft button — above filters so it's unmissable after 5 picks */}
+            {!isDraftComplete && !myEndedDraft && myPicks.length >= 5 && myPicks.length < 7 && (
+              <div className="mb-4 rounded-xl border-2 border-red-200 bg-red-50 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="relative flex h-2.5 w-2.5 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                  </span>
+                  <p className="text-xs font-semibold text-red-700 uppercase tracking-wide">
+                    {myPicks.length >= 6 ? 'Want to skip your last bench pick?' : 'Want to skip bench picks entirely?'}
+                  </p>
+                </div>
+                <p className="text-xs text-red-600 mb-2.5 leading-snug">
+                  {myPicks.length >= 6
+                    ? 'You have 1 bench sub. End now to lock in your team — or keep drafting for your 2nd sub.'
+                    : 'You can end your draft now with just your 5 starters. If a starter is DNP they score 0 with no backup.'}
+                </p>
+                <button
+                  onClick={handleWaiveBench}
+                  disabled={waivingBench}
+                  className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {waivingBench
+                    ? '⏳ Ending draft...'
+                    : myPicks.length >= 6
+                      ? '🏁 End My Draft — keep 1 bench sub'
+                      : '🏁 End My Draft — play with 5 starters only'}
+                </button>
+              </div>
+            )}
+
             {/* Filters */}
             <div className="mb-4">
               <div className="grid grid-cols-2 gap-3 mb-2">
@@ -1238,37 +1269,6 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               >
                 {makingPick ? 'Drafting...' : selectedPlayer ? 'Confirm Pick' : 'Select a Player'}
               </button>
-            )}
-            {/* End My Draft button — visible after 5+ picks, but only before all 7 picks are made */}
-            {!isDraftComplete && !myEndedDraft && myPicks.length >= 5 && myPicks.length < 7 && (
-              <div className="mt-4 rounded-xl border-2 border-red-200 bg-red-50 p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  {/* Pulsing dot to draw attention */}
-                  <span className="relative flex h-2.5 w-2.5 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                  </span>
-                  <p className="text-xs font-semibold text-red-700 uppercase tracking-wide">
-                    {myPicks.length >= 6 ? 'Want to skip your last bench pick?' : 'Want to skip bench picks entirely?'}
-                  </p>
-                </div>
-                <p className="text-xs text-red-600 mb-2.5 leading-snug">
-                  {myPicks.length >= 6
-                    ? 'You have 1 bench sub. End now to lock in your team — or keep drafting for your 2nd sub.'
-                    : 'You can end your draft now with just your 5 starters. If a starter is DNP they score 0 with no backup.'}
-                </p>
-                <button
-                  onClick={handleWaiveBench}
-                  disabled={waivingBench}
-                  className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                >
-                  {waivingBench
-                    ? '⏳ Ending draft...'
-                    : myPicks.length >= 6
-                      ? '🏁 End My Draft — keep 1 bench sub'
-                      : '🏁 End My Draft — play with 5 starters only'}
-                </button>
-              </div>
             )}
             {!isDraftComplete && myEndedDraft && (
               <div className="mt-3 text-center text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg py-2.5 font-medium">
