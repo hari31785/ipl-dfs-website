@@ -1783,11 +1783,11 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                         }`}>
                           {signup.matchup ? (
                             signup.matchup.status === 'DRAFTING' ? (
-                              <>✍️ Drafting vs {signup.matchup.opponent.name}</>
+                              <>✍️ Drafting vs {signup.matchup.opponentUsername ?? signup.matchup.opponent?.name ?? 'opponent'}</>
                             ) : signup.matchup.status === 'COMPLETED' ? (
                               <>✅ Draft Complete — Ready for game</>
                             ) : (
-                              <>⏳ Matched with {signup.matchup.opponent.name} — Draft starting soon</>
+                              <>⏳ Matched with {signup.matchup.opponentUsername ?? signup.matchup.opponent?.name ?? 'opponent'} — Draft starting soon</>
                             )
                           ) : (
                             <>⏳ Waiting for matchup assignment</>
@@ -1815,7 +1815,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                               <div className="text-2xl font-bold text-gray-400">vs</div>
                             </div>
                             <div className="flex-1 text-right">
-                              <div className="text-xs text-gray-600 mb-1">{signup.matchup.opponent.name}</div>
+                              <div className="text-xs text-gray-600 mb-1">{signup.matchup.opponentUsername ?? signup.matchup.opponent?.name ?? 'Opponent'}</div>
                               <div className={`text-2xl font-black ${
                                 signup.matchup.opponentScore! > signup.matchup.myScore 
                                   ? 'text-green-700' 
