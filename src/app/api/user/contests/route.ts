@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const userId = searchParams.get('userId')
     const completedOnly = searchParams.get('completed') === 'true'
+    const excludeCompleted = searchParams.get('excludeCompleted') === 'true'
 
     if (!userId) {
       return NextResponse.json(
@@ -32,8 +33,9 @@ export async function GET(request: NextRequest) {
                 select: {
                   id: true,
                   gameDate: true,
-                  team1: { select: { shortName: true } },
-                  team2: { select: { shortName: true } },
+                  team1: { select: { shortName: true, name: true, color: true } },
+                  team2: { select: { shortName: true, name: true, color: true } },
+                  tournament: { select: { id: true, name: true } },
                 },
               },
             },
@@ -120,6 +122,7 @@ export async function GET(request: NextRequest) {
     const signups = await prisma.contestSignup.findMany({
       where: {
         userId: userId,
+        ...(excludeCompleted ? { contest: { status: { not: 'COMPLETED' } } } : {}),
       },
       orderBy: {
         signupAt: 'desc'

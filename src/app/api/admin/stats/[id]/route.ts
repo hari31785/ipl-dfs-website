@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
 
@@ -44,6 +44,7 @@ export async function PUT(
     });
 
     revalidatePath(`/api/draft/stats/${updatedStats.iplGameId}`);
+    revalidateTag(`scores-game-${updatedStats.iplGameId}`, 'default');
     return NextResponse.json(updatedStats);
     return NextResponse.json(
       { message: 'Failed to update stats' },
