@@ -1365,32 +1365,32 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                       const hasJoined = entryCount > 0;
                                       const canAddEntry = hasJoined && entryCount < 5;
                                       return (
-                                        <div key={contest.id} className={`flex items-center gap-2 px-2.5 py-2 md:px-4 md:py-2.5 ${hasJoined ? 'bg-green-50' : 'bg-white hover:bg-gray-50'} transition-colors`}>
+                                        <div key={contest.id} className={`flex items-center gap-2 px-3 py-1.5 md:px-5 md:py-3 ${hasJoined ? 'bg-green-50' : 'bg-white hover:bg-gray-50'} transition-colors`}>
                                           {/* Left accent dot */}
                                           <div className={`w-2 h-2 rounded-full shrink-0 ${hasJoined ? 'bg-green-500' : 'bg-yellow-400'}`} />
 
-                                          {/* Contest info */}
-                                          <div className="flex-1 min-w-0">
-                                            <span className="font-semibold text-xs md:text-sm text-gray-900 truncate block">
+                                          {/* Contest info — single line: name + slots */}
+                                          <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                                            <span className="font-semibold text-xs md:text-sm text-gray-900 whitespace-nowrap">
                                               <span className="md:hidden">{contestLabel(contest.contestType, contest.coinValue, true)}</span>
                                               <span className="hidden md:inline">{contestLabel(contest.contestType, contest.coinValue)}</span>
                                             </span>
-                                            <span className="text-[10px] md:text-xs text-gray-400">{contest._count.signups}/{contest.maxParticipants}</span>
+                                            <span className="text-[10px] md:text-xs text-gray-400 whitespace-nowrap">({contest._count.signups}/{contest.maxParticipants})</span>
                                           </div>
 
                                           {/* Status + actions */}
                                           {!userContestsLoaded ? (
-                                            <div className="h-6 w-14 bg-gray-200 rounded animate-pulse shrink-0" />
+                                            <div className="h-7 w-16 bg-gray-200 rounded animate-pulse shrink-0" />
                                           ) : hasJoined ? (
-                                            <div className="flex items-center gap-1.5 shrink-0">
-                                              <span className="text-[10px] md:text-xs font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                                            <div className="flex items-center gap-2 shrink-0">
+                                              <span className="text-xs md:text-sm font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full whitespace-nowrap">
                                                 ✓ {entryCount}×
                                               </span>
                                               {canAddEntry && (
                                                 <button
                                                   onClick={() => handleJoinContest(contest.id, game.id)}
                                                   disabled={joiningContest === contest.id}
-                                                  className="text-[10px] md:text-xs font-bold px-2 py-1 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                                  className="text-xs md:text-sm font-bold px-2.5 py-1 md:px-4 md:py-1.5 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 transition-colors disabled:opacity-50 whitespace-nowrap"
                                                   title={`Add entry #${entryCount + 1} (max 5)`}
                                                 >
                                                   {joiningContest === contest.id ? '...' : '+1'}
@@ -1399,7 +1399,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                               <button
                                                 onClick={() => handleUnjoinContest(contest.id)}
                                                 disabled={unjoiningContest === contest.id}
-                                                className="text-[10px] md:text-xs font-bold px-2 py-1 rounded bg-red-100 hover:bg-red-200 text-red-600 border border-red-200 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                                className="text-xs md:text-sm font-bold px-2.5 py-1 md:px-4 md:py-1.5 rounded bg-red-100 hover:bg-red-200 text-red-600 border border-red-200 transition-colors disabled:opacity-50 whitespace-nowrap"
                                                 title={entryCount > 1 ? `Remove latest entry (${entryCount} → ${entryCount - 1})` : 'Leave contest'}
                                               >
                                                 {unjoiningContest === contest.id ? '...' : '✕'}
@@ -1409,7 +1409,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                             <button
                                               onClick={() => handleJoinContest(contest.id, game.id)}
                                               disabled={joiningContest === contest.id}
-                                              className="text-[10px] md:text-xs font-bold px-3 py-1.5 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 border border-yellow-500 transition-colors disabled:opacity-50 shrink-0 whitespace-nowrap"
+                                              className="text-xs md:text-sm font-bold px-3 py-1 md:px-5 md:py-1.5 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 border border-yellow-500 transition-colors disabled:opacity-50 shrink-0 whitespace-nowrap"
                                             >
                                               {joiningContest === contest.id ? '...' : 'Join'}
                                             </button>
