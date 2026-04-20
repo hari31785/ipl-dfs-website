@@ -981,11 +981,15 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                               >
                                 {pick.player.iplTeam.shortName}
                               </span>
-                              {playerStatsMap[pick.player.id] && (
+                              {isDraftComplete ? (
+                                <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
+                                  ⭐ {(playerStatsMap[pick.player.id]?.points ?? 0).toFixed(1)} pts
+                                </span>
+                              ) : playerStatsMap[pick.player.id] ? (
                                 <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
                                   ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                           </div>
                         </div>
@@ -1025,11 +1029,15 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                                 >
                                   {pick.player.iplTeam.shortName}
                                 </span>
-                                {playerStatsMap[pick.player.id] && (
+                                {isDraftComplete ? (
+                                  <span className="text-sm font-black text-black bg-gradient-to-r from-orange-300 to-amber-300 px-3 py-1.5 rounded-md shadow-md border-2 border-orange-600">
+                                    ⭐ {(playerStatsMap[pick.player.id]?.points ?? 0).toFixed(1)} pts
+                                  </span>
+                                ) : playerStatsMap[pick.player.id] ? (
                                   <span className="text-sm font-black text-black bg-gradient-to-r from-orange-300 to-amber-300 px-3 py-1.5 rounded-md shadow-md border-2 border-orange-600">
                                     ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                   </span>
-                                )}
+                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -1330,11 +1338,15 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                               >
                                 {pick.player.iplTeam.shortName}
                               </span>
-                              {playerStatsMap[pick.player.id] && (
+                              {isDraftComplete ? (
+                                <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
+                                  ⭐ {(playerStatsMap[pick.player.id]?.points ?? 0).toFixed(1)} pts
+                                </span>
+                              ) : playerStatsMap[pick.player.id] ? (
                                 <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
                                   ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                           </div>
                         </div>
@@ -1374,11 +1386,15 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                                 >
                                   {pick.player.iplTeam.shortName}
                                 </span>
-                                {playerStatsMap[pick.player.id] && (
+                                {isDraftComplete ? (
+                                  <span className="text-sm font-black text-black bg-gradient-to-r from-orange-300 to-amber-300 px-3 py-1.5 rounded-md shadow-md border-2 border-orange-600">
+                                    ⭐ {(playerStatsMap[pick.player.id]?.points ?? 0).toFixed(1)} pts
+                                  </span>
+                                ) : playerStatsMap[pick.player.id] ? (
                                   <span className="text-sm font-black text-black bg-gradient-to-r from-orange-300 to-amber-300 px-3 py-1.5 rounded-md shadow-md border-2 border-orange-600">
                                     ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                   </span>
-                                )}
+                                ) : null}
                               </div>
                             </div>
                           </div>

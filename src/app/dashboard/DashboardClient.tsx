@@ -144,7 +144,12 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   const [userContestsLoaded, setUserContestsLoaded] = useState(() => {
     try { return !!sessionStorage.getItem('dashUserContests') } catch { return false }
   })
-  const [completedContests, setCompletedContests] = useState<any[]>([])
+  const [completedContests, setCompletedContests] = useState<any[]>(() => {
+    try {
+      const cached = sessionStorage.getItem('dashCompletedContests')
+      return cached ? JSON.parse(cached) : []
+    } catch { return [] }
+  })
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'available' | 'my-contests' | 'spectate'>('available')
   const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'drafted' | 'active' | 'completed'>('upcoming')
@@ -199,7 +204,9 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   const lastFetchedAt = useRef<number>(
     (() => { try { return parseInt(sessionStorage.getItem('dashLastFetch') ?? '0', 10) } catch { return 0 } })()
   )
-  const completedLoadedRef = useRef(false)
+  const completedLoadedRef = useRef<boolean>(
+    (() => { try { return !!sessionStorage.getItem('dashCompletedContests') } catch { return false } })()
+  )
   const [completedLoading, setCompletedLoading] = useState(false)
   const [isDashRefreshing, setIsDashRefreshing] = useState(false)
 
@@ -391,6 +398,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
       if (res.ok) {
         const data = await res.json()
         setCompletedContests(data)
+        try { sessionStorage.setItem('dashCompletedContests', JSON.stringify(data)) } catch {}
         completedLoadedRef.current = true
       }
     } catch (error) {
