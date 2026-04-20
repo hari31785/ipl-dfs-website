@@ -97,8 +97,12 @@ export default function BulkStatsPage() {
   const [isAbandoning, setIsAbandoning] = useState(false);
 
   useEffect(() => {
-    // Parallelise all independent mount fetches including status checks
-    Promise.all([fetchTournaments(), fetchGames(), checkScoreProviderStatus(), checkBridgeStatus()]);
+    // Check score provider first; only fall through to bridge check if provider is unavailable
+    const initStatusChecks = async () => {
+      await checkScoreProviderStatus();
+      // bridgeAvailable state is set inside checkScoreProviderStatus when provider is down
+    };
+    Promise.all([fetchTournaments(), fetchGames(), initStatusChecks()]);
   }, []);
 
   // Handle gameId query parameter after games are loaded
@@ -475,10 +479,20 @@ export default function BulkStatsPage() {
       if (response.ok) {
         const data = await response.json();
         setScoreProviderAvailable(data.available);
+        // Only check bridge if the score provider DB is not available
+        if (!data.available) {
+          checkBridgeStatus();
+        } else {
+          setBridgeAvailable(false); // not needed, keep null-ish
+        }
+      } else {
+        setScoreProviderAvailable(false);
+        checkBridgeStatus();
       }
     } catch (error) {
       console.error('Error checking score provider status:', error);
       setScoreProviderAvailable(false);
+      checkBridgeStatus();
     }
   };
 
