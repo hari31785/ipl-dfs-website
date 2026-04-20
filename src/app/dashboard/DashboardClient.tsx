@@ -1870,8 +1870,8 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                 )}
                               </div>
 
-                              {/* Right: stacked buttons */}
-                              <div className="flex flex-col gap-1 shrink-0">
+                              {/* Right: buttons in a row */}
+                              <div className="flex items-center gap-1.5 shrink-0">
                                 {signup.matchup?.status === 'COMPLETED' ? (
                                   contestSubTab === 'drafted' ? (
                                     <button
@@ -1889,14 +1889,15 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                         } catch {}
                                         finally { setLoadingDraftedPicks(false) }
                                       }}
-                                      className="bg-indigo-500 hover:bg-indigo-600 text-white px-2.5 py-1 rounded text-[10px] font-medium transition-colors whitespace-nowrap"
+                                      className="bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 md:px-3 md:py-1.5 rounded text-[10px] md:text-xs font-medium transition-colors whitespace-nowrap"
                                     >
-                                      View Teams
+                                      <span className="md:hidden">Teams</span>
+                                      <span className="hidden md:inline">View Teams</span>
                                     </button>
                                   ) : (
                                     <button
                                       onClick={() => router.push(`/scores/${signup.matchup?.id}?from=${contestSubTab}`)}
-                                      className="bg-green-500 hover:bg-green-600 text-white px-2.5 py-1 rounded text-[10px] font-medium transition-colors whitespace-nowrap"
+                                      className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 md:px-3 md:py-1.5 rounded text-[10px] md:text-xs font-medium transition-colors whitespace-nowrap"
                                     >
                                       Scores →
                                     </button>
@@ -1905,22 +1906,23 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                   <button
                                     disabled={!canDraft}
                                     onClick={() => router.push(`/draft/${signup.matchup?.id}`)}
-                                    className={`px-2.5 py-1 rounded text-[10px] font-medium transition-colors whitespace-nowrap ${
+                                    className={`px-2 py-1 md:px-3 md:py-1.5 rounded text-[10px] md:text-xs font-medium transition-colors whitespace-nowrap ${
                                       canDraft ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     }`}
                                     title={!signup.matchup ? 'Waiting for matchup' : !canDraft ? 'Draft opens after deadline' : 'Draft your team'}
                                   >
-                                    Draft Team
+                                    <span className="md:hidden">Draft</span>
+                                    <span className="hidden md:inline">Draft Team</span>
                                   </button>
                                 )}
                                 {!signup.matchup && (
                                   isPastDeadline ? (
-                                    <span className="text-[10px] text-gray-400 text-center">🔒 Closed</span>
+                                    <span className="text-[10px] text-gray-400">🔒</span>
                                   ) : (
                                     <button
                                       onClick={() => handleLeaveContest(signup.id)}
                                       disabled={leavingContest === signup.id}
-                                      className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 px-2.5 py-1 rounded text-[10px] font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+                                      className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 px-2 py-1 md:px-3 md:py-1.5 rounded text-[10px] md:text-xs font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
                                     >
                                       {leavingContest === signup.id ? '...' : 'Leave'}
                                     </button>
