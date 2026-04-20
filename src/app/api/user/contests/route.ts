@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
             iplGame: {
               include: {
                 team1: true,
-                team2: true
+                team2: true,
+                tournament: true
               }
             }
           }
