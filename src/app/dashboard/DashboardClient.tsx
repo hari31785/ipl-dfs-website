@@ -135,8 +135,15 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   const [user, setUser] = useState<UserData | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>(initialTournaments)
   const [leaderboardTournamentId, setLeaderboardTournamentId] = useState<string | null>(initialLeaderboardTournamentId)
-  const [userContests, setUserContests] = useState<UserContest[]>([])
-  const [userContestsLoaded, setUserContestsLoaded] = useState(false)
+  const [userContests, setUserContests] = useState<UserContest[]>(() => {
+    try {
+      const cached = sessionStorage.getItem('dashUserContests')
+      return cached ? JSON.parse(cached) : []
+    } catch { return [] }
+  })
+  const [userContestsLoaded, setUserContestsLoaded] = useState(() => {
+    try { return !!sessionStorage.getItem('dashUserContests') } catch { return false }
+  })
   const [completedContests, setCompletedContests] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'available' | 'my-contests' | 'spectate'>('available')
@@ -259,8 +266,8 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
         lastFetchedAt.current = now
         try { sessionStorage.setItem('dashLastFetch', String(now)) } catch {}
       } else {
-        // Data is fresh — skip fetch, mark contests as loaded to unhide join buttons
-        setUserContestsLoaded(true)
+        // Data is fresh and userContests already restored from sessionStorage cache
+        // completedContests is session-only so mark as needing prefetch on first tab click
       }
     } else {
       // Redirect to login if no user data
@@ -337,6 +344,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
         setUser(data.user)
         localStorage.setItem('currentUser', JSON.stringify(data.user))
         setUserContests(data.contests)
+        try { sessionStorage.setItem('dashUserContests', JSON.stringify(data.contests)) } catch {}
         setUserContestsLoaded(true)
       }
     } catch (error) {
