@@ -97,10 +97,8 @@ export default function BulkStatsPage() {
   const [isAbandoning, setIsAbandoning] = useState(false);
 
   useEffect(() => {
-    // Parallelise the two independent mount fetches
-    Promise.all([fetchTournaments(), fetchGames()]);
-    // Bridge + score-provider status only checked when admin opens that panel,
-    // not on every page mount — see checkBridgeStatus / checkScoreProviderStatus calls below
+    // Parallelise all independent mount fetches including status checks
+    Promise.all([fetchTournaments(), fetchGames(), checkScoreProviderStatus(), checkBridgeStatus()]);
   }, []);
 
   // Handle gameId query parameter after games are loaded
