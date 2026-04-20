@@ -188,7 +188,10 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   const [showIosPwaGuide, setShowIosPwaGuide] = useState(false)
   const [dismissedIosBanner, setDismissedIosBanner] = useState(false)
 
-  const lastFetchedAt = useRef<number>(0)
+  const STALE_MS = 2 * 60 * 1000 // 2 minutes
+  const lastFetchedAt = useRef<number>(
+    (() => { try { return parseInt(sessionStorage.getItem('dashLastFetch') ?? '0', 10) } catch { return 0 } })()
+  )
   const completedLoadedRef = useRef(false)
   const [completedLoading, setCompletedLoading] = useState(false)
   const [isDashRefreshing, setIsDashRefreshing] = useState(false)
@@ -244,12 +247,21 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
     if (userData) {
       const parsedUser = JSON.parse(userData)
       setUser(parsedUser)
-      // Fetch fresh user data + active contests in one round-trip
-      fetchDashboardData(parsedUser.id)
-      // Prefetch completed in background — so tab click is instant
-      setCompletedLoading(true)
-      fetchCompletedContests(parsedUser.id)
-      lastFetchedAt.current = Date.now()
+      const now = Date.now()
+      const lastFetch = lastFetchedAt.current
+      const isStale = now - lastFetch > STALE_MS
+      if (isStale) {
+        // Fetch fresh user data + active contests in one round-trip
+        fetchDashboardData(parsedUser.id)
+        // Prefetch completed in background — so tab click is instant
+        setCompletedLoading(true)
+        fetchCompletedContests(parsedUser.id)
+        lastFetchedAt.current = now
+        try { sessionStorage.setItem('dashLastFetch', String(now)) } catch {}
+      } else {
+        // Data is fresh — skip fetch, mark contests as loaded to unhide join buttons
+        setUserContestsLoaded(true)
+      }
     } else {
       // Redirect to login if no user data
       window.location.href = '/login'
@@ -267,14 +279,14 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
 
   // Fix C+D: bfcache restore uses staleness check (no full reload), visibilityChange uses combined fetch
   useEffect(() => {
-    const STALE_MS = 2 * 60 * 1000 // 2 minutes
-
     const refreshIfStale = (userId: string) => {
       if (Date.now() - lastFetchedAt.current < STALE_MS) return
       // Fix D: use combined endpoint (1 call) instead of fetchUserData + fetchUserContests (2 calls)
       fetchDashboardData(userId)
       if (completedLoadedRef.current) fetchCompletedContests(userId)
-      lastFetchedAt.current = Date.now()
+      const now = Date.now()
+      lastFetchedAt.current = now
+      try { sessionStorage.setItem('dashLastFetch', String(now)) } catch {}
     }
 
     const handleVisibilityChange = () => {
