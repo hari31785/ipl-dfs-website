@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getEffectivePickSlots } from '@/lib/draftUtils';
 import { sendToUser } from '@/lib/pushNotifications';
@@ -138,6 +139,7 @@ export async function POST(
       }
     }
 
+    revalidatePath('/api/contests/spectate');
     return NextResponse.json({
       message: 'Pick successful',
       draftPick

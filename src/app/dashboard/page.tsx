@@ -160,6 +160,8 @@ export default function DashboardPage() {
   })
   const [showDraftedTeamsModal, setShowDraftedTeamsModal] = useState(false)
   const [selectedDraftedContest, setSelectedDraftedContest] = useState<UserContest | null>(null)
+  const [draftedTeamPicks, setDraftedTeamPicks] = useState<any[]>([])
+  const [loadingDraftedPicks, setLoadingDraftedPicks] = useState(false)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [dismissedPushBanner, setDismissedPushBanner] = useState(false)
   const [showIosPwaGuide, setShowIosPwaGuide] = useState(false)
@@ -249,8 +251,7 @@ export default function DashboardPage() {
       if (!userData) return
       const parsedUser = JSON.parse(userData)
       fetchUserData(parsedUser.id)
-      // fetchTournaments removed — edge-cached 60 days, no need to re-fetch on tab focus
-      fetchLeaderboardTournament()
+      // fetchTournaments and fetchLeaderboardTournament removed — edge-cached 60 days, IDs don't change mid-session
       fetchUserContests(parsedUser.id)
       lastFetchedAt.current = Date.now()
     }
@@ -1707,9 +1708,19 @@ export default function DashboardPage() {
                         {signup.matchup?.status === 'COMPLETED' ? (
                           contestSubTab === 'drafted' ? (
                             <button 
-                              onClick={() => {
+                              onClick={async () => {
                                 setSelectedDraftedContest(signup)
                                 setShowDraftedTeamsModal(true)
+                                setDraftedTeamPicks([])
+                                setLoadingDraftedPicks(true)
+                                try {
+                                  const res = await fetch(`/api/draft/${signup.matchup?.id}/poll`)
+                                  if (res.ok) {
+                                    const data = await res.json()
+                                    setDraftedTeamPicks(data.draftPicks ?? [])
+                                  }
+                                } catch {}
+                                finally { setLoadingDraftedPicks(false) }
                               }}
                               className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors"
                             >
@@ -2286,13 +2297,15 @@ export default function DashboardPage() {
 
             {/* Body — comparison table */}
             <div className="overflow-y-auto">
-              {(() => {
-                const myPicks = selectedDraftedContest.matchup!.draftPicks
+              {loadingDraftedPicks ? (
+                <div className="flex items-center justify-center h-24 text-xs text-gray-400">Loading picks...</div>
+              ) : (() => {
+                const myPicks = draftedTeamPicks
                   .filter(p => p.pickedByUserId === selectedDraftedContest.id)
-                  .sort((a, b) => a.pickOrder - b.pickOrder)
-                const oppPicks = selectedDraftedContest.matchup!.draftPicks
+                  .sort((a: any, b: any) => a.pickOrder - b.pickOrder)
+                const oppPicks = draftedTeamPicks
                   .filter(p => p.pickedByUserId !== selectedDraftedContest.id)
-                  .sort((a, b) => a.pickOrder - b.pickOrder)
+                  .sort((a: any, b: any) => a.pickOrder - b.pickOrder)
 
                 if (myPicks.length === 0 && oppPicks.length === 0) {
                   return <div className="flex items-center justify-center h-24 text-xs text-gray-400 italic">No picks yet</div>

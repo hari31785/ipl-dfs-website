@@ -74,45 +74,32 @@ export default function CoinVaultPage() {
       router.push('/login')
       return
     }
-    
     const parsedUser = JSON.parse(userData)
     setUser(parsedUser)
-    fetchTournaments()
+
+    // Fetch tournaments immediately — don't wait for state to settle
+    fetch('/api/tournaments?forCoinVault=true')
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data: Tournament[]) => {
+        setTournaments(data)
+        const activeTournament = data.find(t => t.status === 'ACTIVE') || data[0]
+        if (activeTournament) {
+          // We already have the userId here — skip the second useEffect hop entirely
+          fetchCoinData(parsedUser.id, activeTournament.id)
+          setSelectedTournament(activeTournament.id)
+        } else {
+          setLoading(false)
+        }
+      })
+      .catch(() => setLoading(false))
   }, [router])
 
+  // Only fires when user manually switches tournament in the dropdown
   useEffect(() => {
-    console.log('Coin data effect triggered:', { user: user?.id, selectedTournament })
     if (user && selectedTournament) {
       fetchCoinData(user.id, selectedTournament)
     }
-  }, [user, selectedTournament])
-
-  const fetchTournaments = async () => {
-    try {
-      const response = await fetch('/api/tournaments?forCoinVault=true')
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Tournaments fetched:', data)
-        setTournaments(data)
-        // Auto-select first active tournament
-        const activeTournament = data.find((t: Tournament) => t.status === 'ACTIVE') || data[0]
-        console.log('Selected tournament:', activeTournament)
-        if (activeTournament) {
-          setSelectedTournament(activeTournament.id)
-        } else {
-          // No tournaments found, stop loading
-          console.log('No tournaments found')
-          setLoading(false)
-        }
-      } else {
-        console.log('Failed to fetch tournaments:', response.status)
-        setLoading(false)
-      }
-    } catch (error) {
-      console.error('Error fetching tournaments:', error)
-      setLoading(false)
-    }
-  }
+  }, [selectedTournament]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchCoinData = async (userId: string, tournamentId: string) => {
     try {

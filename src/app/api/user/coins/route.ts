@@ -47,76 +47,26 @@ export async function GET(request: Request) {
       })
     }
 
-    // Get all coin transactions for this tournament
-    const transactions = await prisma.coinTransaction.findMany({
-      where: { 
-        userId,
-        tournamentId
-      },
-      orderBy: { createdAt: "desc" },
-      take: 50, // Last 50 transactions
-      include: {
-        contest: {
-          include: {
-            iplGame: {
-              include: {
-                team1: true,
-                team2: true,
+    // Fetch transactions and settlements in parallel — both independent of each other
+    const [transactions, settlements] = await Promise.all([
+      prisma.coinTransaction.findMany({
+        where: { userId, tournamentId },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        include: {
+          contest: {
+            include: {
+              iplGame: {
+                include: {
+                  team1: true,
+                  team2: true,
+                },
               },
             },
           },
         },
-        tournament: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      },
-    })
-
-    // Manually fetch matchup details for transactions that have matchupId
-    const enrichedTransactions = await Promise.all(
-      transactions.map(async (transaction) => {
-        let matchupDetails = null
-        
-        if (transaction.matchupId) {
-          try {
-            matchupDetails = await prisma.headToHeadMatchup.findUnique({
-              where: { id: transaction.matchupId },
-              include: {
-                user1: {
-                  include: {
-                    user: {
-                      select: { name: true, username: true }
-                    }
-                  }
-                },
-                user2: {
-                  include: {
-                    user: {
-                      select: { name: true, username: true }
-                    }
-                  }
-                }
-              }
-            })
-          } catch (error) {
-            console.error('Error fetching matchup details:', error)
-          }
-        }
-
-        return {
-          ...transaction,
-          matchup: matchupDetails
-        }
-      })
-    )
-
-    return NextResponse.json({
-      balance: tournamentBalance.balance,
-      transactions: enrichedTransactions,
-      settlements: await prisma.settlement.findMany({
+      }),
+      prisma.settlement.findMany({
         where: { userId, tournamentId },
         orderBy: { createdAt: 'desc' },
         select: {
@@ -130,6 +80,31 @@ export async function GET(request: Request) {
           createdAt: true,
         },
       }),
+    ])
+
+    // Batch-fetch all referenced matchups in a single query instead of N individual lookups
+    const matchupIds = [...new Set(transactions.map(t => t.matchupId).filter(Boolean))] as string[]
+    const matchupsById = new Map<string, any>()
+    if (matchupIds.length > 0) {
+      const matchups = await prisma.headToHeadMatchup.findMany({
+        where: { id: { in: matchupIds } },
+        include: {
+          user1: { include: { user: { select: { name: true, username: true } } } },
+          user2: { include: { user: { select: { name: true, username: true } } } },
+        },
+      })
+      matchups.forEach(m => matchupsById.set(m.id, m))
+    }
+
+    const enrichedTransactions = transactions.map(t => ({
+      ...t,
+      matchup: t.matchupId ? (matchupsById.get(t.matchupId) ?? null) : null,
+    }))
+
+    return NextResponse.json({
+      balance: tournamentBalance.balance,
+      transactions: enrichedTransactions,
+      settlements,
     })
   } catch (error) {
     console.error("Error fetching coin data:", error)

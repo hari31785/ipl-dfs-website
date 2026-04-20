@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Trophy, Medal, TrendingUp, Users, ArrowLeft, Coins, Eye } from "lucide-react"
 import { calculateFinalLineup, calculateTotalPointsWithSwap } from "@/lib/benchSwapUtils"
@@ -37,105 +37,84 @@ interface Tournament {
 
 export default function TournamentLeaderboardPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const [tournamentId, setTournamentId] = useState<string>("")
+  const { id: tournamentId } = use(params)
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [contestModal, setContestModal] = useState<{ userId: string; username: string } | null>(null)
   const [modalContests, setModalContests] = useState<any[]>([])
   const [modalLoading, setModalLoading] = useState(false)
+  // In-session cache so repeated eye-icon clicks skip the network round-trip
+  const contestHistoryCache = useRef<Map<string, any[]>>(new Map())
   // Scorecard second modal
   const [scorecardSignup, setScorecardSignup] = useState<any | null>(null)
   const [scorecardLoading, setScorecardLoading] = useState(false)
   const [scorecardStatsMap, setScorecardStatsMap] = useState<Record<string, { points: number; runs: number; wickets: number; catches: number; didNotPlay: boolean; runOuts: number; stumpings: number }>>({}) 
 
-  useEffect(() => {
-    const userData = localStorage.getItem('currentUser')
-    if (userData) {
-      try { setCurrentUserId(JSON.parse(userData).id) } catch {}
-    }
-  }, [])
-
   const openContestHistory = async (userId: string, username: string) => {
     setContestModal({ userId, username })
     setModalContests([])
-    setModalLoading(true)
+    // Clear stale scorecard stats from a previous user's game
+    setScorecardStatsMap({})
+    setScorecardSignup(null)
+    setModalLoading(true) // show spinner immediately — before any async work
+
+    // Serve from in-session cache if available
+    if (contestHistoryCache.current.has(userId)) {
+      setModalContests(contestHistoryCache.current.get(userId)!)
+      setModalLoading(false)
+      return
+    }
     try {
-      const res = await fetch(`/api/user/contests?userId=${userId}`)
+      // completed=true filters server-side — only COMPLETED contests are returned
+      const res = await fetch(`/api/user/contests?userId=${userId}&completed=true`)
       if (res.ok) {
         const data = await res.json()
-        // Only show fully settled contests (contest.status === COMPLETED)
-        // matchup.status === 'COMPLETED' only means draft is done, not the game result
-        setModalContests(data.filter((s: any) =>
-          s.contest?.status === 'COMPLETED' &&
+        const filtered = data.filter((s: any) =>
           s.matchup != null &&
           s.matchup.draftPicksCount > 0
-        ))
+        )
+        contestHistoryCache.current.set(userId, filtered)
+        setModalContests(filtered)
       }
     } catch {}
     finally { setModalLoading(false) }
   }
 
+  // Fetch tournaments list + leaderboard data in parallel on mount
   useEffect(() => {
-    params.then((resolvedParams) => {
-      setTournamentId(resolvedParams.id)
-    })
-  }, [params])
+    const loadAll = async () => {
+      const [tournamentsRes, leaderboardRes] = await Promise.allSettled([
+        fetch(`/api/tournaments`),
+        fetch(`/api/tournaments/${tournamentId}/leaderboard`),
+      ])
 
-  useEffect(() => {
-    fetchTournaments()
-  }, [])
-
-  useEffect(() => {
-    if (tournamentId) {
-      fetchTournament()
-      fetchLeaderboard()
-    }
-  }, [tournamentId])
-
-  const fetchTournaments = async () => {
-    try {
-      const response = await fetch(`/api/tournaments`)
-      if (response.ok) {
-        const data = await response.json()
+      if (tournamentsRes.status === 'fulfilled' && tournamentsRes.value.ok) {
+        const data: Tournament[] = await tournamentsRes.value.json()
         setTournaments(data)
+        // Derive current tournament from the same list — no second API call needed
+        const found = data.find((t) => t.id === tournamentId)
+        if (found) setTournament(found)
       }
-    } catch (error) {
-      console.error("Error fetching tournaments:", error)
-    }
-  }
 
-  const fetchTournament = async () => {
-    try {
-      const response = await fetch(`/api/tournaments`)
-      if (response.ok) {
-        const tournamentsData = await response.json()
-        const found = tournamentsData.find((t: Tournament) => t.id === tournamentId)
-        if (found) {
-          setTournament(found)
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching tournament:", error)
-    }
-  }
-
-  const fetchLeaderboard = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(`/api/tournaments/${tournamentId}/leaderboard`)
-      if (response.ok) {
-        const data = await response.json()
+      if (leaderboardRes.status === 'fulfilled' && leaderboardRes.value.ok) {
+        const data = await leaderboardRes.value.json()
         setLeaderboard(data)
       }
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error)
-    } finally {
+
       setLoading(false)
     }
-  }
+    loadAll()
+  }, [tournamentId])
+
+
+
+  const { maxWin, biggestWinner } = useMemo(() => {
+    const maxWin = leaderboard.length > 0 ? Math.max(...leaderboard.map(e => e.biggestSingleWin || 0)) : 0
+    const biggestWinner = leaderboard.find(e => (e.biggestSingleWin || 0) === maxWin)
+    return { maxWin, biggestWinner }
+  }, [leaderboard])
 
   const getRankDisplay = (rank: number) => {
     if (rank === 1) return <Trophy className="w-6 h-6 text-yellow-500" />
@@ -250,24 +229,18 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
           </div>
 
           {/* Biggest Single Win */}
-          {(() => {
-            const maxWin = leaderboard.length > 0 ? Math.max(...leaderboard.map(e => e.biggestSingleWin || 0)) : 0
-            const biggestWinner = leaderboard.find(e => (e.biggestSingleWin || 0) === maxWin)
-            return (
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-sm md:shadow-md px-3 py-2 md:p-6 flex flex-col md:flex-row items-center md:items-center gap-0 md:gap-3 text-center md:text-left">
-                <Trophy className="w-5 h-5 md:w-10 md:h-10 text-yellow-600 mb-0.5 md:mb-0 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-[10px] md:text-sm text-yellow-700 leading-tight">Best Win</p>
-                  <p className="text-sm md:text-2xl font-bold text-yellow-900 leading-tight">
-                    {maxWin > 0 ? `V̶₵${maxWin.toFixed(2)}` : '—'}
-                  </p>
-                  {maxWin > 0 && biggestWinner && (
-                    <p className="text-[10px] md:text-xs text-yellow-600 leading-tight truncate">@{biggestWinner.username}</p>
-                  )}
-                </div>
-              </div>
-            )
-          })()}
+          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-sm md:shadow-md px-3 py-2 md:p-6 flex flex-col md:flex-row items-center md:items-center gap-0 md:gap-3 text-center md:text-left">
+            <Trophy className="w-5 h-5 md:w-10 md:h-10 text-yellow-600 mb-0.5 md:mb-0 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] md:text-sm text-yellow-700 leading-tight">Best Win</p>
+              <p className="text-sm md:text-2xl font-bold text-yellow-900 leading-tight">
+                {maxWin > 0 ? `V̶₵${maxWin.toFixed(2)}` : '—'}
+              </p>
+              {maxWin > 0 && biggestWinner && (
+                <p className="text-[10px] md:text-xs text-yellow-600 leading-tight truncate">@{biggestWinner.username}</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Mobile Card List */}
@@ -516,7 +489,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     const oppScore = matchup?.opponentScore ?? '—'
 
                     return (
-                      <div key={signup.id} className={`rounded-xl border p-4 ${isWinner ? 'bg-green-50 border-green-200' : isTie ? 'bg-gray-50 border-gray-200' : 'bg-red-50 border-red-200'}`}>
+                      <div key={matchup?.id ?? signup.id} className={`rounded-xl border p-4 ${isWinner ? 'bg-green-50 border-green-200' : isTie ? 'bg-gray-50 border-gray-200' : 'bg-red-50 border-red-200'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-semibold text-gray-900 text-sm">{gameLabel}</span>
                           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-green-600 text-white' : isTie ? 'bg-gray-500 text-white' : 'bg-red-600 text-white'}`}>
@@ -527,18 +500,29 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                           <span>vs <strong>@{opponent}</strong> · {coinValue}-coin contest</span>
                           <span className="font-mono">{myScore} – {oppScore}</span>
                         </div>
-                        {matchup?.draftPicks?.length > 0 && (
+                        {matchup?.draftPicksCount > 0 && (
                           <button
-                            onClick={() => {
-                              setScorecardSignup(signup)
+                            onClick={async () => {
                               const gId = signup.contest?.iplGame?.id ?? signup.contest?.iplGameId
-                              if (gId) {
-                                setScorecardStatsMap({})
-                                fetch(`/api/draft/stats/${gId}`)
-                                  .then(r => r.ok ? r.json() : {})
-                                  .then(map => setScorecardStatsMap(map))
-                                  .catch(() => {})
+                              const matchupId = signup.matchup?.id
+                              setScorecardStatsMap({})
+                              setScorecardLoading(true)
+                              setScorecardSignup(signup) // open modal immediately with loading state
+
+                              // Fetch picks + stats in parallel
+                              const [pollRes, statsRes] = await Promise.allSettled([
+                                matchupId ? fetch(`/api/draft/${matchupId}/poll`) : Promise.reject(),
+                                gId ? fetch(`/api/draft/stats/${gId}`) : Promise.reject(),
+                              ])
+
+                              if (pollRes.status === 'fulfilled' && pollRes.value.ok) {
+                                const poll = await pollRes.value.json()
+                                setScorecardSignup({ ...signup, matchup: { ...signup.matchup, draftPicks: poll.draftPicks } })
                               }
+                              if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+                                setScorecardStatsMap(await statsRes.value.json())
+                              }
+                              setScorecardLoading(false)
                             }}
                             className="w-full text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 rounded-lg py-1.5 transition-colors"
                           >
@@ -642,18 +626,24 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 <button onClick={() => setScorecardSignup(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
               </div>
 
-              {/* Score banner */}
-              <div className="grid grid-cols-3 items-center bg-gray-50 border-b border-gray-200 px-5 py-3 text-center">
-                <div>
-                  <div className="text-xs text-gray-500 truncate">{leftLabel}</div>
-                  <div className="text-2xl font-black text-gray-900">{leftTotal}</div>
+              {scorecardLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                 </div>
-                <div className="text-lg font-bold text-gray-400">vs</div>
-                <div>
-                  <div className="text-xs text-gray-500 truncate">{rightLabel}</div>
-                  <div className="text-2xl font-black text-gray-900">{rightTotal}</div>
+              ) : (
+                <>
+                {/* Score banner */}
+                <div className="grid grid-cols-3 items-center bg-gray-50 border-b border-gray-200 px-5 py-3 text-center">
+                  <div>
+                    <div className="text-xs text-gray-500 truncate">{leftLabel}</div>
+                    <div className="text-2xl font-black text-gray-900">{leftTotal}</div>
+                  </div>
+                  <div className="text-lg font-bold text-gray-400">vs</div>
+                  <div>
+                    <div className="text-xs text-gray-500 truncate">{rightLabel}</div>
+                    <div className="text-2xl font-black text-gray-900">{rightTotal}</div>
+                  </div>
                 </div>
-              </div>
 
               {/* Two-column lineups */}
               <div className="overflow-y-auto flex-1 p-4">
@@ -693,6 +683,8 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                   <p className="text-xs text-gray-400">↑ Swapped in &nbsp;·&nbsp; ↓ Benched &nbsp;·&nbsp; DNP = Did Not Play</p>
                 </div>
               </div>
+              </>
+              )}
 
               {/* Footer back button */}
               <div className="px-5 py-3 border-t border-gray-200">

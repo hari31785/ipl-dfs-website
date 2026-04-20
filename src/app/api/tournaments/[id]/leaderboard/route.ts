@@ -10,43 +10,39 @@ export async function GET(
   try {
     const { id } = await context.params
 
-    // Get all contests for this tournament
-    const contests = await prisma.contest.findMany({
-      where: {
-        iplGame: {
-          tournamentId: id,
-        },
-        status: 'COMPLETED', // Only count completed contests
-      },
-      select: {
-        id: true,
-      },
-    })
-
-    const contestIds = contests.map(c => c.id)
-
-    // Get all coin transactions for these contests
-    const transactions = await prisma.coinTransaction.findMany({
-      where: {
-        contestId: {
-          in: contestIds,
-        },
-      },
-      select: {
-        userId: true,
-        amount: true,
-        type: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            totalWins: true,
-            totalMatches: true,
+    // Fetch transactions and settlements in parallel.
+    // Transactions filter directly via nested relation — no pre-fetch of contestIds needed.
+    // Settlements filter by tournamentId directly — also independent.
+    // Users are batch-fetched separately to avoid joining on every transaction row.
+    const [transactions, settlements] = await Promise.all([
+      prisma.coinTransaction.findMany({
+        where: {
+          contest: {
+            status: 'COMPLETED',
+            iplGame: { tournamentId: id },
           },
         },
-      },
+        select: {
+          userId: true,
+          amount: true,
+          type: true,
+          contestId: true,
+          // No user join here — batched separately below
+        },
+      }),
+      prisma.settlement.findMany({
+        where: { tournamentId: id },
+        select: { userId: true, type: true, amount: true },
+      }),
+    ])
+
+    // Batch-fetch user records for the unique set of user IDs in transactions
+    const uniqueUserIds = [...new Set(transactions.map(t => t.userId))]
+    const users = await prisma.user.findMany({
+      where: { id: { in: uniqueUserIds } },
+      select: { id: true, name: true, username: true, totalWins: true, totalMatches: true },
     })
+    const usersById = new Map(users.map(u => [u.id, u]))
 
     // Aggregate stats by user
     const userStatsMap = new Map<string, {
@@ -72,16 +68,18 @@ export async function GET(
       biggestSingleWin: number
     }>()
 
-    // Track contests per user
-    const userContestCounts = new Map<string, Set<string>>()
+    // Also track unique contestIds per user to derive contestsPlayed — no extra DB query needed
+    const userContestSets = new Map<string, Set<string>>()
 
     transactions.forEach(transaction => {
+      const u = usersById.get(transaction.userId)
+      if (!u) return
       const existing = userStatsMap.get(transaction.userId) || {
-        userId: transaction.user.id,
-        name: transaction.user.name,
-        username: transaction.user.username,
-        totalWins: transaction.user.totalWins,
-        totalMatches: transaction.user.totalMatches,
+        userId: u.id,
+        name: u.name,
+        username: u.username,
+        totalWins: u.totalWins,
+        totalMatches: u.totalMatches,
         totalVCWon: 0,
         totalVCLost: 0,
         encashedVC: 0,
@@ -99,18 +97,24 @@ export async function GET(
         biggestSingleWin: 0,
       }
 
+      // Track unique contests for this user
+      if (transaction.contestId) {
+        if (!userContestSets.has(transaction.userId)) userContestSets.set(transaction.userId, new Set())
+        userContestSets.get(transaction.userId)!.add(transaction.contestId)
+      }
+
       const vcAmount = transaction.amount / 100
       const coinAmount = transaction.amount
 
       if (transaction.type === 'WIN') {
         existing.totalVCWon += vcAmount
         existing.totalCoinsWon += coinAmount
-        existing.totalPointsWon += vcAmount // VC directly represents points
+        existing.totalPointsWon += vcAmount
         if (vcAmount > existing.biggestSingleWin) existing.biggestSingleWin = vcAmount
       } else if (transaction.type === 'LOSS') {
         existing.totalVCLost += Math.abs(vcAmount)
         existing.totalCoinsLost += Math.abs(coinAmount)
-        existing.totalPointsLost += Math.abs(vcAmount) // VC directly represents points
+        existing.totalPointsLost += Math.abs(vcAmount)
       }
 
       existing.netVC = existing.totalVCWon - existing.totalVCLost
@@ -120,11 +124,13 @@ export async function GET(
       userStatsMap.set(transaction.userId, existing)
     })
 
-    // Fetch all settlements for this tournament and overlay onto user stats
-    const settlements = await prisma.settlement.findMany({
-      where: { tournamentId: id },
-      select: { userId: true, type: true, amount: true },
+    // Derive contestsPlayed from the transaction data already in memory
+    userContestSets.forEach((contestSet, userId) => {
+      const stats = userStatsMap.get(userId)
+      if (stats) stats.contestsPlayed = contestSet.size
     })
+
+    // Overlay settlements onto user stats
     for (const s of settlements) {
       const existing = userStatsMap.get(s.userId)
       if (!existing) continue
@@ -140,46 +146,6 @@ export async function GET(
       existing.netVC = existing.totalVCWon - existing.totalVCLost - existing.encashedVC + existing.refilledVC
       existing.netCoins = existing.totalCoinsWon - existing.totalCoinsLost - existing.encashedCoins + existing.refilledCoins
     }
-
-    // Count contests per user
-    const contestSignups = await prisma.contestSignup.findMany({
-      where: {
-        contestId: {
-          in: contestIds,
-        },
-        OR: [
-          {
-            matchupsAsUser1: {
-              some: { status: 'COMPLETED' },
-            },
-          },
-          {
-            matchupsAsUser2: {
-              some: { status: 'COMPLETED' },
-            },
-          },
-        ],
-      },
-      select: {
-        userId: true,
-        contestId: true,
-      },
-    })
-
-    contestSignups.forEach(signup => {
-      if (!userContestCounts.has(signup.userId)) {
-        userContestCounts.set(signup.userId, new Set())
-      }
-      userContestCounts.get(signup.userId)!.add(signup.contestId)
-    })
-
-    // Update contests played count
-    userContestCounts.forEach((contestSet, userId) => {
-      const stats = userStatsMap.get(userId)
-      if (stats) {
-        stats.contestsPlayed = contestSet.size
-      }
-    })
 
     // Convert to array and sort by net VC (descending)
     const leaderboard = Array.from(userStatsMap.values())

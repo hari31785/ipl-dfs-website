@@ -99,7 +99,8 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedPlayerStats, setSelectedPlayerStats] = useState<{ player: Player; pickOrder: number } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [playerStatsMap, setPlayerStatsMap] = useState<Record<string, { points: number; runs: number; wickets: number; catches: number; didNotPlay: boolean; runOuts: number; stumpings: number }>>({});
+  const [playerStatsMap, setPlayerStatsMap] = useState<Record<string, { points: number; runs: number; wickets: number; catches: number; didNotPlay: boolean; runOuts: number; stumpings: number }>>({})
+  const [statsLastUpdated, setStatsLastUpdated] = useState<Date | null>(null);;
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -126,7 +127,7 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
         if (gameId) {
           fetch(`/api/draft/stats/${gameId}`)
             .then(r => r.ok ? r.json() : {})
-            .then(map => setPlayerStatsMap(map))
+            .then(map => { setPlayerStatsMap(map); setStatsLastUpdated(new Date()); })
             .catch(() => {});
         }
       }
@@ -611,15 +612,22 @@ export default function ScoresPage({ params }: { params: Promise<{ matchupId: st
         )}
 
       {/* Floating Refresh Button */}
-      <button
-        onClick={handleRefresh}
-        disabled={isRefreshing}
-        className="fixed bottom-6 right-4 z-50 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-70 text-white font-semibold px-5 py-3 rounded-full shadow-2xl transition-all"
-        aria-label="Refresh scores"
-      >
-        <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-        <span className="text-sm">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
-      </button>
+      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-end gap-1">
+        {statsLastUpdated && !isRefreshing && (
+          <span className="text-xs text-gray-500 bg-white/80 backdrop-blur px-2 py-0.5 rounded-full shadow">
+            Updated {statsLastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        )}
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-70 text-white font-semibold px-5 py-3 rounded-full shadow-2xl transition-all"
+          aria-label="Refresh scores"
+        >
+          <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="text-sm">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
+        </button>
+      </div>
       </div>
     </div>
   );

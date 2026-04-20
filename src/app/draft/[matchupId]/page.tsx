@@ -108,6 +108,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   
   // Ref so the poll callback can always read the latest isMyTurn without being in its dep array
   const isMyTurnRef = useRef(false);
+  // Ref to latest matchup so poll/visibility effects don't re-mount on every state tick
+  const matchupRef = useRef<Matchup | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
@@ -116,6 +118,10 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     }
     fetchMatchupDetails(true);
   }, [matchupId]);
+
+  // Keep matchupRef in sync so poll/visibility closures always see the latest value
+  // without needing matchup in their dep arrays (which would recreate the interval every tick)
+  useEffect(() => { matchupRef.current = matchup; }, [matchup]);
 
   // Check if we need to show the toss, or auto-dismiss it when the result arrives
   useEffect(() => {
@@ -142,28 +148,34 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     }
   }, [matchup, currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Real-time polling for turn updates
+  // Real-time polling for turn updates.
+  // Dep is currentUser?.id only — matchupRef keeps current data so the interval
+  // is never cleared/recreated on every poll tick that updates matchup state.
   useEffect(() => {
-    if (!matchup || !currentUser || matchup.draftPicks.length >= 14) return;
+    if (!currentUser) return;
 
     const pollInterval = setInterval(() => {
+      const m = matchupRef.current;
+      if (!m || m.draftPicks.length >= 14) return;
       // Skip the DB hit when it is our own turn (push notification already sent to us)
       // or when the tab is hidden (user will get a push when opponent picks)
       if (!isMyTurnRef.current && !document.hidden) fetchMatchupDetails();
     }, 6000); // Poll every 6 seconds; no-op when tab hidden or own turn
 
     return () => clearInterval(pollInterval);
-  }, [matchup, currentUser]);
+  }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When user returns to the tab, fetch immediately so they don't wait up to 6s
   useEffect(() => {
-    if (!matchup || !currentUser || matchup.draftPicks.length >= 14) return;
+    if (!currentUser) return;
     const onVisible = () => {
+      const m = matchupRef.current;
+      if (!m || m.draftPicks.length >= 14) return;
       if (!document.hidden && !isMyTurnRef.current) fetchMatchupDetails();
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [matchup, currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkDraftAccess = () => {
     if (!matchup) return false;
@@ -1037,7 +1049,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               <button
                 onClick={fetchPlayerGrades}
                 disabled={loadingGrades || !matchup}
-                className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-semibold disabled:opacity-50 transition-colors"
+                className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700 active:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                 title={showGrades ? 'Refresh historical avg pts' : 'Load historical avg pts for all players'}
               >
                 {loadingGrades ? '⟳ Loading...' : showGrades ? '↻ Refresh Avg Pts' : '📊 Load Avg Pts'}
@@ -1240,7 +1252,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 <button
                   onClick={handleWaiveBench}
                   disabled={waivingBench}
-                  className="w-full bg-transparent hover:bg-red-100 border-2 border-red-400 hover:border-red-500 text-red-600 hover:text-red-700 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
                   {waivingBench
                     ? '⏳ Ending draft...'
