@@ -216,12 +216,11 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
     const fetches: Promise<any>[] = [
       fetchDashboardData(user.id),
       fetchTournaments(),
+      fetchCompletedContests(user.id),
     ]
-    if (completedLoadedRef.current) {
-      fetches.push(fetchCompletedContests(user.id))
-    }
     await Promise.all(fetches)
     lastFetchedAt.current = Date.now()
+    try { sessionStorage.setItem('dashLastFetch', String(lastFetchedAt.current)) } catch {}
     setIsDashRefreshing(false)
   }
 
@@ -274,7 +273,11 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
         try { sessionStorage.setItem('dashLastFetch', String(now)) } catch {}
       } else {
         // Data is fresh and userContests already restored from sessionStorage cache
-        // completedContests is session-only so mark as needing prefetch on first tab click
+        // But if completed was never cached, fetch it in the background now
+        if (!completedLoadedRef.current) {
+          setCompletedLoading(true)
+          fetchCompletedContests(parsedUser.id)
+        }
       }
     } else {
       // Redirect to login if no user data
@@ -297,7 +300,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
       if (Date.now() - lastFetchedAt.current < STALE_MS) return
       // Fix D: use combined endpoint (1 call) instead of fetchUserData + fetchUserContests (2 calls)
       fetchDashboardData(userId)
-      if (completedLoadedRef.current) fetchCompletedContests(userId)
+      fetchCompletedContests(userId)
       const now = Date.now()
       lastFetchedAt.current = now
       try { sessionStorage.setItem('dashLastFetch', String(now)) } catch {}
@@ -533,8 +536,8 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
 
   const handleSubTabClick = (key: 'upcoming' | 'drafted' | 'active' | 'completed') => {
     setContestSubTab(key)
-    // Completed is always prefetched on mount; retry only if that fetch failed
-    if (key === 'completed' && !completedLoadedRef.current && !completedLoading) {
+    // Fetch if not loaded yet, or if loaded but data is empty (stale/failed cache)
+    if (key === 'completed' && !completedLoading && (!completedLoadedRef.current || completedContests.length === 0)) {
       const uid = user?.id ?? (() => {
         try { return JSON.parse(localStorage.getItem('currentUser') ?? '{}').id } catch { return null }
       })()
