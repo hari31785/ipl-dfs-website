@@ -1365,12 +1365,12 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                       const hasJoined = entryCount > 0;
                                       const canAddEntry = hasJoined && entryCount < 5;
                                       return (
-                                        <div key={contest.id} className={`flex items-center gap-3 px-3 py-2 md:px-5 md:py-2.5 ${hasJoined ? 'bg-green-50' : 'bg-white hover:bg-gray-50'} transition-colors`}>
+                                        <div key={contest.id} className={`flex items-center gap-2 px-2 py-1 md:px-5 md:py-2.5 ${hasJoined ? 'bg-green-50' : 'bg-white hover:bg-gray-50'} transition-colors`}>
                                           {/* Left accent dot */}
                                           <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${hasJoined ? 'bg-green-500' : 'bg-yellow-400'}`} />
 
                                           {/* Contest info — single line: name + slots */}
-                                          <div className="flex-1 min-w-0 flex items-center gap-2">
+                                          <div className="flex-1 min-w-0 flex items-center gap-1.5">
                                             <span className="font-bold text-sm md:text-base text-gray-900 whitespace-nowrap">
                                               <span className="md:hidden">{contestLabel(contest.contestType, contest.coinValue, true)}</span>
                                               <span className="hidden md:inline">{contestLabel(contest.contestType, contest.coinValue)}</span>
