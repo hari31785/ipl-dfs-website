@@ -49,6 +49,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
   // Scorecard second modal
   const [scorecardSignup, setScorecardSignup] = useState<any | null>(null)
   const [scorecardLoading, setScorecardLoading] = useState(false)
+  const [scorecardStatsMap, setScorecardStatsMap] = useState<Record<string, { points: number; runs: number; wickets: number; catches: number; didNotPlay: boolean; runOuts: number; stumpings: number }>>({}) 
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser')
@@ -528,7 +529,17 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                         </div>
                         {matchup?.draftPicks?.length > 0 && (
                           <button
-                            onClick={() => setScorecardSignup(signup)}
+                            onClick={() => {
+                              setScorecardSignup(signup)
+                              const gId = signup.contest?.iplGame?.id ?? signup.contest?.iplGameId
+                              if (gId) {
+                                setScorecardStatsMap({})
+                                fetch(`/api/draft/stats/${gId}`)
+                                  .then(r => r.ok ? r.json() : {})
+                                  .then(map => setScorecardStatsMap(map))
+                                  .catch(() => {})
+                              }
+                            }}
                             className="w-full text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 rounded-lg py-1.5 transition-colors"
                           >
                             View Scorecard →
@@ -554,9 +565,20 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
         const isWinner = matchup?.winnerId === signup.id
         const isTie = matchup?.winnerId === null
 
+        // Inject stats from the cached stats endpoint into picks so benchSwapUtils can read pick.player.stats
+        const injectStats = (picks: any[]) => picks.map((pick: any) => ({
+          ...pick,
+          player: {
+            ...pick.player,
+            stats: scorecardStatsMap[pick.player?.id]
+              ? [{ iplGameId: gameId, ...scorecardStatsMap[pick.player.id] }]
+              : (pick.player?.stats ?? []),
+          },
+        }))
+
         // Split picks by user
-        const user1Picks = (matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user1Id)
-        const user2Picks = (matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user2Id)
+        const user1Picks = injectStats((matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user1Id))
+        const user2Picks = injectStats((matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user2Id))
 
         const { finalLineup: u1Lineup, benchPlayers: u1Bench } = calculateFinalLineup(user1Picks, gameId)
         const { finalLineup: u2Lineup, benchPlayers: u2Bench } = calculateFinalLineup(user2Picks, gameId)
@@ -581,7 +603,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
         const rightTotal = isViewedUser1 ? u2Total : u1Total
 
         const renderRow = (pick: any, isBench = false) => {
-          const stats = pick.player?.stats?.find((s: any) => s.iplGameId === gameId)
+          const stats = scorecardStatsMap[pick.player?.id] ?? pick.player?.stats?.find((s: any) => s.iplGameId === gameId)
           const pts = stats?.points ?? 0
           const dnp = stats?.didNotPlay ?? false
           return (
