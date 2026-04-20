@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, ArrowLeft, Home, Search, Filter, Calendar, Mail, Phone, Coins, CheckCircle, Activity, Bell } from "lucide-react"
+import { Users, ArrowLeft, Home, Search, Filter, Calendar, Mail, Phone, CheckCircle, Activity, Bell } from "lucide-react"
 import Link from "next/link"
 
 interface User {
@@ -11,7 +11,6 @@ interface User {
   email: string | null
   phone: string | null
   password: string
-  coins: number
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -28,7 +27,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all")
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name" | "coins">("newest")
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name">("newest")
   const [showResetModal, setShowResetModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [temporaryPassword, setTemporaryPassword] = useState("")
@@ -82,8 +81,6 @@ export default function AdminUsersPage() {
           return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         case "name":
           return (a.name || a.username).localeCompare(b.name || b.username)
-        case "coins":
-          return b.coins - a.coins
         default:
           return 0
       }
@@ -242,18 +239,6 @@ export default function AdminUsersPage() {
           <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 p-2 md:p-6">
             <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left">
               <div>
-                <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-600">Total<br className="md:hidden" /> Coins</p>
-                <p className="text-lg md:text-3xl font-bold text-yellow-600">
-                  {users.reduce((sum, user) => sum + user.coins, 0).toLocaleString()}
-                </p>
-              </div>
-              <Coins className="hidden md:block h-8 w-8 text-yellow-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 p-2 md:p-6">
-            <div className="flex flex-col items-center text-center md:flex-row md:items-center md:justify-between md:text-left">
-              <div>
                 <p className="text-[9px] leading-tight md:text-sm font-medium text-gray-600">Contest<br className="md:hidden" /> Signups</p>
                 <p className="text-lg md:text-3xl font-bold text-purple-600">
                   {users.reduce((sum, user) => sum + user._count.contestSignups, 0)}
@@ -295,13 +280,12 @@ export default function AdminUsersPage() {
               <label className="block text-sm font-medium mb-2">Sort by:</label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "newest" | "oldest" | "name" | "coins")}
+                onChange={(e) => setSortBy(e.target.value as "newest" | "oldest" | "name")}
                 className="px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-gray-900 bg-white"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="name">Name A-Z</option>
-                <option value="coins">Coins (High-Low)</option>
               </select>
             </div>
           </div>
@@ -324,7 +308,6 @@ export default function AdminUsersPage() {
                     <tr>
                       <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">User</th>
                       <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Contact</th>
-                      <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Coins</th>
                       <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Activity</th>
                       <th className="px-4 py-4 text-center text-sm font-medium text-gray-600">Push</th>
                       <th className="px-4 py-4 text-left text-sm font-medium text-gray-600">Joined</th>
@@ -359,12 +342,6 @@ export default function AdminUsersPage() {
                           {!user.email && !user.phone && (
                             <span className="text-sm text-gray-500">No contact info</span>
                           )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-1">
-                          <Coins className="h-4 w-4 text-yellow-500" />
-                          <span className="font-medium text-gray-900">{user.coins.toLocaleString()}</span>
                         </div>
                       </td>
                       <td className="px-4 py-4">
@@ -433,10 +410,7 @@ export default function AdminUsersPage() {
                         <p className="text-xs text-gray-400 truncate">@{user.username}{user.email ? ` · ${user.email}` : ''}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Coins className="h-3.5 w-3.5 text-yellow-500" />
-                      <span className="text-sm font-bold text-gray-800">{user.coins.toLocaleString()}</span>
-                    </div>
+
                   </div>
                   {/* Row 2: stats + actions */}
                   <div className="flex items-center justify-between gap-2">
