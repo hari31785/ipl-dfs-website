@@ -1832,8 +1832,10 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                         </div>
                       )}
 
-                      {/* Scores - Only show for active/completed tabs, not drafted (no live stats yet) */}
-                      {contestSubTab !== 'drafted' && signup.matchup?.status === 'COMPLETED' && signup.matchup.myScore !== undefined && (
+                      {/* Scores - Show for active tab (live scores) and completed matchups */}
+                      {contestSubTab !== 'drafted' && 
+                        (signup.matchup?.status === 'COMPLETED' || contestSubTab === 'active') && 
+                        signup.matchup?.myScore != null && signup.matchup?.opponentScore != null && (
                         <div className="mb-2 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
