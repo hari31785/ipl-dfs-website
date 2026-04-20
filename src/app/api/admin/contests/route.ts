@@ -33,12 +33,25 @@ export async function GET() {
         by: ['contestId', 'status'],
         _count: { _all: true }
       }),
-      prisma.$queryRaw<Array<{ contestId: string; count: bigint }>>`
-        SELECT m."contestId", COUNT(dp.id) AS count
-        FROM "HeadToHeadMatchup" m
-        LEFT JOIN "DraftPick" dp ON dp."matchupId" = m.id
-        GROUP BY m."contestId"
-      `
+      prisma.draftPick.groupBy({
+        by: ['matchupId'],
+        _count: { _all: true }
+      }).then(async (picksByMatchup) => {
+        // Map matchupId -> contestId via a single matchup lookup
+        const matchupIds = picksByMatchup.map(r => r.matchupId);
+        if (matchupIds.length === 0) return [] as Array<{ contestId: string; count: number }>;
+        const matchups = await prisma.headToHeadMatchup.findMany({
+          where: { id: { in: matchupIds } },
+          select: { id: true, contestId: true }
+        });
+        const matchupToContest = new Map(matchups.map(m => [m.id, m.contestId]));
+        const contestPickMap = new Map<string, number>();
+        for (const row of picksByMatchup) {
+          const cid = matchupToContest.get(row.matchupId);
+          if (cid) contestPickMap.set(cid, (contestPickMap.get(cid) ?? 0) + row._count._all);
+        }
+        return Array.from(contestPickMap.entries()).map(([contestId, count]) => ({ contestId, count }));
+      })
     ]);
 
     // Build lookup maps for O(1) access
@@ -49,7 +62,7 @@ export async function GET() {
     }
     const pickMap = new Map<string, number>();
     for (const row of pickCountsRaw) {
-      pickMap.set(row.contestId, Number(row.count));
+      pickMap.set(row.contestId, row.count);
     }
 
     // Add matchup status breakdown to each contest
