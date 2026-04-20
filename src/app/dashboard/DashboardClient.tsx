@@ -1351,139 +1351,75 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                               </div>
 
                               {(() => {
-                                // Filter contests to only show those available for signup
-                                if (!game.contests || game.contests.length === 0) {
-                                  return null; // This shouldn't happen due to our filtering above
-                                }
-                                
+                                if (!game.contests || game.contests.length === 0) return null;
                                 const now = new Date();
-                                const signupDeadline = new Date(game.signupDeadline);
-                                
-                                // Filter contests — only show SIGNUP_OPEN contests where deadline hasn't passed
-                                const availableContests = game.contests.filter(contest => 
-                                  contest.status === 'SIGNUP_OPEN' && new Date(game.signupDeadline) > now
+                                const isPastDeadline = new Date(game.signupDeadline) <= now;
+                                const availableContests = game.contests.filter(contest =>
+                                  contest.status === 'SIGNUP_OPEN' && !isPastDeadline
                                 );
-                                
+                                if (availableContests.length === 0) return null;
                                 return (
-                                  <div className="space-y-1.5 md:space-y-2">
-                                    <p className="text-xs md:text-sm font-semibold text-gray-600">Available Contests:</p>
-                                    <div className={`grid gap-2 md:gap-3 ${
-                                      availableContests.length === 1
-                                        ? 'grid-cols-1'
-                                        : availableContests.length === 2
-                                        ? 'grid-cols-2'
-                                        : 'grid-cols-3'
-                                    }`}>
-                                      {availableContests.map((contest) => {
-                                        // Count how many times user has joined this contest
-                                        const entryCount = userContests.filter(
-                                          uc => uc.contest.id === contest.id
-                                        ).length;
-                                        const hasJoined = entryCount > 0;
-                                        const canJoinAgain = entryCount > 0 && entryCount < 5 && contest.status === 'SIGNUP_OPEN' && new Date() <= new Date(game.signupDeadline);
-                                        
-                                        return (
-                                          <div key={contest.id} className="relative">
-                                            {!userContestsLoaded ? (
-                                              // Skeleton while user join-state is loading — prevents accidental double-join
-                                              <div className="w-full flex items-center justify-between gap-1.5 px-2.5 md:px-4 py-2 md:py-3 border-2 border-gray-200 rounded-lg bg-gray-100 animate-pulse">
-                                                <div className="flex flex-col gap-1.5 flex-1">
-                                                  <div className="h-3 bg-gray-300 rounded w-3/4" />
-                                                  <div className="h-2.5 bg-gray-200 rounded w-1/2" />
-                                                </div>
-                                                <div className="h-5 w-10 bg-gray-300 rounded shrink-0" />
-                                              </div>
-                                            ) :
-                                            hasJoined ? (
-                                              /* Split button: joined (left) + unjoin (right) */
-                                              <div className={`w-full flex items-stretch border-2 rounded-lg overflow-hidden shadow-sm border-green-600`}>
-                                                {/* Left: joined info */}
-                                                <div className="flex-1 min-w-0 flex items-center justify-between gap-1.5 px-2 md:px-4 py-2 md:py-3 bg-gradient-to-br from-green-400 to-green-500">
-                                                  <div className="flex flex-col items-start min-w-0 overflow-hidden">
-                                                    <span className="font-bold text-sm md:text-base text-white leading-tight w-full truncate">
-                                                      <span className="md:hidden">{contestLabel(contest.contestType, contest.coinValue, true)}</span>
-                                                      <span className="hidden md:inline">{contestLabel(contest.contestType, contest.coinValue)}</span>
-                                                    </span>
-                                                    <span className="text-xs md:text-sm text-green-100 leading-tight">
-                                                      {contest._count.signups}/{contest.maxParticipants}
-                                                    </span>
-                                                  </div>
-                                                  <div className="flex flex-col items-end shrink-0">
-                                                    <span className="text-sm md:text-base font-bold text-white">
-                                                      {unjoiningContest === contest.id ? '...' : '✓ In'}
-                                                    </span>
-                                                    {entryCount > 1 && (
-                                                      <span className="text-xs md:text-xs text-green-100 font-semibold">
-                                                        {entryCount} entries
-                                                      </span>
-                                                    )}
-                                                  </div>
-                                                </div>
-                                                {/* Divider */}
-                                                <div className="w-px bg-green-600/40" />
-                                                {/* Middle: Join Again button (if < 5 entries and still open) */}
-                                                {canJoinAgain && (
-                                                  <>
-                                                    <button
-                                                      onClick={(e) => { e.stopPropagation(); handleJoinContest(contest.id, game.id); }}
-                                                      disabled={joiningContest === contest.id}
-                                                      className="shrink-0 flex items-center justify-center px-2 md:px-3 bg-yellow-400 hover:bg-yellow-500 transition-colors disabled:opacity-50 border-l border-green-600/40"
-                                                      title={`Add entry #${entryCount + 1} (max 5)`}
-                                                    >
-                                                      <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                                                        {joiningContest === contest.id ? '...' : '+1'}
-                                                      </span>
-                                                    </button>
-                                                    <div className="w-px bg-green-600/40" />
-                                                  </>
-                                                )}
-                                                {/* Right: unjoin strip */}
-                                                {new Date() > new Date(game.signupDeadline) ? (
-                                                  <div className="flex items-center justify-center px-2 md:px-3 bg-green-500/60">
-                                                    <span className="text-[9px] md:text-sm text-green-100">🔒</span>
-                                                  </div>
-                                                ) : (
-                                                  <button
-                                                    onClick={(e) => { e.stopPropagation(); handleUnjoinContest(contest.id); }}
-                                                    disabled={unjoiningContest === contest.id}
-                                                    className="shrink-0 flex items-center justify-center px-2.5 md:px-6 bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
-                                                    title={entryCount > 1 ? `Remove latest entry (${entryCount} → ${entryCount - 1})` : 'Leave contest'}
-                                                  >
-                                                    <span className="text-sm md:hidden font-bold text-white">✕</span>
-                                                    <span className="hidden md:inline text-sm font-bold text-white">
-                                                      {unjoiningContest === contest.id ? '...' : 'Unjoin'}
-                                                    </span>
-                                                  </button>
-                                                )}
-                                              </div>
-                                            ) : (
-                                              /* Not joined: normal join button */
-                                              <button
-                                                onClick={() => handleJoinContest(contest.id, game.id)}
-                                                disabled={joiningContest === contest.id}
-                                                className="w-full flex items-center justify-between gap-1.5 px-2.5 md:px-4 py-2 md:py-3 border-2 border-yellow-600 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                              >
-                                                <div className="flex flex-col items-start min-w-0 overflow-hidden">
-                                                  <span className="font-bold text-sm md:text-base text-gray-900 leading-tight w-full truncate">
-                                                    <span className="md:hidden">{contestLabel(contest.contestType, contest.coinValue, true)}</span>
-                                                    <span className="hidden md:inline">{contestLabel(contest.contestType, contest.coinValue)}</span>
-                                                  </span>
-                                                  <span className="text-xs md:text-sm text-gray-600 leading-tight">
-                                                    {contest._count.signups}/{contest.maxParticipants}
-                                                  </span>
-                                                </div>
-                                                <span className="text-sm md:text-base font-bold text-gray-900 shrink-0">
-                                                  {joiningContest === contest.id ? '...' : 'Join'}
-                                                </span>
-                                              </button>
-                                            )}
+                                  <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 overflow-hidden mt-2">
+                                    {availableContests.map((contest) => {
+                                      const entryCount = userContests.filter(uc => uc.contest.id === contest.id).length;
+                                      const hasJoined = entryCount > 0;
+                                      const canAddEntry = hasJoined && entryCount < 5;
+                                      return (
+                                        <div key={contest.id} className={`flex items-center gap-2 px-2.5 py-2 md:px-4 md:py-2.5 ${hasJoined ? 'bg-green-50' : 'bg-white hover:bg-gray-50'} transition-colors`}>
+                                          {/* Left accent dot */}
+                                          <div className={`w-2 h-2 rounded-full shrink-0 ${hasJoined ? 'bg-green-500' : 'bg-yellow-400'}`} />
+
+                                          {/* Contest info */}
+                                          <div className="flex-1 min-w-0">
+                                            <span className="font-semibold text-xs md:text-sm text-gray-900 truncate block">
+                                              <span className="md:hidden">{contestLabel(contest.contestType, contest.coinValue, true)}</span>
+                                              <span className="hidden md:inline">{contestLabel(contest.contestType, contest.coinValue)}</span>
+                                            </span>
+                                            <span className="text-[10px] md:text-xs text-gray-400">{contest._count.signups}/{contest.maxParticipants}</span>
                                           </div>
-                                        );
-                                      })}
-                                    </div>
+
+                                          {/* Status + actions */}
+                                          {!userContestsLoaded ? (
+                                            <div className="h-6 w-14 bg-gray-200 rounded animate-pulse shrink-0" />
+                                          ) : hasJoined ? (
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                              <span className="text-[10px] md:text-xs font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                                                ✓ {entryCount}×
+                                              </span>
+                                              {canAddEntry && (
+                                                <button
+                                                  onClick={() => handleJoinContest(contest.id, game.id)}
+                                                  disabled={joiningContest === contest.id}
+                                                  className="text-[10px] md:text-xs font-bold px-2 py-1 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                                  title={`Add entry #${entryCount + 1} (max 5)`}
+                                                >
+                                                  {joiningContest === contest.id ? '...' : '+1'}
+                                                </button>
+                                              )}
+                                              <button
+                                                onClick={() => handleUnjoinContest(contest.id)}
+                                                disabled={unjoiningContest === contest.id}
+                                                className="text-[10px] md:text-xs font-bold px-2 py-1 rounded bg-red-100 hover:bg-red-200 text-red-600 border border-red-200 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                                title={entryCount > 1 ? `Remove latest entry (${entryCount} → ${entryCount - 1})` : 'Leave contest'}
+                                              >
+                                                {unjoiningContest === contest.id ? '...' : '✕'}
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <button
+                                              onClick={() => handleJoinContest(contest.id, game.id)}
+                                              disabled={joiningContest === contest.id}
+                                              className="text-[10px] md:text-xs font-bold px-3 py-1.5 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 border border-yellow-500 transition-colors disabled:opacity-50 shrink-0 whitespace-nowrap"
+                                            >
+                                              {joiningContest === contest.id ? '...' : 'Join'}
+                                            </button>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 );
-                              })()} 
+                              })()}
                             </div>
                           ))
                         )}
