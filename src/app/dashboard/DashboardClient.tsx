@@ -265,27 +265,33 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
     }
   }, [permission, isSubscribed, pushLoading, user?.id]);
 
-  // Option C: re-fetch on tab resume (>2min stale) + force reload on bfcache restore
+  // Fix C+D: bfcache restore uses staleness check (no full reload), visibilityChange uses combined fetch
   useEffect(() => {
     const STALE_MS = 2 * 60 * 1000 // 2 minutes
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== 'visible') return
+    const refreshIfStale = (userId: string) => {
       if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      const userData = localStorage.getItem('currentUser')
-      if (!userData) return
-      const parsedUser = JSON.parse(userData)
-      fetchUserData(parsedUser.id)
-      fetchUserContests(parsedUser.id, true) // keep active/upcoming fresh
-      if (completedLoadedRef.current) fetchCompletedContests(parsedUser.id)
+      // Fix D: use combined endpoint (1 call) instead of fetchUserData + fetchUserContests (2 calls)
+      fetchDashboardData(userId)
+      if (completedLoadedRef.current) fetchCompletedContests(userId)
       lastFetchedAt.current = Date.now()
     }
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return
+      const userData = localStorage.getItem('currentUser')
+      if (!userData) return
+      refreshIfStale(JSON.parse(userData).id)
+    }
+
     const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) {
-        // Page was restored from bfcache — force a full reload for freshness
-        window.location.reload()
-      }
+      if (!e.persisted) return
+      // Fix C: bfcache restore — let the instant restore stand, only refetch if stale
+      // Previously did window.location.reload() here which destroyed the bfcache benefit
+      // and triggered a full server render + 2 API calls every time
+      const userData = localStorage.getItem('currentUser')
+      if (!userData) return
+      refreshIfStale(JSON.parse(userData).id)
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
