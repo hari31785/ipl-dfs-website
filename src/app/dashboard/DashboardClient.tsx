@@ -237,6 +237,10 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
     if (subParam === 'upcoming' || subParam === 'drafted' || subParam === 'active' || subParam === 'completed') {
       setContestSubTab(subParam)
     }
+    // Clear URL params after reading so a browser refresh always starts at the default tab
+    if (tabParam || subParam) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
 
     // Restore push banner dismissed state
     if (localStorage.getItem('pushBannerDismissed') === '1') {
@@ -1302,124 +1306,129 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                       </div>
 
                       {/* Games List */}
-                      <div className="p-3 md:p-5 space-y-2 md:space-y-4">
+                      <div className="p-2 md:p-3 space-y-1.5 md:space-y-2">
                         {tournament.games.length === 0 ? (
                           <p className="text-gray-500 text-center py-4">No upcoming games</p>
                         ) : (
                           tournament.games.map((game) => (
-                            <div key={game.id} className="border border-gray-200 rounded-lg p-2.5 md:p-4 hover:border-secondary-300 transition-colors bg-white">
-                              {/* Compact Game Info */}
-                              <div className="flex items-center justify-between mb-2 md:mb-3">
-                                <div className="flex items-center gap-2 md:gap-3">
-                                  <div className="flex items-center gap-1.5 md:gap-2 bg-gray-100 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
-                                    <div className="w-5 h-5 md:w-7 md:h-7 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team1.color }}></div>
-                                    <span className="font-bold text-sm md:text-lg text-gray-900">{game.team1.shortName}</span>
+                            <div key={game.id} className="border border-gray-400 rounded-lg overflow-hidden hover:border-gray-500 transition-colors bg-white">
+                              <div className="flex">
+                                {/* LEFT COLUMN — game info (30%) */}
+                                <div className="flex flex-col justify-center gap-1 px-2 py-2 md:px-3 md:py-3 bg-gray-50 border-r border-gray-200 w-[30%] shrink-0">
+                                  {/* Teams — same row */}
+                                  <div className="flex items-center gap-1 flex-wrap">
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border border-white shadow-sm shrink-0" style={{ backgroundColor: game.team1.color }}></div>
+                                      <span className="font-bold text-sm md:text-base text-gray-900">{game.team1.shortName}</span>
+                                    </div>
+                                    <span className="text-[10px] md:text-xs text-gray-400 font-bold">vs</span>
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border border-white shadow-sm shrink-0" style={{ backgroundColor: game.team2.color }}></div>
+                                      <span className="font-bold text-sm md:text-base text-gray-900">{game.team2.shortName}</span>
+                                    </div>
                                   </div>
-                                  <span className="text-gray-500 text-xs md:text-sm font-bold">vs</span>
-                                  <div className="flex items-center gap-1.5 md:gap-2 bg-gray-100 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
-                                    <div className="w-5 h-5 md:w-7 md:h-7 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: game.team2.color }}></div>
-                                    <span className="font-bold text-sm md:text-lg text-gray-900">{game.team2.shortName}</span>
-                                  </div>
-                                </div>
-                                <div className="text-right">
+                                  {/* Game time */}
                                   <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500">
-                                    <Clock className="h-3 w-3 md:h-4 md:w-4" />
-                                    <span>{new Date(game.gameDate).toLocaleString('en-US', { 
+                                    <Clock className="h-3 w-3 shrink-0" />
+                                    <span className="leading-tight">{new Date(game.gameDate).toLocaleString('en-US', {
                                       month: 'short', day: 'numeric',
-                                      hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short'
+                                      hour: 'numeric', minute: '2-digit', hour12: true
                                     })}</span>
                                   </div>
-                                  <div className="flex items-center gap-1 text-xs md:text-sm text-orange-500 mt-0.5">
-                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  {/* Deadline */}
+                                  <div className="flex items-center gap-1 text-xs md:text-sm text-orange-500">
+                                    <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span>Closes: {new Date(game.signupDeadline).toLocaleString('en-US', { 
+                                    <span className="leading-tight">🔒 {new Date(game.signupDeadline).toLocaleString('en-US', {
                                       month: 'short', day: 'numeric',
-                                      hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short'
+                                      hour: 'numeric', minute: '2-digit', hour12: true
                                     })}</span>
-                                    {(() => {
-                                      const now = new Date();
-                                      const signupDeadline = new Date(game.signupDeadline);
-                                      const hasOpenContests = game.contests?.some(c => c.status === 'SIGNUP_OPEN');
-                                      if (signupDeadline <= now && hasOpenContests) {
-                                        return <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">📢 Reopened</span>;
-                                      }
-                                      return null;
-                                    })()}
                                   </div>
+                                  {(() => {
+                                    const now = new Date();
+                                    const hasOpenContests = game.contests?.some((c: any) => c.status === 'SIGNUP_OPEN');
+                                    if (new Date(game.signupDeadline) <= now && hasOpenContests) {
+                                      return <span className="px-1 py-0.5 rounded-full text-[9px] font-medium bg-blue-100 text-blue-800 w-fit">📢 Reopened</span>;
+                                    }
+                                    return null;
+                                  })()}
                                 </div>
-                              </div>
 
-                              {(() => {
-                                if (!game.contests || game.contests.length === 0) return null;
-                                const now = new Date();
-                                const isPastDeadline = new Date(game.signupDeadline) <= now;
-                                const availableContests = game.contests
-                                  .filter(contest => contest.status === 'SIGNUP_OPEN' && !isPastDeadline)
-                                  .sort((a, b) => a.coinValue - b.coinValue);
-                                if (availableContests.length === 0) return null;
-                                return (
-                                  <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 overflow-hidden mt-2">
-                                    {availableContests.map((contest) => {
-                                      const entryCount = userContests.filter(uc => uc.contest.id === contest.id).length;
-                                      const hasJoined = entryCount > 0;
-                                      const canAddEntry = hasJoined && entryCount < 5;
-                                      return (
-                                        <div key={contest.id} className={`flex items-center gap-2 px-2 py-1 md:px-5 md:py-2.5 ${hasJoined ? 'bg-green-50' : 'bg-white hover:bg-gray-50'} transition-colors`}>
-                                          {/* Left accent dot */}
-                                          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${hasJoined ? 'bg-green-500' : 'bg-yellow-400'}`} />
-
-                                          {/* Contest info — single line: name + slots */}
-                                          <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                                            <span className="font-bold text-sm md:text-base text-gray-900 whitespace-nowrap">
-                                              <span className="md:hidden">{contestLabel(contest.contestType, contest.coinValue, true)}</span>
-                                              <span className="hidden md:inline">{contestLabel(contest.contestType, contest.coinValue)}</span>
-                                            </span>
-                                            <span className="text-xs md:text-sm text-gray-400 whitespace-nowrap">({contest._count.signups}/{contest.maxParticipants})</span>
-                                          </div>
-
-                                          {/* Status + actions */}
-                                          {!userContestsLoaded ? (
-                                            <div className="h-8 w-16 bg-gray-200 rounded animate-pulse shrink-0" />
-                                          ) : hasJoined ? (
-                                            <div className="flex items-center gap-2 shrink-0">
-                                              <span className="text-xs md:text-sm font-bold text-green-700 bg-green-100 px-2.5 py-1.5 rounded-full whitespace-nowrap">
-                                                ✓ {entryCount}×
-                                              </span>
-                                              {canAddEntry && (
+                                {/* RIGHT COLUMN — contests (70%) */}
+                                <div className="flex-1 min-w-0">
+                                  {(() => {
+                                    if (!game.contests || game.contests.length === 0) return null;
+                                    const now = new Date();
+                                    const isPastDeadline = new Date(game.signupDeadline) <= now;
+                                    const availableContests = game.contests
+                                      .filter((contest: any) => contest.status === 'SIGNUP_OPEN' && !isPastDeadline)
+                                      .sort((a: any, b: any) => a.coinValue - b.coinValue);
+                                    if (availableContests.length === 0) return (
+                                      <div className="flex items-center justify-center h-full px-4 py-6 text-xs text-gray-400">No open contests</div>
+                                    );
+                                    return (
+                                      <div className="divide-y divide-gray-300 h-full">
+                                        {availableContests.map((contest: any) => {
+                                          const entryCount = userContests.filter((uc: any) => uc.contest.id === contest.id).length;
+                                          const hasJoined = entryCount > 0;
+                                          const canAddEntry = hasJoined && entryCount < 5;
+                                          return (
+                                            <div key={contest.id} className={`flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 ${hasJoined ? 'bg-green-50' : 'bg-white hover:bg-gray-50'} transition-colors`}>
+                                              {/* Accent dot */}
+                                              <div className={`w-2 h-2 rounded-full shrink-0 ${hasJoined ? 'bg-green-500' : 'bg-yellow-400'}`} />
+                                              {/* Contest name + slots */}
+                                              <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                                                <span className="font-bold text-sm md:text-base text-gray-900 whitespace-nowrap">
+                                                  <span className="md:hidden">{contestLabel(contest.contestType, contest.coinValue, true)}</span>
+                                                  <span className="hidden md:inline">{contestLabel(contest.contestType, contest.coinValue)}</span>
+                                                </span>
+                                                <span className="text-xs md:text-sm text-gray-400 whitespace-nowrap">({contest._count.signups}/{contest.maxParticipants})</span>
+                                              </div>
+                                              {/* Actions */}
+                                              {!userContestsLoaded ? (
+                                                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse shrink-0" />
+                                              ) : hasJoined ? (
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                  <span className="text-xs md:text-sm font-bold text-green-700 bg-green-100 px-2 py-1 md:px-3 md:py-1.5 rounded-full whitespace-nowrap">
+                                                    ✓ {entryCount}×
+                                                  </span>
+                                                  {canAddEntry && (
+                                                    <button
+                                                      onClick={() => handleJoinContest(contest.id, game.id)}
+                                                      disabled={joiningContest === contest.id}
+                                                      className="text-sm md:text-base font-bold px-3 py-1.5 md:px-5 md:py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 transition-colors disabled:opacity-50 min-w-[2.5rem] md:min-w-[3.5rem] text-center"
+                                                      title={`Add entry #${entryCount + 1} (max 5)`}
+                                                    >
+                                                      {joiningContest === contest.id ? '...' : '+1'}
+                                                    </button>
+                                                  )}
+                                                  <button
+                                                    onClick={() => handleUnjoinContest(contest.id)}
+                                                    disabled={unjoiningContest === contest.id}
+                                                    className="text-sm md:text-base font-bold px-3 py-1.5 md:px-5 md:py-2 rounded bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50 min-w-[2.5rem] md:min-w-[3.5rem] text-center"
+                                                    title={entryCount > 1 ? `Remove latest entry (${entryCount} → ${entryCount - 1})` : 'Leave contest'}
+                                                  >
+                                                    {unjoiningContest === contest.id ? '...' : '✕'}
+                                                  </button>
+                                                </div>
+                                              ) : (
                                                 <button
                                                   onClick={() => handleJoinContest(contest.id, game.id)}
                                                   disabled={joiningContest === contest.id}
-                                                  className="text-sm md:text-base font-bold px-4 py-1.5 md:px-5 md:py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 transition-colors disabled:opacity-50 whitespace-nowrap min-w-[3rem] text-center"
-                                                  title={`Add entry #${entryCount + 1} (max 5)`}
+                                                  className="text-sm md:text-base font-bold px-4 py-1.5 md:px-6 md:py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 border border-yellow-500 transition-colors disabled:opacity-50 shrink-0 min-w-[3rem] md:min-w-[4rem] text-center"
                                                 >
-                                                  {joiningContest === contest.id ? '...' : '+1'}
+                                                  {joiningContest === contest.id ? '...' : 'Join'}
                                                 </button>
                                               )}
-                                              <button
-                                                onClick={() => handleUnjoinContest(contest.id)}
-                                                disabled={unjoiningContest === contest.id}
-                                                className="text-sm md:text-base font-bold px-4 py-1.5 md:px-5 md:py-2 rounded bg-red-100 hover:bg-red-200 text-red-600 border border-red-200 transition-colors disabled:opacity-50 whitespace-nowrap min-w-[3rem] text-center"
-                                                title={entryCount > 1 ? `Remove latest entry (${entryCount} → ${entryCount - 1})` : 'Leave contest'}
-                                              >
-                                                {unjoiningContest === contest.id ? '...' : '✕'}
-                                              </button>
                                             </div>
-                                          ) : (
-                                            <button
-                                              onClick={() => handleJoinContest(contest.id, game.id)}
-                                              disabled={joiningContest === contest.id}
-                                              className="text-sm md:text-base font-bold px-4 py-1.5 md:px-5 md:py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-gray-900 border border-yellow-500 transition-colors disabled:opacity-50 shrink-0 whitespace-nowrap min-w-[3rem] text-center"
-                                            >
-                                              {joiningContest === contest.id ? '...' : 'Join'}
-                                            </button>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })()}
+                                          );
+                                        })}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
                             </div>
                           ))
                         )}
@@ -1747,11 +1756,11 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                 isPastDeadline
                               )
                               return (
-                            <div key={`${signup.id}-${signup.matchup?.id ?? 'none'}`} className="flex items-start gap-3 px-3 py-2.5">
+                            <div key={`${signup.id}-${signup.matchup?.id ?? 'none'}`} className="flex items-center gap-2 px-2 py-1.5 md:px-3 md:py-2">
                               {/* Left: badge + status/scores */}
                               <div className="flex-1 min-w-0">
-                                {/* Contest type badge + coin value */}
-                                <div className="flex items-center gap-2 mb-1.5">
+                                {/* Contest type badge + status on one line */}
+                                <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
                                     signup.contest.contestType === 'HIGH_ROLLER' ? 'bg-purple-100 text-purple-700' :
                                     signup.contest.contestType === 'REGULAR'     ? 'bg-blue-100 text-blue-700' :
@@ -1760,12 +1769,10 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                   }`}>
                                     {contestLabel(signup.contest.contestType, signup.contest.coinValue)}
                                   </span>
-                                  <span className="text-[10px] text-gray-400">{signup.contest.coinValue}c/pt</span>
-                                </div>
 
                                 {/* Status — upcoming/drafted */}
                                 {contestSubTab !== 'active' && (
-                                  <div className={`text-[10px] font-medium px-1.5 py-1 rounded mb-1 ${
+                                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded whitespace-nowrap ${
                                     signup.matchup
                                       ? signup.matchup.status === 'DRAFTING'
                                         ? 'bg-blue-50 text-blue-700'
@@ -1773,12 +1780,14 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                       : 'bg-yellow-50 text-yellow-700'
                                   }`}>
                                     {signup.matchup ? (
-                                      signup.matchup.status === 'DRAFTING' ? `✍️ Drafting vs @${signup.matchup.opponentUsername ?? 'opponent'}` :
-                                      signup.matchup.status === 'COMPLETED' ? `✅ Draft done · vs @${signup.matchup.opponentUsername ?? 'opponent'}` :
-                                      `⏳ Matched @${signup.matchup.opponentUsername ?? 'opponent'} — draft soon`
-                                    ) : '⏳ Waiting for matchup'}
-                                  </div>
+                                      signup.matchup.status === 'DRAFTING' ? `✍️ vs @${signup.matchup.opponentUsername ?? 'opponent'}` :
+                                      signup.matchup.status === 'COMPLETED' ? `✅ vs @${signup.matchup.opponentUsername ?? 'opponent'}` :
+                                      `⏳ vs @${signup.matchup.opponentUsername ?? 'opponent'}`
+                                    ) : '⏳ Waiting'}
+                                  </span>
                                 )}
+
+                                </div>
 
                                 {/* Live scores — active tab */}
                                 {contestSubTab !== 'drafted' &&
