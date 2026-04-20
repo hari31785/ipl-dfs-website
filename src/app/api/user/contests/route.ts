@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from '@/lib/prisma'
-import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils'
 
 
 // Get user's contest signups
@@ -44,14 +43,24 @@ export async function GET(request: NextRequest) {
               }
             },
             draftPicks: {
-              include: {
+              select: {
+                id: true,
+                pickOrder: true,
+                pickedByUserId: true,
+                isBench: true,
+                playerId: true,
                 player: {
-                  include: {
-                    stats: true
+                  select: {
+                    id: true,
+                    name: true,
+                    role: true,
+                    iplTeam: { select: { shortName: true, color: true } }
                   }
                 }
               }
-            }
+            },
+            user1Score: true,
+            user2Score: true,
           }
         },
         matchupsAsUser2: {
@@ -62,14 +71,24 @@ export async function GET(request: NextRequest) {
               }
             },
             draftPicks: {
-              include: {
+              select: {
+                id: true,
+                pickOrder: true,
+                pickedByUserId: true,
+                isBench: true,
+                playerId: true,
                 player: {
-                  include: {
-                    stats: true
+                  select: {
+                    id: true,
+                    name: true,
+                    role: true,
+                    iplTeam: { select: { shortName: true, color: true } }
                   }
                 }
               }
-            }
+            },
+            user1Score: true,
+            user2Score: true,
           }
         }
       }
@@ -92,13 +111,9 @@ export async function GET(request: NextRequest) {
         let opponentScore: number | undefined;
 
         if (matchup.status === 'COMPLETED') {
-          const mySignupId       = isUser1 ? matchup.user1Id : matchup.user2Id;
-          const opponentSignupId = isUser1 ? matchup.user2Id : matchup.user1Id;
-
-          const myPicks  = matchup.draftPicks.filter((pick: any) => pick.pickedByUserId === mySignupId);
-          const oppPicks = matchup.draftPicks.filter((pick: any) => pick.pickedByUserId === opponentSignupId);
-          myScore       = calculateTotalPointsWithSwap(myPicks as any, signup.contest.iplGameId);
-          opponentScore = calculateTotalPointsWithSwap(oppPicks as any, signup.contest.iplGameId);
+          // Use stored scores from DB — no need to re-compute from stats
+          myScore       = isUser1 ? (matchup as any).user1Score : (matchup as any).user2Score;
+          opponentScore = isUser1 ? (matchup as any).user2Score : (matchup as any).user1Score;
         }
 
         // Derive winnerId from stored DB scores for legacy records
