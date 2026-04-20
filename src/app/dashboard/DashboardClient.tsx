@@ -1755,212 +1755,207 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                       )
                     }
 
-                    // Sort upcoming/active/drafted by game date
-                    return filteredContests
-                      .sort((a, b) => {
-                        // Sort by game date for better organization
-                        const dateA = new Date(a.contest.iplGame.gameDate)
-                        const dateB = new Date(b.contest.iplGame.gameDate)
-                        return dateA.getTime() - dateB.getTime() // Earliest first for upcoming/active
-                      })
-                      .map((signup) => (
-                    <div key={`${signup.id}-${signup.matchup?.id ?? 'none'}`} className="bg-white rounded-lg shadow border border-gray-200 p-3 md:p-5">
-                      {/* Compact Header with Team Badges */}
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 md:py-2 bg-gray-100 rounded-lg">
-                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team1.color }}></div>
-                            <span className="font-bold text-sm md:text-base text-gray-900">{signup.contest.iplGame.team1.shortName}</span>
-                          </div>
-                          <span className="text-gray-500 text-xs md:text-sm font-bold">vs</span>
-                          <div className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 md:py-2 bg-gray-100 rounded-lg">
-                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: signup.contest.iplGame.team2.color }}></div>
-                            <span className="font-bold text-sm md:text-base text-gray-900">{signup.contest.iplGame.team2.shortName}</span>
-                          </div>
-                          {/* Contest type + coin inline on mobile */}
-                          <span className="text-xs text-gray-500 ml-1 hidden xs:inline">
-                            {contestLabel(signup.contest.contestType, signup.contest.coinValue, true)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-gray-500 xs:hidden">
-                            {contestLabel(signup.contest.contestType, signup.contest.coinValue, true)}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                            signup.contest.iplGame.status === 'LIVE' ? 'bg-red-100 text-red-700' :
-                            signup.contest.iplGame.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
-                            {signup.contest.iplGame.status}
-                          </span>
-                        </div>
-                      </div>
+                    // Group signups by game ID, sorted earliest first
+                    const gameGroups = filteredContests
+                      .sort((a, b) =>
+                        new Date(a.contest.iplGame.gameDate).getTime() -
+                        new Date(b.contest.iplGame.gameDate).getTime()
+                      )
+                      .reduce((groups: Record<string, { game: any; signups: any[] }>, signup: any) => {
+                        const gameId = signup.contest.iplGame.id
+                        if (!groups[gameId]) groups[gameId] = { game: signup.contest.iplGame, signups: [] }
+                        groups[gameId].signups.push(signup)
+                        return groups
+                      }, {})
 
-                      {/* Contest Info — single compact line */}
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2 px-1">
-                        <span className="font-medium text-gray-700">
-                          {contestLabel(signup.contest.contestType, signup.contest.coinValue)}
-                          <span className="text-gray-400 font-normal"> · {signup.contest.coinValue} coins/pt</span>
-                        </span>
-                        <span>
-                          {new Date(signup.contest.iplGame.gameDate).toLocaleString('en-US', {
-                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short'
-                          })}
-                        </span>
-                      </div>
-
-                      {/* Status - Only show for upcoming/drafted tabs, not active/completed */}
-                      {contestSubTab !== 'active' && (
-                        <div className={`rounded px-2 py-1.5 mb-2 text-xs font-medium ${
-                          signup.matchup 
-                            ? signup.matchup.status === 'DRAFTING' 
-                              ? 'bg-blue-50 border border-blue-200 text-blue-800' 
-                              : 'bg-green-50 border border-green-200 text-green-800'
-                            : 'bg-yellow-50 border border-yellow-200 text-yellow-800'
-                        }`}>
-                          {signup.matchup ? (
-                            signup.matchup.status === 'DRAFTING' ? (
-                              <>✍️ Drafting vs {signup.matchup.opponentUsername ?? signup.matchup.opponent?.name ?? 'opponent'}</>
-                            ) : signup.matchup.status === 'COMPLETED' ? (
-                              <>✅ Draft Complete — Ready for game</>
-                            ) : (
-                              <>⏳ Matched with {signup.matchup.opponentUsername ?? signup.matchup.opponent?.name ?? 'opponent'} — Draft starting soon</>
-                            )
-                          ) : (
-                            <>⏳ Waiting for matchup assignment</>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Scores - Show for active tab (live scores) and completed matchups */}
-                      {contestSubTab !== 'drafted' && 
-                        (signup.matchup?.status === 'COMPLETED' || contestSubTab === 'active') && 
-                        signup.matchup?.myScore != null && signup.matchup?.opponentScore != null && (
-                        <div className="mb-2 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="text-xs text-gray-600 mb-1">Your Score</div>
-                              <div className={`text-2xl font-black ${
-                                signup.matchup.myScore > signup.matchup.opponentScore! 
-                                  ? 'text-green-700' 
-                                  : signup.matchup.myScore < signup.matchup.opponentScore!
-                                  ? 'text-red-700'
-                                  : 'text-gray-700'
-                              }`}>
-                                ⭐ {signup.matchup.myScore.toFixed(1)}
-                              </div>
+                    return Object.values(gameGroups).map((group: any) => (
+                      <div key={group.game.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                        {/* Game header */}
+                        <div className="flex items-center justify-between px-3 md:px-5 py-3 bg-gray-50 border-b border-gray-200">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-lg border border-gray-200">
+                              <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: group.game.team1.color }}></div>
+                              <span className="font-bold text-sm md:text-base text-gray-900">{group.game.team1.shortName}</span>
                             </div>
-                            <div className="px-4">
-                              <div className="text-2xl font-bold text-gray-400">vs</div>
+                            <span className="text-gray-400 text-xs font-bold">vs</span>
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-lg border border-gray-200">
+                              <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: group.game.team2.color }}></div>
+                              <span className="font-bold text-sm md:text-base text-gray-900">{group.game.team2.shortName}</span>
                             </div>
-                            <div className="flex-1 text-right">
-                              <div className="text-xs text-gray-600 mb-1">{signup.matchup.opponentUsername ?? signup.matchup.opponent?.name ?? 'Opponent'}</div>
-                              <div className={`text-2xl font-black ${
-                                signup.matchup.opponentScore! > signup.matchup.myScore 
-                                  ? 'text-green-700' 
-                                  : signup.matchup.opponentScore! < signup.matchup.myScore
-                                  ? 'text-red-700'
-                                  : 'text-gray-700'
-                              }`}>
-                                ⭐ {signup.matchup.opponentScore!.toFixed(1)}
-                              </div>
-                            </div>
-                          </div>
-                          {/* Only show won/lost status in drafted tab, not in active tab where scores can still change */}
-                          {contestSubTab !== 'active' && signup.matchup.myScore !== signup.matchup.opponentScore && (
-                            <div className="mt-2 text-center">
-                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                                signup.matchup.myScore > signup.matchup.opponentScore!
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {signup.matchup.myScore > signup.matchup.opponentScore! ? '🎉 You Won!' : '😔 You Lost'}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        {signup.matchup?.status === 'COMPLETED' ? (
-                          contestSubTab === 'drafted' ? (
-                            <button 
-                              onClick={async () => {
-                                setSelectedDraftedContest(signup)
-                                setShowDraftedTeamsModal(true)
-                                setDraftedTeamPicks([])
-                                setLoadingDraftedPicks(true)
-                                try {
-                                  const res = await fetch(`/api/draft/${signup.matchup?.id}/poll`)
-                                  if (res.ok) {
-                                    const data = await res.json()
-                                    setDraftedTeamPicks(data.draftPicks ?? [])
-                                  }
-                                } catch {}
-                                finally { setLoadingDraftedPicks(false) }
-                              }}
-                              className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors"
-                            >
-                              View Drafted Teams
-                            </button>
-                          ) : (
-                            <button 
-                              onClick={() => router.push(`/scores/${signup.matchup?.id}?from=${contestSubTab}`)}
-                              className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors"
-                            >
-                              View Scores
-                            </button>
-                          )
-                        ) : (
-                          <button 
-                            disabled={
-                              !signup.matchup || 
-                              (signup.matchup.status !== 'DRAFTING' && 
-                               signup.matchup.status !== 'COMPLETED' &&
-                               new Date() <= new Date(signup.contest.iplGame.signupDeadline))
-                            }
-                            onClick={() => router.push(`/draft/${signup.matchup?.id}`)}
-                            className={`flex-1 px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors ${
-                              signup.matchup && (
-                                signup.matchup.status === 'DRAFTING' || 
-                                signup.matchup.status === 'COMPLETED' ||
-                                new Date() > new Date(signup.contest.iplGame.signupDeadline)
-                              )
-                                ? 'bg-blue-500 hover:bg-blue-600 text-white cursor-pointer'
-                                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            }`}
-                            title={
-                              !signup.matchup 
-                                ? 'Waiting for matchup' 
-                                : signup.matchup.status !== 'DRAFTING' && 
-                                  signup.matchup.status !== 'COMPLETED' &&
-                                  new Date() <= new Date(signup.contest.iplGame.signupDeadline)
-                                ? 'Draft will open after signup deadline or when admin opens it'
-                                : 'Click to draft your team'
-                            }
-                          >
-                            Draft Team
-                          </button>
-                        )}
-                        {!signup.matchup && (
-                          new Date() > new Date(signup.contest.iplGame.signupDeadline) ? (
-                            <span className="flex-1 text-center text-xs text-gray-400 font-medium py-1.5">
-                              🔒 Deadline Passed
+                            <span className="text-xs text-gray-500 hidden sm:inline">
+                              {new Date(group.game.gameDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
                             </span>
-                          ) : (
-                            <button 
-                              onClick={() => handleLeaveContest(signup.id)}
-                              disabled={leavingContest === signup.id}
-                              className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 px-3 md:px-5 py-1.5 md:py-2.5 rounded text-xs md:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {leavingContest === signup.id ? 'Leaving...' : 'Leave Contest'}
-                            </button>
-                          )
-                        )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-500">{group.signups.length}× entered</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              group.game.status === 'LIVE' ? 'bg-red-100 text-red-700' :
+                              group.game.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {group.game.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* One row per signup */}
+                        <div className="divide-y divide-gray-100">
+                          {group.signups.map((signup: any) => (
+                            <div key={`${signup.id}-${signup.matchup?.id ?? 'none'}`} className="p-3 md:p-4">
+                              {/* Contest type label */}
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                  signup.contest.contestType === 'HIGH_ROLLER' ? 'bg-purple-100 text-purple-700' :
+                                  signup.contest.contestType === 'REGULAR'     ? 'bg-blue-100 text-blue-700' :
+                                  signup.contest.contestType === 'LOW_STAKES'  ? 'bg-green-100 text-green-700' :
+                                  'bg-orange-100 text-orange-700'
+                                }`}>
+                                  {contestLabel(signup.contest.contestType, signup.contest.coinValue)}
+                                </span>
+                                <span className="text-xs text-gray-400">{signup.contest.coinValue} coins/pt</span>
+                              </div>
+
+                              {/* Status row — upcoming/drafted only */}
+                              {contestSubTab !== 'active' && (
+                                <div className={`rounded px-2 py-1.5 mb-2 text-xs font-medium ${
+                                  signup.matchup
+                                    ? signup.matchup.status === 'DRAFTING'
+                                      ? 'bg-blue-50 border border-blue-200 text-blue-800'
+                                      : 'bg-green-50 border border-green-200 text-green-800'
+                                    : 'bg-yellow-50 border border-yellow-200 text-yellow-800'
+                                }`}>
+                                  {signup.matchup ? (
+                                    signup.matchup.status === 'DRAFTING' ? (
+                                      <>✍️ Drafting vs @{signup.matchup.opponentUsername ?? 'opponent'}</>
+                                    ) : signup.matchup.status === 'COMPLETED' ? (
+                                      <>✅ Draft Complete — Ready for game</>
+                                    ) : (
+                                      <>⏳ Matched with @{signup.matchup.opponentUsername ?? 'opponent'} — Draft starting soon</>
+                                    )
+                                  ) : (
+                                    <>⏳ Waiting for matchup assignment</>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Live scores — active tab */}
+                              {contestSubTab !== 'drafted' &&
+                                (signup.matchup?.status === 'COMPLETED' || contestSubTab === 'active') &&
+                                signup.matchup?.myScore != null && signup.matchup?.opponentScore != null && (
+                                <div className="mb-2 p-2.5 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <div className="text-[10px] text-gray-500 mb-0.5">Your Score</div>
+                                      <div className={`text-xl font-black ${
+                                        signup.matchup.myScore > signup.matchup.opponentScore! ? 'text-green-700' :
+                                        signup.matchup.myScore < signup.matchup.opponentScore! ? 'text-red-700' : 'text-gray-700'
+                                      }`}>⭐ {signup.matchup.myScore.toFixed(1)}</div>
+                                    </div>
+                                    <div className="px-3 text-lg font-bold text-gray-400">vs</div>
+                                    <div className="flex-1 text-right">
+                                      <div className="text-[10px] text-gray-500 mb-0.5">@{signup.matchup.opponentUsername ?? 'Opponent'}</div>
+                                      <div className={`text-xl font-black ${
+                                        signup.matchup.opponentScore! > signup.matchup.myScore ? 'text-green-700' :
+                                        signup.matchup.opponentScore! < signup.matchup.myScore ? 'text-red-700' : 'text-gray-700'
+                                      }`}>⭐ {signup.matchup.opponentScore!.toFixed(1)}</div>
+                                    </div>
+                                  </div>
+                                  {contestSubTab !== 'active' && signup.matchup.myScore !== signup.matchup.opponentScore && (
+                                    <div className="mt-1.5 text-center">
+                                      <span className={`inline-block px-3 py-0.5 rounded-full text-xs font-bold ${
+                                        signup.matchup.myScore > signup.matchup.opponentScore!
+                                          ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                      }`}>
+                                        {signup.matchup.myScore > signup.matchup.opponentScore! ? '🎉 You Won!' : '😔 You Lost'}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Actions */}
+                              <div className="flex gap-2">
+                                {signup.matchup?.status === 'COMPLETED' ? (
+                                  contestSubTab === 'drafted' ? (
+                                    <button
+                                      onClick={async () => {
+                                        setSelectedDraftedContest(signup)
+                                        setShowDraftedTeamsModal(true)
+                                        setDraftedTeamPicks([])
+                                        setLoadingDraftedPicks(true)
+                                        try {
+                                          const res = await fetch(`/api/draft/${signup.matchup?.id}/poll`)
+                                          if (res.ok) {
+                                            const data = await res.json()
+                                            setDraftedTeamPicks(data.draftPicks ?? [])
+                                          }
+                                        } catch {}
+                                        finally { setLoadingDraftedPicks(false) }
+                                      }}
+                                      className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                                    >
+                                      View Drafted Teams
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => router.push(`/scores/${signup.matchup?.id}?from=${contestSubTab}`)}
+                                      className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                                    >
+                                      View Scores
+                                    </button>
+                                  )
+                                ) : (
+                                  <button
+                                    disabled={
+                                      !signup.matchup ||
+                                      (signup.matchup.status !== 'DRAFTING' &&
+                                       signup.matchup.status !== 'COMPLETED' &&
+                                       new Date() <= new Date(signup.contest.iplGame.signupDeadline))
+                                    }
+                                    onClick={() => router.push(`/draft/${signup.matchup?.id}`)}
+                                    className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                                      signup.matchup && (
+                                        signup.matchup.status === 'DRAFTING' ||
+                                        signup.matchup.status === 'COMPLETED' ||
+                                        new Date() > new Date(signup.contest.iplGame.signupDeadline)
+                                      )
+                                        ? 'bg-blue-500 hover:bg-blue-600 text-white cursor-pointer'
+                                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                    }`}
+                                    title={
+                                      !signup.matchup
+                                        ? 'Waiting for matchup'
+                                        : signup.matchup.status !== 'DRAFTING' &&
+                                          signup.matchup.status !== 'COMPLETED' &&
+                                          new Date() <= new Date(signup.contest.iplGame.signupDeadline)
+                                        ? 'Draft will open after signup deadline or when admin opens it'
+                                        : 'Click to draft your team'
+                                    }
+                                  >
+                                    Draft Team
+                                  </button>
+                                )}
+                                {!signup.matchup && (
+                                  new Date() > new Date(signup.contest.iplGame.signupDeadline) ? (
+                                    <span className="flex-1 text-center text-xs text-gray-400 font-medium py-1.5">
+                                      🔒 Deadline Passed
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleLeaveContest(signup.id)}
+                                      disabled={leavingContest === signup.id}
+                                      className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {leavingContest === signup.id ? 'Leaving...' : 'Leave Contest'}
+                                    </button>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
                   })()}
                 </div>
               </div>
