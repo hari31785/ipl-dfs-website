@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, BarChart3, Trash2, Edit, Save, X, Download, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface IPLGame {
@@ -183,20 +183,15 @@ export default function BulkStatsPage() {
     }
   };
 
-  const getGamePlayers = () => {
+  const gamePlayers = useMemo(() => {
     if (!selectedGame) return [];
     const game = games.find(g => g.id === selectedGame);
     if (!game) return [];
-    
-    // Filter to only players from the two teams playing
-    const teamPlayers = players.filter(player => 
-      player.iplTeam.id === game.team1.id || 
+    return players.filter(player =>
+      player.iplTeam.id === game.team1.id ||
       player.iplTeam.id === game.team2.id
     );
-    
-    // Show ALL team players for stats entry (admin needs to enter stats for everyone)
-    return teamPlayers;
-  };
+  }, [selectedGame, games, players]);
 
   const calculatePoints = (runs: number, wickets: number, catches: number, runOuts: number, stumpings: number) => {
     return (runs * 1) + (wickets * 20) + ((catches + runOuts + stumpings) * 5);
@@ -261,12 +256,6 @@ export default function BulkStatsPage() {
       hasAnyStats(stat.playerId)
     );
 
-    console.log('Stats to save:', statsToSave);
-    console.log('Request payload:', {
-      iplGameId: selectedGame,
-      stats: statsToSave
-    });
-
     if (statsToSave.length === 0) {
       alert('Please enter stats for at least one player');
       return;
@@ -289,9 +278,6 @@ export default function BulkStatsPage() {
         }),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
       if (response.ok) {
         const result = await response.json();
         alert(`Successfully saved stats for ${result.count} player(s)!`);
@@ -301,7 +287,6 @@ export default function BulkStatsPage() {
         // Handle error response with better error display
         let errorMessage = 'Unknown error occurred';
         const responseText = await response.text();
-        console.log('Error response text:', responseText);
         
         try {
           const error = JSON.parse(responseText);
@@ -599,7 +584,6 @@ export default function BulkStatsPage() {
       }
 
       // Step 2: Provider not configured on this server — try local bridge on localhost:3001
-      console.log('Score provider unavailable on server, trying local bridge on localhost:3001...');
 
       let bridgeResponse: Response;
       try {
@@ -1045,7 +1029,7 @@ export default function BulkStatsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {getGamePlayers().map((player) => (
+                    {gamePlayers.map((player) => (
                       <tr key={player.id} className={`hover:bg-gray-50 ${hasAnyStats(player.id) ? 'bg-green-50' : ''}`}>
                         <td className="px-4 py-3 font-medium text-gray-900">{player.name}</td>
                         <td className="px-4 py-3"><span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: player.iplTeam.color + '20', color: player.iplTeam.color }}>{player.iplTeam.shortName}</span></td>
@@ -1063,7 +1047,7 @@ export default function BulkStatsPage() {
               </div>
               {/* Mobile form cards */}
               <div className="md:hidden divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
-                {getGamePlayers().map((player) => (
+                {gamePlayers.map((player) => (
                   <div key={player.id} className={`p-3 ${hasAnyStats(player.id) ? 'bg-green-50' : ''}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">

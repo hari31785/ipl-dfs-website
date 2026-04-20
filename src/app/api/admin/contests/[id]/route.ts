@@ -29,6 +29,7 @@ export async function PUT(
       );
     }
 
+    const needsSignups = status === 'LIVE' || status === 'ACTIVE' || status === 'DRAFT_PHASE';
     const contest = await prisma.contest.update({
       where: { id },
       data: { status },
@@ -39,11 +40,9 @@ export async function PUT(
             team2: true
           }
         },
-        signups: {
-          select: { id: true, userId: true }
-        }
+        ...(needsSignups ? { signups: { select: { id: true, userId: true } } } : {})
       }
-    });
+    }) as typeof contest & { signups?: Array<{ id: string; userId: string }> };
 
     // Push notification when contest goes LIVE
     if (status === 'LIVE' || status === 'ACTIVE') {

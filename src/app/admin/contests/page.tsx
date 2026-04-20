@@ -330,15 +330,11 @@ export default function ContestsPage() {
   };
 
   const fetchContestSignups = async (contestId: string) => {
-    console.log('fetchContestSignups called with ID:', contestId);
     setLoadingSignups(true);
     try {
-      console.log('Fetching from:', `/api/admin/contests/${contestId}/signups`);
       const response = await fetch(`/api/admin/contests/${contestId}/signups`);
-      console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('Received signups data:', data);
         setSelectedContestSignups(data);
         setShowSignupsModal(true);
       } else {

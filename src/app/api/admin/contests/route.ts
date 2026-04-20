@@ -6,52 +6,65 @@ import { revalidateTag } from 'next/cache';
 // GET /api/admin/contests - List all contests  
 export async function GET() {
   try {
-    const contests = await prisma.contest.findMany({
-      include: {
-        iplGame: {
-          include: {
-            team1: true,
-            team2: true,
-            tournament: true
-          }
-        },
-        matchups: {
-          select: {
-            status: true,
-            _count: {
-              select: {
-                draftPicks: true
-              }
+    const [contests, statusGroups, pickCountsRaw] = await Promise.all([
+      prisma.contest.findMany({
+        include: {
+          iplGame: {
+            include: {
+              team1: true,
+              team2: true,
+              tournament: true
+            }
+          },
+          _count: {
+            select: {
+              signups: true,
+              matchups: true
             }
           }
         },
-        _count: {
-          select: {
-            signups: true,
-            matchups: true
+        orderBy: {
+          iplGame: {
+            gameDate: 'desc'
           }
         }
-      },
-      orderBy: {
-        iplGame: {
-          gameDate: 'desc'
-        }
-      }
-    });
+      }),
+      prisma.headToHeadMatchup.groupBy({
+        by: ['contestId', 'status'],
+        _count: { _all: true }
+      }),
+      prisma.$queryRaw<Array<{ contestId: string; count: bigint }>>`
+        SELECT m."contestId", COUNT(dp.id) AS count
+        FROM "HeadToHeadMatchup" m
+        LEFT JOIN "DraftPick" dp ON dp."matchupId" = m.id
+        GROUP BY m."contestId"
+      `
+    ]);
+
+    // Build lookup maps for O(1) access
+    const statusMap = new Map<string, Record<string, number>>();
+    for (const row of statusGroups) {
+      if (!statusMap.has(row.contestId)) statusMap.set(row.contestId, {});
+      statusMap.get(row.contestId)![row.status] = row._count._all;
+    }
+    const pickMap = new Map<string, number>();
+    for (const row of pickCountsRaw) {
+      pickMap.set(row.contestId, Number(row.count));
+    }
 
     // Add matchup status breakdown to each contest
     const contestsWithStats = contests.map(contest => {
+      const statuses = statusMap.get(contest.id) ?? {};
       const matchupStats = {
-        waiting: contest.matchups.filter(m => m.status === 'WAITING_DRAFT').length,
-        drafting: contest.matchups.filter(m => m.status === 'DRAFTING').length,
-        completed: contest.matchups.filter(m => m.status === 'COMPLETED').length,
-        totalDraftPicks: contest.matchups.reduce((sum, m) => sum + m._count.draftPicks, 0)
+        waiting: statuses['WAITING_DRAFT'] ?? 0,
+        drafting: statuses['DRAFTING'] ?? 0,
+        completed: statuses['COMPLETED'] ?? 0,
+        totalDraftPicks: pickMap.get(contest.id) ?? 0
       };
       
       return {
         ...contest,
-        matchupStats,
-        matchups: undefined // Remove detailed matchups from response
+        matchupStats
       };
     });
 

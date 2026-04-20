@@ -64,7 +64,10 @@ export async function POST(request: NextRequest) {
 
     // Check if game and player exist
     const [game, player] = await Promise.all([
-      prisma.iPLGame.findUnique({ where: { id: iplGameId } }),
+      prisma.iPLGame.findUnique({
+        where: { id: iplGameId },
+        select: { id: true, team1: { select: { id: true } }, team2: { select: { id: true } } }
+      }),
       prisma.player.findUnique({ 
         where: { id: playerId },
         include: { iplTeam: true }
@@ -86,15 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if player is part of the teams playing in this game
-    const gameTeams = await prisma.iPLGame.findUnique({
-      where: { id: iplGameId },
-      include: {
-        team1: true,
-        team2: true
-      }
-    });
-
-    if (player.iplTeam.id !== gameTeams?.team1.id && player.iplTeam.id !== gameTeams?.team2.id) {
+    if (player.iplTeam.id !== game.team1.id && player.iplTeam.id !== game.team2.id) {
       return NextResponse.json(
         { message: 'Player is not part of the teams playing in this game' },
         { status: 400 }
