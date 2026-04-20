@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { revalidateTag } from 'next/cache';
 
 
 // GET /api/admin/contests - List all contests  
@@ -144,6 +145,8 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // New contests are always SIGNUP_OPEN — bust the dashboard tournament cache
+    revalidateTag('dashboard-tournaments', 'default')
     return NextResponse.json(contest);
   } catch (error) {
     console.error('Error creating contest:', error);

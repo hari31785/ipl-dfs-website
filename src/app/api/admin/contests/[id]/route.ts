@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendToUser } from '@/lib/pushNotifications';
+import { revalidateTag } from 'next/cache';
 
 
 // PUT /api/admin/contests/[id] - Update contest status
@@ -125,6 +126,10 @@ export async function PUT(
       );
     }
 
+    // Bust dashboard tournament cache whenever a contest becomes visible to users
+    if (status === 'SIGNUP_OPEN') {
+      revalidateTag('dashboard-tournaments', 'default')
+    }
     return NextResponse.json(contest);
   } catch (error) {
     console.error('Error updating contest:', error);

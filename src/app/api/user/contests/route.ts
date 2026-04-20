@@ -119,10 +119,111 @@ export async function GET(request: NextRequest) {
       return slimResponse
     }
 
+    // Fast slim path for dashboard mount (excludeCompleted=true).
+    // Uses tight select and a short-lived edge cache — the URL includes userId
+    // so each user gets their own cache entry at the CDN.
+    if (excludeCompleted) {
+      const activeSignups = await prisma.contestSignup.findMany({
+        where: { userId, contest: { status: { not: 'COMPLETED' } } },
+        orderBy: { signupAt: 'desc' },
+        select: {
+          id: true,
+          contest: {
+            select: {
+              status: true,
+              coinValue: true,
+              iplGame: {
+                select: {
+                  id: true,
+                  gameDate: true,
+                  team1: { select: { shortName: true, name: true, color: true } },
+                  team2: { select: { shortName: true, name: true, color: true } },
+                  tournament: { select: { id: true, name: true } },
+                },
+              },
+            },
+          },
+          matchupsAsUser1: {
+            select: {
+              id: true,
+              status: true,
+              winnerId: true,
+              user1Id: true,
+              user2Id: true,
+              firstPickUser: true,
+              user1Score: true,
+              user2Score: true,
+              _count: { select: { draftPicks: true } },
+              user2: { select: { user: { select: { username: true } } } },
+            },
+          },
+          matchupsAsUser2: {
+            select: {
+              id: true,
+              status: true,
+              winnerId: true,
+              user1Id: true,
+              user2Id: true,
+              firstPickUser: true,
+              user1Score: true,
+              user2Score: true,
+              _count: { select: { draftPicks: true } },
+              user1: { select: { user: { select: { username: true } } } },
+            },
+          },
+        },
+      })
+
+      const activeResult = activeSignups.flatMap((signup: any) => {
+        const allMatchups = [...signup.matchupsAsUser1, ...signup.matchupsAsUser2]
+        if (allMatchups.length === 0) return [{ ...signup, matchup: null }]
+        return allMatchups.map((matchup: any) => {
+          const isUser1 = signup.matchupsAsUser1.some((m: any) => m.id === matchup.id)
+          let effectiveWinnerId = matchup.winnerId ?? null
+          if (!effectiveWinnerId && matchup.status === 'COMPLETED') {
+            const u1 = matchup.user1Score as number | null
+            const u2 = matchup.user2Score as number | null
+            if (u1 != null && u2 != null) {
+              if (u1 > u2) effectiveWinnerId = matchup.user1Id
+              else if (u2 > u1) effectiveWinnerId = matchup.user2Id
+            }
+          }
+          return {
+            ...signup,
+            matchup: {
+              id: matchup.id,
+              status: matchup.status,
+              winnerId: effectiveWinnerId,
+              draftPicksCount: matchup._count?.draftPicks ?? 0,
+              user1Id: matchup.user1Id,
+              user2Id: matchup.user2Id,
+              firstPickUser: matchup.firstPickUser,
+              draftPicks: [],
+              opponentUsername: isUser1
+                ? matchup.user2?.user?.username
+                : matchup.user1?.user?.username,
+              myScore: isUser1 ? matchup.user1Score : matchup.user2Score,
+              opponentScore: isUser1 ? matchup.user2Score : matchup.user1Score,
+            },
+          }
+        })
+      })
+
+      activeResult.sort((a: any, b: any) =>
+        new Date(b.contest?.iplGame?.gameDate ?? 0).getTime() -
+        new Date(a.contest?.iplGame?.gameDate ?? 0).getTime()
+      )
+
+      const activeRes = NextResponse.json(activeResult)
+      // Per-user cache — 15s at edge is enough to avoid duplicate mounts;
+      // stale-while-revalidate serves instant repeat navigations
+      activeRes.headers.set('Cache-Control', 'private, s-maxage=15, stale-while-revalidate=60')
+      return activeRes
+    }
+
     const signups = await prisma.contestSignup.findMany({
       where: {
         userId: userId,
-        ...(excludeCompleted ? { contest: { status: { not: 'COMPLETED' } } } : {}),
       },
       orderBy: {
         signupAt: 'desc'

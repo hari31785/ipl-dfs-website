@@ -138,7 +138,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   const [userContests, setUserContests] = useState<UserContest[]>([])
   const [userContestsLoaded, setUserContestsLoaded] = useState(false)
   const [completedContests, setCompletedContests] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'available' | 'my-contests' | 'spectate'>('available')
   const [contestSubTab, setContestSubTab] = useState<'upcoming' | 'drafted' | 'active' | 'completed'>('upcoming')
   const [spectateData, setSpectateData] = useState<any[]>([])
@@ -197,9 +197,8 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
     if (!user) return
     setIsDashRefreshing(true)
     const fetches: Promise<any>[] = [
-      fetchUserData(user.id),
+      fetchDashboardData(user.id),
       fetchTournaments(),
-      fetchUserContests(user.id, true), // keep active/upcoming fresh
     ]
     if (completedLoadedRef.current) {
       fetches.push(fetchCompletedContests(user.id))
@@ -245,9 +244,8 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
     if (userData) {
       const parsedUser = JSON.parse(userData)
       setUser(parsedUser)
-      // Fetch fresh user data from database to get latest stats
-      fetchUserData(parsedUser.id)
-      fetchUserContests(parsedUser.id, true)
+      // Fetch fresh user data + active contests in one round-trip
+      fetchDashboardData(parsedUser.id)
       // Prefetch completed in background — so tab click is instant
       setCompletedLoading(true)
       fetchCompletedContests(parsedUser.id)
@@ -309,6 +307,22 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
+    }
+  }
+
+  // Combined fetch: user profile + active contests in one request (2 calls → 1)
+  const fetchDashboardData = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/user/dashboard?userId=${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+        localStorage.setItem('currentUser', JSON.stringify(data.user))
+        setUserContests(data.contests)
+        setUserContestsLoaded(true)
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
     }
   }
 
@@ -1024,7 +1038,12 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
         )}
 
         {/* Draft Notification Banners */}
-        {(() => {
+        {!userContestsLoaded ? (
+          // Skeleton shimmer while active contests load
+          <div className="mb-6 space-y-3">
+            <div className="rounded-xl border border-gray-200 px-5 py-4 bg-gray-50 animate-pulse h-16" />
+          </div>
+        ) : (() => {
           const alerts = userContests
             .flatMap(uc => {
               if (!uc.matchup || dismissedAlerts.has(uc.matchup.id + '_alert')) return []
