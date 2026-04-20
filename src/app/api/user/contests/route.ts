@@ -133,10 +133,14 @@ export async function GET(request: NextRequest) {
               id: true,
               status: true,
               coinValue: true,
+              contestType: true,
               iplGame: {
                 select: {
                   id: true,
+                  title: true,
                   gameDate: true,
+                  signupDeadline: true,
+                  status: true,
                   team1: { select: { shortName: true, name: true, color: true } },
                   team2: { select: { shortName: true, name: true, color: true } },
                   tournament: { select: { id: true, name: true } },

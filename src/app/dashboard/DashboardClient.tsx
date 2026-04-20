@@ -2459,7 +2459,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                   <Users className="h-4 w-4" /> Drafted Teams
                 </h3>
                 <p className="text-[10px] text-indigo-100 mt-0.5">
-                  {selectedDraftedContest.contest.iplGame.title} • {selectedDraftedContest.contest.contestType.replace('_', ' ')}
+                  {selectedDraftedContest.contest.iplGame.title ?? selectedDraftedContest.contest.iplGame.id} • {selectedDraftedContest.contest.contestType?.replace('_', ' ') ?? ''}
                 </p>
               </div>
               <button
