@@ -341,13 +341,11 @@ export default function ContestsPage() {
         setSelectedContestSignups(data);
         setShowSignupsModal(true);
         setAddUserInput(''); setAddUserError(''); setUserSuggestions([]); setShowSuggestions(false);
-        // Pre-load users for autocomplete
-        if (allUsers.length === 0) {
-          fetch('/api/admin/users')
-            .then(r => r.json())
-            .then(d => setAllUsers((d.users || []).map((u: any) => ({ id: u.id, username: u.username, name: u.name }))))
-            .catch(() => {});
-        }
+        // Always (re)load users for autocomplete
+        fetch('/api/admin/users')
+          .then(r => r.json())
+          .then(d => setAllUsers((d.users || []).map((u: any) => ({ id: u.id, username: u.username, name: u.name }))))
+          .catch(() => {});
       } else {
         console.error('Response not OK:', response.status, response.statusText);
         alert(`Failed to load signups: ${response.status} ${response.statusText}`);
@@ -1705,19 +1703,24 @@ export default function ContestsPage() {
                       const val = e.target.value;
                       setAddUserInput(val);
                       setAddUserError('');
-                      if (val.trim().length >= 1) {
-                        const q = val.toLowerCase();
-                        setUserSuggestions(allUsers.filter(u =>
-                          u.username.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q)
-                        ).slice(0, 8));
-                        setShowSuggestions(true);
-                      } else {
-                        setShowSuggestions(false);
-                      }
+                      const q = val.toLowerCase().trim();
+                      const filtered = q
+                        ? allUsers.filter(u =>
+                            u.username.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q)
+                          ).slice(0, 8)
+                        : allUsers.slice(0, 8);
+                      setUserSuggestions(filtered);
+                      setShowSuggestions(filtered.length > 0);
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { setShowSuggestions(false); addUserToContest(); } if (e.key === 'Escape') setShowSuggestions(false); }}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                    onFocus={() => { if (addUserInput.trim() && userSuggestions.length > 0) setShowSuggestions(true); }}
+                    onFocus={() => {
+                      const q = addUserInput.toLowerCase().trim();
+                      const filtered = q
+                        ? allUsers.filter(u => u.username.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q)).slice(0, 8)
+                        : allUsers.slice(0, 8);
+                      if (filtered.length > 0) { setUserSuggestions(filtered); setShowSuggestions(true); }
+                    }}
                     className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   {showSuggestions && userSuggestions.length > 0 && (
