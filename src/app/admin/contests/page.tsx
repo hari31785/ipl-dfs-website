@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Home, ArrowLeft, Trophy, Trash2, Plus, ChevronDown, ChevronUp, Users, Filter } from 'lucide-react';
 import { useLoading } from '@/contexts/LoadingContext';
 
@@ -256,6 +256,8 @@ export default function ContestsPage() {
   const [userSuggestions, setUserSuggestions] = useState<{id: string, username: string, name: string}[]>([]);
   const [allUsers, setAllUsers] = useState<{id: string, username: string, name: string}[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{top: number, left: number, width: number} | null>(null);
+  const addUserInputRef = useRef<HTMLInputElement>(null);
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [reopenContestId, setReopenContestId] = useState<string | null>(null);
   const [reopenDeadline, setReopenDeadline] = useState('');
@@ -1710,7 +1712,13 @@ export default function ContestsPage() {
                           ).slice(0, 8)
                         : allUsers.slice(0, 8);
                       setUserSuggestions(filtered);
-                      setShowSuggestions(filtered.length > 0);
+                      if (filtered.length > 0 && addUserInputRef.current) {
+                        const rect = addUserInputRef.current.getBoundingClientRect();
+                        setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+                        setShowSuggestions(true);
+                      } else {
+                        setShowSuggestions(false);
+                      }
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { setShowSuggestions(false); addUserToContest(); } if (e.key === 'Escape') setShowSuggestions(false); }}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
@@ -1719,12 +1727,18 @@ export default function ContestsPage() {
                       const filtered = q
                         ? allUsers.filter(u => u.username.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q)).slice(0, 8)
                         : allUsers.slice(0, 8);
-                      if (filtered.length > 0) { setUserSuggestions(filtered); setShowSuggestions(true); }
+                      if (filtered.length > 0 && addUserInputRef.current) {
+                        const rect = addUserInputRef.current.getBoundingClientRect();
+                        setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+                        setUserSuggestions(filtered);
+                        setShowSuggestions(true);
+                      }
                     }}
                     className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    ref={addUserInputRef}
                   />
-                  {showSuggestions && userSuggestions.length > 0 && (
-                    <ul className="absolute z-50 w-full bg-white border border-gray-300 rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  {showSuggestions && userSuggestions.length > 0 && dropdownPos && (
+                    <ul className="fixed bg-white border border-gray-300 rounded shadow-xl max-h-48 overflow-y-auto" style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}>
                       {userSuggestions.map(u => (
                         <li
                           key={u.id}
