@@ -54,3 +54,36 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+
+// PATCH /api/user/profile - Change username
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userId, username } = body;
+
+    if (!userId || !username) {
+      return NextResponse.json({ error: 'User ID and username are required' }, { status: 400 });
+    }
+
+    const clean = username.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(clean)) {
+      return NextResponse.json({ error: '3-20 chars, letters/numbers/underscores only' }, { status: 400 });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { username: clean } });
+    if (existing && existing.id !== userId) {
+      return NextResponse.json({ error: 'Username is already taken' }, { status: 409 });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { username: clean },
+      select: { id: true, username: true }
+    });
+
+    return NextResponse.json({ message: 'Username updated successfully', user: updatedUser });
+  } catch (error) {
+    console.error('Error changing username:', error);
+    return NextResponse.json({ error: 'Failed to change username' }, { status: 500 });
+  }
+}

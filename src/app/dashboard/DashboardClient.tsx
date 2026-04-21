@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { signOut } from "next-auth/react"
 import { Trophy, User, Phone, Mail, Calendar, LogOut, Settings, Target, Users, Zap, Clock, ChevronRight, ChevronDown, Ticket, Coins, Bell, BellOff, RefreshCw } from "lucide-react"
 import { useLoading } from '@/contexts/LoadingContext'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
@@ -167,9 +168,12 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [editForm, setEditForm] = useState({
     name: '',
-    phone: ''
+    phone: '',
+    username: ''
   })
   const [savingProfile, setSavingProfile] = useState(false)
+  const [changingUsername, setChangingUsername] = useState(false)
+  const [usernameError, setUsernameError] = useState('')
   const [showPasswordSection, setShowPasswordSection] = useState(false)
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -577,8 +581,10 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
     if (user) {
       setEditForm({
         name: user.name,
-        phone: user.phone || ''
+        phone: user.phone || '',
+        username: user.username || ''
       })
+      setUsernameError('')
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
@@ -769,6 +775,37 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
       alert('Failed to update profile. Please try again.')
     } finally {
       setSavingProfile(false)
+    }
+  }
+
+  const handleChangeUsername = async () => {
+    if (!user) return
+    const newUsername = editForm.username.trim().toLowerCase()
+    if (!newUsername) { setUsernameError('Username cannot be empty'); return }
+    if (newUsername === user.username) { setUsernameError('That is already your username'); return }
+    if (!/^[a-z0-9_]{3,20}$/.test(newUsername)) {
+      setUsernameError('3-20 chars, letters/numbers/underscores only')
+      return
+    }
+    setChangingUsername(true)
+    setUsernameError('')
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, username: newUsername })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert(`Username changed to @${newUsername}. You will be signed out now.`)
+        signOut({ callbackUrl: '/login' })
+      } else {
+        setUsernameError(data.error || 'Failed to change username')
+      }
+    } catch {
+      setUsernameError('Failed to change username')
+    } finally {
+      setChangingUsername(false)
     }
   }
 
@@ -2145,15 +2182,32 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                       />
                     </div>
 
-                    {/* Read-only fields info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-sm text-blue-800 mb-2">
-                        <strong>Note:</strong> Username and email cannot be changed.
-                      </p>
-                      <div className="text-sm text-blue-700 space-y-1">
-                        <div><strong>Username:</strong> {user?.username}</div>
-                        <div><strong>Email:</strong> {user?.email}</div>
+                    {/* Email read-only */}
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-600">
+                      <strong>Email:</strong> {user?.email} <span className="text-gray-400 text-xs">(cannot be changed)</span>
+                    </div>
+
+                    {/* Username change */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={editForm.username}
+                          onChange={(e) => { setEditForm({ ...editForm, username: e.target.value }); setUsernameError('') }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                          placeholder="new_username"
+                        />
+                        <button
+                          onClick={handleChangeUsername}
+                          disabled={changingUsername || editForm.username.trim() === user?.username}
+                          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white text-sm font-medium rounded-lg transition whitespace-nowrap"
+                        >
+                          {changingUsername ? 'Saving...' : 'Change'}
+                        </button>
                       </div>
+                      {usernameError && <p className="text-red-500 text-xs mt-1">{usernameError}</p>}
+                      <p className="text-xs text-amber-600 mt-1">⚠️ You will be signed out after changing your username.</p>
                     </div>
                   </div>
                 </div>
