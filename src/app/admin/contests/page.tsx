@@ -253,6 +253,9 @@ export default function ContestsPage() {
   const [addUserInput, setAddUserInput] = useState('');
   const [addingUser, setAddingUser] = useState(false);
   const [addUserError, setAddUserError] = useState('');
+  const [userSuggestions, setUserSuggestions] = useState<{id: string, username: string, name: string}[]>([]);
+  const [allUsers, setAllUsers] = useState<{id: string, username: string, name: string}[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [reopenContestId, setReopenContestId] = useState<string | null>(null);
   const [reopenDeadline, setReopenDeadline] = useState('');
@@ -337,6 +340,14 @@ export default function ContestsPage() {
         const data = await response.json();
         setSelectedContestSignups(data);
         setShowSignupsModal(true);
+        setAddUserInput(''); setAddUserError(''); setUserSuggestions([]); setShowSuggestions(false);
+        // Pre-load users for autocomplete
+        if (allUsers.length === 0) {
+          fetch('/api/admin/users')
+            .then(r => r.json())
+            .then(d => setAllUsers((d.users || []).map((u: any) => ({ id: u.id, username: u.username, name: u.name }))))
+            .catch(() => {});
+        }
       } else {
         console.error('Response not OK:', response.status, response.statusText);
         alert(`Failed to load signups: ${response.status} ${response.statusText}`);
@@ -382,6 +393,7 @@ export default function ContestsPage() {
   const addUserToContest = async () => {
     if (!addUserInput.trim() || !selectedContestSignups) return;
     setAddingUser(true);
+    setShowSuggestions(false);
     setAddUserError('');
     try {
       const response = await fetch(`/api/admin/contests/${selectedContestSignups.contest.id}/signups`, {
@@ -1684,14 +1696,45 @@ export default function ContestsPage() {
             
             <div className="bg-gray-50 px-4 md:px-6 py-3 md:py-4 space-y-3">
               <div className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  placeholder="Username to add..."
-                  value={addUserInput}
-                  onChange={(e) => { setAddUserInput(e.target.value); setAddUserError(''); }}
-                  onKeyDown={(e) => e.key === 'Enter' && addUserToContest()}
-                  className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Username to add..."
+                    value={addUserInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAddUserInput(val);
+                      setAddUserError('');
+                      if (val.trim().length >= 1) {
+                        const q = val.toLowerCase();
+                        setUserSuggestions(allUsers.filter(u =>
+                          u.username.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q)
+                        ).slice(0, 8));
+                        setShowSuggestions(true);
+                      } else {
+                        setShowSuggestions(false);
+                      }
+                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { setShowSuggestions(false); addUserToContest(); } if (e.key === 'Escape') setShowSuggestions(false); }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                    onFocus={() => { if (addUserInput.trim() && userSuggestions.length > 0) setShowSuggestions(true); }}
+                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  {showSuggestions && userSuggestions.length > 0 && (
+                    <ul className="absolute z-50 w-full bg-white border border-gray-300 rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
+                      {userSuggestions.map(u => (
+                        <li
+                          key={u.id}
+                          onMouseDown={() => { setAddUserInput(u.username); setShowSuggestions(false); }}
+                          className="px-3 py-2 text-sm hover:bg-teal-50 cursor-pointer flex items-center gap-2"
+                        >
+                          <span className="font-medium text-gray-900">@{u.username}</span>
+                          {u.name && <span className="text-gray-400 text-xs">{u.name}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 <button
                   onClick={addUserToContest}
                   disabled={!addUserInput.trim() || addingUser}
@@ -1700,7 +1743,7 @@ export default function ContestsPage() {
                   {addingUser ? 'Adding...' : '+ Add User'}
                 </button>
                 <button
-                  onClick={() => { setShowSignupsModal(false); setSelectedContestSignups(null); setAddUserInput(''); setAddUserError(''); }}
+                  onClick={() => { setShowSignupsModal(false); setSelectedContestSignups(null); setAddUserInput(''); setAddUserError(''); setUserSuggestions([]); setShowSuggestions(false); }}
                   className="px-4 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700 transition text-sm whitespace-nowrap"
                 >
                   Close
