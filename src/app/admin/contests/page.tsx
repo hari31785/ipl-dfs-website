@@ -773,7 +773,10 @@ export default function ContestsPage() {
 
   // Split into upcoming/active vs fully completed for UI sections
   const activeGameGroups = gameGroups.filter(g => g.contests.some(c => c.status !== 'COMPLETED'));
-  const completedGameGroups = gameGroups.filter(g => g.contests.every(c => c.status === 'COMPLETED'));
+  const completedGameGroups = gameGroups
+    .filter(g => g.contests.every(c => c.status === 'COMPLETED'))
+    .slice()
+    .reverse(); // newest first
 
   const toggleGameExpanded = (gameId: string) => {
     const newExpanded = new Set(expandedGames);
