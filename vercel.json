@@ -23,5 +23,15 @@
   },
   "env": {
     "NEXTAUTH_URL": "https://ipl-dfs-website.vercel.app"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/auto-fetch-scores",
+      "schedule": "*/5 15-19 * * 1-5"
+    },
+    {
+      "path": "/api/cron/auto-fetch-scores",
+      "schedule": "*/5 11-19 * * 0,6"
+    }
+  ]
 }
