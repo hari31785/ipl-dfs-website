@@ -160,7 +160,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       // Skip the DB hit when it is our own turn (push notification already sent to us)
       // or when the tab is hidden (user will get a push when opponent picks)
       if (!isMyTurnRef.current && !document.hidden) fetchMatchupDetails();
-    }, 6000); // Poll every 6 seconds; no-op when tab hidden or own turn
+    }, 3000); // Poll every 3 seconds; no-op when tab hidden or own turn
 
     return () => clearInterval(pollInterval);
   }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
