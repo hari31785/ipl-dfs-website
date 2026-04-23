@@ -81,8 +81,8 @@ export async function GET(request: NextRequest) {
         FROM game g
         JOIN team ht ON g.home_team_id = ht.team_id
         JOIN team vt ON g.visiting_team_id = vt.team_id
-        WHERE g.date_scheduled::date BETWEEN NOW() AT TIME ZONE 'UTC' - INTERVAL '12 hours'
-                                         AND NOW() AT TIME ZONE 'UTC' + INTERVAL '12 hours'
+        WHERE g.date_scheduled BETWEEN (NOW() - INTERVAL '12 hours')
+                                   AND (NOW() + INTERVAL '12 hours')
           AND g.is_active = true
           AND g.status_id != 42
         ORDER BY g.date_scheduled
