@@ -71,16 +71,25 @@ export async function fairPairSignups(
     }
   }
 
-  // Shuffle pool for base randomness
-  const pool = secureShuffleArray([...signups]);
+  // Shuffle pool for base randomness, then sort so multi-entry users come first.
+  // Processing most-constrained users first ensures they get spread across
+  // different opponents before single-entry users are considered, preventing
+  // a multi-entry user from being left with only themselves as a partner.
+  const entryCount = new Map<string, number>();
+  for (const s of signups) {
+    entryCount.set(s.userId, (entryCount.get(s.userId) ?? 0) + 1);
+  }
+  const pool = secureShuffleArray([...signups]).sort(
+    (a, b) => (entryCount.get(b.userId) ?? 1) - (entryCount.get(a.userId) ?? 1)
+  );
   const paired: [SignupForPairing, SignupForPairing][] = [];
   const used = new Set<string>();
   // Track user-level pairs committed in this session so multi-entry users
-  // don't face the same opponent across their two entries.
+  // don't face the same opponent across their entries.
   const sessionUserPairs = new Set<string>();
 
-  // Greedy pass: for each unmatched user, find the unmatched partner with
-  // fewest (ideally 0) previous meetings in this tournament.
+  // Greedy pass: for each unmatched signup (processed most-entries-first),
+  // find the unmatched partner with fewest previous meetings in this tournament.
   for (let i = 0; i < pool.length; i++) {
     if (used.has(pool[i].id)) continue;
 
@@ -94,8 +103,7 @@ export async function fairPairSignups(
       // Skip if these two users are already matched elsewhere in this session
       const sessionKey = [pool[i].userId, pool[j].userId].sort().join('|');
       if (sessionUserPairs.has(sessionKey)) continue;
-      const key = sessionKey;
-      const count = pairCount.get(key) ?? 0;
+      const count = pairCount.get(sessionKey) ?? 0;
       if (count < bestCount) {
         bestCount = count;
         bestPartnerIdx = j;
@@ -109,13 +117,35 @@ export async function fairPairSignups(
       used.add(pool[bestPartnerIdx].id);
       const sessionKey = [pool[i].userId, pool[bestPartnerIdx].userId].sort().join('|');
       sessionUserPairs.add(sessionKey);
+    } else {
+      // No fresh pairing available — allow a rematch (ignore sessionUserPairs)
+      // but NEVER pair a user against themselves.
+      for (let j = i + 1; j < pool.length; j++) {
+        if (used.has(pool[j].id)) continue;
+        if (pool[j].userId === pool[i].userId) continue; // never self-pair
+        paired.push([pool[i], pool[j]]);
+        used.add(pool[i].id);
+        used.add(pool[j].id);
+        const sessionKey = [pool[i].userId, pool[j].userId].sort().join('|');
+        sessionUserPairs.add(sessionKey);
+        break;
+      }
     }
   }
 
-  // Safety net: pair any remaining unpaired users (shouldn't happen with even counts)
+  // Safety net: pair any remaining unpaired users — never self-pair.
   const remaining = pool.filter(s => !used.has(s.id));
-  for (let i = 0; i < remaining.length - 1; i += 2) {
-    paired.push([remaining[i], remaining[i + 1]]);
+  const remainingUsed = new Set<string>();
+  for (let i = 0; i < remaining.length; i++) {
+    if (remainingUsed.has(remaining[i].id)) continue;
+    for (let j = i + 1; j < remaining.length; j++) {
+      if (remainingUsed.has(remaining[j].id)) continue;
+      if (remaining[j].userId === remaining[i].userId) continue; // never self-pair
+      paired.push([remaining[i], remaining[j]]);
+      remainingUsed.add(remaining[i].id);
+      remainingUsed.add(remaining[j].id);
+      break;
+    }
   }
 
   return paired;
