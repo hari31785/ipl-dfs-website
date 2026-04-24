@@ -31,17 +31,18 @@ function getScorePool() {
 }
 
 // ─── Time window check ──────────────────────────────────────────────────────────
-// Weekdays (Mon–Fri): 10AM–2PM EST = 15:00–19:00 UTC
-// Weekends (Sat–Sun):  6AM–2PM EST = 11:00–19:00 UTC
-// Internal guard covers the right range per day; cron schedule in
-// vercel.json enforces the tighter weekday window automatically.
+// US Eastern is currently EDT (UTC-4) during daylight saving time.
+// Weekdays (Mon–Fri): 10AM–2PM EDT = 14:00–18:00 UTC
+// Weekends (Sat–Sun):  6AM–2PM EDT = 10:00–18:00 UTC
+// Cron schedule in vercel.json fires */2 13-19 UTC (buffer before window);
+// internal guard enforces the exact per-day window.
 function isWithinWindow(): boolean {
   const now = new Date()
   const utcHour = now.getUTCHours()
   const dayOfWeek = now.getUTCDay() // 0 = Sun, 6 = Sat
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-  if (isWeekend) return utcHour >= 11 && utcHour < 19  // 6AM–2PM EST
-  return utcHour >= 15 && utcHour < 19                 // 10AM–2PM EST
+  if (isWeekend) return utcHour >= 10 && utcHour < 18  // 6AM–2PM EDT
+  return utcHour >= 14 && utcHour < 18                 // 10AM–2PM EDT
 }
 
 export async function GET(request: NextRequest) {
