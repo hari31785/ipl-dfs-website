@@ -1577,9 +1577,9 @@ export default function ContestsPage() {
 
       {/* Signups Modal */}
       {showSignupsModal && selectedContestSignups && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 md:p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-3 md:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-xl w-full max-w-4xl max-h-[85dvh] sm:max-h-[92vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between shrink-0">
               <div className="min-w-0">
                 <h3 className="text-base md:text-xl font-bold text-white flex items-center gap-2">
                   <Users className="h-5 w-5 shrink-0" />
@@ -1697,8 +1697,8 @@ export default function ContestsPage() {
               )}
             </div>
             
-            <div className="bg-gray-50 px-4 md:px-6 py-3 md:py-4 space-y-3">
-              <div className="flex gap-2 items-center">
+            <div className="bg-gray-50 px-4 md:px-6 py-3 md:py-4 space-y-3 shrink-0 border-t border-gray-200">
+              <div className="flex flex-col xs:flex-row gap-2 items-stretch xs:items-center">
                 <div className="relative flex-1">
                   <input
                     type="text"
