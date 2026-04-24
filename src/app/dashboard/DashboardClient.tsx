@@ -1948,6 +1948,8 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                   }, {} as Record<string, { game: any; contests: any[] }>)
 
                   return Object.values(gameGroups).map((group: any) => {
+                    // Sort contests highest coin value first
+                    group.contests.sort((a: any, b: any) => b.coinValue - a.coinValue)
                     const isExpanded = expandedSpectateGames.has(group.game.id)
                     const totalMatchups = group.contests.reduce((n: number, c: any) => n + c.matchups.length, 0)
                     return (

@@ -31,18 +31,23 @@ function getScorePool() {
 }
 
 // ─── Time window check ──────────────────────────────────────────────────────────
-// US Eastern is currently EDT (UTC-4) during daylight saving time.
-// Weekdays (Mon–Fri): 10AM–2PM EDT = 14:00–18:00 UTC
-// Weekends (Sat–Sun):  6AM–2PM EDT = 10:00–18:00 UTC
-// Cron schedule in vercel.json fires */2 13-19 UTC (buffer before window);
-// internal guard enforces the exact per-day window.
+// Uses Intl.DateTimeFormat with America/New_York to get the actual Eastern hour,
+// which automatically handles EDT (UTC-4) vs EST (UTC-5) DST transitions.
+// Weekdays (Mon–Fri): 10AM–2PM ET
+// Weekends (Sat–Sun):  6AM–2PM ET
+// Cron schedule in vercel.json fires */2 13-19 UTC as a wide net;
+// this internal guard enforces the exact window regardless of DST.
 function isWithinWindow(): boolean {
   const now = new Date()
-  const utcHour = now.getUTCHours()
-  const dayOfWeek = now.getUTCDay() // 0 = Sun, 6 = Sat
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-  if (isWeekend) return utcHour >= 10 && utcHour < 18  // 6AM–2PM EDT
-  return utcHour >= 14 && utcHour < 18                 // 10AM–2PM EDT
+  // Intl gives us the correct Eastern hour regardless of DST
+  const easternHour = parseInt(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false }).format(now),
+    10
+  )
+  const easternDay = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' }).format(now)
+  const isWeekend = easternDay === 'Sat' || easternDay === 'Sun'
+  if (isWeekend) return easternHour >= 6 && easternHour < 14  // 6AM–2PM ET
+  return easternHour >= 10 && easternHour < 14                // 10AM–2PM ET
 }
 
 export async function GET(request: NextRequest) {
@@ -54,7 +59,7 @@ export async function GET(request: NextRequest) {
 
   // 2. Time window guard (belt-and-suspenders — schedule in vercel.json already limits this)
   if (!isWithinWindow()) {
-    return NextResponse.json({ skipped: 'outside time window (6AM–2PM EST)' })
+    return NextResponse.json({ skipped: 'outside time window (6AM–2PM ET)' })
   }
 
   // 3. Check score DB is configured
