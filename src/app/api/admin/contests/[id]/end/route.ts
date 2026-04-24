@@ -125,6 +125,7 @@ export async function POST(
     let losersCharged = 0;
     let adminFeeCollected = 0;
     const computedWinnerIds = new Map<string, string | null>(); // matchupId -> winnerId (ContestSignup ID)
+    const computedScores = new Map<string, { u1: number; u2: number }>(); // matchupId -> scores
 
     // Process each matchup
     for (const matchup of contest.matchups) {
@@ -135,6 +136,7 @@ export async function POST(
       // Use the bench swap utility to calculate correct scores (only active 5 players count)
       const user1Score = calculateTotalPointsWithSwap(user1Picks, contest.iplGameId);
       const user2Score = calculateTotalPointsWithSwap(user2Picks, contest.iplGameId);
+      computedScores.set(matchup.id, { u1: user1Score, u2: user2Score });
 
       // Update matchup with calculated scores
       await prisma.headToHeadMatchup.update({
@@ -343,10 +345,14 @@ export async function POST(
       const coinLabel = `${contest.coinValue}-coin`;
       const resolvedWinnerId = computedWinnerIds.has(matchup.id) ? computedWinnerIds.get(matchup.id) : null;
       const isTie = resolvedWinnerId === undefined || resolvedWinnerId === null;
+      const scores = computedScores.get(matchup.id);
+      const ptDiff = scores ? Math.abs(scores.u1 - scores.u2) : 0;
+      const ptDiffStr = ptDiff % 1 === 0 ? ptDiff.toFixed(0) : ptDiff.toFixed(1);
 
       const getTitle = (won: boolean) => {
         if (isTie) return '🤝 It\'s a tie!';
-        return won ? '🏆 You won!' : '😔 Better luck next time';
+        if (won) return `🏆 You won by ${ptDiffStr} pts!`;
+        return `😔 You lost by ${ptDiffStr} pts`;
       };
       const getBody = (won: boolean, opponent: string) => {
         const contestLabel = `${gameTitle} ${coinLabel} contest`;
