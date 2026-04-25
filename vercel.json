@@ -27,7 +27,7 @@
   "crons": [
     {
       "path": "/api/cron/auto-fetch-scores",
-      "schedule": "*/2 13-19 * * *"
+      "schedule": "*/2 10-19 * * *"
     }
   ]
 }

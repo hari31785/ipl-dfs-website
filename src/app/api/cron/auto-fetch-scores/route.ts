@@ -35,8 +35,8 @@ function getScorePool() {
 // which automatically handles EDT (UTC-4) vs EST (UTC-5) DST transitions.
 // Weekdays (Mon–Fri): 10AM–2PM ET
 // Weekends (Sat–Sun):  6AM–2PM ET
-// Cron schedule in vercel.json fires */2 13-19 UTC as a wide net;
-// this internal guard enforces the exact window regardless of DST.
+// Cron schedule in vercel.json fires */2 10-19 UTC to cover the weekend 6AM ET start;
+// on weekdays the internal guard skips runs before 14:00 UTC (10AM ET).
 function isWithinWindow(): boolean {
   const now = new Date()
   // Intl gives us the correct Eastern hour regardless of DST
