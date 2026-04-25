@@ -131,6 +131,24 @@ export async function GET(request: NextRequest) {
           continue
         }
 
+        // 5b. Skip if ALL contests for this game are already COMPLETED —
+        //     scores are settled; cron should never overwrite manually-corrected stats.
+        const contestStatuses = await prisma.contest.findMany({
+          where: { iplGameId: ourGame.id },
+          select: { status: true },
+        })
+        const allContestsCompleted =
+          contestStatuses.length > 0 &&
+          contestStatuses.every(c => c.status === 'COMPLETED')
+        if (allContestsCompleted) {
+          results.push({
+            externalGameId,
+            game: ourGame.title,
+            skipped: 'all contests already completed — skipping to preserve settled scores',
+          })
+          continue
+        }
+
         // 6. Fetch player scores from external DB (same SQL as scoreDatabase.ts getPlayerScores)
         const scoresResult = await scoreClient.query(`
           SELECT
@@ -234,12 +252,20 @@ export async function GET(request: NextRequest) {
 
         const allStats = [...matchedStats, ...dnpPlayers]
 
-        // 9. Upsert each stat (findFirst → update or create — same as stats/route.ts)
+        // 9. Upsert each stat — but never overwrite a manually-set stat with DNP.
+        //    A stat is considered manually set if our DB has didNotPlay=false
+        //    but the incoming data would mark it as DNP (player not found in external data).
         let saved = 0
+        let skippedManual = 0
         for (const stat of allStats) {
           const existing = await prisma.playerStat.findFirst({
             where: { iplGameId: ourGame.id, playerId: stat.playerId },
           })
+          // Guard: if external says DNP but admin already set didNotPlay=false, don't overwrite
+          if (existing && stat.didNotPlay && !existing.didNotPlay) {
+            skippedManual++
+            continue
+          }
           if (existing) {
             await prisma.playerStat.update({
               where: { id: existing.id },
@@ -276,6 +302,7 @@ export async function GET(request: NextRequest) {
           game:        ourGame.title,
           status:      isCompleted ? 'completed' : 'live',
           saved,
+          skippedManual,
           unmatched:   unmatchedPlayers.length,
           unmatchedNames: unmatchedPlayers,
           dnpMarked:   dnpPlayers.length,
