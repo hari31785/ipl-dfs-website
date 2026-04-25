@@ -102,10 +102,11 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Auto-create contest types for the game (25 VC + 50 VC; add 100 VC manually if needed)
+    // Auto-create contest types for the game (25 VC + 50 VC + 100 VC)
     const contestTypes = [
       { type: 'LOW_STAKES', value: 25 },
-      { type: 'REGULAR', value: 50 }
+      { type: 'REGULAR', value: 50 },
+      { type: 'HIGH_ROLLER', value: 100 }
     ];
 
     await Promise.all(
