@@ -586,7 +586,7 @@ function DraftPageInner() {
       {/* Matchup Detail Modal */}
       {selectedMatchup && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90dvh] overflow-y-auto shadow-2xl">
             <div className="p-6">
               {/* Modal Header */}
               <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-200">
@@ -711,7 +711,7 @@ function DraftPageInner() {
       {/* Edit Picks Modal (stacked on top of matchup modal) */}
       {showEditPicks && selectedMatchup && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-60">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90dvh] overflow-y-auto shadow-2xl">
             <div className="p-6">
               {/* Header */}
               <div className="flex justify-between items-start mb-5 pb-4 border-b border-gray-200">

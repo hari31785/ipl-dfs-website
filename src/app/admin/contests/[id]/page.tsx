@@ -588,7 +588,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
         {/* Edit Matchup Modal */}
         {editingMatchup && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90dvh] overflow-y-auto">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Edit H2H Matchup</h3>
               <p className="text-sm text-gray-600 mb-2">
                 Update the opponents for this matchup.
@@ -766,7 +766,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
         {/* Create Matchup Modal */}
         {showCreateMatchup && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90dvh] overflow-y-auto">
               <h3 className="text-xl font-bold text-gray-900 mb-3">Create Custom H2H Matchup</h3>
 
               {/* Contest context banner */}
@@ -993,7 +993,7 @@ export default function ContestMatchupsPage({ params }: { params: Promise<{ id: 
 
           return (
             <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[92dvh] flex flex-col">
 
                 {/* Header */}
                 <div className="px-6 pt-5 pb-4 border-b border-gray-200 shrink-0">
