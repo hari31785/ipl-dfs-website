@@ -715,25 +715,27 @@ export default function BulkStatsPage() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Tournament Filter */}
         {tournaments.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 md:p-6 mb-3 md:mb-6">
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Filter by Tournament
-            </label>
-            <select
-              value={selectedTournament}
-              onChange={(e) => {
-                setSelectedTournament(e.target.value);
-                setSelectedGame(''); // Clear game selection when tournament changes
-              }}
-              className="w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-base font-medium text-gray-900"
-            >
-              <option value="all" className="text-gray-900">All Tournaments</option>
-              {tournaments.map((tournament) => (
-                <option key={tournament.id} value={tournament.id} className="text-gray-900">
-                  {tournament.name}
-                </option>
-              ))}
-            </select>
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 mb-3 md:mb-6">
+            <div className="grid grid-cols-2 gap-3 items-center">
+              <label className="text-sm font-bold text-gray-700">
+                Filter by Tournament
+              </label>
+              <select
+                value={selectedTournament}
+                onChange={(e) => {
+                  setSelectedTournament(e.target.value);
+                  setSelectedGame('');
+                }}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm font-medium text-gray-900"
+              >
+                <option value="all" className="text-gray-900">All Tournaments</option>
+                {tournaments.map((tournament) => (
+                  <option key={tournament.id} value={tournament.id} className="text-gray-900">
+                    {tournament.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 
@@ -742,12 +744,12 @@ export default function BulkStatsPage() {
           <label className="block text-sm font-bold text-gray-700 mb-2">
             Select Game
           </label>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-end">
-            <div className="flex-1">
+          <div className="grid grid-cols-3 gap-2 items-center">
+            <div className="col-span-1">
               <select
                 value={selectedGame}
                 onChange={(e) => setSelectedGame(e.target.value)}
-                className="w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-base font-medium text-gray-900"
+                className="w-full px-2 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm font-medium text-gray-900"
               >
                 <option value="" className="text-gray-900">-- Select a game --</option>
                 {games
@@ -759,33 +761,29 @@ export default function BulkStatsPage() {
                   ))}
               </select>
             </div>
-            {selectedGame && (
-              <div className="flex items-center gap-2">
+            <button
+              onClick={handleFetchScoresClick}
+              disabled={!selectedGame || isFetchingScores || loadingScoreDbGames}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
+            >
+              <Download className="h-4 w-4 shrink-0" />
+              {loadingScoreDbGames ? 'Loading…' : isFetchingScores ? 'Fetching…' : 'Fetch Scores'}
+            </button>
+            {(() => {
+              const game = games.find(g => g.id === selectedGame);
+              const canAbandon = game && game.status !== 'CANCELLED';
+              return canAbandon ? (
                 <button
-                  onClick={handleFetchScoresClick}
-                  disabled={isFetchingScores || loadingScoreDbGames}
-                  className="flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
+                  onClick={handleAbandonGame}
+                  disabled={isAbandoning}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
+                  title="Mark this game as abandoned"
                 >
-                  <Download className="h-4 w-4 md:h-5 md:w-5" />
-                  {loadingScoreDbGames ? 'Loading...' : isFetchingScores ? 'Fetching...' : <><span className="hidden sm:inline">Fetch Scores from API</span><span className="sm:hidden">Fetch Scores</span></>}
+                  <X className="h-4 w-4 shrink-0" />
+                  {isAbandoning ? 'Abandoning…' : 'Abandon'}
                 </button>
-                {(() => {
-                  const game = games.find(g => g.id === selectedGame);
-                  const canAbandon = game && game.status !== 'CANCELLED';
-                  return canAbandon ? (
-                    <button
-                      onClick={handleAbandonGame}
-                      disabled={isAbandoning}
-                      className="flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
-                      title="Mark this game as abandoned — completes all contests with no score settlement"
-                    >
-                      <X className="h-4 w-4 md:h-5 md:w-5" />
-                      {isAbandoning ? 'Abandoning...' : <><span className="hidden sm:inline">Abandon Game</span><span className="sm:hidden">Abandon</span></>}
-                    </button>
-                  ) : null;
-                })()}
-              </div>
-            )}
+              ) : <div />;
+            })()}
           </div>
           
           {/* Status Messages */}
