@@ -120,84 +120,94 @@ function ContestCard({
       </div>
 
       {/* Actions */}
-      <div className="space-y-1.5">
-        {contest._count.signups > 0 && (
-          <button
-            onClick={() => onViewSignups(contest.id)}
-            className="block w-full px-2 py-1.5 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center text-xs font-medium"
-          >
-            <Users className="inline-block h-3 w-3 mr-1" /> Signups ({contest._count.signups})
-          </button>
-        )}
-        
-        {(contest._count.matchups > 0 || contest.status === 'SIGNUP_CLOSED') && (
-          <a
-            href={`/admin/contests/${contest.id}`}
-            className="block w-full px-2 py-1.5 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-xs font-medium"
-          >
-            👁️ Matchups ({contest._count.matchups})
-          </a>
-        )}
+      <div className="grid grid-cols-3 gap-1">
+        {/* Col 1: Signups / Matchups */}
+        <div className="flex flex-col gap-1">
+          {contest._count.signups > 0 ? (
+            <button
+              onClick={() => onViewSignups(contest.id)}
+              className="flex-1 px-1 py-1.5 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center text-xs font-medium leading-tight"
+            >
+              <Users className="inline-block h-3 w-3 mb-0.5" /><br />
+              {contest._count.signups}
+            </button>
+          ) : (
+            <div className="flex-1 px-1 py-1.5 bg-gray-100 text-gray-400 rounded text-center text-xs leading-tight">
+              <Users className="inline-block h-3 w-3 mb-0.5" /><br />0
+            </div>
+          )}
+        </div>
 
-        {contest.status === 'SIGNUP_OPEN' && (
-          <button
-            onClick={() => onCloseSignups(contest.id)}
-            className="block w-full px-2 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-xs font-medium text-center"
-            title={contest._count.signups === 0
-              ? 'Close contest (no signups)'
-              : contest._count.signups === 1
-              ? `Close signups (Admin will be added)` 
-              : contest._count.signups % 2 !== 0 
-              ? `Close signups (Admin will join: ${contest._count.signups})` 
-              : 'Close signups and generate matchups'}
-          >
-            🔒 Close ({contest._count.signups})
-          </button>
-        )}
-        
-        {(contest.status === 'SIGNUP_CLOSED' || contest.status === 'DRAFT_PHASE') && (
-          <button
-            onClick={() => onReopenSignups(contest.id)}
-            className="block w-full px-2 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-xs font-medium text-center"
-          >
-            🔓 Reopen
-          </button>
-        )}
-        
-        {contest.status === 'DRAFT_PHASE' && contest.matchupStats &&
-         contest.matchupStats.waiting > 0 && (
-          <button
-            onClick={() => onOpenDrafting(contest.id)}
-            className="block w-full px-2 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-xs font-medium text-center"
-          >
-            🎯 Open Draft ({contest.matchupStats.waiting})
-          </button>
-        )}
+        {/* Col 2: Matchups */}
+        <div className="flex flex-col gap-1">
+          {(contest._count.matchups > 0 || contest.status === 'SIGNUP_CLOSED') ? (
+            <a
+              href={`/admin/contests/${contest.id}`}
+              className="flex-1 px-1 py-1.5 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-xs font-medium leading-tight block"
+            >
+              👁️<br />{contest._count.matchups}
+            </a>
+          ) : (
+            <div className="flex-1 px-1 py-1.5 bg-gray-100 text-gray-400 rounded text-center text-xs leading-tight">
+              👁️<br />0
+            </div>
+          )}
+        </div>
 
-        {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') && contest.matchupStats && (
-          contest.matchupStats.drafting > 0 || contest.matchupStats.completed > 0
-        ) && contest.matchupStats.completed > 0 && (
-          <button
-            onClick={() => onUpdateStatus(contest.id, 'START_CONTEST')}
-            className="block w-full px-2 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs font-medium text-center"
-          >
-            ▶️ Start Contest
-          </button>
-        )}
-        
-        {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
-          <button
-            onClick={() => onEndContest(contest.id)}
-            className="block w-full px-2 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-xs font-medium text-center"
-          >
-            🏁 End Contest
-          </button>
-        )}
-        
-        {contest.status === 'SIGNUP_OPEN' && contest._count.signups % 2 !== 0 && contest._count.signups > 0 && (
-          <div className="text-xs text-blue-600 text-center">ℹ️ Admin will join</div>
-        )}
+        {/* Col 3: Primary action based on status */}
+        <div className="flex flex-col gap-1">
+          {contest.status === 'SIGNUP_OPEN' && (
+            <button
+              onClick={() => onCloseSignups(contest.id)}
+              className="flex-1 px-1 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-xs font-medium text-center leading-tight"
+              title={contest._count.signups === 0 ? 'Close contest (no signups)' : contest._count.signups % 2 !== 0 ? `Admin will join` : 'Close signups'}
+            >
+              🔒<br />Close
+            </button>
+          )}
+          {(contest.status === 'SIGNUP_CLOSED' || contest.status === 'DRAFT_PHASE') && (
+            <button
+              onClick={() => onReopenSignups(contest.id)}
+              className="flex-1 px-1 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-xs font-medium text-center leading-tight"
+            >
+              🔓<br />Reopen
+            </button>
+          )}
+          {contest.status === 'DRAFT_PHASE' && contest.matchupStats && contest.matchupStats.waiting > 0 && (
+            <button
+              onClick={() => onOpenDrafting(contest.id)}
+              className="flex-1 px-1 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-xs font-medium text-center leading-tight"
+            >
+              🎯<br />Draft
+            </button>
+          )}
+          {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') && contest.matchupStats &&
+           contest.matchupStats.completed > 0 && (
+            <button
+              onClick={() => onUpdateStatus(contest.id, 'START_CONTEST')}
+              className="flex-1 px-1 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs font-medium text-center leading-tight"
+            >
+              ▶️<br />Start
+            </button>
+          )}
+          {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
+            <button
+              onClick={() => onEndContest(contest.id)}
+              className="flex-1 px-1 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-xs font-medium text-center leading-tight"
+            >
+              🏁<br />End
+            </button>
+          )}
+          {contest.status === 'COMPLETED' && (
+            <div className="flex-1 px-1 py-1.5 bg-gray-100 text-gray-400 rounded text-center text-xs leading-tight">
+              ✅<br />Done
+            </div>
+          )}
+        </div>
       </div>
+      {contest.status === 'SIGNUP_OPEN' && contest._count.signups % 2 !== 0 && contest._count.signups > 0 && (
+        <div className="text-xs text-blue-600 text-center mt-1">ℹ️ Admin will join</div>
+      )}
     </div>
   );
 }
@@ -1109,7 +1119,7 @@ export default function ContestsPage() {
                           </div>
                           {isExpanded && (
                             <div className="p-3 bg-gray-50 border-t border-gray-200">
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              <div className="grid grid-cols-3 gap-2">
                                 {gameContests.map((contest) => (
                                   <ContestCard
                                     key={contest.id}
@@ -1193,7 +1203,7 @@ export default function ContestsPage() {
                           </div>
                           {isExpanded && (
                             <div className="p-3 bg-gray-50 border-t border-gray-200">
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              <div className="grid grid-cols-3 gap-2">
                                 {gameContests.map((contest) => (
                                   <ContestCard
                                     key={contest.id}
