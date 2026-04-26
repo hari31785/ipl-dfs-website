@@ -73,89 +73,76 @@ function ContestCard({
   getContestTypeDisplay: (type: string, value: number) => string;
 }) {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border-2 ${isSelected ? 'border-primary-500' : 'border-gray-200'} p-4 hover:shadow-md transition-shadow`}>
+    <div className={`bg-white rounded-lg shadow-sm border-2 ${isSelected ? 'border-primary-500' : 'border-gray-200'} p-3 hover:shadow-md transition-shadow`}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={() => onToggleSelect(contest.id)}
-            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 mt-1"
+            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
           />
           <div>
-            <div className="font-bold text-lg text-blue-600">
+            <div className="font-bold text-sm text-blue-600 leading-tight">
               {getContestTypeDisplay(contest.contestType, contest.coinValue)}
             </div>
-            <div className="text-xs text-gray-500">
-              Max: {contest.maxParticipants} users
-            </div>
+            <div className="text-xs text-gray-400">Max: {contest.maxParticipants}</div>
           </div>
         </div>
-        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(contest.status)}`}>
-          {contest.status.replace('_', ' ')}
+        <span className={`inline-flex px-1.5 py-0.5 text-xs font-medium rounded-full ${getStatusColor(contest.status)}`}>
+          {contest.status.replace(/_/g, ' ')}
         </span>
       </div>
 
       {/* Stats */}
-      <div className="mb-3 pb-3 border-b border-gray-200">
-        <div className="text-sm text-gray-900 mb-1">
-          <strong>{contest._count.signups}</strong> signups • <strong>{contest._count.matchups}</strong> matchups
+      <div className="mb-2 pb-2 border-b border-gray-100">
+        <div className="text-xs text-gray-700">
+          <strong>{contest._count.signups}</strong> signups · <strong>{contest._count.matchups}</strong> matchups
+          {contest.matchupStats && contest._count.matchups > 0 && (
+            <span className="ml-1">
+              {contest.matchupStats.waiting > 0 && <span className="text-yellow-600"> ⏳{contest.matchupStats.waiting}</span>}
+              {contest.matchupStats.drafting > 0 && <span className="text-blue-600"> ✍️{contest.matchupStats.drafting}</span>}
+              {contest.matchupStats.completed > 0 && <span className="text-green-600"> ✅{contest.matchupStats.completed}</span>}
+            </span>
+          )}
         </div>
-        {contest.matchupStats && contest._count.matchups > 0 && (
-          <div className="text-xs text-gray-600 space-y-0.5">
-            {contest.matchupStats.waiting > 0 && (
-              <div className="text-yellow-600">⏳ {contest.matchupStats.waiting} waiting</div>
-            )}
-            {contest.matchupStats.drafting > 0 && (
-              <div className="text-blue-600">✍️ {contest.matchupStats.drafting} drafting</div>
-            )}
-            {contest.matchupStats.completed > 0 && (
-              <div className="text-green-600">✅ {contest.matchupStats.completed} complete</div>
-            )}
-            <div className="text-gray-500">
-              {contest.matchupStats.totalDraftPicks}/50 picks
-            </div>
-            {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') &&
-             (contest.matchupStats.drafting > 0 || contest.matchupStats.waiting > 0 || contest.matchupStats.completed > 0) && (
-              <a
-                href={`/admin/drafts?contest=${contest.id}`}
-                className="inline-flex items-center gap-1 mt-1 px-2 py-1 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded text-xs font-semibold transition"
-              >
-                ✍️ Manage Drafts →
-              </a>
-            )}
-          </div>
+        {contest.matchupStats && contest._count.matchups > 0 &&
+         (contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') &&
+         (contest.matchupStats.drafting > 0 || contest.matchupStats.waiting > 0 || contest.matchupStats.completed > 0) && (
+          <a
+            href={`/admin/drafts?contest=${contest.id}`}
+            className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded text-xs font-semibold transition"
+          >
+            ✍️ Manage Drafts →
+          </a>
         )}
       </div>
 
       {/* Actions */}
-      <div className="space-y-2">
-        {/* View Signups */}
+      <div className="space-y-1.5">
         {contest._count.signups > 0 && (
           <button
             onClick={() => onViewSignups(contest.id)}
-            className="block w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center text-sm font-medium"
+            className="block w-full px-2 py-1.5 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center text-xs font-medium"
           >
-            <Users className="inline-block h-4 w-4 mr-1" /> View Signups ({contest._count.signups})
+            <Users className="inline-block h-3 w-3 mr-1" /> Signups ({contest._count.signups})
           </button>
         )}
         
-        {/* View Matchups */}
         {(contest._count.matchups > 0 || contest.status === 'SIGNUP_CLOSED') && (
           <a
             href={`/admin/contests/${contest.id}`}
-            className="block w-full px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-sm font-medium"
+            className="block w-full px-2 py-1.5 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-xs font-medium"
           >
-            👁️ View Matchups ({contest._count.matchups})
+            👁️ Matchups ({contest._count.matchups})
           </a>
         )}
 
-        {/* Close Signups */}
         {contest.status === 'SIGNUP_OPEN' && (
           <button
             onClick={() => onCloseSignups(contest.id)}
-            className="block w-full px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-sm font-medium"
+            className="block w-full px-2 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-xs font-medium text-center"
             title={contest._count.signups === 0
               ? 'Close contest (no signups)'
               : contest._count.signups === 1
@@ -164,58 +151,51 @@ function ContestCard({
               ? `Close signups (Admin will join: ${contest._count.signups})` 
               : 'Close signups and generate matchups'}
           >
-            🔒 Close Signups ({contest._count.signups})
+            🔒 Close ({contest._count.signups})
           </button>
         )}
         
-        {/* Reopen Signups */}
         {(contest.status === 'SIGNUP_CLOSED' || contest.status === 'DRAFT_PHASE') && (
           <button
             onClick={() => onReopenSignups(contest.id)}
-            className="block w-full px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-sm font-medium"
+            className="block w-full px-2 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-xs font-medium text-center"
           >
-            🔓 Reopen Signups
+            🔓 Reopen
           </button>
         )}
         
-        {/* Open Drafting */}
         {contest.status === 'DRAFT_PHASE' && contest.matchupStats &&
          contest.matchupStats.waiting > 0 && (
           <button
             onClick={() => onOpenDrafting(contest.id)}
-            className="block w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-sm font-medium"
+            className="block w-full px-2 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-xs font-medium text-center"
           >
-            🎯 Open Draft ({contest.matchupStats.waiting} waiting)
+            🎯 Open Draft ({contest.matchupStats.waiting})
           </button>
         )}
 
-        {/* Start Contest - Show when drafting is open and at least one draft is complete */}
         {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') && contest.matchupStats && (
           contest.matchupStats.drafting > 0 || contest.matchupStats.completed > 0
         ) && contest.matchupStats.completed > 0 && (
           <button
             onClick={() => onUpdateStatus(contest.id, 'START_CONTEST')}
-            className="block w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-sm font-medium"
+            className="block w-full px-2 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs font-medium text-center"
           >
             ▶️ Start Contest
           </button>
         )}
         
-        {/* End Contest */}
         {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
           <button
             onClick={() => onEndContest(contest.id)}
-            className="block w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-sm font-medium"
+            className="block w-full px-2 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-xs font-medium text-center"
           >
             🏁 End Contest
           </button>
         )}
         
-        {/* Info */}
         {contest.status === 'SIGNUP_OPEN' && contest._count.signups % 2 !== 0 && contest._count.signups > 0 && (
-          <div className="text-xs text-blue-600 text-center">
-            ℹ️ Admin will join
-          </div>
+          <div className="text-xs text-blue-600 text-center">ℹ️ Admin will join</div>
         )}
       </div>
     </div>
@@ -992,77 +972,68 @@ export default function ContestsPage() {
         </button>
       </div>
 
-      {/* Status Filter and Bulk Actions */}
-      <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <label className="block text-sm font-medium mb-2">Filter by Status:</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border rounded px-3 py-2 text-gray-900 bg-white"
-            >
-              <option value="ALL">All Contests</option>
-              <option value="SIGNUP_OPEN">Signup Open</option>
-              <option value="SIGNUP_CLOSED">Signup Closed</option>
-              <option value="DRAFT_PHASE">Draft Phase</option>
-              <option value="LIVE">Live</option>
-              <option value="COMPLETED">Completed</option>
-            </select>
-          </div>
+      {/* Filter Bar */}
+      <div className="mb-3 flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex flex-wrap gap-2 items-center">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border rounded px-2 py-1.5 text-xs text-gray-900 bg-white"
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="SIGNUP_OPEN">Signup Open</option>
+            <option value="SIGNUP_CLOSED">Signup Closed</option>
+            <option value="DRAFT_PHASE">Draft Phase</option>
+            <option value="LIVE">Live</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Filter by Tournament:</label>
-            <select
-              value={tournamentFilter}
-              onChange={(e) => setTournamentFilter(e.target.value)}
-              className="border rounded px-3 py-2 text-gray-900 bg-white"
-            >
-              <option value="ALL">All Tournaments</option>
-              {tournaments.map(tournament => (
-                <option key={tournament.id} value={tournament.id}>{tournament.name}</option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={tournamentFilter}
+            onChange={(e) => setTournamentFilter(e.target.value)}
+            className="border rounded px-2 py-1.5 text-xs text-gray-900 bg-white"
+          >
+            <option value="ALL">All Tournaments</option>
+            {tournaments.map(tournament => (
+              <option key={tournament.id} value={tournament.id}>{tournament.name}</option>
+            ))}
+          </select>
 
           {/* View Mode Toggle */}
-          <div>
-            <label className="block text-sm font-medium mb-2">View Mode:</label>
-            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grouped')}
-                className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
-                  viewMode === 'grouped' 
-                    ? 'bg-white text-primary-700 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                📋 By Game
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
-                  viewMode === 'table' 
-                    ? 'bg-white text-primary-700 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                📊 Table
-              </button>
-            </div>
+          <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+            <button
+              onClick={() => setViewMode('grouped')}
+              className={`px-3 py-1 rounded-md font-medium transition-colors text-xs ${
+                viewMode === 'grouped' 
+                  ? 'bg-white text-primary-700 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              📋 By Game
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-1 rounded-md font-medium transition-colors text-xs ${
+                viewMode === 'table' 
+                  ? 'bg-white text-primary-700 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              📊 Table
+            </button>
           </div>
 
           {viewMode === 'grouped' && (
-            <div className="flex items-center gap-2 mt-7">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={expandAll}
-                className="text-sm px-3 py-2 text-primary-600 hover:text-primary-700 font-medium border border-primary-300 rounded"
+                className="text-xs px-2 py-1 text-primary-600 hover:text-primary-700 font-medium border border-primary-300 rounded"
               >
                 Expand All
               </button>
               <button
                 onClick={collapseAll}
-                className="text-sm px-3 py-2 text-gray-600 hover:text-gray-700 font-medium border border-gray-300 rounded"
+                className="text-xs px-2 py-1 text-gray-600 hover:text-gray-700 font-medium border border-gray-300 rounded"
               >
                 Collapse All
               </button>
@@ -1074,9 +1045,9 @@ export default function ContestsPage() {
           <button
             onClick={handleBulkDelete}
             disabled={isDeleting}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
           >
-            {isDeleting ? "Deleting..." : `Delete Selected (${selectedContests.length})`}
+            {isDeleting ? "Deleting..." : `Delete (${selectedContests.length})`}
           </button>
         )}
       </div>
@@ -1137,8 +1108,8 @@ export default function ContestsPage() {
                             </div>
                           </div>
                           {isExpanded && (
-                            <div className="p-4 bg-gray-50 border-t border-gray-200">
-                              <div className="grid md:grid-cols-3 gap-4">
+                            <div className="p-3 bg-gray-50 border-t border-gray-200">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                 {gameContests.map((contest) => (
                                   <ContestCard
                                     key={contest.id}
@@ -1221,8 +1192,8 @@ export default function ContestsPage() {
                             </div>
                           </div>
                           {isExpanded && (
-                            <div className="p-4 bg-gray-50 border-t border-gray-200">
-                              <div className="grid md:grid-cols-3 gap-4">
+                            <div className="p-3 bg-gray-50 border-t border-gray-200">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                 {gameContests.map((contest) => (
                                   <ContestCard
                                     key={contest.id}
