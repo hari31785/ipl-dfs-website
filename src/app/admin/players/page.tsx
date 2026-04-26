@@ -1033,7 +1033,7 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
               </div>
               <div className="divide-y divide-gray-200">
                 {filteredPlayers.map((player) => (
-                  <div key={player.id} className="px-3 py-3 flex items-center gap-2.5">
+                  <div key={player.id} className="px-3 py-1.5 flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={selectedPlayers.includes(player.id)}
@@ -1042,35 +1042,30 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-base">{getRoleIcon(player.role)}</span>
-                        <span className="font-semibold text-sm text-gray-900 truncate">{player.name}</span>
+                        <span className="text-sm">{getRoleIcon(player.role)}</span>
+                        <span className="font-semibold text-xs text-gray-900 truncate">{player.name}</span>
                         <div
-                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                          className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ backgroundColor: player.iplTeam.color }}
                         />
-                        <span className="text-xs text-gray-500 flex-shrink-0">{player.iplTeam.shortName}</span>
+                        <span className="text-[10px] text-gray-500 flex-shrink-0">{player.iplTeam.shortName}</span>
+                        <span className="text-[10px] text-gray-400 flex-shrink-0">{PLAYER_ROLES.find(r => r.value === player.role)?.label}{player.jerseyNumber ? ` #${player.jerseyNumber}` : ''}</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {PLAYER_ROLES.find(r => r.value === player.role)?.label}
-                        {player.jerseyNumber ? ` · #${player.jerseyNumber}` : ''}
-                      </p>
                     </div>
-                    <div className="flex gap-1.5 flex-shrink-0">
+                    <div className="flex gap-1 flex-shrink-0">
                       <button
                         onClick={() => handleEdit(player)}
                         disabled={deletingPlayerId === player.id}
-                        className="p-1.5 text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Edit"
+                        className="px-2 py-0.5 text-white bg-primary-600 hover:bg-primary-700 rounded text-[10px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Edit className="h-3.5 w-3.5" />
+                        Edit
                       </button>
                       <button
                         onClick={() => handleDelete(player)}
                         disabled={deletingPlayerId === player.id}
-                        className="p-1.5 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Delete"
+                        className="px-2 py-0.5 text-white bg-red-600 hover:bg-red-700 rounded text-[10px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        Del
                       </button>
                     </div>
                   </div>
