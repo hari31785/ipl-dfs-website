@@ -66,6 +66,7 @@ export async function GET(
       netPoints: number
       contestsPlayed: number
       biggestSingleWin: number
+      biggestSingleLoss: number
     }>()
 
     // Also track unique contestIds per user to derive contestsPlayed — no extra DB query needed
@@ -95,6 +96,7 @@ export async function GET(
         netPoints: 0,
         contestsPlayed: 0,
         biggestSingleWin: 0,
+        biggestSingleLoss: 0,
       }
 
       // Track unique contests for this user
@@ -115,6 +117,7 @@ export async function GET(
         existing.totalVCLost += Math.abs(vcAmount)
         existing.totalCoinsLost += Math.abs(coinAmount)
         existing.totalPointsLost += Math.abs(vcAmount)
+        if (Math.abs(vcAmount) > existing.biggestSingleLoss) existing.biggestSingleLoss = Math.abs(vcAmount)
       }
 
       existing.netVC = existing.totalVCWon - existing.totalVCLost

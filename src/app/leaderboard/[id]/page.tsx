@@ -27,6 +27,7 @@ interface LeaderboardEntry {
   netPoints: number
   contestsPlayed: number
   biggestSingleWin: number
+  biggestSingleLoss: number
 }
 
 interface Tournament {
@@ -267,8 +268,13 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                       {getRankDisplay(entry.rank)}
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-900">{entry.name}</span>
-                      <span className="text-xs text-gray-400 ml-1.5">@{entry.username} · {entry.totalWins}/{entry.totalMatches}W</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-gray-900">{entry.name}</span>
+                        {entry.totalWins >= 3 && entry.totalMatches > 0 && Math.round((entry.totalWins / entry.totalMatches) * 100) >= 60 && (
+                          <span title="Win streak" className="text-sm">🔥</span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-400">@{entry.username} · {entry.totalWins}/{entry.totalMatches}W</span>
                     </div>
                   </div>
                   <button
@@ -282,7 +288,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 {/* Row 2: Net VC + W-L record */}
                   <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
                     <span className={`text-base font-black ${entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                      {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
+                      Bal {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
                     </span>
                     <div className="flex items-center gap-1.5 text-xs">
                       <span className="font-bold text-green-600">{entry.totalWins}W</span>
@@ -290,6 +296,12 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                       <span className="font-bold text-red-500">{entry.totalMatches - entry.totalWins}L</span>
                       <span className="text-gray-400 text-[10px]">({entry.totalMatches > 0 ? Math.round((entry.totalWins / entry.totalMatches) * 100) : 0}%)</span>
                     </div>
+                    {entry.biggestSingleWin > 0 && (
+                      <span className="text-[10px] text-gray-500">best <span className="font-semibold text-green-600">V̶₵{entry.biggestSingleWin.toFixed(2)}</span></span>
+                    )}
+                    {entry.biggestSingleLoss > 0 && (
+                      <span className="text-[10px] text-gray-500">worst <span className="font-semibold text-red-500">V̶₵{entry.biggestSingleLoss.toFixed(2)}</span></span>
+                    )}
                   </div>
               </div>
             ))
@@ -298,33 +310,39 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
 
         {/* Leaderboard Table — desktop only */}
         <div className="hidden md:block bg-white rounded-lg shadow-lg overflow-hidden">
-            <table className="w-full divide-y divide-gray-200">
+            <table className="w-full table-fixed divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-blue-600 to-purple-600">
                 <tr>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-16">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-14">
                     Rank
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-36">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-40">
                     Player
                   </th>
-                  <th className="px-3 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-20">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-24">
                     <div className="flex items-center justify-center gap-1">
                       <span>Played</span>
                       <Eye className="w-3 h-3 opacity-70" />
                     </div>
                   </th>
-                  <th className="px-3 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-24">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-28">
+                    V̶₵ Balance
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-28">
                     W-L Record
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-28">
-                    Net V̶₵
+                  <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-24">
+                    Best Win
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-24">
+                    Worst Loss
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {leaderboard.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-lg">No completed contests yet</p>
                       <p className="text-sm">The leaderboard will populate as contests are completed</p>
@@ -341,16 +359,21 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                         hover:bg-blue-50 transition-colors
                       `}
                     >
-                      <td className="px-3 py-2 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center justify-center">
                           {getRankDisplay(entry.rank)}
                         </div>
                       </td>
-                      <td className="px-3 py-2 max-w-[160px]">
-                        <div className="text-sm font-semibold text-gray-900 truncate">{entry.name}</div>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <div className="text-sm font-semibold text-gray-900 truncate">{entry.name}</div>
+                          {entry.totalWins >= 3 && entry.totalMatches > 0 && Math.round((entry.totalWins / entry.totalMatches) * 100) >= 60 && (
+                            <span title="Hot streak" className="text-sm shrink-0">🔥</span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-400 truncate">@{entry.username} · {entry.totalWins}/{entry.totalMatches}W</div>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <button
                           onClick={() => openContestHistory(entry.userId, entry.username)}
                           className="px-2 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 ring-1 ring-blue-300 hover:bg-blue-600 hover:text-white hover:ring-blue-600 transition-all cursor-pointer"
@@ -360,20 +383,29 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                           <Eye className="w-3 h-3" />
                         </button>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-center">
-                        <span className="text-sm font-bold text-green-600">{entry.totalWins}W</span>
-                        <span className="text-gray-400 mx-1">-</span>
-                        <span className="text-sm font-bold text-red-500">{entry.totalMatches - entry.totalWins}L</span>
-                        <div className="text-xs text-gray-400">{entry.totalMatches > 0 ? Math.round((entry.totalWins / entry.totalMatches) * 100) : 0}%</div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <span className={`text-base font-bold ${
                           entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'
                         }`}>
                           {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
                         </span>
                       </td>
-                    </tr>
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                        <span className="text-sm font-bold text-green-600">{entry.totalWins}W</span>
+                        <span className="text-gray-400 mx-1">-</span>
+                        <span className="text-sm font-bold text-red-500">{entry.totalMatches - entry.totalWins}L</span>
+                        <div className="text-xs text-gray-400">{entry.totalMatches > 0 ? Math.round((entry.totalWins / entry.totalMatches) * 100) : 0}%</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                        <span className="text-sm font-semibold text-green-600">
+                          {entry.biggestSingleWin > 0 ? `V̶₵${entry.biggestSingleWin.toFixed(2)}` : '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                        <span className="text-sm font-semibold text-red-500">
+                          {entry.biggestSingleLoss > 0 ? `V̶₵${entry.biggestSingleLoss.toFixed(2)}` : '—'}
+                        </span>
+                      </td>
                     </tr>
                   ))
                 )}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Shield, Users, Trophy, AlertCircle, CheckCircle, Scale, Clock, Target } from "lucide-react"
+import { ArrowLeft, Shield, Users, Trophy, AlertCircle, CheckCircle, Scale, Clock, Target, Coins } from "lucide-react"
 
 export default function RulesPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -174,6 +174,7 @@ export default function RulesPage() {
                   <li>• No negative points for poor performance</li>
                   <li>• Statistics are sourced from official IPL data</li>
                   <li>• Points are final once match statistics are updated</li>
+                  <li className="font-semibold text-orange-700">• Points accrued in any Super Over will <span className="underline font-bold uppercase">not</span> count towards final scores</li>
                 </ul>
               </div>
             </div>
@@ -199,7 +200,7 @@ export default function RulesPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
-                      <span>Substitute players earn points only if they participate in the match</span>
+                      <span>Substitute (bench) players earn points <strong>only if they are moved into the starting 5</strong> to replace a DNP main player — bench players who are not promoted score 0 points</span>
                     </li>
                   </ul>
                 </div>
@@ -221,15 +222,11 @@ export default function RulesPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
-                      <span>If a drafted player is substituted during the IPL match, the substitute's performance counts</span>
+                      <span>A player earns points based on <strong>their own performance only</strong> — a player must be part of the playing XI to score</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
-                      <span>Impact substitute points are awarded to the original drafted player's slot</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
-                      <span>Concussion substitutes follow the same rule - substitute's performance counts</span>
+                      <span>The IPL allows up to 12 active players (11 starters + 1 Impact Sub) — any of these 12 who appeared in the match will have their points counted toward your total</span>
                     </li>
                   </ul>
                 </div>
@@ -238,19 +235,23 @@ export default function RulesPage() {
                   <h3 className="font-bold text-primary-800 mb-3">Non-Playing Scenarios</h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>If a drafted player doesn't play and isn't substituted, they score 0 points</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
-                      <span>Last-minute team changes or injuries do not allow draft modifications</span>
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
+                      <span>Injuries (including concussions) during the match do <strong>not</strong> allow draft modifications — your drafted lineup is locked once the match begins</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
+                      <span>A player who was part of the <strong>starting XI or came on as an Impact Sub</strong> and then gets injured or suffers a concussion is <strong>not eligible to be marked as DNP</strong> — they participated in the match and any points they scored stand</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>Rain-affected or shortened matches: all participating player points count</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>Match cancellations result in all contests being voided and coins refunded</span>
                     </li>
                   </ul>
@@ -270,19 +271,19 @@ export default function RulesPage() {
                   <h3 className="font-bold text-primary-800 mb-3">Prohibited Activities</h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-red-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>Creating multiple accounts to gain unfair advantages</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-red-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>Collusion with other players</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-red-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>Use of automated tools or bots</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-red-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>Sharing account credentials</span>
                     </li>
                   </ul>
@@ -354,6 +355,40 @@ export default function RulesPage() {
               </div>
             </div>
 
+            {/* League Fee — hidden for now */}
+            {false && <div className="bg-white rounded-2xl p-8 shadow-xl">
+              <h2 className="text-2xl font-bold text-primary-800 mb-6 flex items-center">
+                <Coins className="h-6 w-6 mr-3 text-secondary-500" />
+                League Fee
+              </h2>
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                  <p className="text-gray-700 text-sm">
+                    IPL DFS charges a <strong>10% League Fee</strong> on winnings to cover hosting, platform maintenance, and prize administration.
+                    VC won or lost in a matchup is determined by the <strong>difference in fantasy points</strong> between the two players — there is no fixed pot.
+                  </p>
+                </div>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
+                    <span>The amount of V̶₵ transferred is based on the <strong>points difference</strong> between you and your opponent</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
+                    <span>The League Fee is <strong>10% of the V̶₵ won</strong>, deducted from the winner automatically at settlement</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
+                    <span>The League Fee is charged <strong>only to the winner</strong> — the losing player pays no fee</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
+                    <span>Example: If the points difference earns you <strong>100 V̶₵</strong>, you receive <strong>90 V̶₵</strong> after the 10% fee</span>
+                  </li>
+                </ul>
+              </div>
+            </div>}
+
             {/* Disputes */}
             <div className="bg-white rounded-2xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-primary-800 mb-6 flex items-center">
@@ -384,15 +419,15 @@ export default function RulesPage() {
                   <h3 className="font-bold text-primary-800 mb-3">Technical Issues</h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>Report technical issues immediately through support channels</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>Platform downtime may result in contest cancellation and refunds</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
                       <span>No liability for user connectivity issues during draft or gameplay</span>
                     </li>
                   </ul>
