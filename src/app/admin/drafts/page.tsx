@@ -420,23 +420,23 @@ function DraftPageInner() {
                 </span>
               </button>
               {showActiveDrafts && (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                   {contests.filter(c => c.status !== 'COMPLETED').map((contest) => (
                     <button
                       key={contest.id}
                       onClick={() => setSelectedContest(contest.id)}
-                      className={`text-left px-4 py-3 rounded-lg border-2 transition-all ${
+                      className={`text-left px-3 py-2 rounded-lg border-2 transition-all ${
                         selectedContest === contest.id
                           ? 'border-pink-500 bg-pink-50 shadow-sm'
                           : 'border-gray-200 bg-gray-50 hover:border-pink-300 hover:bg-pink-50/40'
                       }`}
                     >
-                      <div className="font-semibold text-gray-900 text-sm">{contest.iplGame.title}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-gray-600">{contest.coinValue} VC</span>
-                        <span className="text-xs text-gray-400">·</span>
-                        <span className="text-xs text-gray-600">{contest._count.matchups} matchup{contest._count.matchups !== 1 ? 's' : ''}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      <div className="font-semibold text-gray-900 text-xs leading-tight truncate">{contest.iplGame.title}</div>
+                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                        <span className="text-[10px] text-gray-600">{contest.coinValue} VC</span>
+                        <span className="text-[10px] text-gray-400">·</span>
+                        <span className="text-[10px] text-gray-600">{contest._count.matchups}m</span>
+                        <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${
                           contest.status === 'DRAFT_PHASE' ? 'bg-purple-100 text-purple-700' :
                           contest.status === 'SIGNUP_CLOSED' ? 'bg-yellow-100 text-yellow-700' :
                           contest.status === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
@@ -463,23 +463,23 @@ function DraftPageInner() {
                 </span>
               </button>
               {showCompletedDrafts && (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                   {contests.filter(c => c.status === 'COMPLETED').map((contest) => (
                     <button
                       key={contest.id}
                       onClick={() => setSelectedContest(contest.id)}
-                      className={`text-left px-4 py-3 rounded-lg border-2 transition-all opacity-70 ${
+                      className={`text-left px-3 py-2 rounded-lg border-2 transition-all opacity-70 ${
                         selectedContest === contest.id
                           ? 'border-pink-500 bg-pink-50 shadow-sm opacity-100'
                           : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:opacity-90'
                       }`}
                     >
-                      <div className="font-semibold text-gray-700 text-sm">{contest.iplGame.title}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-gray-500">{contest.coinValue} VC</span>
-                        <span className="text-xs text-gray-400">·</span>
-                        <span className="text-xs text-gray-500">{contest._count.matchups} matchup{contest._count.matchups !== 1 ? 's' : ''}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-500">COMPLETED</span>
+                      <div className="font-semibold text-gray-700 text-xs leading-tight truncate">{contest.iplGame.title}</div>
+                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                        <span className="text-[10px] text-gray-500">{contest.coinValue} VC</span>
+                        <span className="text-[10px] text-gray-400">·</span>
+                        <span className="text-[10px] text-gray-500">{contest._count.matchups}m</span>
+                        <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-gray-500">DONE</span>
                       </div>
                     </button>
                   ))}
@@ -541,21 +541,20 @@ function DraftPageInner() {
             {/* Mobile cards */}
             <div className="md:hidden divide-y divide-gray-200">
               {matchups.map((matchup) => (
-                <div key={matchup.id} className="p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <div className="font-semibold text-sm text-gray-900">{matchup.user1.user.name} vs {matchup.user2.user.name}</div>
-                      <div className="text-xs text-gray-500">@{matchup.user1.user.username} · @{matchup.user2.user.username}</div>
+                <div key={matchup.id} className="px-3 py-2 flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-semibold text-xs text-gray-900 truncate">@{matchup.user1.user.username} vs @{matchup.user2.user.username}</span>
+                      <span className={`inline-flex shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded-full ${getMatchupStatusColor(matchup.status)}`}>{matchup.status.replace('_', ' ')}</span>
                     </div>
-                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full flex-shrink-0 ml-2 ${getMatchupStatusColor(matchup.status)}`}>{matchup.status.replace('_', ' ')}</span>
-                  </div>
-                  <div className="mb-2">
-                    <div className="text-xs text-gray-600 mb-1">{getDraftProgress(matchup)}</div>
-                    <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div className="bg-pink-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (matchup.draftPicks.length / (14 - (matchup.firstPickUser?.includes(':w1') ? 2 : 0) - (matchup.firstPickUser?.includes(':w2') ? 2 : 0))) * 100)}%` }} />
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-gray-500 shrink-0">{getDraftProgress(matchup)}</span>
+                      <div className="flex-1 bg-gray-200 rounded-full h-1">
+                        <div className="bg-pink-500 h-1 rounded-full" style={{ width: `${Math.min(100, (matchup.draftPicks.length / (14 - (matchup.firstPickUser?.includes(':w1') ? 2 : 0) - (matchup.firstPickUser?.includes(':w2') ? 2 : 0))) * 100)}%` }} />
+                      </div>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedMatchup(matchup)} className="w-full bg-pink-600 hover:bg-pink-700 text-white py-1.5 rounded-lg text-xs font-semibold">View Details</button>
+                  <button onClick={() => setSelectedMatchup(matchup)} className="shrink-0 bg-pink-600 hover:bg-pink-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-semibold">View</button>
                 </div>
               ))}
             </div>
