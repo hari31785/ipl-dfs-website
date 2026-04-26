@@ -1033,41 +1033,27 @@ Hardik Pandya, ALL_ROUNDER, GT, 33`}
               </div>
               <div className="divide-y divide-gray-200">
                 {filteredPlayers.map((player) => (
-                  <div key={player.id} className="px-3 py-1.5 flex items-center gap-2">
+                  <div key={player.id} className="px-2 py-1 flex items-center gap-1.5">
                     <input
                       type="checkbox"
                       checked={selectedPlayers.includes(player.id)}
                       onChange={() => handleSelectPlayer(player.id)}
-                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 flex-shrink-0"
+                      className="w-3.5 h-3.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 flex-shrink-0"
                     />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">{getRoleIcon(player.role)}</span>
-                        <span className="font-semibold text-xs text-gray-900 truncate">{player.name}</span>
-                        <div
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: player.iplTeam.color }}
-                        />
-                        <span className="text-[10px] text-gray-500 flex-shrink-0">{player.iplTeam.shortName}</span>
-                        <span className="text-[10px] text-gray-400 flex-shrink-0">{PLAYER_ROLES.find(r => r.value === player.role)?.label}{player.jerseyNumber ? ` #${player.jerseyNumber}` : ''}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <button
-                        onClick={() => handleEdit(player)}
-                        disabled={deletingPlayerId === player.id}
-                        className="px-2 py-0.5 text-white bg-primary-600 hover:bg-primary-700 rounded text-[10px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(player)}
-                        disabled={deletingPlayerId === player.id}
-                        className="px-2 py-0.5 text-white bg-red-600 hover:bg-red-700 rounded text-[10px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Del
-                      </button>
-                    </div>
+                    <span className="text-xs leading-none">{getRoleIcon(player.role)}</span>
+                    <span className="font-semibold text-xs text-gray-900 truncate flex-1 min-w-0 leading-none">{player.name}</span>
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: player.iplTeam.color }} />
+                    <span className="text-[10px] text-gray-500 flex-shrink-0 leading-none">{player.iplTeam.shortName}</span>
+                    <button
+                      onClick={() => handleEdit(player)}
+                      disabled={deletingPlayerId === player.id}
+                      className="px-3 py-0.5 text-white bg-primary-600 hover:bg-primary-700 rounded text-[10px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    >Edit</button>
+                    <button
+                      onClick={() => handleDelete(player)}
+                      disabled={deletingPlayerId === player.id}
+                      className="px-3 py-0.5 text-white bg-red-600 hover:bg-red-700 rounded text-[10px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    >Del</button>
                   </div>
                 ))}
               </div>
