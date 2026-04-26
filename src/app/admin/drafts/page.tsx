@@ -419,33 +419,46 @@ function DraftPageInner() {
                   {showActiveDrafts ? <ChevronUp className="h-4 w-4 inline" /> : <ChevronDown className="h-4 w-4 inline" />}
                 </span>
               </button>
-              {showActiveDrafts && (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-                  {contests.filter(c => c.status !== 'COMPLETED').map((contest) => (
-                    <button
-                      key={contest.id}
-                      onClick={() => setSelectedContest(contest.id)}
-                      className={`text-left px-3 py-2 rounded-lg border-2 transition-all ${
-                        selectedContest === contest.id
-                          ? 'border-pink-500 bg-pink-50 shadow-sm'
-                          : 'border-gray-200 bg-gray-50 hover:border-pink-300 hover:bg-pink-50/40'
-                      }`}
-                    >
-                      <div className="font-semibold text-gray-900 text-xs leading-tight truncate">{contest.iplGame.title}</div>
-                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                        <span className="text-[10px] text-gray-600">{contest.coinValue} VC</span>
-                        <span className="text-[10px] text-gray-400">·</span>
-                        <span className="text-[10px] text-gray-600">{contest._count.matchups}m</span>
-                        <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${
-                          contest.status === 'DRAFT_PHASE' ? 'bg-purple-100 text-purple-700' :
-                          contest.status === 'SIGNUP_CLOSED' ? 'bg-yellow-100 text-yellow-700' :
-                          contest.status === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
-                        }`}>{contest.status.replace(/_/g, ' ')}</span>
+              {showActiveDrafts && (() => {
+                const activeContests = contests.filter(c => c.status !== 'COMPLETED');
+                const gameGroups = Array.from(new Map(activeContests.map(c => [c.iplGame.title, c.iplGame])).values());
+                return (
+                  <div className="space-y-3">
+                    {gameGroups.map(game => (
+                      <div key={game.title}>
+                        <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                          <span className="w-4 h-px bg-gray-300 inline-block"></span>
+                          {game.title}
+                          <span className="flex-1 h-px bg-gray-200 inline-block"></span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {activeContests.filter(c => c.iplGame.title === game.title).map((contest) => (
+                            <button
+                              key={contest.id}
+                              onClick={() => setSelectedContest(contest.id)}
+                              className={`text-left px-2 py-2 rounded-lg border-2 transition-all ${
+                                selectedContest === contest.id
+                                  ? 'border-pink-500 bg-pink-50 shadow-sm'
+                                  : 'border-gray-200 bg-gray-50 hover:border-pink-300 hover:bg-pink-50/40'
+                              }`}
+                            >
+                              <div className="font-bold text-gray-900 text-xs">{contest.coinValue} VC</div>
+                              <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                <span className="text-[10px] text-gray-600">{contest._count.matchups}m</span>
+                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${
+                                  contest.status === 'DRAFT_PHASE' ? 'bg-purple-100 text-purple-700' :
+                                  contest.status === 'SIGNUP_CLOSED' ? 'bg-yellow-100 text-yellow-700' :
+                                  contest.status === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
+                                }`}>{contest.status.replace(/_/g, ' ')}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -462,29 +475,42 @@ function DraftPageInner() {
                   {showCompletedDrafts ? <ChevronUp className="h-4 w-4 inline" /> : <ChevronDown className="h-4 w-4 inline" />}
                 </span>
               </button>
-              {showCompletedDrafts && (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-                  {contests.filter(c => c.status === 'COMPLETED').map((contest) => (
-                    <button
-                      key={contest.id}
-                      onClick={() => setSelectedContest(contest.id)}
-                      className={`text-left px-3 py-2 rounded-lg border-2 transition-all opacity-70 ${
-                        selectedContest === contest.id
-                          ? 'border-pink-500 bg-pink-50 shadow-sm opacity-100'
-                          : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:opacity-90'
-                      }`}
-                    >
-                      <div className="font-semibold text-gray-700 text-xs leading-tight truncate">{contest.iplGame.title}</div>
-                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                        <span className="text-[10px] text-gray-500">{contest.coinValue} VC</span>
-                        <span className="text-[10px] text-gray-400">·</span>
-                        <span className="text-[10px] text-gray-500">{contest._count.matchups}m</span>
-                        <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-gray-500">DONE</span>
+              {showCompletedDrafts && (() => {
+                const completedContests = contests.filter(c => c.status === 'COMPLETED');
+                const gameGroups = Array.from(new Map(completedContests.map(c => [c.iplGame.title, c.iplGame])).values());
+                return (
+                  <div className="space-y-3">
+                    {gameGroups.map(game => (
+                      <div key={game.title}>
+                        <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                          <span className="w-4 h-px bg-gray-300 inline-block"></span>
+                          {game.title}
+                          <span className="flex-1 h-px bg-gray-200 inline-block"></span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {completedContests.filter(c => c.iplGame.title === game.title).map((contest) => (
+                            <button
+                              key={contest.id}
+                              onClick={() => setSelectedContest(contest.id)}
+                              className={`text-left px-2 py-2 rounded-lg border-2 transition-all opacity-70 ${
+                                selectedContest === contest.id
+                                  ? 'border-pink-500 bg-pink-50 shadow-sm opacity-100'
+                                  : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:opacity-90'
+                              }`}
+                            >
+                              <div className="font-bold text-gray-500 text-xs">{contest.coinValue} VC</div>
+                              <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                <span className="text-[10px] text-gray-500">{contest._count.matchups}m</span>
+                                <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-gray-500">DONE</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
