@@ -446,32 +446,31 @@ export default function GamesPage() {
           <div className="text-center py-12 text-gray-500">No games found</div>
         ) : (
           filteredGames.map((game) => (
-            <div key={game.id} className="p-3">
-              <div className="flex items-start justify-between mb-1.5">
-                <div>
-                  <div className="font-semibold text-sm text-gray-900">{game.title}</div>
-                  <div className="text-xs text-gray-400">{game.tournament.name}</div>
+            <div key={game.id} className="px-3 py-2">
+              <div className="flex items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-semibold text-xs text-gray-900 truncate">{game.title}</span>
+                    <span className={`inline-flex shrink-0 px-1.5 py-0.5 text-[9px] font-medium rounded-full ${getStatusColor(game.status)}`}>
+                      {game.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: game.team1.color }}></span>
+                    <span className="text-[10px] font-medium text-gray-700">{game.team1.shortName}</span>
+                    <span className="text-[10px] text-gray-400">vs</span>
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: game.team2.color }}></span>
+                    <span className="text-[10px] font-medium text-gray-700">{game.team2.shortName}</span>
+                    <span className="text-[10px] text-gray-400">·</span>
+                    <span className="text-[10px] text-gray-500">{new Date(game.gameDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                    <span className="text-[10px] text-gray-400">·</span>
+                    <span className="text-[10px] text-gray-500">{game._count.contests}c</span>
+                  </div>
                 </div>
-                <span className={`inline-flex px-2 py-0.5 text-[10px] font-medium rounded-full ${getStatusColor(game.status)}`}>
-                  {game.status.replace('_', ' ')}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: game.team1.color }}></span>
-                <span className="text-xs font-medium text-gray-800">{game.team1.shortName}</span>
-                <span className="text-xs text-gray-400">vs</span>
-                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: game.team2.color }}></span>
-                <span className="text-xs font-medium text-gray-800">{game.team2.shortName}</span>
-                <span className="ml-auto text-xs text-gray-400">{game._count.contests} contest(s)</span>
-              </div>
-              <div className="text-xs text-gray-500 mb-2">
-                {new Date(game.gameDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
-                <span className="mx-1 text-gray-300">·</span>
-                Deadline: {new Date(game.signupDeadline).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => handleEdit(game)} className="flex-1 text-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold">Edit</button>
-                <button onClick={() => handleDelete(game.id)} className="flex-1 text-center px-3 py-1.5 bg-red-600 text-white rounded text-xs font-semibold">Delete</button>
+                <div className="flex shrink-0 gap-1.5 items-center">
+                  <button onClick={() => handleEdit(game)} className="px-2.5 py-1 bg-blue-600 text-white rounded text-[10px] font-semibold">Edit</button>
+                  <button onClick={() => handleDelete(game.id)} className="px-2.5 py-1 bg-red-600 text-white rounded text-[10px] font-semibold">Del</button>
+                </div>
               </div>
             </div>
           ))
