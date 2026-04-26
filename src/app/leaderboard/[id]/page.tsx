@@ -279,22 +279,18 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     <Eye className="w-3 h-3" />
                   </button>
                 </div>
-                {/* Row 2: VC + Coins inline */}
-                <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100 text-xs">
-                  <span className="text-gray-400">Won <span className="text-green-600 font-semibold">{entry.totalVCWon.toFixed(2)}</span></span>
-                  {entry.encashedVC > 0 ? (
-                    <span className="text-gray-400">Sttl <span className="text-blue-600 font-semibold">-{entry.encashedVC.toFixed(2)}</span></span>
-                  ) : entry.refilledVC > 0 ? (
-                    <span className="text-gray-400">Sttl <span className="text-purple-600 font-semibold">+{entry.refilledVC.toFixed(2)}</span></span>
-                  ) : null}
-                  <span className={`font-black text-sm ${entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                    {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
-                  </span>
-                  <span className="text-gray-400">Lost <span className="text-red-600 font-semibold">{entry.totalVCLost.toFixed(2)}</span></span>
-                  <span className={`font-semibold ${entry.netCoins > 0 ? 'text-green-700' : entry.netCoins < 0 ? 'text-red-700' : 'text-gray-500'}`}>
-                    {entry.netCoins > 0 ? '+' : ''}{entry.netCoins.toLocaleString()}🪙
-                  </span>
-                </div>
+                {/* Row 2: Net VC + W-L record */}
+                  <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                    <span className={`text-base font-black ${entry.netVC > 0 ? 'text-green-600' : entry.netVC < 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                      {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
+                    </span>
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <span className="font-bold text-green-600">{entry.totalWins}W</span>
+                      <span className="text-gray-300">·</span>
+                      <span className="font-bold text-red-500">{entry.totalMatches - entry.totalWins}L</span>
+                      <span className="text-gray-400 text-[10px]">({entry.totalMatches > 0 ? Math.round((entry.totalWins / entry.totalMatches) * 100) : 0}%)</span>
+                    </div>
+                  </div>
               </div>
             ))
           )}
@@ -317,27 +313,18 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                       <Eye className="w-3 h-3 opacity-70" />
                     </div>
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-24">
-                    V̶₵ Won
-                  </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-24">
-                    V̶₵ Lost
-                  </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-24">
-                    Settled
+                  <th className="px-3 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-24">
+                    W-L Record
                   </th>
                   <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-28">
                     Net V̶₵
-                  </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-28">
-                    Net Coins
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {leaderboard.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-lg">No completed contests yet</p>
                       <p className="text-sm">The leaderboard will populate as contests are completed</p>
@@ -373,28 +360,11 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                           <Eye className="w-3 h-3" />
                         </button>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
-                        <span className="text-sm font-bold text-green-600">
-                          V̶₵{entry.totalVCWon.toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
-                        <span className="text-sm font-bold text-red-600">
-                          V̶₵{entry.totalVCLost.toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
-                        {entry.encashedVC > 0 ? (
-                          <span className="text-sm font-bold text-blue-600">
-                            -V̶₵{entry.encashedVC.toFixed(2)}
-                          </span>
-                        ) : entry.refilledVC > 0 ? (
-                          <span className="text-sm font-bold text-purple-600">
-                            +V̶₵{entry.refilledVC.toFixed(2)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
+                      <td className="px-3 py-2 whitespace-nowrap text-center">
+                        <span className="text-sm font-bold text-green-600">{entry.totalWins}W</span>
+                        <span className="text-gray-400 mx-1">-</span>
+                        <span className="text-sm font-bold text-red-500">{entry.totalMatches - entry.totalWins}L</span>
+                        <div className="text-xs text-gray-400">{entry.totalMatches > 0 ? Math.round((entry.totalWins / entry.totalMatches) * 100) : 0}%</div>
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-right">
                         <span className={`text-base font-bold ${
@@ -403,13 +373,7 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                           {entry.netVC > 0 ? '+' : ''}V̶₵{entry.netVC.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
-                        <span className={`text-sm font-semibold ${
-                          entry.netCoins > 0 ? 'text-green-700' : entry.netCoins < 0 ? 'text-red-700' : 'text-gray-700'
-                        }`}>
-                          {entry.netCoins > 0 ? '+' : ''}{entry.netCoins.toLocaleString()}
-                        </span>
-                      </td>
+                    </tr>
                     </tr>
                   ))
                 )}
