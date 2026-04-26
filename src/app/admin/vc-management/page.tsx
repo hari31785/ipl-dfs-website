@@ -304,7 +304,7 @@ export default function VCManagementPage() {
               >
                 <div className="text-green-700 text-[9px] md:text-sm font-semibold">Winners</div>
                 <div className="text-gray-800 text-xl md:text-2xl font-bold">{group.winners.length}</div>
-                <div className="text-green-600 text-[8px] md:text-sm truncate">+V̶₵{(group.totalWinnings / 100).toFixed(2)}</div>
+                <div className="text-green-600 text-[8px] md:text-sm break-all leading-tight">+V̶₵{(group.totalWinnings / 100).toFixed(2)}</div>
               </button>
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'losers' ? 'all' : 'losers')}
@@ -314,7 +314,7 @@ export default function VCManagementPage() {
               >
                 <div className="text-red-700 text-[9px] md:text-sm font-semibold">Losers</div>
                 <div className="text-gray-800 text-xl md:text-2xl font-bold">{group.losers.length}</div>
-                <div className="text-red-600 text-[8px] md:text-sm truncate">-V̶₵{(group.totalLosses / 100).toFixed(2)}</div>
+                <div className="text-red-600 text-[8px] md:text-sm break-all leading-tight">-V̶₵{(group.totalLosses / 100).toFixed(2)}</div>
               </button>
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'breakeven' ? 'all' : 'breakeven')}
@@ -328,7 +328,7 @@ export default function VCManagementPage() {
               </button>
               <div className={`${group.netBalance >= 0 ? 'bg-green-50 border-green-950' : 'bg-red-50 border-red-950'} border-2 rounded-lg p-2 md:p-4 text-center md:text-left`}>
                 <div className="text-gray-600 text-[9px] md:text-sm font-semibold">Net</div>
-                <div className="text-gray-800 text-base md:text-2xl font-bold truncate">{group.netBalance > 0 ? '+' : ''}V̶₵{(group.netBalance / 100).toFixed(2)}</div>
+                <div className="text-gray-800 text-xs md:text-2xl font-bold break-all leading-tight">{group.netBalance > 0 ? '+' : ''}V̶₵{(group.netBalance / 100).toFixed(2)}</div>
               </div>
             </div>
 
