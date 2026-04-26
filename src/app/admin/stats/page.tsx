@@ -934,7 +934,7 @@ export default function BulkStatsPage() {
                 {/* Mobile cards */}
                 <div className="md:hidden divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
                   {existingStats.map((stat) => (
-                    <div key={stat.id} className="py-1.5 px-2">
+                    <div key={stat.id} className="py-1 px-2">
                       {editingStatId === stat.id ? (
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
@@ -955,19 +955,15 @@ export default function BulkStatsPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-xs font-bold px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: stat.player.iplTeam.color + '20', color: stat.player.iplTeam.color }}>{stat.player.iplTeam.shortName}</span>
-                            <span className="font-medium text-xs text-gray-900 truncate">{stat.player.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {stat.didNotPlay
-                              ? <span className="text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded font-bold">DNP</span>
-                              : <span className="text-xs text-gray-500">R:{stat.runs} W:{stat.wickets} C:{stat.catches} <span className="font-bold text-green-600">{stat.points}pt</span></span>
-                            }
-                            <button onClick={() => handleEditStat(stat)} disabled={deletingStatId === stat.id || isDeletingAll} className="p-1 bg-blue-500 text-white rounded disabled:opacity-50"><Edit className="h-3 w-3" /></button>
-                            <button onClick={() => handleDeleteStat(stat.id)} disabled={deletingStatId === stat.id || isDeletingAll} className="p-1 bg-red-500 text-white rounded disabled:opacity-50"><Trash2 className="h-3 w-3" /></button>
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-bold px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: stat.player.iplTeam.color + '20', color: stat.player.iplTeam.color }}>{stat.player.iplTeam.shortName}</span>
+                          <span className="font-medium text-xs text-gray-900 truncate flex-1 min-w-0">{stat.player.name}</span>
+                          {stat.didNotPlay
+                            ? <span className="text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded font-bold shrink-0">DNP</span>
+                            : <span className="text-xs text-gray-500 shrink-0">R:{stat.runs} W:{stat.wickets} C:{stat.catches} <span className="font-bold text-green-600">{stat.points}pt</span></span>
+                          }
+                          <button onClick={() => handleEditStat(stat)} disabled={deletingStatId === stat.id || isDeletingAll} className="px-2 py-0.5 bg-blue-500 text-white rounded text-xs disabled:opacity-50 shrink-0">Edit</button>
+                          <button onClick={() => handleDeleteStat(stat.id)} disabled={deletingStatId === stat.id || isDeletingAll} className="px-2 py-0.5 bg-red-500 text-white rounded text-xs disabled:opacity-50 shrink-0">Del</button>
                         </div>
                       )}
                     </div>
