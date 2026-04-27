@@ -155,6 +155,31 @@ export default function VCManagementPage() {
     }
   };
 
+  const handlePrePay = async (balance: UserBalance) => {
+    const input = prompt(`Pre Pay — Add V\u0336\u20b5 for ${balance.user.name} (@${balance.user.username})\n\nEnter amount in V\u0336\u20b5 to add:`);
+    if (!input) return;
+    const amountVC = parseFloat(input);
+    if (isNaN(amountVC) || amountVC <= 0) { alert('Invalid amount'); return; }
+    if (!confirm(`Add V\u0336\u20b5${amountVC.toFixed(2)} to ${balance.user.name}'s balance as a pre-payment?`)) return;
+    const amountCoins = Math.round(amountVC * 100);
+    try {
+      const response = await fetch('/api/admin/vc-settle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tournamentBalanceId: balance.id,
+          type: 'REFILL',
+          amount: amountCoins,
+          adminUsername,
+          notes: 'Pre-payment by admin',
+        }),
+      });
+      const result = await response.json();
+      if (result.success) { alert(result.message); fetchBalances(); }
+      else alert(`Error: ${result.error}`);
+    } catch { alert('Failed to process pre-payment'); }
+  };
+
   const filteredGroups = selectedTournament === 'all' 
     ? tournamentGroups 
     : { [selectedTournament]: tournamentGroups[selectedTournament] };
@@ -486,6 +511,7 @@ export default function VCManagementPage() {
                         <th className="px-4 py-3 text-left">User</th>
                         <th className="px-4 py-3 text-right">Current Balance</th>
                         <th className="px-4 py-3 text-right">Net</th>
+                        <th className="px-4 py-3 text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -494,6 +520,11 @@ export default function VCManagementPage() {
                           <td className="px-4 py-3"><div className="font-semibold">{balance.user.name}</div><div className="text-sm text-gray-500">{balance.user.username}</div></td>
                           <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.balance / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-right font-mono text-yellow-600">V̶₵0.00</td>
+                          <td className="px-4 py-3 text-right">
+                            <button onClick={() => handlePrePay(balance)} className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded transition">
+                              💰 Pre Pay
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -507,9 +538,12 @@ export default function VCManagementPage() {
                         <p className="font-semibold text-sm text-gray-900">{balance.user.name}</p>
                         <p className="text-xs text-gray-500">@{balance.user.username}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end gap-1">
                         <p className="text-sm font-mono text-gray-600">V̶₵{(balance.balance / 100).toFixed(2)}</p>
                         <p className="text-xs font-semibold text-yellow-600">Break Even</p>
+                        <button onClick={() => handlePrePay(balance)} className="px-2 py-0.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded transition">
+                          💰 Pre Pay
+                        </button>
                       </div>
                     </div>
                   ))}
