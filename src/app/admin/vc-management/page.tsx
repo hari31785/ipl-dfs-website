@@ -168,7 +168,7 @@ export default function VCManagementPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tournamentBalanceId: balance.id,
-          type: 'REFILL',
+          type: 'PREPAY',
           amount: amountCoins,
           adminUsername,
           notes: 'Pre-payment by admin',

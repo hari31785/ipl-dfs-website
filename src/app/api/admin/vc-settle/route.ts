@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (type !== 'ENCASH' && type !== 'REFILL') {
+    if (type !== 'ENCASH' && type !== 'REFILL' && type !== 'PREPAY') {
       return NextResponse.json(
-        { error: 'Invalid settlement type. Must be ENCASH or REFILL' },
+        { error: 'Invalid settlement type. Must be ENCASH, REFILL, or PREPAY' },
         { status: 400 }
       );
     }
@@ -90,11 +90,12 @@ export async function POST(request: NextRequest) {
         );
       }
     }
+    // PREPAY: no balance validation — admin can add VC regardless of current balance
 
     // Calculate new balance
     const balanceAfter = type === 'ENCASH' 
       ? balanceBefore - amount  // Deduct winnings
-      : balanceBefore + amount; // Add refill
+      : balanceBefore + amount; // Add refill or prepay
 
     // Perform settlement in transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully ${type === 'ENCASH' ? 'encashed' : 'refilled'} ${amount} VCs for ${tournamentBalance.user.name}`,
+      message: `Successfully ${type === 'ENCASH' ? 'encashed' : type === 'PREPAY' ? 'pre-paid' : 'refilled'} ${amount} VCs for ${tournamentBalance.user.name}`,
       data: {
         user: tournamentBalance.user,
         tournament: tournamentBalance.tournament,
