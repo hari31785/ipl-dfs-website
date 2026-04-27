@@ -74,23 +74,21 @@ function ContestCard({
 }) {
   return (
     <div className={`bg-white rounded-lg shadow-sm border-2 ${isSelected ? 'border-primary-500' : 'border-gray-200'} p-2 hover:shadow-md transition-shadow`}>
-      {/* Header — all on 2 lines */}
-      <div className="mb-1.5">
-        <div className="flex items-center gap-1 min-w-0">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onToggleSelect(contest.id)}
-            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 shrink-0"
-          />
-          <div className="font-bold text-xs text-blue-600 leading-tight truncate flex-1 min-w-0">
-            {getContestTypeDisplay(contest.contestType, contest.coinValue)}
-          </div>
-          <span className={`inline-flex px-1 py-0.5 text-[9px] font-bold rounded whitespace-nowrap shrink-0 ${getStatusColor(contest.status)}`}>
-            {({'DRAFT_PHASE':'DRAFT','SIGNUP_CLOSED':'CLOSED','SIGNUP_OPEN':'OPEN','LIVE':'LIVE','COMPLETED':'DONE'} as Record<string,string>)[contest.status] ?? contest.status.replace(/_/g,' ')}
-          </span>
+      {/* Header */}
+      <div className="flex items-center gap-1 mb-1.5 min-w-0">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(contest.id)}
+          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 shrink-0"
+        />
+        <div className="font-bold text-sm text-blue-600 leading-none shrink-0">
+          {getContestTypeDisplay(contest.contestType, contest.coinValue)}
         </div>
-        <div className="text-[10px] text-gray-400 leading-tight pl-4">Max:{contest.maxParticipants}</div>
+        <span className={`inline-flex px-1 py-0.5 text-[9px] font-bold rounded whitespace-nowrap shrink-0 ${getStatusColor(contest.status)}`}>
+          {({'DRAFT_PHASE':'DRAFT','SIGNUP_CLOSED':'CLOSED','SIGNUP_OPEN':'OPEN','LIVE':'LIVE','COMPLETED':'DONE'} as Record<string,string>)[contest.status] ?? contest.status.replace(/_/g,' ')}
+        </span>
+        <span className="text-[10px] text-gray-400 leading-none shrink-0">/{contest.maxParticipants}</span>
       </div>
 
       {/* Stats */}
@@ -834,7 +832,7 @@ export default function ContestsPage() {
   };
 
   const getContestTypeDisplay = (contestType: string, coinValue: number) => {
-    return `${coinValue} Coins/Point`;
+    return `${coinValue}c`;
   };
 
   if (loading) return <div>Loading...</div>;
