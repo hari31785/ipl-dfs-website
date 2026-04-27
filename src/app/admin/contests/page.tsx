@@ -75,24 +75,24 @@ function ContestCard({
   return (
     <div className={`bg-white rounded-lg shadow-sm border-2 ${isSelected ? 'border-primary-500' : 'border-gray-200'} p-3 hover:shadow-md transition-shadow`}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-2 gap-1">
-        <div className="flex items-center gap-1.5 min-w-0">
+      <div className="mb-2">
+        <div className="flex items-center gap-1 mb-1">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={() => onToggleSelect(contest.id)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 shrink-0"
           />
-          <div className="min-w-0">
-            <div className="font-bold text-xs text-blue-600 leading-tight truncate">
-              {getContestTypeDisplay(contest.contestType, contest.coinValue)}
-            </div>
-            <div className="text-xs text-gray-400">Max: {contest.maxParticipants}</div>
-          </div>
+          <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold rounded-full whitespace-nowrap ${getStatusColor(contest.status)}`}>
+            {({'DRAFT_PHASE':'DRAFT','SIGNUP_CLOSED':'CLOSED','SIGNUP_OPEN':'OPEN','LIVE':'LIVE','COMPLETED':'DONE'} as Record<string,string>)[contest.status] ?? contest.status.replace(/_/g,' ')}
+          </span>
         </div>
-        <span className={`inline-flex shrink-0 px-1.5 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${getStatusColor(contest.status)}`}>
-          {contest.status.replace(/_/g, ' ')}
-        </span>
+        <div className="min-w-0 pl-5">
+          <div className="font-bold text-xs text-blue-600 leading-tight truncate">
+            {getContestTypeDisplay(contest.contestType, contest.coinValue)}
+          </div>
+          <div className="text-xs text-gray-400">Max: {contest.maxParticipants}</div>
+        </div>
       </div>
 
       {/* Stats */}
