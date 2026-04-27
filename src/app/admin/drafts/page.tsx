@@ -436,21 +436,23 @@ function DraftPageInner() {
                             <button
                               key={contest.id}
                               onClick={() => setSelectedContest(contest.id)}
-                              className={`text-left px-2 py-2 rounded-lg border-2 transition-all ${
+                              className={`text-left px-2 py-2 rounded-lg border-2 transition-all relative overflow-hidden ${
                                 selectedContest === contest.id
                                   ? 'border-pink-500 bg-pink-50 shadow-sm'
                                   : 'border-gray-200 bg-gray-50 hover:border-pink-300 hover:bg-pink-50/40'
                               }`}
                             >
-                              <div className="font-bold text-gray-900 text-xs">{contest.coinValue} VC</div>
-                              <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                                <span className="text-[10px] text-gray-600">{contest._count.matchups}m</span>
-                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${
-                                  contest.status === 'DRAFT_PHASE' ? 'bg-purple-100 text-purple-700' :
-                                  contest.status === 'SIGNUP_CLOSED' ? 'bg-yellow-100 text-yellow-700' :
-                                  contest.status === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
-                                }`}>{contest.status.replace(/_/g, ' ')}</span>
-                              </div>
+                              <div className="font-bold text-gray-900 text-xs leading-tight">{contest.coinValue} VC</div>
+                              <div className="text-[10px] text-gray-500 leading-tight">{contest._count.matchups}m</div>
+                              <div className={`mt-0.5 px-1 py-0.5 rounded text-[9px] font-bold leading-tight inline-block max-w-full truncate ${
+                                contest.status === 'DRAFT_PHASE' ? 'bg-purple-100 text-purple-700' :
+                                contest.status === 'SIGNUP_CLOSED' ? 'bg-yellow-100 text-yellow-700' :
+                                contest.status === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
+                              }`}>{{
+                                DRAFT_PHASE: 'DRAFT',
+                                SIGNUP_CLOSED: 'CLOSED',
+                                LIVE: 'LIVE',
+                              }[contest.status] ?? contest.status.replace(/_/g, ' ')}</div>
                             </button>
                           ))}
                         </div>
@@ -492,17 +494,15 @@ function DraftPageInner() {
                             <button
                               key={contest.id}
                               onClick={() => setSelectedContest(contest.id)}
-                              className={`text-left px-2 py-2 rounded-lg border-2 transition-all opacity-70 ${
+                              className={`text-left px-2 py-2 rounded-lg border-2 transition-all opacity-70 relative overflow-hidden ${
                                 selectedContest === contest.id
                                   ? 'border-pink-500 bg-pink-50 shadow-sm opacity-100'
                                   : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:opacity-90'
                               }`}
                             >
-                              <div className="font-bold text-gray-500 text-xs">{contest.coinValue} VC</div>
-                              <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                                <span className="text-[10px] text-gray-500">{contest._count.matchups}m</span>
-                                <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-gray-500">DONE</span>
-                              </div>
+                              <div className="font-bold text-gray-500 text-xs leading-tight">{contest.coinValue} VC</div>
+                              <div className="text-[10px] text-gray-500 leading-tight">{contest._count.matchups}m</div>
+                              <div className="mt-0.5 px-1 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-gray-500 inline-block">DONE</div>
                             </button>
                           ))}
                         </div>
