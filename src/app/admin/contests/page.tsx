@@ -112,7 +112,7 @@ function ContestCard({
             href={`/admin/drafts?contest=${contest.id}`}
             className="flex items-center justify-center gap-1 mt-1 w-full px-1 py-1 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded text-[10px] md:text-xs font-semibold transition"
           >
-            ✍️ <span className="md:inline">Manage</span> Drafts →
+            ✍️ <span className="hidden md:inline">Manage </span>Drafts →
           </a>
         )}
       </div>
