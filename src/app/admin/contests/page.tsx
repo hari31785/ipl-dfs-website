@@ -90,7 +90,7 @@ function ContestCard({
           <span className="md:hidden">{({'DRAFT_PHASE':'DRAFT','SIGNUP_CLOSED':'CLOSED','SIGNUP_OPEN':'OPEN','LIVE':'LIVE','COMPLETED':'DONE'} as Record<string,string>)[contest.status] ?? contest.status.replace(/_/g,' ')}</span>
           <span className="hidden md:inline">{contest.status.replace(/_/g,' ')}</span>
         </span>
-        <span className="text-[10px] text-gray-400 leading-none shrink-0">/{contest.maxParticipants}</span>
+        <span className="hidden md:inline text-[10px] text-gray-400 leading-none shrink-0">/{contest.maxParticipants}</span>
       </div>
 
       {/* Stats */}
@@ -1113,7 +1113,7 @@ export default function ContestsPage() {
                           </div>
                           {isExpanded && (
                             <div className="p-3 bg-gray-50 border-t border-gray-200">
-                              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
+                              <div className="grid grid-cols-3 gap-2 md:gap-3">
                                 {gameContests.map((contest) => (
                                   <ContestCard
                                     key={contest.id}
@@ -1197,7 +1197,7 @@ export default function ContestsPage() {
                           </div>
                           {isExpanded && (
                             <div className="p-3 bg-gray-50 border-t border-gray-200">
-                              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
+                              <div className="grid grid-cols-3 gap-2 md:gap-3">
                                 {gameContests.map((contest) => (
                                   <ContestCard
                                     key={contest.id}
