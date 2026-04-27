@@ -112,58 +112,67 @@ function ContestCard({
          (contest.matchupStats.drafting > 0 || contest.matchupStats.waiting > 0 || contest.matchupStats.completed > 0) && (
           <a
             href={`/admin/drafts?contest=${contest.id}`}
-            className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded text-xs font-semibold transition"
+            className="flex items-center justify-center gap-1 mt-1 w-full px-1 py-1 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded text-[10px] font-semibold transition truncate"
           >
-            ✍️ Manage Drafts →
+            ✍️ Drafts →
           </a>
         )}
       </div>
 
-      {/* Actions */}
-      <div className="space-y-1.5">
+      {/* Actions — icon buttons in a single flex row */}
+      <div className="flex gap-1 mt-1">
         {contest._count.signups > 0 && (
           <button
             onClick={() => onViewSignups(contest.id)}
-            className="block w-full px-2 py-1.5 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center text-xs font-medium"
+            className="flex-1 flex flex-col items-center justify-center py-1.5 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-[9px] font-medium leading-tight"
+            title={`Signups (${contest._count.signups})`}
           >
-            <Users className="inline-block h-3 w-3 mr-1" /> Signups ({contest._count.signups})
+            <Users className="h-3.5 w-3.5" />
+            <span>{contest._count.signups}</span>
           </button>
         )}
 
         {(contest._count.matchups > 0 || contest.status === 'SIGNUP_CLOSED') && (
           <a
             href={`/admin/contests/${contest.id}`}
-            className="block w-full px-2 py-1.5 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-xs font-medium"
+            className="flex-1 flex flex-col items-center justify-center py-1.5 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-[9px] font-medium leading-tight"
+            title={`Matchups (${contest._count.matchups})`}
           >
-            👁️ Matchups ({contest._count.matchups})
+            <span className="text-sm leading-none">👁️</span>
+            <span>{contest._count.matchups}</span>
           </a>
         )}
 
         {contest.status === 'SIGNUP_OPEN' && (
           <button
             onClick={() => onCloseSignups(contest.id)}
-            className="block w-full px-2 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-xs font-medium text-center"
-            title={contest._count.signups === 0 ? 'Close contest (no signups)' : contest._count.signups % 2 !== 0 ? `Admin will join` : 'Close signups'}
+            className="flex-1 flex flex-col items-center justify-center py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-[9px] font-medium leading-tight"
+            title={`Close signups (${contest._count.signups})`}
           >
-            🔒 Close ({contest._count.signups})
+            <span className="text-sm leading-none">🔒</span>
+            <span>{contest._count.signups}</span>
           </button>
         )}
 
         {(contest.status === 'SIGNUP_CLOSED' || contest.status === 'DRAFT_PHASE') && (
           <button
             onClick={() => onReopenSignups(contest.id)}
-            className="block w-full px-2 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-xs font-medium text-center"
+            className="flex-1 flex flex-col items-center justify-center py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-[9px] font-medium leading-tight"
+            title="Reopen signups"
           >
-            🔓 Reopen
+            <span className="text-sm leading-none">🔓</span>
+            <span>Open</span>
           </button>
         )}
 
         {contest.status === 'DRAFT_PHASE' && contest.matchupStats && contest.matchupStats.waiting > 0 && (
           <button
             onClick={() => onOpenDrafting(contest.id)}
-            className="block w-full px-2 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-xs font-medium text-center"
+            className="flex-1 flex flex-col items-center justify-center py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-[9px] font-medium leading-tight"
+            title={`Open drafting (${contest.matchupStats.waiting} waiting)`}
           >
-            🎯 Open Draft ({contest.matchupStats.waiting})
+            <span className="text-sm leading-none">🎯</span>
+            <span>{contest.matchupStats.waiting}</span>
           </button>
         )}
 
@@ -171,23 +180,30 @@ function ContestCard({
          contest.matchupStats.completed > 0 && (
           <button
             onClick={() => onUpdateStatus(contest.id, 'START_CONTEST')}
-            className="block w-full px-2 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs font-medium text-center"
+            className="flex-1 flex flex-col items-center justify-center py-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition text-[9px] font-medium leading-tight"
+            title="Start contest"
           >
-            ▶️ Start Contest
+            <span className="text-sm leading-none">▶️</span>
+            <span>Start</span>
           </button>
         )}
 
         {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
           <button
             onClick={() => onEndContest(contest.id)}
-            className="block w-full px-2 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-xs font-medium text-center"
+            className="flex-1 flex flex-col items-center justify-center py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-[9px] font-medium leading-tight"
+            title="End contest"
           >
-            🏁 End Contest
+            <span className="text-sm leading-none">🏁</span>
+            <span>End</span>
           </button>
         )}
 
         {contest.status === 'SIGNUP_OPEN' && contest._count.signups % 2 !== 0 && contest._count.signups > 0 && (
-          <div className="text-xs text-blue-600 text-center">ℹ️ Admin will join</div>
+          <div className="flex-1 flex flex-col items-center justify-center py-1.5 text-[9px] text-blue-600 text-center leading-tight">
+            <span className="text-sm leading-none">ℹ️</span>
+            <span>+Admin</span>
+          </div>
         )}
       </div>
     </div>
