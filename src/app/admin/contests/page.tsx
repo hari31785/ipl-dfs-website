@@ -110,7 +110,7 @@ function ContestCard({
          (contest.matchupStats.drafting > 0 || contest.matchupStats.waiting > 0 || contest.matchupStats.completed > 0) && (
           <a
             href={`/admin/drafts?contest=${contest.id}`}
-            className="flex items-center justify-center gap-1 mt-1 w-full px-1 py-1 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded text-[10px] md:text-xs font-semibold transition"
+            className="flex items-center justify-center gap-1 mt-1 w-full px-1 py-1 md:py-2.5 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded text-[10px] md:text-sm font-semibold transition"
           >
             ✍️ <span className="hidden md:inline">Manage </span>Drafts →
           </a>
@@ -164,37 +164,37 @@ function ContestCard({
       {/* Desktop: stacked full-width buttons */}
       <div className="hidden md:block space-y-1.5">
         {contest._count.signups > 0 && (
-          <button onClick={() => onViewSignups(contest.id)} className="block w-full px-2 py-1.5 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center text-xs font-medium">
-            <Users className="inline-block h-3 w-3 mr-1" /> Signups ({contest._count.signups})
+          <button onClick={() => onViewSignups(contest.id)} className="block w-full px-2 py-2.5 bg-teal-500 text-white rounded hover:bg-teal-600 transition text-center text-sm font-medium">
+            <Users className="inline-block h-3.5 w-3.5 mr-1" /> Signups ({contest._count.signups})
           </button>
         )}
         {(contest._count.matchups > 0 || contest.status === 'SIGNUP_CLOSED') && (
-          <a href={`/admin/contests/${contest.id}`} className="block w-full px-2 py-1.5 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-xs font-medium">
+          <a href={`/admin/contests/${contest.id}`} className="block w-full px-2 py-2.5 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition text-center text-sm font-medium">
             👁️ Matchups ({contest._count.matchups})
           </a>
         )}
         {contest.status === 'SIGNUP_OPEN' && (
-          <button onClick={() => onCloseSignups(contest.id)} className="block w-full px-2 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-xs font-medium text-center" title={contest._count.signups % 2 !== 0 ? 'Admin will join' : 'Close signups'}>
+          <button onClick={() => onCloseSignups(contest.id)} className="block w-full px-2 py-2.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-sm font-medium text-center" title={contest._count.signups % 2 !== 0 ? 'Admin will join' : 'Close signups'}>
             🔒 Close ({contest._count.signups})
           </button>
         )}
         {(contest.status === 'SIGNUP_CLOSED' || contest.status === 'DRAFT_PHASE') && (
-          <button onClick={() => onReopenSignups(contest.id)} className="block w-full px-2 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-xs font-medium text-center">
+          <button onClick={() => onReopenSignups(contest.id)} className="block w-full px-2 py-2.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-sm font-medium text-center">
             🔓 Reopen
           </button>
         )}
         {contest.status === 'DRAFT_PHASE' && contest.matchupStats && contest.matchupStats.waiting > 0 && (
-          <button onClick={() => onOpenDrafting(contest.id)} className="block w-full px-2 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-xs font-medium text-center">
+          <button onClick={() => onOpenDrafting(contest.id)} className="block w-full px-2 py-2.5 bg-purple-500 text-white rounded hover:bg-purple-600 transition text-sm font-medium text-center">
             🎯 Open Draft ({contest.matchupStats.waiting})
           </button>
         )}
         {(contest.status === 'DRAFT_PHASE' || contest.status === 'SIGNUP_CLOSED') && contest.matchupStats && contest.matchupStats.completed > 0 && (
-          <button onClick={() => onUpdateStatus(contest.id, 'START_CONTEST')} className="block w-full px-2 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs font-medium text-center">
+          <button onClick={() => onUpdateStatus(contest.id, 'START_CONTEST')} className="block w-full px-2 py-2.5 bg-green-500 text-white rounded hover:bg-green-600 transition text-sm font-medium text-center">
             ▶️ Start Contest
           </button>
         )}
         {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
-          <button onClick={() => onEndContest(contest.id)} className="block w-full px-2 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-xs font-medium text-center">
+          <button onClick={() => onEndContest(contest.id)} className="block w-full px-2 py-2.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-sm font-medium text-center">
             🏁 End Contest
           </button>
         )}
