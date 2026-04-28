@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully ${type === 'ENCASH' ? 'encashed' : type === 'PREPAY' ? 'pre-paid' : 'refilled'} ${amount} VCs for ${tournamentBalance.user.name}`,
+      message: `Successfully ${type === 'ENCASH' ? 'encashed' : type === 'PREPAY' ? 'pre-paid' : 'refilled'} ${(amount / 100).toFixed(2)} VCs for ${tournamentBalance.user.name}`,
       data: {
         user: tournamentBalance.user,
         tournament: tournamentBalance.tournament,
