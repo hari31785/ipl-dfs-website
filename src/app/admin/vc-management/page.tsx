@@ -521,9 +521,7 @@ export default function VCManagementPage() {
                           <td className="px-4 py-3 text-right font-mono">V̶₵{(balance.balance / 100).toFixed(2)}</td>
                           <td className="px-4 py-3 text-right font-mono text-yellow-600">V̶₵0.00</td>
                           <td className="px-4 py-3 text-right">
-                            <button onClick={() => handlePrePay(balance)} className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded transition">
-                              💰 Pre Pay
-                            </button>
+                            <button onClick={() => handlePrePay(balance)} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm">💰 Pre Pay</button>
                           </td>
                         </tr>
                       ))}
@@ -533,18 +531,13 @@ export default function VCManagementPage() {
                 {/* Mobile cards */}
                 <div className="md:hidden bg-white rounded-lg border border-yellow-200 divide-y divide-gray-100">
                   {group.breakEven.map((balance) => (
-                    <div key={balance.id} className="p-3 flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-sm text-gray-900">{balance.user.name}</p>
-                        <p className="text-xs text-gray-500">@{balance.user.username}</p>
+                    <div key={balance.id} className="px-3 py-2 flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-900 truncate">{balance.user.name}</p>
+                        <p className="text-xs text-gray-500 truncate">@{balance.user.username}</p>
                       </div>
-                      <div className="text-right flex flex-col items-end gap-1">
-                        <p className="text-sm font-mono text-gray-600">V̶₵{(balance.balance / 100).toFixed(2)}</p>
-                        <p className="text-xs font-semibold text-yellow-600">Break Even</p>
-                        <button onClick={() => handlePrePay(balance)} className="px-2 py-0.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded transition">
-                          💰 Pre Pay
-                        </button>
-                      </div>
+                      <span className="text-sm font-mono text-yellow-600 font-semibold shrink-0">V̶₵0.00</span>
+                      <button onClick={() => handlePrePay(balance)} className="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-xs font-medium shrink-0">💰 Pre Pay</button>
                     </div>
                   ))}
                 </div>
