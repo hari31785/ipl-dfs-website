@@ -102,13 +102,24 @@ export async function POST(
       where: { contestId: id },
       select: { id: true, userId: true },
     });
+
+    // Group signups by userId — a user may have signed up multiple times
+    const byUser = new Map<string, string[]>();
+    for (const s of signups) {
+      const opponents = byUser.get(s.userId) ?? [];
+      const opp = opponentMap.get(s.id);
+      if (opp) opponents.push(opp);
+      byUser.set(s.userId, opponents);
+    }
+
     await Promise.all(
-      signups.map((s) => {
-        const opponentUsername = opponentMap.get(s.id);
-        const body = opponentUsername
-          ? `You're up against @${opponentUsername} in ${gameTitle} — draft your team now!`
-          : `Your draft for ${gameTitle} is open — draft your team now!`;
-        return sendToUser(s.userId, {
+      Array.from(byUser.entries()).map(([userId, opponents]) => {
+        const body = opponents.length > 1
+          ? `You have ${opponents.length} drafts open in ${gameTitle} (vs @${opponents.join(', @')}) — draft your teams now!`
+          : opponents.length === 1
+            ? `You're up against @${opponents[0]} in ${gameTitle} — draft your team now!`
+            : `Your draft for ${gameTitle} is open — draft your team now!`;
+        return sendToUser(userId, {
           title: `⚡ Draft Open · ${contestTypeLabel}`,
           body,
           icon: '/icon-192.png',
