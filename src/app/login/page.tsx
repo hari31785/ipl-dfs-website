@@ -171,7 +171,7 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="my-6">
+          {false && <div className="my-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
@@ -180,10 +180,10 @@ export default function LoginPage() {
                 <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* Google Sign In */}
-          <button
+          {false && <button
             type="button"
             disabled
             className="w-full border border-gray-300 text-gray-500 py-3 px-4 rounded-lg font-semibold flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
@@ -195,15 +195,15 @@ export default function LoginPage() {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
             Google Sign-in (Coming Soon)
-          </button>
+          </button>}
 
           {/* Sign Up Link */}
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Don't have an account?{" "}
-            <Link href="/signup" className="text-secondary-600 hover:text-secondary-700 font-semibold">
-              Create one here
+          <div className="mt-6 border-t border-gray-200 pt-6">
+            <p className="text-center text-sm text-gray-700 font-semibold mb-3">New to IPL DFS?</p>
+            <Link href="/signup" className="block w-full text-center bg-primary-800 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+              Create an Account
             </Link>
-          </p>
+          </div>
 
           {/* Back to Home */}
           <div className="text-center mt-4">

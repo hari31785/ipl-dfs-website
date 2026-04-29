@@ -38,29 +38,23 @@ function HomeContent() {
         <div className="absolute inset-0 bg-gradient-to-r from-secondary-500/20 to-transparent"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-              IPL <span className="text-secondary-400">DFS</span>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6">
+              <span className="text-secondary-300">IPL</span> <span className="text-secondary-400">DFS</span>
             </h1>
-            <p className="text-xl md:text-2xl text-blue-900 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-secondary-300 mb-8 max-w-3xl mx-auto">
               Fantasy Cricket Head-to-Head
             </p>
-            <p className="text-lg text-blue-900 mb-12 max-w-2xl mx-auto">
+            <p className="text-lg text-secondary-200 mb-12 max-w-2xl mx-auto">
               Compete with your friends in Indian Premier League Daily Fantasy Sports. 
               Build your dream team, challenge your friends, and prove who knows cricket best!
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <Link 
-                href="/signup" 
-                className="bg-secondary-500 hover:bg-secondary-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-xl"
+                href="/login" 
+                className="bg-secondary-500 hover:bg-secondary-600 text-white px-10 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-xl inline-flex items-center"
               >
                 Start Playing
                 <ArrowRight className="inline ml-2 h-5 w-5" />
-              </Link>
-              <Link 
-                href="/login" 
-                className="border-2 border-white text-white bg-white/10 hover:bg-white hover:text-primary-800 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
-              >
-                Sign In
               </Link>
             </div>
           </div>
