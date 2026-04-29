@@ -58,7 +58,7 @@ function HomeContent() {
               </Link>
               <Link 
                 href="/login" 
-                className="border-2 border-primary-800 text-primary-800 hover:bg-primary-800 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-primary-800 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+                className="border-2 border-white text-white bg-white/10 hover:bg-white hover:text-primary-800 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
               >
                 Sign In
               </Link>
