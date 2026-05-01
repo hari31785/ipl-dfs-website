@@ -35,12 +35,19 @@ export default function SignUpPage() {
     if (e.target.name === 'phone') {
       // Remove all non-digits
       const digits = value.replace(/\D/g, '')
-      // Format as XXX-XXX-XXXX
-      if (digits.length >= 6) {
-        value = `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`
-      } else if (digits.length >= 3) {
-        value = `${digits.slice(0, 3)}-${digits.slice(3)}`
+      // Only auto-format if not deleting (i.e. new value is longer than or equal to previous)
+      const prevDigits = (formData.phone || '').replace(/\D/g, '')
+      if (digits.length >= prevDigits.length) {
+        // Formatting on add
+        if (digits.length >= 6) {
+          value = `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`
+        } else if (digits.length >= 3) {
+          value = `${digits.slice(0, 3)}-${digits.slice(3)}`
+        } else {
+          value = digits
+        }
       } else {
+        // On delete, just store the raw digits so user can freely edit
         value = digits
       }
     }
