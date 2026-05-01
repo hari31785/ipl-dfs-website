@@ -36,6 +36,7 @@ export async function fairPairSignups(
   const SAME_DAY_PENALTY = 1000; // effectively ban same-day rematches
 
   // Fetch all past USER-level pairings in this tournament (excluding current contest)
+  // Include contestId so we can rank contests by recency for decay weighting (Option B)
   const pastMatchups = await prisma.headToHeadMatchup.findMany({
     where: {
       contest: {
@@ -44,22 +45,51 @@ export async function fairPairSignups(
       contestId: { not: currentContestId },
     },
     select: {
+      contestId: true,
       user1: { select: { userId: true } },
       user2: { select: { userId: true } },
       createdAt: true,
     },
   });
 
+  // ── Option B: Recency Decay ──────────────────────────────────────────────
+  // Rank past contests from most recent (rank 0) to oldest.
+  // Weights: rank 0 = 8, rank 1 = 4, rank 2 = 2, rank 3+ = 1
+  // This makes a match played last contest count 8× more than one from 4+ contests ago,
+  // so the algorithm strongly prefers opponents you haven't faced recently.
+  const contestDates = new Map<string, Date>();
+  for (const m of pastMatchups) {
+    const existing = contestDates.get(m.contestId);
+    if (!existing || m.createdAt > existing) {
+      contestDates.set(m.contestId, m.createdAt);
+    }
+  }
+  const sortedContestIds = [...contestDates.entries()]
+    .sort((a, b) => b[1].getTime() - a[1].getTime()) // most recent first
+    .map(([id]) => id);
+  const contestRankMap = new Map<string, number>();
+  sortedContestIds.forEach((id, idx) => contestRankMap.set(id, idx));
+
+  function getRecencyWeight(contestId: string): number {
+    const rank = contestRankMap.get(contestId) ?? 99;
+    if (rank === 0) return 8;
+    if (rank === 1) return 4;
+    if (rank === 2) return 2;
+    return 1;
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   // Count how many times each pair has played (to prefer least-played pairings).
   // Pairings created TODAY get a large penalty to prevent same-day rematches
   // even when two contests are closed in rapid succession.
+  // Non-same-day pairings now use recency decay weight instead of flat 1 (Option B).
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
   const pairCount = new Map<string, number>();
   for (const m of pastMatchups) {
     const key = [m.user1.userId, m.user2.userId].sort().join('|');
-    const weight = m.createdAt >= todayStart ? SAME_DAY_PENALTY : 1;
+    const weight = m.createdAt >= todayStart ? SAME_DAY_PENALTY : getRecencyWeight(m.contestId);
     pairCount.set(key, (pairCount.get(key) ?? 0) + weight);
   }
 
@@ -70,6 +100,39 @@ export async function fairPairSignups(
       pairCount.set(key, (pairCount.get(key) ?? 0) + SAME_DAY_PENALTY);
     }
   }
+
+  // ── Option E: Last 3 Opponents Hard Ban ─────────────────────────────────
+  // For each user, find their 3 most recent unique opponents and hard-ban
+  // those pairings. The algorithm will only fall back to them if there is
+  // literally no other available partner.
+  const userRecentOpponents = new Map<string, Array<{ opponentId: string; createdAt: Date }>>();
+  for (const m of pastMatchups) {
+    const u1 = m.user1.userId, u2 = m.user2.userId;
+    if (!userRecentOpponents.has(u1)) userRecentOpponents.set(u1, []);
+    if (!userRecentOpponents.has(u2)) userRecentOpponents.set(u2, []);
+    userRecentOpponents.get(u1)!.push({ opponentId: u2, createdAt: m.createdAt });
+    userRecentOpponents.get(u2)!.push({ opponentId: u1, createdAt: m.createdAt });
+  }
+
+  // Hard-ban set: contains "uid1|uid2" sorted keys for last-3-opponent pairs
+  const hardBanPairs = new Set<string>();
+  for (const [userId, opponents] of userRecentOpponents) {
+    // Sort by most recent, collect last 3 unique opponent userIds
+    const sorted = [...opponents].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const last3: string[] = [];
+    const seen = new Set<string>();
+    for (const o of sorted) {
+      if (!seen.has(o.opponentId)) {
+        seen.add(o.opponentId);
+        last3.push(o.opponentId);
+        if (last3.length === 3) break;
+      }
+    }
+    for (const oppId of last3) {
+      hardBanPairs.add([userId, oppId].sort().join('|'));
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────
 
   // Shuffle pool for base randomness, then sort so multi-entry users come first.
   // Processing most-constrained users first ensures they get spread across
@@ -90,6 +153,7 @@ export async function fairPairSignups(
 
   // Greedy pass: for each unmatched signup (processed most-entries-first),
   // find the unmatched partner with fewest previous meetings in this tournament.
+  // Hard-banned pairs (last 3 opponents) are skipped unless no other option exists.
   for (let i = 0; i < pool.length; i++) {
     if (used.has(pool[i].id)) continue;
 
@@ -103,6 +167,8 @@ export async function fairPairSignups(
       // Skip if these two users are already matched elsewhere in this session
       const sessionKey = [pool[i].userId, pool[j].userId].sort().join('|');
       if (sessionUserPairs.has(sessionKey)) continue;
+      // Option E: skip hard-banned pairs in the main pass (last 3 opponents)
+      if (hardBanPairs.has(sessionKey)) continue;
       const count = pairCount.get(sessionKey) ?? 0;
       if (count < bestCount) {
         bestCount = count;
@@ -118,17 +184,40 @@ export async function fairPairSignups(
       const sessionKey = [pool[i].userId, pool[bestPartnerIdx].userId].sort().join('|');
       sessionUserPairs.add(sessionKey);
     } else {
-      // No fresh pairing available — allow a rematch (ignore sessionUserPairs)
-      // but NEVER pair a user against themselves.
+      // No ideal pairing available — relax hard-ban (Option E fallback) but
+      // still prefer least-played. NEVER pair a user against themselves.
+      let fallbackIdx = -1;
+      let fallbackCount = Infinity;
       for (let j = i + 1; j < pool.length; j++) {
         if (used.has(pool[j].id)) continue;
         if (pool[j].userId === pool[i].userId) continue; // never self-pair
-        paired.push([pool[i], pool[j]]);
-        used.add(pool[i].id);
-        used.add(pool[j].id);
         const sessionKey = [pool[i].userId, pool[j].userId].sort().join('|');
+        if (sessionUserPairs.has(sessionKey)) continue;
+        const count = pairCount.get(sessionKey) ?? 0;
+        if (count < fallbackCount) {
+          fallbackCount = count;
+          fallbackIdx = j;
+        }
+      }
+
+      if (fallbackIdx !== -1) {
+        paired.push([pool[i], pool[fallbackIdx]]);
+        used.add(pool[i].id);
+        used.add(pool[fallbackIdx].id);
+        const sessionKey = [pool[i].userId, pool[fallbackIdx].userId].sort().join('|');
         sessionUserPairs.add(sessionKey);
-        break;
+      } else {
+        // Absolute last resort: ignore sessionUserPairs too, never self-pair
+        for (let j = i + 1; j < pool.length; j++) {
+          if (used.has(pool[j].id)) continue;
+          if (pool[j].userId === pool[i].userId) continue; // never self-pair
+          paired.push([pool[i], pool[j]]);
+          used.add(pool[i].id);
+          used.add(pool[j].id);
+          const sessionKey = [pool[i].userId, pool[j].userId].sort().join('|');
+          sessionUserPairs.add(sessionKey);
+          break;
+        }
       }
     }
   }
