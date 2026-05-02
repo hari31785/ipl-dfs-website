@@ -450,7 +450,8 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
       c.matchup && c.matchup.status === 'COMPLETED'
     ).length,
     active: userContests.filter(c =>
-      c.contest.status === 'LIVE' || c.contest.status === 'ACTIVE'
+      (c.contest.status === 'LIVE' || c.contest.status === 'ACTIVE') &&
+      !(c.matchup && c.matchup.status === 'COMPLETED')
     ).length,
     completed: completedContests.length,
   }), [userContests, completedContests])
