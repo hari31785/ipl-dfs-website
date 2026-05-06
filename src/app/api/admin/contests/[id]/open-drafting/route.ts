@@ -103,12 +103,15 @@ export async function POST(
       select: { id: true, userId: true },
     });
 
-    // Group signups by userId — a user may have signed up multiple times
+    // Group signups by userId — only include signups that have a matchup.
+    // Users whose matchup was deleted still have a ContestSignup record but no
+    // entry in opponentMap, so we skip them to avoid spurious notifications.
     const byUser = new Map<string, string[]>();
     for (const s of signups) {
-      const opponents = byUser.get(s.userId) ?? [];
       const opp = opponentMap.get(s.id);
-      if (opp) opponents.push(opp);
+      if (!opp) continue; // no matchup for this signup — skip
+      const opponents = byUser.get(s.userId) ?? [];
+      opponents.push(opp);
       byUser.set(s.userId, opponents);
     }
 
