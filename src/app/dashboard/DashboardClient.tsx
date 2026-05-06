@@ -452,7 +452,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
     drafted: new Set(
       userContests
         .filter(c =>
-          (c.contest.status === 'DRAFT_PHASE' || c.contest.status === 'ACTIVE') &&
+          (c.contest.status === 'DRAFT_PHASE' || c.contest.status === 'ACTIVE' || c.contest.status === 'LIVE') &&
           c.matchup && c.matchup.status === 'COMPLETED'
         )
         .map(c => c.contest.id)
@@ -1711,7 +1711,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                       filteredContests = filteredContests.filter(contest => 
                         // Drafted: Draft complete, waiting for admin to activate
                         // Use matchup.status === COMPLETED as source of truth (handles bench waivers)
-                        (contest.contest.status === 'DRAFT_PHASE' || contest.contest.status === 'ACTIVE') && 
+                        (contest.contest.status === 'DRAFT_PHASE' || contest.contest.status === 'ACTIVE' || contest.contest.status === 'LIVE') && 
                         contest.matchup && 
                         contest.matchup.status === 'COMPLETED'
                       )
