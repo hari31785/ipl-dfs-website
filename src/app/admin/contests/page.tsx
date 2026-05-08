@@ -811,6 +811,55 @@ export default function ContestsPage() {
     }
   };
 
+  const endAllContestsForGame = async (gameId: string, gameTitle: string, gameContests: typeof contests) => {
+    const endable = gameContests.filter(c => c.status === 'LIVE' || c.status === 'ACTIVE');
+    if (endable.length === 0) {
+      alert('No LIVE or ACTIVE contests to end for this game.');
+      return;
+    }
+    if (!confirm(
+      `🏁 END ALL CONTESTS for "${gameTitle}"?\n\n` +
+      `This will end ${endable.length} contest${endable.length !== 1 ? 's' : ''} ` +
+      `(${endable.map(c => getContestTypeDisplay(c.contestType, c.coinValue)).join(', ')}), ` +
+      `calculate winners/losers and update coin balances for all matchups.\n\nAre you sure?`
+    )) return;
+
+    setGlobalLoading(true, `Ending ${endable.length} contest${endable.length !== 1 ? 's' : ''} for ${gameTitle}...`);
+    const results: string[] = [];
+    for (const contest of endable) {
+      try {
+        const res = await fetch(`/api/admin/contests/${contest.id}/end`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+          results.push(`✅ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: ${data.winnersPaid} winners paid, ${data.losersCharged} charged`);
+        } else if (data.canForce) {
+          // Stats warning — ask once whether to force all remaining
+          const forceAll = confirm(
+            `⚠️ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: ${data.message}\n\nForce end this contest anyway?`
+          );
+          if (forceAll) {
+            const forceRes = await fetch(`/api/admin/contests/${contest.id}/end?force=true`, { method: 'POST' });
+            const forceData = await forceRes.json();
+            if (forceRes.ok) {
+              results.push(`⚠️ ${getContestTypeDisplay(contest.contestType, contest.coinValue)} (forced): ${forceData.winnersPaid} winners paid`);
+            } else {
+              results.push(`❌ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: ${forceData.message}`);
+            }
+          } else {
+            results.push(`⏭️ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: skipped`);
+          }
+        } else {
+          results.push(`❌ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: ${data.message}`);
+        }
+      } catch {
+        results.push(`❌ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: network error`);
+      }
+    }
+    await fetchContests();
+    setGlobalLoading(false);
+    alert(`Results for ${gameTitle}:\n\n${results.join('\n')}`);
+  };
+
   const expandAll = () => {
     setExpandedGames(new Set(gameGroups.map(g => g.game.id)));
   };
@@ -1106,9 +1155,20 @@ export default function ContestsPage() {
                                   {gameContests.length} contest{gameContests.length !== 1 ? 's' : ''}
                                 </div>
                               </div>
-                              <a href={`/admin/stats?gameId=${game.id}`} className="px-2 py-1.5 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs md:text-sm font-bold shadow-md whitespace-nowrap flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                                📊<span className="hidden sm:inline"> Stats</span>
-                              </a>
+                              <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <a href={`/admin/stats?gameId=${game.id}`} className="px-2 py-1.5 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs md:text-sm font-bold shadow-md whitespace-nowrap">
+                                  📊<span className="hidden sm:inline"> Stats</span>
+                                </a>
+                                {gameContests.some(c => c.status === 'LIVE' || c.status === 'ACTIVE') && (
+                                  <button
+                                    onClick={() => endAllContestsForGame(game.id, game.title, gameContests)}
+                                    className="px-2 py-1.5 md:px-4 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-xs md:text-sm font-bold shadow-md whitespace-nowrap"
+                                    title="End all LIVE/ACTIVE contests for this game"
+                                  >
+                                    🏁<span className="hidden sm:inline"> End All</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                           {isExpanded && (
