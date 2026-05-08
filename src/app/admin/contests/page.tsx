@@ -818,14 +818,16 @@ export default function ContestsPage() {
 
     setGlobalLoading(true, `Ending ${endable.length} contest${endable.length !== 1 ? 's' : ''} for ${gameTitle}...`);
     const results: string[] = [];
+    let totalFeeCollected = 0;
     for (const contest of endable) {
       try {
         const res = await fetch(`/api/admin/contests/${contest.id}/end`, { method: 'POST' });
         const data = await res.json();
         if (res.ok) {
-          results.push(`✅ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: ${data.winnersPaid} winners paid, ${data.losersCharged} charged`);
+          const fee = data.adminFeeCollected ?? 0;
+          totalFeeCollected += fee;
+          results.push(`✅ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: ${data.winnersPaid} winners paid, ${data.losersCharged} charged — fee: ${fee} coins (VC${(fee / 100).toFixed(2)})`);
         } else if (data.canForce) {
-          // Stats warning — ask once whether to force all remaining
           const forceAll = confirm(
             `⚠️ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: ${data.message}\n\nForce end this contest anyway?`
           );
@@ -833,7 +835,9 @@ export default function ContestsPage() {
             const forceRes = await fetch(`/api/admin/contests/${contest.id}/end?force=true`, { method: 'POST' });
             const forceData = await forceRes.json();
             if (forceRes.ok) {
-              results.push(`⚠️ ${getContestTypeDisplay(contest.contestType, contest.coinValue)} (forced): ${forceData.winnersPaid} winners paid`);
+              const fee = forceData.adminFeeCollected ?? 0;
+              totalFeeCollected += fee;
+              results.push(`⚠️ ${getContestTypeDisplay(contest.contestType, contest.coinValue)} (forced): ${forceData.winnersPaid} winners paid — fee: ${fee} coins (VC${(fee / 100).toFixed(2)})`);
             } else {
               results.push(`❌ ${getContestTypeDisplay(contest.contestType, contest.coinValue)}: ${forceData.message}`);
             }
@@ -849,7 +853,11 @@ export default function ContestsPage() {
     }
     await fetchContests();
     setGlobalLoading(false);
-    alert(`Results for ${gameTitle}:\n\n${results.join('\n')}`);
+    alert(
+      `Results for ${gameTitle}:\n\n${results.join('\n')}\n\n` +
+      `─────────────────────────\n` +
+      `💰 Total admin fee collected: ${totalFeeCollected} coins (VC${(totalFeeCollected / 100).toFixed(2)})`
+    );
   };
 
   const expandAll = () => {
