@@ -1720,7 +1720,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                         // Active: Contest has been started by admin (LIVE or ACTIVE status)
                         // Exclude completed matchups — those belong in the Drafted tab
                         (contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE') &&
-                        contest.matchup !== null &&
+                        !!contest.matchup &&
                         contest.matchup.status !== 'COMPLETED'
                       )
                     }
