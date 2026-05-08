@@ -149,11 +149,7 @@ function ContestCard({
             <span className="text-sm leading-none">▶️</span><span>Start</span>
           </button>
         )}
-        {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
-          <button onClick={() => onEndContest(contest.id)} className="flex-1 basis-[calc(50%-2px)] flex flex-col items-center justify-center py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-[9px] font-medium leading-tight" title="End contest">
-            <span className="text-sm leading-none">🏁</span><span>End</span>
-          </button>
-        )}
+
         {contest.status === 'SIGNUP_OPEN' && contest._count.signups % 2 !== 0 && contest._count.signups > 0 && (
           <div className="flex-1 basis-[calc(50%-2px)] flex flex-col items-center justify-center py-1.5 text-[9px] text-blue-600 text-center leading-tight">
             <span className="text-sm leading-none">ℹ️</span><span>+Admin</span>
@@ -193,11 +189,7 @@ function ContestCard({
             ▶️ Start Contest
           </button>
         )}
-        {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
-          <button onClick={() => onEndContest(contest.id)} className="block w-full px-2 py-2.5 bg-red-500 text-white rounded hover:bg-red-600 transition text-sm font-medium text-center">
-            🏁 End Contest
-          </button>
-        )}
+
         {contest.status === 'SIGNUP_OPEN' && contest._count.signups % 2 !== 0 && contest._count.signups > 0 && (
           <div className="text-xs text-blue-600 text-center">ℹ️ Admin will join</div>
         )}
@@ -1469,16 +1461,7 @@ export default function ContestsPage() {
                     </button>
                   )}
                   
-                  {/* End Contest Button (when live or active) */}
-                  {(contest.status === 'LIVE' || contest.status === 'ACTIVE') && (
-                    <button
-                      onClick={() => endContest(contest.id)}
-                      className="block w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                      title="End contest and settle coin transactions"
-                    >
-                      🏁 End Contest
-                    </button>
-                  )}
+
                   
                   {/* Contest Info */}
                   <div className="text-xs text-gray-400 mt-1">
