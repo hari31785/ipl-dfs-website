@@ -1718,10 +1718,10 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                     } else if (contestSubTab === 'active') {
                       filteredContests = filteredContests.filter(contest => 
                         // Active: Contest has been started by admin (LIVE or ACTIVE status)
-                        // Must also have a matchup — guards against stale signups where admin
-                        // deleted the matchup but the signup was not cleaned up
+                        // Exclude completed matchups — those belong in the Drafted tab
                         (contest.contest.status === 'LIVE' || contest.contest.status === 'ACTIVE') &&
-                        contest.matchup !== null
+                        contest.matchup !== null &&
+                        contest.matchup.status !== 'COMPLETED'
                       )
                     }
 
