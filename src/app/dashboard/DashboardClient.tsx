@@ -441,29 +441,17 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   , [tournaments])
 
   const subTabCounts = useMemo(() => ({
-    upcoming: new Set(
-      userContests
-        .filter(c =>
-          (c.contest.status === 'SIGNUP_OPEN' || c.contest.status === 'SIGNUP_CLOSED' || c.contest.status === 'DRAFT_PHASE') &&
-          !(c.matchup && c.matchup.status === 'COMPLETED')
-        )
-        .map(c => c.contest.id)
-    ).size,
-    drafted: new Set(
-      userContests
-        .filter(c =>
-          c.contest.status === 'DRAFT_PHASE' &&
-          c.matchup && c.matchup.status === 'COMPLETED'
-        )
-        .map(c => c.contest.id)
-    ).size,
-    active: new Set(
-      userContests
-        .filter(c =>
-          (c.contest.status === 'LIVE' || c.contest.status === 'ACTIVE')
-        )
-        .map(c => c.contest.id)
-    ).size,
+    upcoming: userContests.filter(c =>
+      (c.contest.status === 'SIGNUP_OPEN' || c.contest.status === 'SIGNUP_CLOSED' || c.contest.status === 'DRAFT_PHASE') &&
+      !(c.matchup && c.matchup.status === 'COMPLETED')
+    ).length,
+    drafted: userContests.filter(c =>
+      c.contest.status === 'DRAFT_PHASE' &&
+      c.matchup && c.matchup.status === 'COMPLETED'
+    ).length,
+    active: userContests.filter(c =>
+      (c.contest.status === 'LIVE' || c.contest.status === 'ACTIVE') && !!c.matchup
+    ).length,
     completed: completedContests.length,
   }), [userContests, completedContests])
 
