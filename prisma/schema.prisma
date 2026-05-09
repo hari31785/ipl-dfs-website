@@ -57,8 +57,10 @@ model CoinTransaction {
   description     String
   matchupId       String?  // Related matchup if applicable
   contestId       String?  // Related contest if applicable
-  adminFee        Int      @default(0) // 10% admin fee on winnings
-  createdAt       DateTime @default(now())
+  adminFee             Int      @default(0)    // 10% admin fee on winnings
+  captainBonusApplied  Boolean  @default(false) // was captain active for this matchup
+  captainBonusCoins    Int      @default(0)     // extra coins from captain 2× bonus (display only)
+  createdAt            DateTime @default(now())
   
   // Relations
   user            User      @relation(fields: [userId], references: [id])
@@ -304,13 +306,20 @@ model HeadToHeadMatchup {
   contestId       String
   user1Id         String   // ContestSignup ID
   user2Id         String   // ContestSignup ID
-  firstPickUser   String?  // "user1" or "user2" - determined by coin toss
-  status          String   @default("WAITING_DRAFT") // WAITING_DRAFT, DRAFTING, COMPLETED
-  user1Score      Float    @default(0)
-  user2Score      Float    @default(0)
-  winnerId        String?  // ContestSignup ID of winner
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  firstPickUser        String?  // "user1" or "user2" - determined by coin toss
+  status               String   @default("WAITING_DRAFT") // WAITING_DRAFT, DRAFTING, COMPLETED
+  user1Score           Float    @default(0)
+  user2Score           Float    @default(0)
+  winnerId             String?  // ContestSignup ID of winner
+  // Captain Bonus
+  captainAgreedUser1   Boolean  @default(false) // user1 agreed to captain opt-in before draft
+  captainAgreedUser2   Boolean  @default(false) // user2 agreed to captain opt-in before draft
+  captainDeclined      Boolean  @default(false) // either user declined — permanently disables captain
+  captainEnabled       Boolean  @default(false) // true only when both agreed
+  user1CaptainPickId   String?                  // DraftPick.id chosen by user1 as captain
+  user2CaptainPickId   String?                  // DraftPick.id chosen by user2 as captain
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
   
   // Relations
   contest         Contest       @relation(fields: [contestId], references: [id])

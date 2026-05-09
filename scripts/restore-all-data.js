@@ -230,14 +230,18 @@ async function restoreAllData(backupFilePath) {
     // Restore Contest Signups
     if (data.signups && data.signups.length > 0) {
       console.log('✍️  Restoring contest signups...');
+      const entryCountMap = {}; // track entryNumber per (contestId, userId)
       for (const signup of data.signups) {
         const rawDate = signup.signupAt || signup.createdAt;
         const parsedDate = rawDate ? new Date(rawDate) : new Date();
+        const key = `${signup.contestId}:${signup.userId}`;
+        entryCountMap[key] = (entryCountMap[key] || 0) + 1;
         await prisma.contestSignup.create({
           data: {
             id: signup.id,
             contestId: signup.contestId,
             userId: signup.userId,
+            entryNumber: signup.entryNumber || entryCountMap[key],
             signupAt: isNaN(parsedDate.getTime()) ? new Date() : parsedDate
           }
         });
