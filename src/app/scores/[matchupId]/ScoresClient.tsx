@@ -141,8 +141,8 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
   const myPicksWithStats = injectStats(myPicks);
   const opponentPicksWithStats = injectStats(opponentPicks);
 
-  const myTotalPoints = calculateTotalPointsWithSwap(myPicksWithStats, gameId);
-  const opponentTotalPoints = calculateTotalPointsWithSwap(opponentPicksWithStats, gameId);
+  const myTotalPoints = calculateTotalPointsWithSwap(myPicksWithStats, gameId).totalPoints;
+  const opponentTotalPoints = calculateTotalPointsWithSwap(opponentPicksWithStats, gameId).totalPoints;
 
   const { finalLineup: myFinalLineup, benchPlayers: myBenchPlayers } = calculateFinalLineup(myPicksWithStats, gameId);
   const { finalLineup: opponentFinalLineup, benchPlayers: opponentBenchPlayers } = calculateFinalLineup(opponentPicksWithStats, gameId);

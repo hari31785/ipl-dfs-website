@@ -14,6 +14,13 @@ export async function GET(
       select: {
         status: true,
         firstPickUser: true,
+        // Captain feature fields
+        captainAgreedUser1: true,
+        captainAgreedUser2: true,
+        captainDeclined: true,
+        captainEnabled: true,
+        user1CaptainPickId: true,
+        user2CaptainPickId: true,
         draftPicks: {
           select: {
             id: true,

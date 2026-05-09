@@ -131,8 +131,12 @@ export async function POST(
     const user1Picks = matchup.draftPicks.filter(p => p.pickedByUserId === matchup.user1.id);
     const user2Picks = matchup.draftPicks.filter(p => p.pickedByUserId === matchup.user2.id);
 
-    const user1Score = calculateTotalPointsWithSwap(user1Picks, contest.iplGameId);
-    const user2Score = calculateTotalPointsWithSwap(user2Picks, contest.iplGameId);
+    const { totalPoints: user1Score, captainBonusPoints: user1CaptainBonus } = calculateTotalPointsWithSwap(
+      user1Picks, contest.iplGameId, matchup.captainEnabled ? matchup.user1CaptainPickId : null
+    );
+    const { totalPoints: user2Score, captainBonusPoints: user2CaptainBonus } = calculateTotalPointsWithSwap(
+      user2Picks, contest.iplGameId, matchup.captainEnabled ? matchup.user2CaptainPickId : null
+    );
 
     // Determine winner
     let winnerId: string | null = null;
@@ -170,10 +174,14 @@ export async function POST(
       const loserScore = Math.min(user1Score, user2Score);
       const { coinValue } = contest;
 
+      const winnerCaptainBonus = user1Score > user2Score ? user1CaptainBonus : user2CaptainBonus;
       const winnerGrossWinnings = (winnerScore - loserScore) * coinValue;
       const adminFee = Math.floor(winnerGrossWinnings * 0.1);
       const winnerNetWinnings = winnerGrossWinnings - adminFee;
       const loserAmount = (loserScore - winnerScore) * coinValue; // negative
+      const captainBonusCoins = matchup.captainEnabled && winnerCaptainBonus > 0
+        ? Math.round(winnerCaptainBonus * coinValue * 0.9)
+        : 0;
 
       // Winner
       const winner = await prisma.user.findUnique({ where: { id: winnerUserId } });
@@ -209,6 +217,8 @@ export async function POST(
             matchupId,
             contestId: contest.id,
             adminFee,
+            captainBonusApplied: captainBonusCoins > 0,
+            captainBonusCoins,
           },
         });
       }

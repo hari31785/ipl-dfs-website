@@ -77,8 +77,8 @@ export async function GET() {
           p => p.pickedByUserId === matchup.user2.id
         );
 
-        const user1Score = calculateTotalPointsWithSwap(user1Picks as any, iplGameId);
-        const user2Score = calculateTotalPointsWithSwap(user2Picks as any, iplGameId);
+        const user1Score = calculateTotalPointsWithSwap(user1Picks as any, iplGameId).totalPoints;
+        const user2Score = calculateTotalPointsWithSwap(user2Picks as any, iplGameId).totalPoints;
 
         return {
           id: matchup.id,

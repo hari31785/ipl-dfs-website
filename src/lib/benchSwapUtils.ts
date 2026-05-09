@@ -26,12 +26,14 @@ interface DraftPick {
  * - Picks 11-14 are bench players (2 per user)
  * - If a starter has didNotPlay=true, swap with first available bench player
  * - If two starters are DNP, use both bench players in order
+ * - If captainPickId is provided and the captain was DNP, the bench replacement inherits the 2× bonus
  * 
  * @param userPicks - All draft picks for one user (7 total: 5 starters + 2 bench)
  * @param gameId - The IPL game ID to filter stats
- * @returns Object with active lineup and bench players (including swapped-out starters)
+ * @param captainPickId - Optional DraftPick.id of the player chosen as captain (gets 2× points)
+ * @returns Object with active lineup, bench players, captainActivePlayerId, and captainBonusPoints
  */
-export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
+export function calculateFinalLineup(userPicks: DraftPick[], gameId: string, captainPickId?: string | null) {
   // Separate starters and bench
   const starters = userPicks.filter(p => !p.isBench).sort((a, b) => a.pickOrder - b.pickOrder);
   const bench = userPicks.filter(p => p.isBench).sort((a, b) => a.pickOrder - b.pickOrder);
@@ -41,12 +43,20 @@ export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
   const swappedOutPlayers: any[] = [];
   const usedBenchPlayerIds = new Set<string>();
   
+  // Captain tracking: if original captain was DNP, track which bench pick inherited the bonus
+  // captainInheritedPickId will be set to the bench pick's id that replaced the captain
+  let captainInheritedPickId: string | null = null;
+  let captainWasDNP = false;
+  
   // Build final lineup
   const finalLineup = starters.map(starter => {
     const starterStats = starter.player.stats.find(s => s.iplGameId === gameId);
+    const isThisCaptain = captainPickId != null && starter.id === captainPickId;
     
     // If starter did not play, cascade through bench to find a player who actually played
     if (starterStats?.didNotPlay) {
+      if (isThisCaptain) captainWasDNP = true;
+      
       while (benchIndex < bench.length) {
         const benchPlayer = bench[benchIndex];
         benchIndex++;
@@ -55,6 +65,11 @@ export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
         if (!benchStats?.didNotPlay) {
           // Found a bench player who played — use them
           usedBenchPlayerIds.add(benchPlayer.playerId);
+          
+          // If original captain was DNP, bench replacement inherits the captain bonus
+          if (isThisCaptain) {
+            captainInheritedPickId = benchPlayer.id;
+          }
           
           swappedOutPlayers.push({
             ...starter,
@@ -95,23 +110,45 @@ export function calculateFinalLineup(userPicks: DraftPick[], gameId: string) {
     };
   });
   
+  // Determine which pick id is the active captain (original if not DNP, inherited if DNP)
+  const captainActivePickId: string | null = captainPickId
+    ? (captainWasDNP ? captainInheritedPickId : captainPickId)
+    : null;
+  
+  // Apply 2× bonus to the active captain's points in the lineup
+  let captainBonusPoints = 0;
+  const finalLineupWithCaptain = finalLineup.map(player => {
+    const isCaptainActive = captainActivePickId != null && player.id === captainActivePickId;
+    if (isCaptainActive) {
+      captainBonusPoints = player.points; // extra 1× on top of base points
+      return { ...player, isCaptain: true, points: player.points * 2 };
+    }
+    return { ...player, isCaptain: false };
+  });
+  
   // Get unused bench players
   const unusedBench = bench.filter(b => !usedBenchPlayerIds.has(b.playerId));
   
   // Combine swapped-out starters with unused bench players
   const benchPlayers = [...swappedOutPlayers, ...unusedBench];
   
-  return { finalLineup, benchPlayers };
+  return { finalLineup: finalLineupWithCaptain, benchPlayers, captainActivePickId, captainBonusPoints };
 }
 
 /**
- * Calculates total points for a user with bench auto-swap applied
+ * Calculates total points for a user with bench auto-swap and optional captain 2× bonus applied
  * 
  * @param userPicks - All draft picks for one user
  * @param gameId - The IPL game ID
- * @returns Total points after applying bench swaps
+ * @param captainPickId - Optional DraftPick.id of the captain (gets 2× points)
+ * @returns Object with totalPoints and captainBonusPoints
  */
-export function calculateTotalPointsWithSwap(userPicks: DraftPick[], gameId: string): number {
-  const { finalLineup } = calculateFinalLineup(userPicks, gameId);
-  return finalLineup.reduce((total, player) => total + player.points, 0);
+export function calculateTotalPointsWithSwap(
+  userPicks: DraftPick[],
+  gameId: string,
+  captainPickId?: string | null
+): { totalPoints: number; captainBonusPoints: number } {
+  const { finalLineup, captainBonusPoints } = calculateFinalLineup(userPicks, gameId, captainPickId);
+  const totalPoints = finalLineup.reduce((total, player) => total + player.points, 0);
+  return { totalPoints, captainBonusPoints };
 }

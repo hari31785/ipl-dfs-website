@@ -91,6 +91,22 @@ export async function PUT(
       );
     }
 
+    // When contest goes LIVE: auto-disable captain for matchups where not both picks are set
+    if (status === 'LIVE' || status === 'ACTIVE') {
+      const captainMatchups = await prisma.headToHeadMatchup.findMany({
+        where: { contestId: id, captainEnabled: true },
+        select: { id: true, user1CaptainPickId: true, user2CaptainPickId: true },
+      });
+      for (const m of captainMatchups) {
+        if (!m.user1CaptainPickId || !m.user2CaptainPickId) {
+          await prisma.headToHeadMatchup.update({
+            where: { id: m.id },
+            data: { captainEnabled: false, captainDeclined: true },
+          });
+        }
+      }
+    }
+
     // Push notification when contest moves to DRAFT_PHASE (draft room opens)
     if (status === 'DRAFT_PHASE') {
       const gameTitle = `${contest.iplGame.team1.shortName} vs ${contest.iplGame.team2.shortName}`;

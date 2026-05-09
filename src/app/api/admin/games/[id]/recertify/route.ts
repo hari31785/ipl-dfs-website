@@ -144,8 +144,12 @@ export async function POST(
         const user1Picks = matchup.draftPicks.filter(p => p.pickedByUserId === matchup.user1.id);
         const user2Picks = matchup.draftPicks.filter(p => p.pickedByUserId === matchup.user2.id);
 
-        const newUser1Score = calculateTotalPointsWithSwap(user1Picks, gameId);
-        const newUser2Score = calculateTotalPointsWithSwap(user2Picks, gameId);
+        const { totalPoints: newUser1Score, captainBonusPoints: user1CaptainBonus } = calculateTotalPointsWithSwap(
+          user1Picks, gameId, matchup.captainEnabled ? matchup.user1CaptainPickId : null
+        );
+        const { totalPoints: newUser2Score, captainBonusPoints: user2CaptainBonus } = calculateTotalPointsWithSwap(
+          user2Picks, gameId, matchup.captainEnabled ? matchup.user2CaptainPickId : null
+        );
 
         const oldUser1Score = matchup.user1Score;
         const oldUser2Score = matchup.user2Score;
@@ -185,11 +189,15 @@ export async function POST(
           const winnerScore = Math.max(newUser1Score, newUser2Score);
           const loserScore = Math.min(newUser1Score, newUser2Score);
           const { coinValue } = contest;
+          const winnerCaptainBonus = newUser1Score > newUser2Score ? user1CaptainBonus : user2CaptainBonus;
 
           const winnerGrossWinnings = (winnerScore - loserScore) * coinValue;
           const adminFee = Math.floor(winnerGrossWinnings * 0.1);
           const winnerNetWinnings = winnerGrossWinnings - adminFee;
           const loserAmount = (loserScore - winnerScore) * coinValue;
+          const captainBonusCoins = matchup.captainEnabled && winnerCaptainBonus > 0
+            ? Math.round(winnerCaptainBonus * coinValue * 0.9)
+            : 0;
 
           // Winner
           const winner = await prisma.user.findUnique({ where: { id: winnerUserId } });
@@ -226,6 +234,8 @@ export async function POST(
                 matchupId: matchup.id,
                 contestId: contest.id,
                 adminFee,
+                captainBonusApplied: captainBonusCoins > 0,
+                captainBonusCoins,
               },
             });
           }

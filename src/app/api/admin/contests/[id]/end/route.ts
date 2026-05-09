@@ -134,8 +134,13 @@ export async function POST(
       const user2Picks = matchup.draftPicks.filter(p => p.pickedByUserId === matchup.user2.id);
 
       // Use the bench swap utility to calculate correct scores (only active 5 players count)
-      const user1Score = calculateTotalPointsWithSwap(user1Picks, contest.iplGameId);
-      const user2Score = calculateTotalPointsWithSwap(user2Picks, contest.iplGameId);
+      // Pass captain pick IDs so the 2× bonus is applied before scoring
+      const { totalPoints: user1Score, captainBonusPoints: user1CaptainBonus } = calculateTotalPointsWithSwap(
+        user1Picks, contest.iplGameId, matchup.captainEnabled ? matchup.user1CaptainPickId : null
+      );
+      const { totalPoints: user2Score, captainBonusPoints: user2CaptainBonus } = calculateTotalPointsWithSwap(
+        user2Picks, contest.iplGameId, matchup.captainEnabled ? matchup.user2CaptainPickId : null
+      );
       computedScores.set(matchup.id, { u1: user1Score, u2: user2Score });
 
       // Update matchup with calculated scores
@@ -180,6 +185,7 @@ export async function POST(
       const coinValue = contest.coinValue;
       const winnerScore = user1Score > user2Score ? user1Score : user2Score;
       const loserScore = user1Score > user2Score ? user2Score : user1Score;
+      const winnerCaptainBonus = user1Score > user2Score ? user1CaptainBonus : user2CaptainBonus;
       
       // Calculate winnings for winner (positive)
       const winnerScoreDifference = winnerScore - loserScore;
@@ -241,6 +247,11 @@ export async function POST(
         }
       });
 
+      // Captain bonus coins = extra points from captain × coinValue × net factor (after 10% admin fee)
+      const captainBonusCoins = matchup.captainEnabled && winnerCaptainBonus > 0
+        ? Math.round(winnerCaptainBonus * coinValue * 0.9)
+        : 0;
+
       // Create winner transaction
       await prisma.coinTransaction.create({
         data: {
@@ -252,7 +263,9 @@ export async function POST(
           description: `Won contest (${contest.iplGame.title})`,
           matchupId: matchup.id,
           contestId: contest.id,
-          adminFee: adminFee
+          adminFee: adminFee,
+          captainBonusApplied: captainBonusCoins > 0,
+          captainBonusCoins
         }
       });
 

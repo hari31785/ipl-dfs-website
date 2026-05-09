@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
             : [],
         },
       }))
-      return calculateTotalPointsWithSwap(picksWithStats, gameId)
+      return calculateTotalPointsWithSwap(picksWithStats, gameId).totalPoints
     }
 
     // Fan-out matchups (same logic as user/contests route)
