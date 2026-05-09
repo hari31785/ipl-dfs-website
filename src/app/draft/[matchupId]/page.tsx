@@ -26,6 +26,7 @@ interface Player {
 interface DraftPick {
   id: string;
   pickOrder: number;
+  isBench: boolean;
   player: Player;
   pickedByUserId: string;
 }
@@ -40,6 +41,13 @@ interface Matchup {
   id: string;
   status: string;
   firstPickUser: string;
+  // Captain feature
+  captainAgreedUser1: boolean;
+  captainAgreedUser2: boolean;
+  captainDeclined: boolean;
+  captainEnabled: boolean;
+  user1CaptainPickId: string | null;
+  user2CaptainPickId: string | null;
   user1: {
     id: string;
     user: User;
@@ -111,6 +119,10 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   // Ref to latest matchup so poll/visibility effects don't re-mount on every state tick
   const matchupRef = useRef<Matchup | null>(null);
 
+  // Captain feature states
+  const [showCaptainModal, setShowCaptainModal] = useState(false);
+  const [captainModalDismissed, setCaptainModalDismissed] = useState(false);
+
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
     if (userData) {
@@ -147,6 +159,18 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       }, 4000);
     }
   }, [matchup, currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show captain opt-in modal once after toss completes, if not yet decided
+  useEffect(() => {
+    if (!matchup || !currentUser || captainModalDismissed) return;
+    if (tossPhase !== 'complete') return;
+    if (matchup.captainDeclined || matchup.captainEnabled) return;
+    // Check if this user has already agreed
+    const isUser1Local = matchup.user1.user.id === currentUser.id;
+    const alreadyAgreed = isUser1Local ? matchup.captainAgreedUser1 : matchup.captainAgreedUser2;
+    if (alreadyAgreed) return;
+    setShowCaptainModal(true);
+  }, [tossPhase, matchup?.captainDeclined, matchup?.captainEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Real-time polling for turn updates.
   // Dep is currentUser?.id only — matchupRef keeps current data so the interval
@@ -225,7 +249,19 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         const response = await fetch(`/api/draft/${matchupId}/poll`);
         if (response.ok) {
           const poll = await response.json();
-          setMatchup(prev => prev ? { ...prev, status: poll.status, firstPickUser: poll.firstPickUser, draftPicks: poll.draftPicks } : prev);
+          setMatchup(prev => prev ? {
+            ...prev,
+            status: poll.status,
+            firstPickUser: poll.firstPickUser,
+            draftPicks: poll.draftPicks,
+            // Captain fields from poll
+            captainAgreedUser1: poll.captainAgreedUser1 ?? prev.captainAgreedUser1,
+            captainAgreedUser2: poll.captainAgreedUser2 ?? prev.captainAgreedUser2,
+            captainDeclined: poll.captainDeclined ?? prev.captainDeclined,
+            captainEnabled: poll.captainEnabled ?? prev.captainEnabled,
+            user1CaptainPickId: poll.user1CaptainPickId ?? prev.user1CaptainPickId,
+            user2CaptainPickId: poll.user2CaptainPickId ?? prev.user2CaptainPickId,
+          } : prev);
           // Recompute available players from the updated picks
           setAvailablePlayers(prev => prev.filter(p => !poll.draftPicks.some((dp: any) => dp.playerId === p.id)));
         }
@@ -467,6 +503,11 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const opponentSignupId = isUser1 ? matchup.user2.id : matchup.user1.id;
   const opponent = isUser1 ? matchup.user2.user : matchup.user1.user;
 
+  // Captain feature derived state
+  const myAgreed = isUser1 ? matchup.captainAgreedUser1 : matchup.captainAgreedUser2;
+  const opponentAgreed = isUser1 ? matchup.captainAgreedUser2 : matchup.captainAgreedUser1;
+  const myCaptainPickId = isUser1 ? matchup.user1CaptainPickId : matchup.user2CaptainPickId;
+
   const myPicks = matchup.draftPicks.filter(p => p.pickedByUserId === mySignupId);
   const opponentPicks = matchup.draftPicks.filter(p => p.pickedByUserId === opponentSignupId);
 
@@ -523,6 +564,54 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     }
   };
 
+  const handleCaptainAgree = async () => {
+    if (!currentUser || !matchup) return;
+    setShowCaptainModal(false);
+    setCaptainModalDismissed(true);
+    try {
+      await fetch(`/api/draft/${matchupId}/captain/agree`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+      await fetchMatchupDetails();
+    } catch {
+      console.error('Failed to agree to captain feature');
+    }
+  };
+
+  const handleCaptainDecline = async () => {
+    if (!currentUser || !matchup) return;
+    setShowCaptainModal(false);
+    setCaptainModalDismissed(true);
+    try {
+      await fetch(`/api/draft/${matchupId}/captain/decline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+      await fetchMatchupDetails();
+    } catch {
+      console.error('Failed to decline captain feature');
+    }
+  };
+
+  const handleCaptainPick = async (draftPickId: string) => {
+    if (!currentUser || !matchup) return;
+    try {
+      const res = await fetch(`/api/draft/${matchupId}/captain/pick`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, draftPickId }),
+      });
+      if (res.ok) {
+        await fetchMatchupDetails();
+      }
+    } catch {
+      console.error('Failed to pick captain');
+    }
+  };
+
   const sortedMyPicks = myPicks.slice().sort((a, b) => a.pickOrder - b.pickOrder);
   const sortedOppPicks = opponentPicks.slice().sort((a, b) => a.pickOrder - b.pickOrder);
   const roleAbbr = (role: string) =>
@@ -532,6 +621,38 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      {/* Captain Opt-In Modal — shown once after toss, if feature not yet decided */}
+      {showCaptainModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 border-4 border-amber-400">
+            <div className="text-center">
+              <div className="text-5xl mb-3">🎖️</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Captain Bonus</h2>
+              <p className="text-gray-600 text-sm mb-1">
+                Enable the <span className="font-semibold text-amber-700">Captain Mode</span> for this matchup?
+              </p>
+              <p className="text-gray-500 text-xs mb-5">
+                Both players must agree. Your captain scores <span className="font-bold">2×</span> points. If your captain is DNP, your top bench sub inherits the bonus.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCaptainDecline}
+                  className="flex-1 border-2 border-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  ❌ No thanks
+                </button>
+                <button
+                  onClick={handleCaptainAgree}
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow"
+                >
+                  ✅ I'm in!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toss Modal — hidden for the waiting user during 'calling' phase; shown for caller + flipping + result */}
       {showToss && !(tossPhase === 'calling' && callingUser !== currentUser.id) && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
@@ -671,6 +792,62 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             </div>
           </div>
         </div>
+
+        {/* Captain Banner — shown when user has agreed but still waiting or captains not yet picked */}
+        {matchup.captainEnabled && !matchup.captainDeclined && (
+          <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
+            <span className="text-2xl">🎖️</span>
+            <div className="flex-1 text-sm">
+              {isDraftComplete && !myCaptainPickId ? (
+                <span className="font-semibold text-amber-800">Pick your captain below — your captain scores 2× points!</span>
+              ) : isDraftComplete && myCaptainPickId && !matchup.user2CaptainPickId && !matchup.user1CaptainPickId ? (
+                <span className="text-amber-700">Waiting for opponent to pick their captain...</span>
+              ) : isDraftComplete && myCaptainPickId ? (
+                <span className="text-amber-700">🎖️ Captain locked in — waiting for opponent.</span>
+              ) : (
+                <span className="text-amber-700">
+                  <span className="font-semibold">Captain Mode active!</span> Pick your captain after the draft.
+                  {!opponentAgreed && <span className="ml-1 text-amber-600">(Waiting for {opponent.name} to agree...)</span>}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Captain Waiting Banner — user agreed but opponent hasn't yet */}
+        {myAgreed && !matchup.captainEnabled && !matchup.captainDeclined && (
+          <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
+            <span className="text-xl">🎖️</span>
+            <span className="text-sm text-amber-800">
+              You opted in to Captain Mode — waiting for <span className="font-semibold">{opponent.name}</span> to respond.
+            </span>
+          </div>
+        )}
+
+        {/* Captain Selection Panel — shown after draft completes and both agreed but user hasn't picked yet */}
+        {matchup.captainEnabled && isDraftComplete && !myCaptainPickId && (
+          <div className="bg-white rounded-lg shadow border-2 border-amber-400 mb-4 p-4">
+            <h3 className="text-base font-bold text-amber-800 mb-1 flex items-center gap-2">
+              🎖️ Pick Your Captain
+            </h3>
+            <p className="text-xs text-gray-600 mb-3">
+              Your captain scores <span className="font-bold">2×</span> points. Bench-only picks are not eligible. If your captain is DNP, the bonus transfers to your bench replacement.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {sortedMyPicks.filter(p => !p.isBench).map(pick => (
+                <button
+                  key={pick.id}
+                  onClick={() => handleCaptainPick(pick.id)}
+                  className="flex flex-col items-center p-2.5 rounded-lg border-2 border-amber-200 hover:border-amber-500 hover:bg-amber-50 transition-all text-center"
+                >
+                  <div className="text-xl mb-1">⭐</div>
+                  <div className="text-xs font-semibold text-gray-800 leading-tight">{pick.player.name}</div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">{pick.player.iplTeam.shortName}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* How To Play Section */}
         <div className="bg-white rounded-lg shadow border border-gray-200 mb-4">

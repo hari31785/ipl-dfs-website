@@ -35,6 +35,11 @@ interface Matchup {
   id: string;
   status: string;
   firstPickUser: string;
+  // Captain feature
+  captainEnabled?: boolean;
+  captainDeclined?: boolean;
+  user1CaptainPickId?: string | null;
+  user2CaptainPickId?: string | null;
   user1: { id: string; user: { id: string; name: string; username: string } };
   user2: { id: string; user: { id: string; name: string; username: string } };
   contest: {
@@ -141,11 +146,18 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
   const myPicksWithStats = injectStats(myPicks);
   const opponentPicksWithStats = injectStats(opponentPicks);
 
-  const myTotalPoints = calculateTotalPointsWithSwap(myPicksWithStats, gameId).totalPoints;
-  const opponentTotalPoints = calculateTotalPointsWithSwap(opponentPicksWithStats, gameId).totalPoints;
+  const myCaptainPickId = matchup.captainEnabled
+    ? (isUser1 ? matchup.user1CaptainPickId : matchup.user2CaptainPickId) ?? null
+    : null;
+  const opponentCaptainPickId = matchup.captainEnabled
+    ? (isUser1 ? matchup.user2CaptainPickId : matchup.user1CaptainPickId) ?? null
+    : null;
 
-  const { finalLineup: myFinalLineup, benchPlayers: myBenchPlayers } = calculateFinalLineup(myPicksWithStats, gameId);
-  const { finalLineup: opponentFinalLineup, benchPlayers: opponentBenchPlayers } = calculateFinalLineup(opponentPicksWithStats, gameId);
+  const myTotalPoints = calculateTotalPointsWithSwap(myPicksWithStats, gameId, myCaptainPickId).totalPoints;
+  const opponentTotalPoints = calculateTotalPointsWithSwap(opponentPicksWithStats, gameId, opponentCaptainPickId).totalPoints;
+
+  const { finalLineup: myFinalLineup, benchPlayers: myBenchPlayers, captainActivePickId: myCaptainActivePickId } = calculateFinalLineup(myPicksWithStats, gameId, myCaptainPickId);
+  const { finalLineup: opponentFinalLineup, benchPlayers: opponentBenchPlayers, captainActivePickId: opponentCaptainActivePickId } = calculateFinalLineup(opponentPicksWithStats, gameId, opponentCaptainPickId);
 
   const didIWin = myTotalPoints > opponentTotalPoints;
   const isTie = myTotalPoints === opponentTotalPoints;
@@ -153,9 +165,11 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
   const hasScores = hasAnyStats;
   const gameIsCompleted = matchup.contest.iplGame.status === 'COMPLETED';
 
-  const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean, swappedOut?: boolean, replacedBy?: string) => {
+  const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean, swappedOut?: boolean, replacedBy?: string, isCaptain?: boolean) => {
     const playerStats = playerStatsMap[pick.player.id];
     const playerPoints = playerStats?.points || 0;
+    // If captain, points are doubled — display original + badge
+    const displayPoints = isCaptain ? playerPoints * 2 : playerPoints;
     const didNotPlay = playerStats?.didNotPlay || false;
     const showScoreBadge = (!!playerStats && !didNotPlay) || (!playerStats && gameIsCompleted);
     const statusLabel = isSwapped ? '↑SWAP' : swappedOut ? '↓BENCH' : (didNotPlay && !isActive && !swappedOut) ? 'DNP' : null;
@@ -166,29 +180,33 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
         key={pick.id}
         className={`flex items-center gap-1.5 rounded-lg p-1.5 sm:p-3 ${
           isActive
-            ? 'bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300'
+            ? isCaptain
+              ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-white border-2 border-amber-400'
+              : 'bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300'
             : 'bg-gray-50 border-2 border-gray-200 opacity-75'
         }`}
       >
         <div className={`w-5 h-5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-black text-[9px] sm:text-sm shadow shrink-0 ${
-          isActive ? 'bg-gradient-to-br from-cricket-600 to-green-800' : 'bg-gray-400'
+          isActive ? (isCaptain ? 'bg-gradient-to-br from-amber-500 to-yellow-600' : 'bg-gradient-to-br from-cricket-600 to-green-800') : 'bg-gray-400'
         }`}>
-          {pick.pickOrder}
+          {isCaptain ? '🎖️' : pick.pickOrder}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 justify-between">
             <div className={`font-bold text-[10px] sm:text-sm leading-tight truncate flex-1 min-w-0 ${isActive ? 'text-black' : 'text-gray-500'}`}>
               {pick.player.name}
+              {isCaptain && <span className="ml-1 text-[8px] sm:text-[10px] font-semibold text-amber-700 bg-amber-100 px-1 rounded">C</span>}
             </div>
             {showScoreBadge && isActive ? (
               <button
                 onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
-                className={`shrink-0 text-[9px] sm:text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-1 sm:px-3 py-0 sm:py-1.5 rounded shadow border border-green-700 ${playerStats ? 'cursor-pointer' : 'cursor-default'}`}
+                className={`shrink-0 text-[9px] sm:text-sm font-black text-black px-1 sm:px-3 py-0 sm:py-1.5 rounded shadow border ${isCaptain ? 'bg-gradient-to-r from-amber-300 to-yellow-300 border-amber-500' : 'bg-gradient-to-r from-cricket-300 to-green-300 border-green-700'} ${playerStats ? 'cursor-pointer' : 'cursor-default'}`}
               >
-                ⭐{playerPoints.toFixed(1)}
+                {isCaptain ? `🎖️${displayPoints.toFixed(1)}` : `⭐${displayPoints.toFixed(1)}`}
+                {isCaptain && <span className="ml-0.5 text-[8px] opacity-70">×2</span>}
               </button>
             ) : showScoreBadge && !isActive ? (
-              <span className="shrink-0 text-[9px] sm:text-xs font-bold text-gray-400">{playerPoints.toFixed(1)}</span>
+              <span className="shrink-0 text-[9px] sm:text-xs font-bold text-gray-400">{displayPoints.toFixed(1)}</span>
             ) : null}
           </div>
           <div className="flex items-center gap-1 mt-0.5">
@@ -366,7 +384,7 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
               </h4>
               <div className="space-y-1.5 sm:space-y-3">
                 {myFinalLineup.map((player: any) =>
-                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped)
+                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped, undefined, undefined, player.id === myCaptainActivePickId)
                 )}
               </div>
             </div>
@@ -417,7 +435,7 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
               </h4>
               <div className="space-y-1.5 sm:space-y-3">
                 {opponentFinalLineup.map((player: any) =>
-                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped)
+                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped, undefined, undefined, player.id === opponentCaptainActivePickId)
                 )}
               </div>
             </div>

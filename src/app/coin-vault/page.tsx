@@ -11,6 +11,8 @@ interface CoinTransaction {
   type: string
   description: string
   adminFee: number
+  captainBonusApplied?: boolean
+  captainBonusCoins?: number
   createdAt: string
   matchupId?: string
   contestId?: string
@@ -409,6 +411,11 @@ export default function CoinVaultPage() {
                           <span className="text-xs text-red-600 font-medium">-{coinsLost.toLocaleString()} coins</span>
                         ) : null}
                       </div>
+                      {isWin && transaction.captainBonusApplied && transaction.captainBonusCoins && transaction.captainBonusCoins > 0 && (
+                        <div className="text-xs text-amber-700 mt-0.5">
+                          🎖️ incl. V̶₵{(transaction.captainBonusCoins / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} captain bonus
+                        </div>
+                      )}
                     </div>
                   )
                 })}

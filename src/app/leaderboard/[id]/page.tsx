@@ -560,11 +560,15 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
         const user1Picks = injectStats((matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user1Id))
         const user2Picks = injectStats((matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user2Id))
 
-        const { finalLineup: u1Lineup, benchPlayers: u1Bench } = calculateFinalLineup(user1Picks, gameId)
-        const { finalLineup: u2Lineup, benchPlayers: u2Bench } = calculateFinalLineup(user2Picks, gameId)
+        const captainEnabled = matchup?.captainEnabled
+        const u1CaptainPickId = captainEnabled ? (matchup?.user1CaptainPickId ?? null) : null
+        const u2CaptainPickId = captainEnabled ? (matchup?.user2CaptainPickId ?? null) : null
 
-        const u1Total = calculateTotalPointsWithSwap(user1Picks, gameId)
-        const u2Total = calculateTotalPointsWithSwap(user2Picks, gameId)
+        const { finalLineup: u1Lineup, benchPlayers: u1Bench } = calculateFinalLineup(user1Picks, gameId, u1CaptainPickId)
+        const { finalLineup: u2Lineup, benchPlayers: u2Bench } = calculateFinalLineup(user2Picks, gameId, u2CaptainPickId)
+
+        const u1Total = calculateTotalPointsWithSwap(user1Picks, gameId, u1CaptainPickId).totalPoints
+        const u2Total = calculateTotalPointsWithSwap(user2Picks, gameId, u2CaptainPickId).totalPoints
 
         // Figure out which side is "this user's" side
         const viewedUser = contestModal?.username ?? ''

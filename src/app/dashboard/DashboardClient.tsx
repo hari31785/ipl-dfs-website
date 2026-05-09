@@ -1834,6 +1834,9 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                               {signup.matchup.myScore > signup.matchup.opponentScore! ? 'WON' : 'LOST'}
                                             </span>
                                           )}
+                                          {signup.matchup.captainEnabled && (
+                                            <span className="text-[10px] md:text-xs font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">🎖️ C</span>
+                                          )}
                                         </div>
                                       )}
                                     </div>
