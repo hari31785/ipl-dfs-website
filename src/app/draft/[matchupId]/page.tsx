@@ -122,6 +122,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   // Captain feature states
   const [showCaptainModal, setShowCaptainModal] = useState(false);
   const [captainModalDismissed, setCaptainModalDismissed] = useState(false);
+  // Whether the captain question has been resolved (so toss can proceed)
+  const [captainResolved, setCaptainResolved] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
@@ -139,9 +141,11 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   useEffect(() => {
     if (!matchup || !currentUser) return;
 
-    // Toss hasn't happened yet — show toss UI
+    // Toss hasn't happened yet — but only initiate after captain modal is resolved
     if (matchup.status === 'DRAFTING' && !matchup.firstPickUser && tossPhase !== 'complete') {
-      initiateToss();
+      if (captainResolved) {
+        initiateToss();
+      }
       return;
     }
 
@@ -158,19 +162,30 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         setTossPhase('complete');
       }, 4000);
     }
-  }, [matchup, currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [matchup, currentUser, captainResolved]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Show captain opt-in modal once after toss completes, if not yet decided
+  // Show captain opt-in modal once on page load, before the toss, if not yet decided
   useEffect(() => {
     if (!matchup || !currentUser || captainModalDismissed) return;
-    if (tossPhase !== 'complete') return;
-    if (matchup.captainDeclined || matchup.captainEnabled) return;
-    // Check if this user has already agreed
+    // If already decided (either side declined, or feature already enabled, or user already agreed)
+    if (matchup.captainDeclined || matchup.captainEnabled) {
+      setCaptainResolved(true);
+      return;
+    }
     const isUser1Local = matchup.user1.user.id === currentUser.id;
     const alreadyAgreed = isUser1Local ? matchup.captainAgreedUser1 : matchup.captainAgreedUser2;
-    if (alreadyAgreed) return;
-    setShowCaptainModal(true);
-  }, [tossPhase, matchup?.captainDeclined, matchup?.captainEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (alreadyAgreed) {
+      setCaptainResolved(true);
+      return;
+    }
+    // Only show before the toss (when draft hasn't started yet)
+    if (matchup.status === 'DRAFTING' && !matchup.firstPickUser) {
+      setShowCaptainModal(true);
+    } else {
+      // Draft already in progress or toss already done — skip modal
+      setCaptainResolved(true);
+    }
+  }, [matchup?.id, currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Real-time polling for turn updates.
   // Dep is currentUser?.id only — matchupRef keeps current data so the interval
@@ -568,6 +583,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     if (!currentUser || !matchup) return;
     setShowCaptainModal(false);
     setCaptainModalDismissed(true);
+    setCaptainResolved(true);
     try {
       await fetch(`/api/draft/${matchupId}/captain/agree`, {
         method: 'POST',
@@ -584,6 +600,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     if (!currentUser || !matchup) return;
     setShowCaptainModal(false);
     setCaptainModalDismissed(true);
+    setCaptainResolved(true);
     try {
       await fetch(`/api/draft/${matchupId}/captain/decline`, {
         method: 'POST',
@@ -632,7 +649,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 Enable the <span className="font-semibold text-amber-700">Captain Mode</span> for this matchup?
               </p>
               <p className="text-gray-500 text-xs mb-5">
-                Both players must agree. Your captain scores <span className="font-bold">2×</span> points. If your captain is DNP, your top bench sub inherits the bonus.
+                Both players must agree. After the draft, pick one starter as captain — they score <span className="font-bold">2×</span> points. If your captain is DNP, your top bench sub inherits the bonus.
               </p>
               <div className="flex gap-3">
                 <button
