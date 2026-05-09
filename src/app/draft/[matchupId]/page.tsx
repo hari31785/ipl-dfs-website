@@ -141,13 +141,16 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   useEffect(() => {
     if (!matchup || !currentUser) return;
 
-    // Toss hasn't happened yet — but only initiate after captain modal is resolved
+    // Toss hasn't happened yet — gate it behind the captain modal
     if (matchup.status === 'DRAFTING' && !matchup.firstPickUser && tossPhase !== 'complete') {
       if (captainResolved) {
         initiateToss();
       }
       return;
     }
+
+    // Toss already done (firstPickUser set) but captain modal just resolved — nothing to do for toss
+    if (matchup.firstPickUser && !showToss) return;
 
     // Toss result just came in via the main poll while waiting user is still on the "calling" screen
     if (matchup.firstPickUser && showToss && tossPhase === 'calling') {
@@ -167,7 +170,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   // Show captain opt-in modal once on page load, before the toss, if not yet decided
   useEffect(() => {
     if (!matchup || !currentUser || captainModalDismissed) return;
-    // If already decided (either side declined, or feature already enabled, or user already agreed)
+    // If already decided for this matchup, no need to show modal
     if (matchup.captainDeclined || matchup.captainEnabled) {
       setCaptainResolved(true);
       return;
@@ -178,11 +181,12 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       setCaptainResolved(true);
       return;
     }
-    // Only show before the toss (when draft hasn't started yet)
-    if (matchup.status === 'DRAFTING' && !matchup.firstPickUser) {
+    // Show the modal as long as the user hasn't answered yet — regardless of toss state.
+    // This covers the case where the waiting user opens the page after the toss already happened.
+    if (matchup.status === 'DRAFTING') {
       setShowCaptainModal(true);
     } else {
-      // Draft already in progress or toss already done — skip modal
+      // Draft not yet in DRAFTING state — skip
       setCaptainResolved(true);
     }
   }, [matchup?.id, currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
