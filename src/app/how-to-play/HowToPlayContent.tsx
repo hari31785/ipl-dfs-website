@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Users, Trophy, Zap, Target, Star, CheckCircle } from "lucide-react"
+import { ArrowLeft, Users, Trophy, Zap, Target, Star, CheckCircle, AlertCircle } from "lucide-react"
 
 export default function HowToPlayContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
