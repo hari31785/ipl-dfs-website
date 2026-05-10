@@ -857,7 +857,17 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               </div>
             );
           }
-          // User has not yet responded (modal not shown / dismissed without answering — shouldn't normally happen)
+          // Fallback: user dismissed the modal (localStorage) but DB hasn't updated yet — show opted-in banner
+          if (captainModalDismissed) {
+            return (
+              <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
+                <span className="text-xl">🎖️</span>
+                <span className="text-sm text-amber-800">
+                  You responded to Captain Mode — waiting for <span className="font-semibold">{opponent.name}</span> to respond.
+                </span>
+              </div>
+            );
+          }
           return null;
         })()}
 
