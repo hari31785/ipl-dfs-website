@@ -1073,10 +1073,11 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             const oppP = sortedOppPicks[i];
             return (
               <div key={i} className="grid grid-cols-2 border-b border-gray-100">
-                <div className="px-2 py-1.5 flex items-center gap-1 min-w-0 bg-green-50/50">
+                <div className={`px-2 py-1.5 flex items-center gap-1 min-w-0 ${myP && myP.id === myCaptainPickId ? 'bg-amber-50' : 'bg-green-50/50'}`}>
                   <span className="text-[9px] font-bold text-green-700 w-4 shrink-0">{i+1}.</span>
                   {myP ? (
                     <>
+                      {myP.id === myCaptainPickId && <span className="text-[9px] shrink-0">🎖️</span>}
                       <span className="text-[11px] font-semibold text-gray-800 truncate flex-1">{myP.player.name}</span>
                       <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1 rounded shrink-0">{roleAbbr(myP.player.role)}</span>
                     </>
@@ -1198,14 +1199,25 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                       <h4 className="font-bold text-green-800 text-lg">Starting 5</h4>
                       <span className="text-sm text-green-600">({Math.min(myPicks.length, 5)}/5)</span>
                     </div>
-                    {myPicks.slice(0, 5).map(pick => (
-                      <div key={pick.id} className="mb-3 group relative bg-gradient-to-br from-green-50 via-emerald-50 to-white border-2 border-green-300 rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102">
+                    {myPicks.slice(0, 5).map(pick => {
+                      const isPickCaptain = pick.id === myCaptainPickId;
+                      return (
+                      <div key={pick.id} className={`mb-3 group relative rounded-xl p-5 hover:shadow-xl transition-all hover:scale-102 border-2 bg-gradient-to-br ${
+                        isPickCaptain
+                          ? 'from-amber-50 via-yellow-50 to-white border-amber-400'
+                          : 'from-green-50 via-emerald-50 to-white border-green-300'
+                      }`}>
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-cricket-600 to-green-800 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shrink-0">
-                            {pick.pickOrder}
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0 bg-gradient-to-br ${
+                            isPickCaptain ? 'from-amber-500 to-yellow-600' : 'from-cricket-600 to-green-800'
+                          }`}>
+                            {isPickCaptain ? '🎖️' : pick.pickOrder}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-extrabold text-xl text-black mb-2 leading-tight">{pick.player.name}</div>
+                            <div className="font-extrabold text-xl text-black mb-2 leading-tight">
+                              {pick.player.name}
+                              {isPickCaptain && <span className="ml-2 text-sm font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Captain ×2</span>}
+                            </div>
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-xs font-bold text-black bg-green-200 px-2 py-1 rounded-md shadow-sm border border-green-400">
                                 {pick.player.role}
@@ -1221,19 +1233,20 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                                 {pick.player.iplTeam.shortName}
                               </span>
                               {isDraftComplete ? (
-                                <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
-                                  ⭐ {(playerStatsMap[pick.player.id]?.points ?? 0).toFixed(1)} pts
+                                <span className={`text-sm font-black text-black px-3 py-1.5 rounded-md shadow-md border-2 bg-gradient-to-r ${isPickCaptain ? 'from-amber-300 to-yellow-300 border-amber-500' : 'from-cricket-300 to-green-300 border-green-700'}`}>
+                                  {isPickCaptain ? '🎖️' : '⭐'} {(playerStatsMap[pick.player.id]?.points ?? 0).toFixed(1)} pts
                                 </span>
                               ) : playerStatsMap[pick.player.id] ? (
-                                <span className="text-sm font-black text-black bg-gradient-to-r from-cricket-300 to-green-300 px-3 py-1.5 rounded-md shadow-md border-2 border-green-700">
-                                  ⭐ {playerStatsMap[pick.player.id].points.toFixed(1)} pts
+                                <span className={`text-sm font-black text-black px-3 py-1.5 rounded-md shadow-md border-2 bg-gradient-to-r ${isPickCaptain ? 'from-amber-300 to-yellow-300 border-amber-500' : 'from-cricket-300 to-green-300 border-green-700'}`}>
+                                  {isPickCaptain ? '🎖️' : '⭐'} {playerStatsMap[pick.player.id].points.toFixed(1)} pts
                                 </span>
                               ) : null}
                             </div>
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Substitutes Section */}
