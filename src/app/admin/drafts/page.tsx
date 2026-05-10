@@ -332,10 +332,8 @@ function DraftPageInner() {
 
   const saveCaptains = async () => {
     if (!selectedMatchup) return;
-    if (!adminUser1CaptainPickId && !adminUser2CaptainPickId) {
-      alert('Please select at least one captain before saving.');
-      return;
-    }
+    // Allow saving with no captains selected (will disable captain mode)
+    const captainEnabled = !!(adminUser1CaptainPickId || adminUser2CaptainPickId);
     setSavingCaptains(true);
     try {
       const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}`, {
@@ -344,7 +342,7 @@ function DraftPageInner() {
         body: JSON.stringify({
           user1CaptainPickId: adminUser1CaptainPickId,
           user2CaptainPickId: adminUser2CaptainPickId,
-          captainEnabled: true,
+          captainEnabled,
         }),
       });
       if (!res.ok) {
