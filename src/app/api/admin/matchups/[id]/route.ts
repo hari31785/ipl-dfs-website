@@ -37,7 +37,7 @@ export async function PATCH(
     // Handle captain picks update
     if (user1CaptainPickId !== undefined) {
       if (user1CaptainPickId !== null) {
-        const pickExists = matchup.draftPicks.some(p => p.id === user1CaptainPickId && p.pickedByUserId === matchup.user1SignupId);
+        const pickExists = matchup.draftPicks.some(p => p.id === user1CaptainPickId && p.pickedByUserId === matchup.user1Id);
         if (!pickExists) {
           return NextResponse.json({ message: 'Invalid user1CaptainPickId - pick not found or not owned by user1' }, { status: 400 });
         }
@@ -47,7 +47,7 @@ export async function PATCH(
 
     if (user2CaptainPickId !== undefined) {
       if (user2CaptainPickId !== null) {
-        const pickExists = matchup.draftPicks.some(p => p.id === user2CaptainPickId && p.pickedByUserId === matchup.user2SignupId);
+        const pickExists = matchup.draftPicks.some(p => p.id === user2CaptainPickId && p.pickedByUserId === matchup.user2Id);
         if (!pickExists) {
           return NextResponse.json({ message: 'Invalid user2CaptainPickId - pick not found or not owned by user2' }, { status: 400 });
         }
