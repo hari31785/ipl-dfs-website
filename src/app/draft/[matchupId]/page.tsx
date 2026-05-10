@@ -876,7 +876,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         })()}
 
         {/* Captain Selection Panel — shown after draft completes and both agreed but user hasn't picked yet */}
-        {matchup.captainEnabled && isDraftComplete && !myCaptainPickId && (
+        {(matchup.captainEnabled || (isDraftComplete && captainModalDismissed && !matchup.captainDeclined)) && isDraftComplete && !myCaptainPickId && (
           <div className="bg-white rounded-lg shadow border-2 border-amber-400 mb-4 p-4">
             <h3 className="text-base font-bold text-amber-800 mb-1 flex items-center gap-2">
               🎖️ Pick Your Captain
