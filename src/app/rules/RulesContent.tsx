@@ -121,6 +121,71 @@ export default function RulesContent() {
               </div>
             </div>
 
+            <div className="bg-white rounded-2xl p-8 shadow-xl border-l-4 border-amber-500">
+              <h2 className="text-2xl font-bold text-primary-800 mb-6 flex items-center">
+                <span className="text-3xl mr-3">🎖️</span>Captain Mode (Optional 2× Bonus)
+              </h2>
+              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-6 mb-6 border-2 border-amber-300">
+                <p className="text-gray-800 font-semibold text-center text-lg">Double your star player's points — if both users agree!</p>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-bold text-primary-800 mb-3 text-lg">How Captain Mode Works</h3>
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-start gap-3">
+                      <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                      <div><strong>Opt-In During Draft:</strong> When you enter the draft room, you'll see a modal asking if you want to enable Captain Mode. Both users must agree.</div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                      <div><strong>Complete Your Draft:</strong> Pick your 5 starters + 2 bench players as usual through the snake draft.</div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                      <div><strong>Select Your Captain:</strong> After the draft completes, choose ONE of your 5 starters as your captain. This player's points will count <strong className="text-amber-700">×2 (doubled)</strong>.</div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                      <div><strong>Captain Bonus Applied:</strong> During scoring, your captain's performance is automatically doubled. If your captain scores 60 points, you get 120 points!</div>
+                    </li>
+                  </ul>
+                </div>
+                <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5">
+                  <h3 className="font-bold text-red-800 mb-3 text-lg flex items-center">
+                    <AlertCircle className="h-5 w-5 mr-2" />⚠️ CRITICAL: Must Pick Captain After Opt-In
+                  </h3>
+                  <ul className="space-y-2 text-red-900">
+                    <li className="flex items-start gap-2">
+                      <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div><strong>If you opt in to Captain Mode but do NOT select a captain pick:</strong> You will receive <strong className="underline">NO 2× bonus</strong> on any of your players — all your players score normal (1×) points.</div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div><strong>Your opponent WILL still get their captain bonus</strong> if they picked one. This puts you at a massive disadvantage!</div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div><strong>Captain selection is YOUR responsibility.</strong> Always pick your captain immediately after the draft completes if you opted in.</div>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-bold text-primary-800 mb-3">Captain Mode Rules</h3>
+                  <ul className="space-y-2 text-gray-700">
+                    <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>Captain can only be selected from your 5 starting players (not bench)</span></li>
+                    <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>If one user declines Captain Mode, it's disabled for the entire matchup</span></li>
+                    <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>Captain pick cannot be changed once selected</span></li>
+                    <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>If your captain is marked DNP, their substitute's points are NOT doubled</span></li>
+                    <li className="flex items-start gap-2"><AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" /><span>Admin can manually enable Captain Mode and set captains for any matchup</span></li>
+                  </ul>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-bold text-blue-900 mb-2 flex items-center"><Target className="h-4 w-4 mr-2" />Strategy Tip</h4>
+                  <p className="text-blue-800 text-sm">Choose a captain who has high scoring potential (batsmen with good form, or key bowlers on helpful pitches). The 2× multiplier can be the difference between winning and losing!</p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-white rounded-2xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-primary-800 mb-6 flex items-center">
                 <Users className="h-6 w-6 mr-3 text-secondary-500" />Player Eligibility & Substitutions

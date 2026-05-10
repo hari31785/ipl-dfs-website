@@ -152,6 +152,77 @@ export default function HowToPlayContent() {
               </div>
             </div>
 
+            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-8 shadow-xl border-2 border-amber-400">
+              <h2 className="text-2xl font-bold text-amber-900 mb-6 flex items-center">
+                <span className="text-3xl mr-3">🎖️</span>Captain Mode: Double Your Best Player!
+              </h2>
+              <div className="bg-white/80 rounded-xl p-6 mb-6 border border-amber-300">
+                <p className="text-gray-800 text-center text-lg font-semibold">Choose ONE starter as your captain — their points count <span className="text-amber-700 font-black text-xl">×2 (DOUBLE)</span>!</p>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-bold text-amber-900 mb-4 text-lg">📋 How It Works (Step-by-Step)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="bg-amber-500 text-white text-sm font-bold rounded-full w-7 h-7 flex items-center justify-center">1</span>
+                        <h4 className="font-bold text-gray-800">Opt-In at Draft Start</h4>
+                      </div>
+                      <p className="text-gray-600 text-sm">When entering the draft room, a modal asks: "Add a Captain to your team?" — click "Yes, I'm in!"</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="bg-amber-500 text-white text-sm font-bold rounded-full w-7 h-7 flex items-center justify-center">2</span>
+                        <h4 className="font-bold text-gray-800">Both Users Must Agree</h4>
+                      </div>
+                      <p className="text-gray-600 text-sm">If your opponent also says yes, Captain Mode is ON. If either declines, it's OFF for both.</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="bg-amber-500 text-white text-sm font-bold rounded-full w-7 h-7 flex items-center justify-center">3</span>
+                        <h4 className="font-bold text-gray-800">Complete Your Draft</h4>
+                      </div>
+                      <p className="text-gray-600 text-sm">Pick your 5 starters + 2 bench through the normal snake draft process.</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="bg-amber-500 text-white text-sm font-bold rounded-full w-7 h-7 flex items-center justify-center">4</span>
+                        <h4 className="font-bold text-gray-800">Pick Your Captain</h4>
+                      </div>
+                      <p className="text-gray-600 text-sm">After draft ends, choose ONE of your 5 starters as captain. Their points will be doubled!</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-red-100 border-2 border-red-400 rounded-xl p-5">
+                  <h3 className="font-bold text-red-900 mb-3 text-lg flex items-center">
+                    <AlertCircle className="h-5 w-5 mr-2" />⚠️ WARNING: Opt-In = You MUST Pick a Captain!
+                  </h3>
+                  <div className="space-y-3 text-red-900">
+                    <p className="flex items-start gap-2">
+                      <span className="text-red-600 font-bold text-lg flex-shrink-0">❌</span>
+                      <span><strong>If you opt in but forget to pick a captain:</strong> You get <strong className="underline">NO 2× bonus</strong> on any player. All your players score regular (1×) points.</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-red-600 font-bold text-lg flex-shrink-0">😟</span>
+                      <span><strong>Your opponent WILL get their 2× bonus</strong> if they picked a captain — putting you at a huge disadvantage!</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-green-600 font-bold text-lg flex-shrink-0">✅</span>
+                      <span><strong>Always select your captain immediately</strong> after the draft completes if Captain Mode is active.</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-5 border border-amber-300">
+                  <h4 className="font-bold text-gray-800 mb-3">💡 Example Calculation</h4>
+                  <div className="space-y-2 text-gray-700">
+                    <p>Your captain Virat Kohli scores: <strong>65 runs (65 pts) + 1 catch (5 pts) = 70 points</strong></p>
+                    <p className="text-amber-700 font-bold text-lg">With Captain Bonus: 70 × 2 = <span className="text-2xl">140 points!</span></p>
+                    <p className="text-sm text-gray-500 italic">That extra 70 points could decide the match!</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-white rounded-2xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-primary-800 mb-6 flex items-center">
                 <Star className="h-6 w-6 mr-3 text-secondary-500" />Coin Rewards
