@@ -590,6 +590,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     if (!currentUser || !matchup) return;
     setShowCaptainModal(false);
     localStorage.setItem(`captain-modal-dismissed-${matchupId}`, 'true');
+    localStorage.setItem(`captain-choice-${matchupId}`, 'agreed');
     setCaptainModalDismissed(true);
     setCaptainResolved(true);
     try {
@@ -608,6 +609,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     if (!currentUser || !matchup) return;
     setShowCaptainModal(false);
     localStorage.setItem(`captain-modal-dismissed-${matchupId}`, 'true');
+    localStorage.setItem(`captain-choice-${matchupId}`, 'declined');
     setCaptainModalDismissed(true);
     setCaptainResolved(true);
     try {
@@ -824,6 +826,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           // Derive per-user status labels
           const myStatus = (() => {
             if (matchup.captainDeclined && !myAgreed) return { icon: '❌', label: 'Opted out', color: 'text-red-600' };
+            const localChoice = typeof window !== 'undefined' ? localStorage.getItem(`captain-choice-${matchupId}`) : null;
+            if (localChoice === 'declined') return { icon: '❌', label: 'Opted out', color: 'text-red-600' };
             if (myAgreed || matchup.captainEnabled) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
             if (captainModalDismissed) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
             return { icon: '⏳', label: 'Pending', color: 'text-gray-500' };
@@ -876,7 +880,12 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         })()}
 
         {/* Captain Selection Panel — shown after draft completes and both agreed but user hasn't picked yet */}
-        {(matchup.captainEnabled || (isDraftComplete && captainModalDismissed && !matchup.captainDeclined)) && isDraftComplete && !myCaptainPickId && (
+        {(() => {
+          const localChoice = typeof window !== 'undefined' ? localStorage.getItem(`captain-choice-${matchupId}`) : null;
+          const locallyDeclined = localChoice === 'declined';
+          const show = (matchup.captainEnabled || (isDraftComplete && captainModalDismissed && !matchup.captainDeclined)) && isDraftComplete && !myCaptainPickId && !locallyDeclined;
+          if (!show) return null;
+          return (
           <div className="bg-white rounded-lg shadow border-2 border-amber-400 mb-4 p-4">
             <h3 className="text-base font-bold text-amber-800 mb-1 flex items-center gap-2">
               🎖️ Pick Your Captain
@@ -898,7 +907,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               ))}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* How To Play Section */}
         <div className="bg-white rounded-lg shadow border border-gray-200 mb-4">
