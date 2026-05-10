@@ -819,36 +819,47 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           </div>
         </div>
 
-        {/* Captain Banner — shown when user has agreed but still waiting or captains not yet picked */}
-        {matchup.captainEnabled && !matchup.captainDeclined && (
-          <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
-            <span className="text-2xl">🎖️</span>
-            <div className="flex-1 text-sm">
-              {isDraftComplete && !myCaptainPickId ? (
-                <span className="font-semibold text-amber-800">Pick your captain below — your captain scores 2× points!</span>
-              ) : isDraftComplete && myCaptainPickId && !matchup.user2CaptainPickId && !matchup.user1CaptainPickId ? (
-                <span className="text-amber-700">Waiting for opponent to pick their captain...</span>
-              ) : isDraftComplete && myCaptainPickId ? (
-                <span className="text-amber-700">🎖️ Captain locked in — waiting for opponent.</span>
-              ) : (
-                <span className="text-amber-700">
-                  <span className="font-semibold">Captain Mode active!</span> Pick your captain after the draft.
-                  {!opponentAgreed && <span className="ml-1 text-amber-600">(Waiting for {opponent.name} to agree...)</span>}
+        {/* Captain Status Banner — always shown, reflects current captain mode state */}
+        {(() => {
+          if (matchup.captainDeclined) {
+            return (
+              <div className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
+                <span className="text-xl">❌</span>
+                <span className="text-sm text-gray-600">Captain Mode <span className="font-semibold">not active</span> for this matchup — one player opted out.</span>
+              </div>
+            );
+          }
+          if (matchup.captainEnabled) {
+            return (
+              <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
+                <span className="text-2xl">🎖️</span>
+                <div className="flex-1 text-sm">
+                  {isDraftComplete && !myCaptainPickId ? (
+                    <span className="font-semibold text-amber-800">Pick your captain below — your captain scores 2× points!</span>
+                  ) : isDraftComplete && myCaptainPickId ? (
+                    <span className="text-amber-700">🎖️ Captain locked in — waiting for opponent.</span>
+                  ) : (
+                    <span className="text-amber-700">
+                      <span className="font-semibold">Captain Mode active!</span> Pick your captain after the draft.
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          }
+          if (myAgreed) {
+            return (
+              <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
+                <span className="text-xl">🎖️</span>
+                <span className="text-sm text-amber-800">
+                  You opted <span className="font-semibold">in</span> to Captain Mode — waiting for <span className="font-semibold">{opponent.name}</span> to respond.
                 </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Captain Waiting Banner — user agreed but opponent hasn't yet */}
-        {myAgreed && !matchup.captainEnabled && !matchup.captainDeclined && (
-          <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
-            <span className="text-xl">🎖️</span>
-            <span className="text-sm text-amber-800">
-              You opted in to Captain Mode — waiting for <span className="font-semibold">{opponent.name}</span> to respond.
-            </span>
-          </div>
-        )}
+              </div>
+            );
+          }
+          // User has not yet responded (modal not shown / dismissed without answering — shouldn't normally happen)
+          return null;
+        })()}
 
         {/* Captain Selection Panel — shown after draft completes and both agreed but user hasn't picked yet */}
         {matchup.captainEnabled && isDraftComplete && !myCaptainPickId && (
