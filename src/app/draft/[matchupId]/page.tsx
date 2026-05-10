@@ -121,7 +121,10 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   // Captain feature states
   const [showCaptainModal, setShowCaptainModal] = useState(false);
-  const [captainModalDismissed, setCaptainModalDismissed] = useState(false);
+  const [captainModalDismissed, setCaptainModalDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(`captain-modal-dismissed-${matchupId}`) === 'true';
+  });
   // Whether the captain question has been resolved (so toss can proceed)
   const [captainResolved, setCaptainResolved] = useState(false);
 
@@ -586,6 +589,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const handleCaptainAgree = async () => {
     if (!currentUser || !matchup) return;
     setShowCaptainModal(false);
+    localStorage.setItem(`captain-modal-dismissed-${matchupId}`, 'true');
     setCaptainModalDismissed(true);
     setCaptainResolved(true);
     try {
@@ -603,6 +607,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const handleCaptainDecline = async () => {
     if (!currentUser || !matchup) return;
     setShowCaptainModal(false);
+    localStorage.setItem(`captain-modal-dismissed-${matchupId}`, 'true');
     setCaptainModalDismissed(true);
     setCaptainResolved(true);
     try {
