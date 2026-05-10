@@ -821,54 +821,55 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
         {/* Captain Status Banner — always shown, reflects current captain mode state */}
         {(() => {
-          if (matchup.captainDeclined) {
-            return (
-              <div className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
-                <span className="text-xl">❌</span>
-                <span className="text-sm text-gray-600">Captain Mode <span className="font-semibold">not active</span> for this matchup — one player opted out.</span>
+          // Derive per-user status labels
+          const myStatus = (() => {
+            if (matchup.captainDeclined && !myAgreed) return { icon: '❌', label: 'Opted out', color: 'text-red-600' };
+            if (myAgreed || matchup.captainEnabled) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
+            if (captainModalDismissed) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
+            return { icon: '⏳', label: 'Pending', color: 'text-gray-500' };
+          })();
+          const oppStatus = (() => {
+            if (matchup.captainDeclined && !opponentAgreed) return { icon: '❌', label: 'Opted out', color: 'text-red-600' };
+            if (opponentAgreed || matchup.captainEnabled) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
+            return { icon: '⏳', label: 'Pending', color: 'text-gray-500' };
+          })();
+
+          // Banner colour: grey if declined, amber otherwise
+          const borderColor = matchup.captainDeclined ? 'border-gray-300 bg-gray-50' : 'border-amber-300 bg-amber-50';
+
+          // Message line below the status row
+          const message = (() => {
+            if (matchup.captainDeclined) return <span className="text-xs text-gray-500">Captain Mode is <span className="font-semibold">off</span> — one player opted out.</span>;
+            if (matchup.captainEnabled && isDraftComplete && !myCaptainPickId) return <span className="text-xs font-semibold text-amber-800">Pick your captain below — your captain scores 2× points!</span>;
+            if (matchup.captainEnabled && isDraftComplete && myCaptainPickId) return <span className="text-xs text-amber-700">🎖️ Your captain is locked in.</span>;
+            if (matchup.captainEnabled) return <span className="text-xs text-amber-700">Both in! Pick your captain after the draft.</span>;
+            if (!opponentAgreed) return <span className="text-xs text-amber-700">Waiting for {opponent.name} to respond…</span>;
+            return null;
+          })();
+
+          if (!captainModalDismissed && !myAgreed && !matchup.captainEnabled && !matchup.captainDeclined) return null;
+
+          return (
+            <div className={`border rounded-lg px-4 py-2.5 mb-3 ${borderColor}`}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-base">🎖️</span>
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Captain Mode</span>
               </div>
-            );
-          }
-          if (matchup.captainEnabled) {
-            return (
-              <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
-                <span className="text-2xl">🎖️</span>
-                <div className="flex-1 text-sm">
-                  {isDraftComplete && !myCaptainPickId ? (
-                    <span className="font-semibold text-amber-800">Pick your captain below — your captain scores 2× points!</span>
-                  ) : isDraftComplete && myCaptainPickId ? (
-                    <span className="text-amber-700">🎖️ Captain locked in — waiting for opponent.</span>
-                  ) : (
-                    <span className="text-amber-700">
-                      <span className="font-semibold">Captain Mode active!</span> Pick your captain after the draft.
-                    </span>
-                  )}
+              <div className="flex gap-4 mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-500">You:</span>
+                  <span className="text-sm">{myStatus.icon}</span>
+                  <span className={`text-xs font-semibold ${myStatus.color}`}>{myStatus.label}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-500">{opponent.name}:</span>
+                  <span className="text-sm">{oppStatus.icon}</span>
+                  <span className={`text-xs font-semibold ${oppStatus.color}`}>{oppStatus.label}</span>
                 </div>
               </div>
-            );
-          }
-          if (myAgreed) {
-            return (
-              <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
-                <span className="text-xl">🎖️</span>
-                <span className="text-sm text-amber-800">
-                  You opted <span className="font-semibold">in</span> to Captain Mode — waiting for <span className="font-semibold">{opponent.name}</span> to respond.
-                </span>
-              </div>
-            );
-          }
-          // Fallback: user dismissed the modal (localStorage) but DB hasn't updated yet — show opted-in banner
-          if (captainModalDismissed) {
-            return (
-              <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3 flex items-center gap-3">
-                <span className="text-xl">🎖️</span>
-                <span className="text-sm text-amber-800">
-                  You responded to Captain Mode — waiting for <span className="font-semibold">{opponent.name}</span> to respond.
-                </span>
-              </div>
-            );
-          }
-          return null;
+              {message}
+            </div>
+          );
         })()}
 
         {/* Captain Selection Panel — shown after draft completes and both agreed but user hasn't picked yet */}
