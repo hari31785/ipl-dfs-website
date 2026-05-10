@@ -167,9 +167,9 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
 
   const renderPlayerCard = (pick: any, isActive: boolean, swappedFor?: string, isSwapped?: boolean, swappedOut?: boolean, replacedBy?: string, isCaptain?: boolean) => {
     const playerStats = playerStatsMap[pick.player.id];
-    const playerPoints = playerStats?.points || 0;
-    // If captain, points are doubled — display original + badge
-    const displayPoints = isCaptain ? playerPoints * 2 : playerPoints;
+    const basePoints = playerStats?.points || 0;
+    // pick.points already has captain bonus applied (doubled), so use it directly
+    const displayPoints = pick.points || 0;
     const didNotPlay = playerStats?.didNotPlay || false;
     const showScoreBadge = (!!playerStats && !didNotPlay) || (!playerStats && gameIsCompleted);
     const statusLabel = isSwapped ? '↑SWAP' : swappedOut ? '↓BENCH' : (didNotPlay && !isActive && !swappedOut) ? 'DNP' : null;
@@ -200,10 +200,10 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
             {showScoreBadge && isActive ? (
               <button
                 onClick={() => playerStats && setSelectedPlayerStats({ player: pick.player, pickOrder: pick.pickOrder })}
-                className={`shrink-0 text-[9px] sm:text-sm font-black text-black px-1 sm:px-3 py-0 sm:py-1.5 rounded shadow border ${isCaptain ? 'bg-gradient-to-r from-amber-300 to-yellow-300 border-amber-500' : 'bg-gradient-to-r from-cricket-300 to-green-300 border-green-700'} ${playerStats ? 'cursor-pointer' : 'cursor-default'}`}
+                className={`shrink-0 ${isCaptain ? 'flex flex-col items-end' : ''} text-[9px] sm:text-sm font-black text-black px-1 sm:px-3 py-0 sm:py-1.5 rounded shadow border ${isCaptain ? 'bg-gradient-to-r from-amber-300 to-yellow-300 border-amber-500' : 'bg-gradient-to-r from-cricket-300 to-green-300 border-green-700'} ${playerStats ? 'cursor-pointer' : 'cursor-default'}`}
               >
-                {isCaptain ? `🎖️${displayPoints.toFixed(1)}` : `⭐${displayPoints.toFixed(1)}`}
-                {isCaptain && <span className="ml-0.5 text-[8px] opacity-70">×2</span>}
+                <span>{isCaptain ? `🎖️${displayPoints.toFixed(1)}` : `⭐${displayPoints.toFixed(1)}`}</span>
+                {isCaptain && basePoints > 0 && <span className="text-[7px] sm:text-[9px] opacity-70 font-semibold">{basePoints.toFixed(1)}×2</span>}
               </button>
             ) : showScoreBadge && !isActive ? (
               <span className="shrink-0 text-[9px] sm:text-xs font-bold text-gray-400">{displayPoints.toFixed(1)}</span>
