@@ -828,9 +828,12 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             if (captainModalDismissed) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
             return { icon: '⏳', label: 'Pending', color: 'text-gray-500' };
           })();
+          const draftStarted = !!matchup.firstPickUser;
           const oppStatus = (() => {
             if (matchup.captainDeclined && !opponentAgreed) return { icon: '❌', label: 'Opted out', color: 'text-red-600' };
             if (opponentAgreed || matchup.captainEnabled) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
+            // Draft has started — opponent must have responded to the modal to get here
+            if (draftStarted && !matchup.captainDeclined) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
             return { icon: '⏳', label: 'Pending', color: 'text-gray-500' };
           })();
 
