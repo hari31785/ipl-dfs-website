@@ -127,6 +127,9 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   });
   // Whether the captain question has been resolved (so toss can proceed)
   const [captainResolved, setCaptainResolved] = useState(false);
+  // Captain pick modal (shown after draft completion)
+  const [showCaptainPickModal, setShowCaptainPickModal] = useState(false);
+  const [selectingCaptain, setSelectingCaptain] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
@@ -193,6 +196,21 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       setCaptainResolved(true);
     }
   }, [matchup?.id, currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show captain pick modal after draft completion if captainEnabled and no captain picked yet
+  useEffect(() => {
+    if (!matchup || !currentUser) return;
+    const isUser1Local = matchup.user1.user.id === currentUser.id;
+    const myCaptainPick = isUser1Local ? matchup.user1CaptainPickId : matchup.user2CaptainPickId;
+    const draftComplete = matchup.status === 'COMPLETED' || (effectiveSlots.length > 0 && matchup.draftPicks.length >= effectiveSlots.length);
+    
+    // Show modal if: draft is complete, captain mode enabled, and user hasn't picked captain yet
+    if (draftComplete && matchup.captainEnabled && !myCaptainPick) {
+      setShowCaptainPickModal(true);
+    } else {
+      setShowCaptainPickModal(false);
+    }
+  }, [matchup?.draftPicks.length, matchup?.status, matchup?.captainEnabled, matchup?.user1CaptainPickId, matchup?.user2CaptainPickId, currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Real-time polling for turn updates.
   // Dep is currentUser?.id only — matchupRef keeps current data so the interval
@@ -626,6 +644,21 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
   const handleCaptainPick = async (draftPickId: string) => {
     if (!currentUser || !matchup) return;
+    
+    // Find the player name for confirmation message
+    const selectedPick = myPicks.find(p => p.id === draftPickId);
+    if (!selectedPick) return;
+    
+    // Show confirmation dialog
+    const confirmed = confirm(
+      `Are you sure you want to make ${selectedPick.player.name} your captain?\n\n` +
+      `⚠️ This decision is FINAL and cannot be changed.\n\n` +
+      `${selectedPick.player.name} will score 2× points for all their stats in this match.`
+    );
+    
+    if (!confirmed) return;
+    
+    setSelectingCaptain(true);
     try {
       const res = await fetch(`/api/draft/${matchupId}/captain/pick`, {
         method: 'POST',
@@ -633,10 +666,17 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         body: JSON.stringify({ userId: currentUser.id, draftPickId }),
       });
       if (res.ok) {
+        setShowCaptainPickModal(false);
         await fetchMatchupDetails();
+      } else {
+        const err = await res.json();
+        alert(`Error: ${err.message || 'Failed to pick captain'}`);
       }
     } catch {
       console.error('Failed to pick captain');
+      alert('Failed to pick captain. Please try again.');
+    } finally {
+      setSelectingCaptain(false);
     }
   };
 
@@ -677,6 +717,55 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Captain Pick Modal - Shown after draft completion */}
+      {showCaptainPickModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-2xl w-full border-4 border-amber-400">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-3">🎖️</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Captain!</h2>
+              <p className="text-gray-600 text-sm mb-3">
+                Select one of your 5 starters as captain — they'll score <span className="font-bold text-amber-700">2× points</span>!
+              </p>
+              <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 mb-4 space-y-2">
+                <p className="text-red-800 font-semibold text-sm">
+                  ⚠️ Warning: If you don't choose a captain, you will forfeit the 2× bonus opportunity!
+                </p>
+                <p className="text-red-700 font-bold text-sm">
+                  🔒 Once you select a captain, this decision is FINAL and cannot be changed.
+                </p>
+              </div>
+            </div>
+
+            {/* Grid of starter cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
+              {myPicks
+                .filter(pick => !pick.isBench)
+                .sort((a, b) => a.pickOrder - b.pickOrder)
+                .map(pick => (
+                  <button
+                    key={pick.id}
+                    onClick={() => handleCaptainPick(pick.id)}
+                    disabled={selectingCaptain}
+                    className="bg-gradient-to-br from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 border-2 border-amber-300 hover:border-amber-500 rounded-lg p-3 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="text-2xl mb-1">{pick.player.role === 'BATSMAN' ? '🏏' : pick.player.role === 'BOWLER' ? '⚡' : pick.player.role === 'ALL_ROUNDER' ? '🌟' : '🧤'}</div>
+                    <div className="font-bold text-sm text-gray-900 truncate">{pick.player.name}</div>
+                    <div className="text-xs text-gray-600 truncate">{pick.player.iplTeam.shortName}</div>
+                    <div className="text-xs font-semibold text-amber-700 mt-1">
+                      {pick.player.role === 'ALL_ROUNDER' ? 'AR' : pick.player.role === 'WICKET_KEEPER' ? 'WK' : pick.player.role === 'BATSMAN' ? 'BAT' : 'BWL'}
+                    </div>
+                  </button>
+                ))}
+            </div>
+
+            {selectingCaptain && (
+              <p className="text-center text-sm text-gray-500">Saving your captain choice...</p>
+            )}
           </div>
         </div>
       )}

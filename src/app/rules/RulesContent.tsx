@@ -176,7 +176,7 @@ export default function RulesContent() {
                     <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>Captain can only be selected from your 5 starting players (not bench)</span></li>
                     <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>If one user declines Captain Mode, it's disabled for the entire matchup</span></li>
                     <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>Captain pick cannot be changed once selected</span></li>
-                    <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>If your captain is marked DNP, their substitute's points are NOT doubled</span></li>
+                    <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" /><span>If your captain is marked DNP, the substitute who replaces them WILL inherit the captain bonus (2× points)</span></li>
                     <li className="flex items-start gap-2"><AlertCircle className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" /><span>Admin can manually enable Captain Mode and set captains for any matchup</span></li>
                   </ul>
                 </div>
