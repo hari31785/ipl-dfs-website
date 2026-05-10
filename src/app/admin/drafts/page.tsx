@@ -912,12 +912,30 @@ function DraftPageInner() {
                   >
                     ❌ Disable Captain Mode
                   </button>
-                  {selectedMatchup.captainEnabled && (
-                    <span className="text-xs text-amber-700">
-                      Current: <strong>A</strong> = {selectedMatchup.user1CaptainPickId ? selectedMatchup.draftPicks.find(p => p.id === selectedMatchup.user1CaptainPickId)?.player.name ?? 'set' : 'none'} &nbsp;|&nbsp;
-                      <strong>B</strong> = {selectedMatchup.user2CaptainPickId ? selectedMatchup.draftPicks.find(p => p.id === selectedMatchup.user2CaptainPickId)?.player.name ?? 'set' : 'none'}
-                    </span>
-                  )}
+                  {/* Captain Mode Status Display */}
+                  <div className="flex-1 min-w-full md:min-w-0 mt-2 md:mt-0">
+                    <div className="text-xs space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-700">Status:</span>
+                        {selectedMatchup.captainEnabled ? (
+                          <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">✅ Captain Mode Active</span>
+                        ) : selectedMatchup.captainDeclined ? (
+                          <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-semibold">❌ Captain Mode Declined</span>
+                        ) : (
+                          <span className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full font-semibold">⏸️ Captain Mode Inactive</span>
+                        )}
+                      </div>
+                      {selectedMatchup.captainEnabled && (
+                        <div className="text-amber-700">
+                          Current: <strong>A</strong> = {selectedMatchup.user1CaptainPickId ? selectedMatchup.draftPicks.find(p => p.id === selectedMatchup.user1CaptainPickId)?.player.name ?? 'set' : 'none'} &nbsp;|&nbsp;
+                          <strong>B</strong> = {selectedMatchup.user2CaptainPickId ? selectedMatchup.draftPicks.find(p => p.id === selectedMatchup.user2CaptainPickId)?.player.name ?? 'set' : 'none'}
+                        </div>
+                      )}
+                      <div className="text-gray-600">
+                        Opt-in: <strong>A</strong> {selectedMatchup.captainAgreedUser1 ? '✅' : '⏳'} &nbsp;|&nbsp; <strong>B</strong> {selectedMatchup.captainAgreedUser2 ? '✅' : '⏳'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
