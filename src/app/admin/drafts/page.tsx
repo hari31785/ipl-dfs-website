@@ -354,7 +354,7 @@ function DraftPageInner() {
         ...selectedMatchup,
         user1CaptainPickId: adminUser1CaptainPickId,
         user2CaptainPickId: adminUser2CaptainPickId,
-        captainEnabled: true,
+        captainEnabled,
       };
       setSelectedMatchup(updatedMatchup);
       setMatchups(prev => prev.map(m => m.id === selectedMatchup.id ? updatedMatchup : m));
@@ -362,6 +362,44 @@ function DraftPageInner() {
     } catch (e) {
       console.error('Error saving captains:', e);
       alert('Failed to save captains.');
+    } finally {
+      setSavingCaptains(false);
+    }
+  };
+
+  const disableCaptainMode = async () => {
+    if (!selectedMatchup) return;
+    if (!confirm('Disable Captain Mode for this matchup?\n\nThis will:\n• Set captainEnabled to false\n• Clear all captain selections\n• Prevent captain bonuses from being applied')) return;
+    setSavingCaptains(true);
+    try {
+      const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user1CaptainPickId: null,
+          user2CaptainPickId: null,
+          captainEnabled: false,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Error: ${err.message}`);
+        return;
+      }
+      const updatedMatchup = {
+        ...selectedMatchup,
+        user1CaptainPickId: null,
+        user2CaptainPickId: null,
+        captainEnabled: false,
+      };
+      setSelectedMatchup(updatedMatchup);
+      setMatchups(prev => prev.map(m => m.id === selectedMatchup.id ? updatedMatchup : m));
+      setAdminUser1CaptainPickId(null);
+      setAdminUser2CaptainPickId(null);
+      alert('✅ Captain Mode disabled successfully!');
+    } catch (e) {
+      console.error('Error disabling captain mode:', e);
+      alert('Failed to disable captain mode.');
     } finally {
       setSavingCaptains(false);
     }
@@ -855,7 +893,7 @@ function DraftPageInner() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-3">
+                <div className="mt-4 flex flex-wrap items-center gap-3">
                   <button
                     onClick={saveCaptains}
                     disabled={savingCaptains}
@@ -866,6 +904,13 @@ function DraftPageInner() {
                     ) : (
                       <>🎖️ Save Captains</>
                     )}
+                  </button>
+                  <button
+                    onClick={disableCaptainMode}
+                    disabled={savingCaptains}
+                    className="flex items-center gap-1.5 px-5 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
+                  >
+                    ❌ Disable Captain Mode
                   </button>
                   {selectedMatchup.captainEnabled && (
                     <span className="text-xs text-amber-700">
