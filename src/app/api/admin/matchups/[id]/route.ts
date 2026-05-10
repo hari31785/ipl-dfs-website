@@ -9,29 +9,64 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { status, user1CaptainPickId, user2CaptainPickId, captainEnabled } = body;
 
-    const allowedStatuses = ['WAITING_DRAFT', 'DRAFTING', 'COMPLETED'];
-    if (!status || !allowedStatuses.includes(status)) {
-      return NextResponse.json(
-        { message: `Invalid status. Must be one of: ${allowedStatuses.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
-    const matchup = await prisma.headToHeadMatchup.findUnique({ where: { id } });
+    const matchup = await prisma.headToHeadMatchup.findUnique({ 
+      where: { id },
+      include: { draftPicks: true }
+    });
     if (!matchup) {
       return NextResponse.json({ message: 'Matchup not found' }, { status: 404 });
     }
 
+    // Prepare update data
+    const updateData: any = {};
+
+    // Handle status update
+    if (status) {
+      const allowedStatuses = ['WAITING_DRAFT', 'DRAFTING', 'COMPLETED'];
+      if (!allowedStatuses.includes(status)) {
+        return NextResponse.json(
+          { message: `Invalid status. Must be one of: ${allowedStatuses.join(', ')}` },
+          { status: 400 }
+        );
+      }
+      updateData.status = status;
+    }
+
+    // Handle captain picks update
+    if (user1CaptainPickId !== undefined) {
+      if (user1CaptainPickId !== null) {
+        const pickExists = matchup.draftPicks.some(p => p.id === user1CaptainPickId && p.pickedByUserId === matchup.user1SignupId);
+        if (!pickExists) {
+          return NextResponse.json({ message: 'Invalid user1CaptainPickId - pick not found or not owned by user1' }, { status: 400 });
+        }
+      }
+      updateData.user1CaptainPickId = user1CaptainPickId;
+    }
+
+    if (user2CaptainPickId !== undefined) {
+      if (user2CaptainPickId !== null) {
+        const pickExists = matchup.draftPicks.some(p => p.id === user2CaptainPickId && p.pickedByUserId === matchup.user2SignupId);
+        if (!pickExists) {
+          return NextResponse.json({ message: 'Invalid user2CaptainPickId - pick not found or not owned by user2' }, { status: 400 });
+        }
+      }
+      updateData.user2CaptainPickId = user2CaptainPickId;
+    }
+
+    if (captainEnabled !== undefined) {
+      updateData.captainEnabled = captainEnabled;
+    }
+
     const updated = await prisma.headToHeadMatchup.update({
       where: { id },
-      data: { status },
+      data: updateData,
     });
 
-    console.log(`✅ Admin manually set matchup ${id} status → ${status}`);
+    console.log(`✅ Admin updated matchup ${id}:`, updateData);
 
-    return NextResponse.json({ message: 'Matchup status updated', matchup: updated });
+    return NextResponse.json({ message: 'Matchup updated', matchup: updated });
   } catch (error) {
     console.error('Error updating matchup status:', error);
     return NextResponse.json({ message: 'Failed to update matchup status' }, { status: 500 });

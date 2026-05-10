@@ -19,7 +19,20 @@ export async function GET(request: NextRequest) {
       where: {
         contestId: contestId
       },
-      include: {
+      select: {
+        id: true,
+        firstPickUser: true,
+        status: true,
+        user1Score: true,
+        user2Score: true,
+        winnerId: true,
+        createdAt: true,
+        captainEnabled: true,
+        captainAgreedUser1: true,
+        captainAgreedUser2: true,
+        captainDeclined: true,
+        user1CaptainPickId: true,
+        user2CaptainPickId: true,
         user1: {
           include: {
             user: true

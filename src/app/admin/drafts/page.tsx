@@ -41,6 +41,12 @@ interface HeadToHeadMatchup {
     };
   };
   draftPicks: DraftPick[];
+  captainEnabled: boolean;
+  captainAgreedUser1: boolean;
+  captainAgreedUser2: boolean;
+  captainDeclined: boolean;
+  user1CaptainPickId: string | null;
+  user2CaptainPickId: string | null;
 }
 
 interface DraftPick {
@@ -92,6 +98,11 @@ function DraftPageInner() {
   const [showActiveDrafts, setShowActiveDrafts] = useState(true);
   const [showCompletedDrafts, setShowCompletedDrafts] = useState(false);
   const [markingComplete, setMarkingComplete] = useState(false);
+
+  // Captain state
+  const [savingCaptains, setSavingCaptains] = useState(false);
+  const [adminUser1CaptainPickId, setAdminUser1CaptainPickId] = useState<string | null>(null);
+  const [adminUser2CaptainPickId, setAdminUser2CaptainPickId] = useState<string | null>(null);
 
   // Edit picks state
   const [showEditPicks, setShowEditPicks] = useState(false);
@@ -316,6 +327,45 @@ function DraftPageInner() {
       alert('Failed to mark draft as complete.');
     } finally {
       setMarkingComplete(false);
+    }
+  };
+
+  const saveCaptains = async () => {
+    if (!selectedMatchup) return;
+    if (!adminUser1CaptainPickId && !adminUser2CaptainPickId) {
+      alert('Please select at least one captain before saving.');
+      return;
+    }
+    setSavingCaptains(true);
+    try {
+      const res = await fetch(`/api/admin/matchups/${selectedMatchup.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user1CaptainPickId: adminUser1CaptainPickId,
+          user2CaptainPickId: adminUser2CaptainPickId,
+          captainEnabled: true,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Error: ${err.message}`);
+        return;
+      }
+      const updatedMatchup = {
+        ...selectedMatchup,
+        user1CaptainPickId: adminUser1CaptainPickId,
+        user2CaptainPickId: adminUser2CaptainPickId,
+        captainEnabled: true,
+      };
+      setSelectedMatchup(updatedMatchup);
+      setMatchups(prev => prev.map(m => m.id === selectedMatchup.id ? updatedMatchup : m));
+      alert('✅ Captains saved successfully!');
+    } catch (e) {
+      console.error('Error saving captains:', e);
+      alert('Failed to save captains.');
+    } finally {
+      setSavingCaptains(false);
     }
   };
 
@@ -557,7 +607,7 @@ function DraftPageInner() {
                         <span className={`inline-flex px-2.5 py-1 text-xs font-bold rounded-full ${getMatchupStatusColor(matchup.status)}`}>{matchup.status.replace('_', ' ')}</span>
                       </td>
                       <td className="px-6 py-4 text-sm font-medium">
-                        <button onClick={() => setSelectedMatchup(matchup)} className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold rounded-lg transition-colors">View Details</button>
+                        <button onClick={() => { setSelectedMatchup(matchup); setAdminUser1CaptainPickId(matchup.user1CaptainPickId); setAdminUser2CaptainPickId(matchup.user2CaptainPickId); }} className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold rounded-lg transition-colors">View Details</button>
                       </td>
                     </tr>
                   ))}
@@ -580,7 +630,7 @@ function DraftPageInner() {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedMatchup(matchup)} className="shrink-0 bg-pink-600 hover:bg-pink-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-semibold">View</button>
+                  <button onClick={() => { setSelectedMatchup(matchup); setAdminUser1CaptainPickId(matchup.user1CaptainPickId); setAdminUser2CaptainPickId(matchup.user2CaptainPickId); }} className="shrink-0 bg-pink-600 hover:bg-pink-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-semibold">View</button>
                 </div>
               ))}
             </div>
@@ -726,6 +776,105 @@ function DraftPageInner() {
                   <div><span className="text-gray-500">Entry:</span> <span className="font-medium text-gray-900">{selectedMatchup.contest.coinValue} VC</span></div>
                   <div><span className="text-gray-500">Teams:</span> <span className="font-medium text-gray-900">{selectedMatchup.contest.iplGame.team1.shortName} vs {selectedMatchup.contest.iplGame.team2.shortName}</span></div>
                   <div><span className="text-gray-500">Status:</span> <span className={`inline-flex px-2 py-0.5 text-xs font-bold rounded-full ${getMatchupStatusColor(selectedMatchup.status)}`}>{selectedMatchup.status.replace('_', ' ')}</span></div>
+                </div>
+              </div>
+
+              {/* Admin Captain Selection */}
+              <div className="mt-5 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-bold text-amber-900 text-sm flex items-center gap-2">
+                    🎖️ Set Captains <span className="text-xs font-normal text-amber-700">(Admin Override — works regardless of draft status)</span>
+                  </h4>
+                  {selectedMatchup.captainEnabled && (
+                    <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Captains Active</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* User 1 Captain */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold bg-blue-100 text-blue-700">A</span>
+                      <span className="font-semibold text-sm text-gray-800">{selectedMatchup.user1.user.name}&apos;s Captain</span>
+                    </div>
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => setAdminUser1CaptainPickId(null)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${
+                          adminUser1CaptainPickId === null
+                            ? 'bg-gray-200 border-gray-400 font-bold text-gray-700'
+                            : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                        }`}
+                      >
+                        — No Captain —
+                      </button>
+                      {getUserPicks(selectedMatchup, selectedMatchup.user1.id).filter(p => !p.isBench).map((pick) => (
+                        <button
+                          key={pick.id}
+                          onClick={() => setAdminUser1CaptainPickId(pick.id)}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${
+                            adminUser1CaptainPickId === pick.id
+                              ? 'bg-amber-200 border-amber-500 font-bold text-amber-900'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-amber-300 hover:bg-amber-50'
+                          }`}
+                        >
+                          {adminUser1CaptainPickId === pick.id && '🎖️ '}{pick.player.name}
+                          <span className="ml-1 text-gray-400 font-normal">({pick.player.role} · {pick.player.iplTeam.shortName})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* User 2 Captain */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold bg-green-100 text-green-700">B</span>
+                      <span className="font-semibold text-sm text-gray-800">{selectedMatchup.user2.user.name}&apos;s Captain</span>
+                    </div>
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => setAdminUser2CaptainPickId(null)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${
+                          adminUser2CaptainPickId === null
+                            ? 'bg-gray-200 border-gray-400 font-bold text-gray-700'
+                            : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                        }`}
+                      >
+                        — No Captain —
+                      </button>
+                      {getUserPicks(selectedMatchup, selectedMatchup.user2.id).filter(p => !p.isBench).map((pick) => (
+                        <button
+                          key={pick.id}
+                          onClick={() => setAdminUser2CaptainPickId(pick.id)}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${
+                            adminUser2CaptainPickId === pick.id
+                              ? 'bg-amber-200 border-amber-500 font-bold text-amber-900'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-amber-300 hover:bg-amber-50'
+                          }`}
+                        >
+                          {adminUser2CaptainPickId === pick.id && '🎖️ '}{pick.player.name}
+                          <span className="ml-1 text-gray-400 font-normal">({pick.player.role} · {pick.player.iplTeam.shortName})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    onClick={saveCaptains}
+                    disabled={savingCaptains}
+                    className="flex items-center gap-1.5 px-5 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white text-sm font-semibold rounded-lg transition-colors"
+                  >
+                    {savingCaptains ? (
+                      <><span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full" /> Saving…</>
+                    ) : (
+                      <>🎖️ Save Captains</>
+                    )}
+                  </button>
+                  {selectedMatchup.captainEnabled && (
+                    <span className="text-xs text-amber-700">
+                      Current: <strong>A</strong> = {selectedMatchup.user1CaptainPickId ? selectedMatchup.draftPicks.find(p => p.id === selectedMatchup.user1CaptainPickId)?.player.name ?? 'set' : 'none'} &nbsp;|&nbsp;
+                      <strong>B</strong> = {selectedMatchup.user2CaptainPickId ? selectedMatchup.draftPicks.find(p => p.id === selectedMatchup.user2CaptainPickId)?.player.name ?? 'set' : 'none'}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
