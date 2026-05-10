@@ -195,6 +195,9 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   const [selectedDraftedContest, setSelectedDraftedContest] = useState<UserContest | null>(null)
   const [draftedTeamPicks, setDraftedTeamPicks] = useState<any[]>([])
   const [loadingDraftedPicks, setLoadingDraftedPicks] = useState(false)
+  const [draftedCaptainEnabled, setDraftedCaptainEnabled] = useState(false)
+  const [draftedUser1CaptainPickId, setDraftedUser1CaptainPickId] = useState<string | null>(null)
+  const [draftedUser2CaptainPickId, setDraftedUser2CaptainPickId] = useState<string | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(() => {
     try {
       const stored = typeof window !== 'undefined' ? sessionStorage.getItem('dismissedAlerts') : null
@@ -1876,11 +1879,17 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                               setShowDraftedTeamsModal(true)
                                               setDraftedTeamPicks([])
                                               setLoadingDraftedPicks(true)
+                                              setDraftedCaptainEnabled(false)
+                                              setDraftedUser1CaptainPickId(null)
+                                              setDraftedUser2CaptainPickId(null)
                                               try {
                                                 const res = await fetch(`/api/draft/${signup.matchup?.id}/poll`)
                                                 if (res.ok) {
                                                   const data = await res.json()
                                                   setDraftedTeamPicks(data.draftPicks ?? [])
+                                                  setDraftedCaptainEnabled(data.captainEnabled ?? false)
+                                                  setDraftedUser1CaptainPickId(data.user1CaptainPickId ?? null)
+                                                  setDraftedUser2CaptainPickId(data.user2CaptainPickId ?? null)
                                                 }
                                               } catch {}
                                               finally { setLoadingDraftedPicks(false) }
@@ -2479,10 +2488,14 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                 const starterRows = rows.slice(0, 5)
                 const benchRows = rows.slice(5)
 
-                const renderCell = (pick: typeof myPicks[0] | undefined) =>
+                const renderCell = (pick: typeof myPicks[0] | undefined, isCaptain: boolean) =>
                   pick ? (
-                    <div className="flex-1 min-w-0 px-1.5">
-                      <div className="text-[11px] font-semibold text-gray-900 truncate leading-tight">{pick.player.name}</div>
+                    <div className={`flex-1 min-w-0 px-1.5 rounded ${isCaptain ? 'bg-amber-50 border border-amber-200' : ''}`}>
+                      <div className="text-[11px] font-semibold text-gray-900 truncate leading-tight">
+                        {isCaptain && <span className="text-amber-600 mr-0.5">🎖️</span>}
+                        {pick.player.name}
+                        {isCaptain && <span className="ml-1 text-[8px] font-bold text-amber-700 bg-amber-100 px-1 rounded">×2</span>}
+                      </div>
                       <div className="text-[9px] text-gray-400 leading-none">{pick.player.role.replace('_', ' ')}</div>
                     </div>
                   ) : (
@@ -2500,15 +2513,32 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                     </div>
 
                     {/* Starting 5 */}
-                    <div className="px-2 py-1 text-[9px] font-bold text-amber-700 bg-amber-50 border-b border-amber-100">⭐ Starting 5</div>
-                    {starterRows.map(({ my, opp, num }) => (
-                      <div key={num} className="flex items-center gap-1 px-2 py-2 border-b border-gray-100">
-                        <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0">{num}</div>
-                        {renderCell(my)}
-                        <div className="w-px self-stretch bg-gray-200 shrink-0" />
-                        {renderCell(opp)}
-                      </div>
-                    ))}
+                    <div className="px-2 py-1 text-[9px] font-bold text-amber-700 bg-amber-50 border-b border-amber-100">
+                      ⭐ Starting 5 {draftedCaptainEnabled && <span className="text-amber-600 ml-1">(🎖️ Captains get ×2 points)</span>}
+                    </div>
+                    {starterRows.map(({ my, opp, num }) => {
+                      // Current user's signup ID
+                      const mySignupId = selectedDraftedContest.id
+                      // Determine if current user is user1
+                      const myIsUser1 = selectedDraftedContest.matchup?.user1Id === mySignupId
+                      // Check if picks are captains
+                      const myIsCaptain = draftedCaptainEnabled && my && (
+                        (myIsUser1 && my.id === draftedUser1CaptainPickId) ||
+                        (!myIsUser1 && my.id === draftedUser2CaptainPickId)
+                      )
+                      const oppIsCaptain = draftedCaptainEnabled && opp && (
+                        (myIsUser1 && opp.id === draftedUser2CaptainPickId) ||
+                        (!myIsUser1 && opp.id === draftedUser1CaptainPickId)
+                      )
+                      return (
+                        <div key={num} className="flex items-center gap-1 px-2 py-2 border-b border-gray-100">
+                          <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0">{num}</div>
+                          {renderCell(my, myIsCaptain)}
+                          <div className="w-px self-stretch bg-gray-200 shrink-0" />
+                          {renderCell(opp, oppIsCaptain)}
+                        </div>
+                      )
+                    })}
 
                     {/* Bench */}
                     {benchRows.length > 0 && (
@@ -2517,9 +2547,9 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                         {benchRows.map(({ my, opp, num }) => (
                           <div key={num} className="flex items-center gap-1 px-2 py-2 border-b border-gray-100">
                             <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0">{num}</div>
-                            {renderCell(my)}
+                            {renderCell(my, false)}
                             <div className="w-px self-stretch bg-gray-200 shrink-0" />
-                            {renderCell(opp)}
+                            {renderCell(opp, false)}
                           </div>
                         ))}
                       </>
