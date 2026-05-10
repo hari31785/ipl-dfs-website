@@ -117,6 +117,7 @@ export default function RulesContent() {
                   <li>• Statistics are sourced from official IPL data</li>
                   <li>• Points are final once match statistics are updated</li>
                   <li className="font-semibold text-orange-700">• Points accrued in any Super Over will <span className="underline font-bold uppercase">not</span> count towards final scores</li>
+                  <li className="font-semibold text-red-700">• <span className="underline font-bold uppercase">Match Abandonment:</span> If any team is forced to play less than 15 overs due to rain or other unforeseen issues (not due to being all out), the match will be abandoned and all contests voided with coins refunded</li>
                 </ul>
               </div>
             </div>
