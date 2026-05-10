@@ -40,9 +40,10 @@ export async function POST(
       return NextResponse.json({ message: 'Captain bonus is not enabled for this matchup' }, { status: 400 });
     }
 
-    // Captain picks must be set before the game goes LIVE
-    if (matchup.status === 'COMPLETED') {
-      return NextResponse.json({ message: 'Draft is already completed' }, { status: 400 });
+    // Captain picks are allowed in DRAFTING or COMPLETED status (completed = all picks done, captain still pending)
+    // Block only if the game has gone fully LIVE (i.e., both captains already picked)
+    if (matchup.user1CaptainPickId && matchup.user2CaptainPickId) {
+      return NextResponse.json({ message: 'Both captains are already chosen' }, { status: 400 });
     }
 
     const isUser1 = matchup.user1.user.id === userId;
@@ -82,6 +83,11 @@ export async function POST(
     const myUser = isUser1 ? matchup.user1.user : matchup.user2.user;
 
     if (bothPicked) {
+      // Both captains chosen — finalize the draft
+      await prisma.headToHeadMatchup.update({
+        where: { id: matchupId },
+        data: { status: 'COMPLETED' },
+      });
       // Notify both: captains are locked in
       await sendToUser(myUser.id, {
         title: '🎖️ Captains Locked!',

@@ -115,16 +115,28 @@ export async function POST(
     // NOTE: Contest status remains in DRAFT_PHASE until admin clicks "Start Contest"
     const isDraftComplete = currentPickOrder === effectiveSlots.length;
     if (isDraftComplete) {
+      // If captain feature is enabled but captains haven't been picked yet, keep DRAFTING
+      // so users can still pick their captain before the draft room closes.
+      const captainPending = matchup.captainEnabled &&
+        (!matchup.user1CaptainPickId || !matchup.user2CaptainPickId);
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
-        data: { status: 'COMPLETED' }
+        data: { status: captainPending ? 'DRAFTING' : 'COMPLETED' }
       });
-      // Trigger 4: Notify both players — draft is done
       const draftUrl = `/draft/${matchupId}`;
-      await Promise.allSettled([
-        sendToUser(matchup.user1.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
-        sendToUser(matchup.user2.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
-      ]).catch(() => {});
+      if (!captainPending) {
+        // Trigger 4: Notify both players — draft is done (only when fully complete)
+        await Promise.allSettled([
+          sendToUser(matchup.user1.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
+          sendToUser(matchup.user2.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
+        ]).catch(() => {});
+      } else {
+        // Notify both players to pick their captain
+        await Promise.allSettled([
+          sendToUser(matchup.user1.user.id, { title: '🎖️ Pick Your Captain!', body: 'All picks are in — now choose your captain for a 2x bonus!', url: draftUrl }),
+          sendToUser(matchup.user2.user.id, { title: '🎖️ Pick Your Captain!', body: 'All picks are in — now choose your captain for a 2x bonus!', url: draftUrl }),
+        ]).catch(() => {});
+      }
     } else {
       // Trigger 1: Notify next picker only if turn changes (skip back-to-back picks)
       const nextPickerSignupId = effectiveSlots[currentPickOrder]; // 0-indexed slot after this pick

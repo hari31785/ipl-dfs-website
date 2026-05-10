@@ -85,16 +85,27 @@ export async function POST(
     // Auto-complete draft if all effective pick slots are now filled
     const effectiveSlots = getEffectivePickSlots(newFirstPickUser, matchup.user1.id, matchup.user2.id);
     if (matchup.draftPicks.length >= effectiveSlots.length) {
+      // If captain feature is enabled but captains haven't been picked yet, keep DRAFTING
+      const captainPending = matchup.captainEnabled &&
+        (!matchup.user1CaptainPickId || !matchup.user2CaptainPickId);
       await prisma.headToHeadMatchup.update({
         where: { id: matchupId },
-        data: { status: 'COMPLETED' },
+        data: { status: captainPending ? 'DRAFTING' : 'COMPLETED' },
       });
-      // Trigger 4: Draft complete — notify both
       const draftUrl = `/draft/${matchupId}`;
-      await Promise.allSettled([
-        sendToUser(matchup.user1.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
-        sendToUser(matchup.user2.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
-      ]).catch(() => {});
+      if (!captainPending) {
+        // Trigger 4: Draft complete — notify both
+        await Promise.allSettled([
+          sendToUser(matchup.user1.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
+          sendToUser(matchup.user2.user.id, { title: '✅ Draft Complete!', body: 'All picks are in. Good luck in the game!', url: draftUrl }),
+        ]).catch(() => {});
+      } else {
+        // Notify both players to pick their captain
+        await Promise.allSettled([
+          sendToUser(matchup.user1.user.id, { title: '🎖️ Pick Your Captain!', body: 'All picks are in — now choose your captain for a 2x bonus!', url: draftUrl }),
+          sendToUser(matchup.user2.user.id, { title: '🎖️ Pick Your Captain!', body: 'All picks are in — now choose your captain for a 2x bonus!', url: draftUrl }),
+        ]).catch(() => {});
+      }
       return NextResponse.json({ message: 'Bench picks waived — draft complete!', completed: true });
     }
 
