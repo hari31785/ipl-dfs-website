@@ -963,6 +963,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               <div>
                 <p className="font-bold text-yellow-800">Waiting for {opponent.name} to call the toss...</p>
                 <p className="text-yellow-700 text-sm">Browse available players below while you wait — the draft will start automatically!</p>
+                {myAgreed && <p className="text-amber-700 text-xs mt-1 font-medium">🎖️ You opted in to Captain Mode — waiting for {opponent.name} to respond.</p>}
               </div>
             </div>
             <a href="/dashboard" className="shrink-0 text-yellow-700 hover:text-yellow-900 text-sm font-semibold underline">← Dashboard</a>
