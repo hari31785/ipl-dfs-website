@@ -29,7 +29,7 @@ export async function POST(
     }
 
     // Only allow during draft phase
-    if (matchup.status !== 'PENDING' && matchup.status !== 'IN_PROGRESS') {
+    if (matchup.status !== 'PENDING' && matchup.status !== 'IN_PROGRESS' && matchup.status !== 'DRAFTING') {
       return NextResponse.json(
         { message: 'Captain agreement can only be set during draft phase' },
         { status: 400 }
