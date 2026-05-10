@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface LoadingContextType {
   isLoading: boolean;
@@ -8,11 +8,20 @@ interface LoadingContextType {
   setLoading: (loading: boolean, message?: string) => void;
 }
 
-const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
+const LoadingContext = createContext<LoadingContextType>({
+  isLoading: false,
+  loadingMessage: '',
+  setLoading: () => {},
+});
 
 export function LoadingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const setLoading = (loading: boolean, message: string = 'Processing...') => {
     setIsLoading(loading);
@@ -22,7 +31,7 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
   return (
     <LoadingContext.Provider value={{ isLoading, loadingMessage, setLoading }}>
       {children}
-      {isLoading && (
+      {mounted && isLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
             <div className="flex flex-col items-center gap-4">
@@ -45,8 +54,5 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
 
 export function useLoading() {
   const context = useContext(LoadingContext);
-  if (context === undefined) {
-    throw new Error('useLoading must be used within a LoadingProvider');
-  }
   return context;
 }

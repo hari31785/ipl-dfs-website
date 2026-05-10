@@ -114,6 +114,7 @@ interface UserContest {
     opponentUsername: string
     myScore?: number
     opponentScore?: number
+    captainEnabled?: boolean
   } | null
 }
 

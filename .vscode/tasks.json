@@ -21,6 +21,28 @@
 			"command": "node scripts/score-bridge-server.js",
 			"isBackground": true,
 			"problemMatcher": []
+		},
+		{
+			"label": "Build Check",
+			"type": "shell",
+			"command": "cd /Users/harikurada/Desktop/ipl-dfs-website && npm run build 2>&1",
+			"isBackground": false
+		},
+		{
+			"label": "Build Check Now",
+			"type": "shell",
+			"command": "cd /Users/harikurada/Desktop/ipl-dfs-website && npm run build 2>&1 | tail -40"
+		},
+		{
+			"label": "Run Dev Server",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true
+		},
+		{
+			"label": "Run Build Check",
+			"type": "shell",
+			"command": "cd /Users/harikurada/Desktop/ipl-dfs-website && npm run build 2>&1"
 		}
 	]
 }

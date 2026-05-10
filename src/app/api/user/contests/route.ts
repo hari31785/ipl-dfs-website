@@ -102,6 +102,7 @@ export async function GET(request: NextRequest) {
                 : (matchup as any).user1?.user?.username,
               myScore: isUser1 ? u1Score : u2Score,
               opponentScore: isUser1 ? u2Score : u1Score,
+              captainEnabled: (matchup as any).captainEnabled ?? false,
             },
           }
         })
@@ -209,6 +210,7 @@ export async function GET(request: NextRequest) {
                 : matchup.user1?.user?.username,
               myScore: isUser1 ? matchup.user1Score : matchup.user2Score,
               opponentScore: isUser1 ? matchup.user2Score : matchup.user1Score,
+              captainEnabled: matchup.captainEnabled ?? false,
             },
           }
         })
@@ -320,6 +322,7 @@ export async function GET(request: NextRequest) {
             opponentUsername: isUser1 ? (matchup as any).user2?.user?.username : (matchup as any).user1?.user?.username,
             myScore,
             opponentScore,
+            captainEnabled: (matchup as any).captainEnabled ?? false,
           },
         };
       });
