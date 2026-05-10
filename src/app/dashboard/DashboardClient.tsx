@@ -486,6 +486,15 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
         ) {
           return [{ type: 'open', matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id }]
         }
+        // 🎖️ Alert: Draft complete, captain pick still needed
+        if (
+          uc.contest.status === 'DRAFT_PHASE' &&
+          uc.matchup.status === 'DRAFTING' &&
+          uc.matchup.captainEnabled &&
+          uc.matchup.draftPicksCount >= 14
+        ) {
+          return [{ type: 'captain-pick', matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id }]
+        }
         if (
           (uc.contest.status === 'SIGNUP_OPEN' || uc.contest.status === 'SIGNUP_CLOSED') &&
           uc.matchup !== null
@@ -495,7 +504,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
         return []
       })
       .sort((a, b) => {
-        const order = { 'my-turn': 0, started: 1, open: 2, matched: 3 }
+        const order = { 'my-turn': 0, 'captain-pick': 1, started: 2, open: 3, matched: 4 }
         return order[a.type as keyof typeof order] - order[b.type as keyof typeof order]
       })
   , [userContests, dismissedAlerts])
@@ -1157,6 +1166,16 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                 return [{ type: 'open', matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id }]
               }
 
+              // 🎖️ Alert: Draft complete, captain pick still needed
+              if (
+                uc.contest.status === 'DRAFT_PHASE' &&
+                uc.matchup.status === 'DRAFTING' &&
+                uc.matchup.captainEnabled &&
+                uc.matchup.draftPicksCount >= 14
+              ) {
+                return [{ type: 'captain-pick', matchupId, matchTitle, tournamentName, coinValue, opponentName, contestMatchupId: uc.matchup.id }]
+              }
+
               // 🔵 Alert 3: Opponent matched, draft not open yet
               if (
                 (uc.contest.status === 'SIGNUP_OPEN' || uc.contest.status === 'SIGNUP_CLOSED') &&
@@ -1169,7 +1188,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
             })
             // Sort: started first, then open, then matched
             .sort((a, b) => {
-              const order = { 'my-turn': 0, started: 1, open: 2, matched: 3 }
+              const order = { 'my-turn': 0, 'captain-pick': 1, started: 2, open: 3, matched: 4 }
               return order[a.type as keyof typeof order] - order[b.type as keyof typeof order]
             })
 
@@ -1187,21 +1206,24 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                       ? 'bg-gray-50 border-gray-300'
                       : alert.type === 'open'
                       ? 'bg-amber-50 border-amber-300'
+                      : alert.type === 'captain-pick'
+                      ? 'bg-amber-50 border-amber-400'
                       : 'bg-blue-50 border-blue-300'
                   }`}
                 >
                   <div className="flex items-start gap-3 flex-1">
                     <span className="text-xl mt-0.5">
-                      {alert.type === 'my-turn' ? '🟢' : alert.type === 'started' ? '⏳' : alert.type === 'open' ? '⚡' : '🎯'}
+                      {alert.type === 'my-turn' ? '🟢' : alert.type === 'started' ? '⏳' : alert.type === 'open' ? '⚡' : alert.type === 'captain-pick' ? '🎖️' : '🎯'}
                     </span>
                     <div className="flex-1">
                       <p className={`font-semibold text-sm ${
-                        alert.type === 'my-turn' ? 'text-green-800' : alert.type === 'started' ? 'text-gray-700' : alert.type === 'open' ? 'text-amber-800' : 'text-blue-800'
+                        alert.type === 'my-turn' ? 'text-green-800' : alert.type === 'started' ? 'text-gray-700' : alert.type === 'open' ? 'text-amber-800' : alert.type === 'captain-pick' ? 'text-amber-800' : 'text-blue-800'
                       }`}>
                         {alert.type === 'my-turn' && "It's your turn to pick!"}
                         {alert.type === 'started' && 'Draft in progress'}
                         {alert.type === 'open' && 'Your draft window is open!'}
                         {alert.type === 'matched' && 'Opponent matched!'}
+                        {alert.type === 'captain-pick' && 'Pick your captain!'}
                       </p>
                       <p className={`text-sm mt-0.5 ${
                         alert.type === 'my-turn' ? 'text-green-700' : alert.type === 'started' ? 'text-gray-600' : alert.type === 'open' ? 'text-amber-700' : 'text-blue-700'
@@ -1209,15 +1231,16 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                         {alert.matchTitle} &bull; {alert.tournamentName} &bull; {alert.coinValue} Coin Contest
                       </p>
                       <p className={`text-sm mt-1 ${
-                        alert.type === 'my-turn' ? 'text-green-600' : alert.type === 'started' ? 'text-gray-500' : alert.type === 'open' ? 'text-amber-600' : 'text-blue-600'
+                        alert.type === 'my-turn' ? 'text-green-600' : alert.type === 'started' ? 'text-gray-500' : alert.type === 'open' ? 'text-amber-600' : alert.type === 'captain-pick' ? 'text-amber-700' : 'text-blue-600'
                       }`}>
                         {alert.type === 'my-turn' && `Pick #${(alert as any).pickNumber} vs ${alert.opponentName} — don't keep them waiting!`}
                         {alert.type === 'started' && `${alert.opponentName} is picking now... (Pick #${(alert as any).pickNumber})`}
                         {alert.type === 'open' && `Be the first to enter the draft room vs ${alert.opponentName}.`}
                         {alert.type === 'matched' && `You'll be facing ${alert.opponentName} — draft opens soon.`}
+                        {alert.type === 'captain-pick' && `Draft done vs ${alert.opponentName} — head to the draft room to pick your captain.`}
                       </p>
                     </div>
-                    {(alert.type === 'my-turn' || alert.type === 'started' || alert.type === 'open') && (
+                    {(alert.type === 'my-turn' || alert.type === 'started' || alert.type === 'open' || alert.type === 'captain-pick') && (
                       <button
                         onClick={() => router.push(`/draft/${alert.matchupId}`)}
                         className={`shrink-0 text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors ${
@@ -1225,10 +1248,12 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                             ? 'bg-green-600 hover:bg-green-700 text-white'
                             : alert.type === 'started'
                             ? 'bg-gray-400 hover:bg-gray-500 text-white'
+                            : alert.type === 'captain-pick'
+                            ? 'bg-amber-500 hover:bg-amber-600 text-white'
                             : 'bg-amber-500 hover:bg-amber-600 text-white'
                         }`}
                       >
-                        {alert.type === 'my-turn' ? 'Pick Now →' : alert.type === 'started' ? 'Watch →' : 'Go Draft →'}
+                        {alert.type === 'my-turn' ? 'Pick Now →' : alert.type === 'started' ? 'Watch →' : alert.type === 'captain-pick' ? 'Pick Captain →' : 'Go Draft →'}
                       </button>
                     )}
                   </div>
@@ -1239,7 +1264,7 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                       return next
                     })}
                     className={`shrink-0 text-lg font-bold leading-none mt-0.5 ${
-                      alert.type === 'my-turn' ? 'text-green-400 hover:text-green-600' : alert.type === 'started' ? 'text-gray-400 hover:text-gray-600' : alert.type === 'open' ? 'text-amber-400 hover:text-amber-600' : 'text-blue-400 hover:text-blue-600'
+                      alert.type === 'my-turn' ? 'text-green-400 hover:text-green-600' : alert.type === 'started' ? 'text-gray-400 hover:text-gray-600' : alert.type === 'open' || alert.type === 'captain-pick' ? 'text-amber-400 hover:text-amber-600' : 'text-blue-400 hover:text-blue-600'
                     }`}
                   >
                     ✕
