@@ -384,7 +384,7 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
               </h4>
               <div className="space-y-1.5 sm:space-y-3">
                 {myFinalLineup.map((player: any) =>
-                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped, undefined, undefined, player.id === myCaptainActivePickId)
+                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped, undefined, undefined, player.isCaptain)
                 )}
               </div>
             </div>
@@ -435,7 +435,7 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
               </h4>
               <div className="space-y-1.5 sm:space-y-3">
                 {opponentFinalLineup.map((player: any) =>
-                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped, undefined, undefined, player.id === opponentCaptainActivePickId)
+                  renderPlayerCard(player, true, player.swappedFor, player.isSwapped, undefined, undefined, player.isCaptain)
                 )}
               </div>
             </div>
