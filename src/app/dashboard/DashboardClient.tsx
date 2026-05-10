@@ -1665,6 +1665,9 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                                 <span className={iWon ? 'text-green-700 font-bold' : iLost ? 'text-red-700' : ''}>{myScore.toFixed(1)}</span>
                                                 <span className="text-gray-300 mx-1">–</span>
                                                 <span className={iLost ? 'text-green-700 font-bold' : iWon ? 'text-red-700' : ''}>{oppScore.toFixed(1)}</span>
+                                                {signup.matchup?.captainEnabled && (
+                                                  <span className="ml-1.5 text-[9px] md:text-xs font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">🎖️ C</span>
+                                                )}
                                               </div>
                                             )}
                                             {!hasScores && <div className="text-[10px] md:text-sm text-gray-400 mt-0.5">No scores yet</div>}
