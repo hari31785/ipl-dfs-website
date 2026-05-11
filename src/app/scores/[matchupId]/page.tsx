@@ -15,6 +15,10 @@ const MATCHUP_SELECT = {
   user2Score: true,
   user1Id: true,
   user2Id: true,
+  captainEnabled: true,
+  captainDeclined: true,
+  user1CaptainPickId: true,
+  user2CaptainPickId: true,
   user1: {
     select: {
       id: true,

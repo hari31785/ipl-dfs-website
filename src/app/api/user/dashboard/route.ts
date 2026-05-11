@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils'
+import { calculateFinalLineup } from '@/lib/benchSwapUtils'
 
 // GET /api/user/dashboard - Returns user profile + active contests in one round-trip.
 // Replaces two separate mount fetches (/api/user + /api/user/contests?excludeCompleted=true)
@@ -68,6 +68,8 @@ export async function GET(request: NextRequest) {
               user1Score: true,
               user2Score: true,
               captainEnabled: true,
+              user1CaptainPickId: true,
+              user2CaptainPickId: true,
               _count: { select: { draftPicks: true } },
               user2: { select: { user: { select: { username: true } } } },
             },
@@ -83,6 +85,8 @@ export async function GET(request: NextRequest) {
               user1Score: true,
               user2Score: true,
               captainEnabled: true,
+              user1CaptainPickId: true,
+              user2CaptainPickId: true,
               _count: { select: { draftPicks: true } },
               user1: { select: { user: { select: { username: true } } } },
             },
@@ -141,7 +145,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Compute live score for one side of a matchup
-    const computeScore = (matchupId: string, signupId: string, gameId: string): number | null => {
+    const computeScore = (matchupId: string, signupId: string, gameId: string, captainPickId?: string | null): number | null => {
       const picks = picksByMatchup.get(matchupId)
       if (!picks || picks.length === 0) return null
       const myPicks = picks.filter(p => p.pickedByUserId === signupId)
@@ -155,7 +159,9 @@ export async function GET(request: NextRequest) {
             : [],
         },
       }))
-      return calculateTotalPointsWithSwap(picksWithStats, gameId).totalPoints
+      const { finalLineup } = calculateFinalLineup(picksWithStats, gameId, captainPickId)
+      const totalPoints = finalLineup.reduce((sum, player) => sum + player.points, 0)
+      return totalPoints
     }
 
     // Fan-out matchups (same logic as user/contests route)
@@ -179,11 +185,13 @@ export async function GET(request: NextRequest) {
         const gameId = signup.contest.iplGame.id
         const mySignupId = isUser1 ? matchup.user1Id : matchup.user2Id
         const oppSignupId = isUser1 ? matchup.user2Id : matchup.user1Id
+        const myCaptainPickId = isUser1 ? matchup.user1CaptainPickId : matchup.user2CaptainPickId
+        const oppCaptainPickId = isUser1 ? matchup.user2CaptainPickId : matchup.user1CaptainPickId
         const myScore = isLive
-          ? computeScore(matchup.id, mySignupId, gameId)
+          ? computeScore(matchup.id, mySignupId, gameId, myCaptainPickId)
           : (isUser1 ? matchup.user1Score : matchup.user2Score)
         const opponentScore = isLive
-          ? computeScore(matchup.id, oppSignupId, gameId)
+          ? computeScore(matchup.id, oppSignupId, gameId, oppCaptainPickId)
           : (isUser1 ? matchup.user2Score : matchup.user1Score)
 
         return {
