@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { unstable_cache } from 'next/cache'
+import { unstable_cache, unstable_noStore } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import ScoresClient from './ScoresClient'
 
@@ -108,6 +108,11 @@ export default async function ScoresPage({ params }: { params: Promise<{ matchup
 
   const gameId = matchup.contest.iplGame.id
   const isCompleted = matchup.status === 'COMPLETED'
+
+  // For LIVE/ACTIVE contests, opt out of caching entirely to ensure fresh data
+  if (!isCompleted) {
+    unstable_noStore()
+  }
 
   // COMPLETED matchups: cache stats for 1 hour at the server layer.
   // Tag allows instant invalidation when admin pushes new stats.
