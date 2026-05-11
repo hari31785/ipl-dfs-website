@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendToUser } from '@/lib/pushNotifications';
+import { parseFirstPickUser } from '@/lib/draftUtils';
 
 // POST /api/draft/[matchupId]/captain/agree
 // Body: { userId: string }
@@ -97,6 +98,21 @@ export async function POST(
       body: `${myUser.username ?? myUser.name} wants to enable the Captain Bonus. Open the draft to respond!`,
       url: `/draft/${matchupId}`,
     });
+
+    // If toss is already done and this user just answered, send them the draft start notification
+    if (updated.firstPickUser) {
+      const { firstPick } = parseFirstPickUser(updated.firstPickUser);
+      const firstPickerUser = firstPick === 'user1' ? matchup.user1.user : matchup.user2.user;
+      const isFirstPicker = myUser.id === firstPickerUser.id;
+      
+      await sendToUser(myUser.id, {
+        title: isFirstPicker ? '🏆 Draft Started — You Pick First!' : '🏆 Draft Started!',
+        body: isFirstPicker 
+          ? 'The toss is done. Make your first pick now!' 
+          : `${firstPickerUser.name} won the toss and picks first. Get ready!`,
+        url: `/draft/${matchupId}`,
+      });
+    }
 
     return NextResponse.json({ agreed: true, captainEnabled: false, bothAgreed: false });
   } catch (error) {

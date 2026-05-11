@@ -147,7 +147,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   useEffect(() => {
     if (!matchup || !currentUser) return;
 
-    // Toss hasn't happened yet — gate it behind the captain modal
+    // Toss hasn't happened yet — allow the calling user to proceed after their captain decision
+    // The waiting user will see their captain modal first, then the toss result
     if (matchup.status === 'DRAFTING' && !matchup.firstPickUser && tossPhase !== 'complete') {
       if (captainResolved) {
         initiateToss();
@@ -182,8 +183,11 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       return;
     }
     const isUser1Local = matchup.user1.user.id === currentUser.id;
-    const alreadyAgreed = isUser1Local ? matchup.captainAgreedUser1 : matchup.captainAgreedUser2;
-    if (alreadyAgreed) {
+    const myAgreed = isUser1Local ? matchup.captainAgreedUser1 : matchup.captainAgreedUser2;
+    
+    // If I already agreed, mark as resolved for ME (so I don't see modal again)
+    // but the MATCHUP captain isn't resolved until both users respond
+    if (myAgreed) {
       setCaptainResolved(true);
       return;
     }
@@ -771,7 +775,8 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       )}
 
       {/* Toss Modal — hidden for the waiting user during 'calling' phase; shown for caller + flipping + result */}
-      {showToss && !(tossPhase === 'calling' && callingUser !== currentUser.id) && (
+      {/* Also hidden if captain modal is active (waiting user must answer captain modal first) */}
+      {showToss && !(tossPhase === 'calling' && callingUser !== currentUser.id) && !showCaptainModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border-4 border-cricket-600">
             {tossPhase === 'calling' && (
@@ -921,12 +926,10 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             if (captainModalDismissed) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
             return { icon: '⏳', label: 'Pending', color: 'text-gray-500' };
           })();
-          const draftStarted = !!matchup.firstPickUser;
           const oppStatus = (() => {
             if (matchup.captainDeclined && !opponentAgreed) return { icon: '❌', label: 'Opted out', color: 'text-red-600' };
             if (opponentAgreed || matchup.captainEnabled) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
-            // Draft has started — opponent must have responded to the modal to get here
-            if (draftStarted && !matchup.captainDeclined) return { icon: '✅', label: 'Opted in', color: 'text-green-700' };
+            // Never assume - opponent status is only known from database flags
             return { icon: '⏳', label: 'Pending', color: 'text-gray-500' };
           })();
 

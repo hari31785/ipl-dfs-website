@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendToUser } from '@/lib/pushNotifications';
+import { parseFirstPickUser } from '@/lib/draftUtils';
 
 // POST /api/draft/[matchupId]/captain/decline
 // Body: { userId: string }
@@ -44,7 +46,7 @@ export async function POST(
     }
 
     // Mark as declined — captain feature is off for this matchup permanently
-    await prisma.headToHeadMatchup.update({
+    const updated = await prisma.headToHeadMatchup.update({
       where: { id: matchupId },
       data: {
         captainDeclined: true,
@@ -53,6 +55,22 @@ export async function POST(
         captainAgreedUser2: false,
       },
     });
+
+    // If toss is already done and this user just declined, send them the draft start notification
+    if (updated.firstPickUser) {
+      const myUser = isUser1 ? matchup.user1.user : matchup.user2.user;
+      const { firstPick } = parseFirstPickUser(updated.firstPickUser);
+      const firstPickerUser = firstPick === 'user1' ? matchup.user1.user : matchup.user2.user;
+      const isFirstPicker = myUser.id === firstPickerUser.id;
+      
+      await sendToUser(myUser.id, {
+        title: isFirstPicker ? '🏆 Draft Started — You Pick First!' : '🏆 Draft Started!',
+        body: isFirstPicker 
+          ? 'The toss is done. Make your first pick now!' 
+          : `${firstPickerUser.name} won the toss and picks first. Get ready!`,
+        url: `/draft/${matchupId}`,
+      });
+    }
 
     return NextResponse.json({ declined: true, captainEnabled: false });
   } catch (error) {

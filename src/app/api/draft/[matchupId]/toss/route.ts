@@ -35,24 +35,30 @@ export async function POST(
       }
     });
 
-    // Trigger 2: Notify both players — draft has started
+    // Only send notifications if both users have resolved their captain decisions
+    // This prevents spoiling the toss result before the waiting user answers the captain modal
     if (matchup) {
-      const { firstPick } = parseFirstPickUser(firstPickUser);
-      const firstPickerUser = firstPick === 'user1' ? matchup.user1.user : matchup.user2.user;
-      const secondPickerUser = firstPick === 'user1' ? matchup.user2.user : matchup.user1.user;
-      const draftUrl = `/draft/${matchupId}`;
-      await Promise.allSettled([
-        sendToUser(firstPickerUser.id, {
-          title: '🏆 Draft Started — You Pick First!',
-          body: 'The toss is done. Make your first pick now!',
-          url: draftUrl,
-        }),
-        sendToUser(secondPickerUser.id, {
-          title: '🏆 Draft Started!',
-          body: `${firstPickerUser.name} won the toss and picks first. Get ready!`,
-          url: draftUrl,
-        }),
-      ]).catch(() => {});
+      const bothResolved = matchup.captainEnabled || matchup.captainDeclined || 
+                          (matchup.captainAgreedUser1 && matchup.captainAgreedUser2);
+      
+      if (bothResolved) {
+        const { firstPick } = parseFirstPickUser(firstPickUser);
+        const firstPickerUser = firstPick === 'user1' ? matchup.user1.user : matchup.user2.user;
+        const secondPickerUser = firstPick === 'user1' ? matchup.user2.user : matchup.user1.user;
+        const draftUrl = `/draft/${matchupId}`;
+        await Promise.allSettled([
+          sendToUser(firstPickerUser.id, {
+            title: '🏆 Draft Started — You Pick First!',
+            body: 'The toss is done. Make your first pick now!',
+            url: draftUrl,
+          }),
+          sendToUser(secondPickerUser.id, {
+            title: '🏆 Draft Started!',
+            body: `${firstPickerUser.name} won the toss and picks first. Get ready!`,
+            url: draftUrl,
+          }),
+        ]).catch(() => {});
+      }
     }
 
     return NextResponse.json({
