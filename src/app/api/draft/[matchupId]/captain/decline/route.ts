@@ -46,14 +46,16 @@ export async function POST(
     }
 
     // Mark as declined — captain feature is off for this matchup permanently
+    // Only set the declining user's flag, preserve the other user's choice for display
+    const declineData = {
+      captainDeclined: true,
+      captainEnabled: false,
+      ...(isUser1 ? { captainAgreedUser1: false } : { captainAgreedUser2: false }),
+    };
+    
     const updated = await prisma.headToHeadMatchup.update({
       where: { id: matchupId },
-      data: {
-        captainDeclined: true,
-        captainEnabled: false,
-        captainAgreedUser1: false,
-        captainAgreedUser2: false,
-      },
+      data: declineData,
     });
 
     // If toss is already done and this user just declined, send them the draft start notification
