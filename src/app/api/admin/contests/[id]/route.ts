@@ -75,13 +75,29 @@ export async function PUT(
         opponentMap.set(m.user2Id, m.user1.user.username);
       }
 
+      // Group signups by userId to send one notification per user (not per signup)
+      // Users with multiple matchups in same contest should get 1 combined notification
+      const userSignups = new Map<string, Array<{ id: string; userId: string }>>();
+      if (contest.signups) {
+        for (const signup of contest.signups) {
+          const existing = userSignups.get(signup.userId) || [];
+          existing.push(signup);
+          userSignups.set(signup.userId, existing);
+        }
+      }
+
       await Promise.all(
-        contest.signups!.map((s) => {
-          const opponentUsername = opponentMap.get(s.id);
-          const body = opponentUsername
-            ? `${gameTitle} is underway — you're up against @${opponentUsername}. Check your active contest!`
-            : `${gameTitle} is underway. Check your active contest!`;
-          return sendToUser(s.userId, {
+        Array.from(userSignups.entries()).map(([userId, signups]) => {
+          const opponents = signups.map(s => opponentMap.get(s.id)).filter(Boolean);
+          let body: string;
+          if (opponents.length === 0) {
+            body = `${gameTitle} is underway. Check your active contest!`;
+          } else if (opponents.length === 1) {
+            body = `${gameTitle} is underway — you're up against @${opponents[0]}. Check your active contest!`;
+          } else {
+            body = `${gameTitle} is underway — you have ${opponents.length} matchups in this contest. Check your active contests!`;
+          }
+          return sendToUser(userId, {
             title: `🏏 Contest Live · ${contestTypeLabel}`,
             body,
             icon: '/icon-192.png',
@@ -131,13 +147,29 @@ export async function PUT(
         draftOpponentMap.set(m.user2Id, m.user1.user.username);
       }
 
+      // Group signups by userId to send one notification per user (not per signup)
+      // Users with multiple matchups in same contest should get 1 combined notification
+      const userDraftSignups = new Map<string, Array<{ id: string; userId: string }>>();
+      if (contest.signups) {
+        for (const signup of contest.signups) {
+          const existing = userDraftSignups.get(signup.userId) || [];
+          existing.push(signup);
+          userDraftSignups.set(signup.userId, existing);
+        }
+      }
+
       await Promise.all(
-        contest.signups!.map((s) => {
-          const opponentUsername = draftOpponentMap.get(s.id);
-          const body = opponentUsername
-            ? `You're up against @${opponentUsername} in ${gameTitle} — head to your dashboard to draft your team!`
-            : `${gameTitle} draft is now open — head to your dashboard and draft your team!`;
-          return sendToUser(s.userId, {
+        Array.from(userDraftSignups.entries()).map(([userId, signups]) => {
+          const opponents = signups.map(s => draftOpponentMap.get(s.id)).filter(Boolean);
+          let body: string;
+          if (opponents.length === 0) {
+            body = `${gameTitle} draft is now open — head to your dashboard and draft your team!`;
+          } else if (opponents.length === 1) {
+            body = `You're up against @${opponents[0]} in ${gameTitle} — head to your dashboard to draft your team!`;
+          } else {
+            body = `You have ${opponents.length} matchups in ${gameTitle} — head to your dashboard to draft your teams!`;
+          }
+          return sendToUser(userId, {
             title: `⚡ Draft Open · ${contestTypeLabel}`,
             body,
             icon: '/icon-192.png',
