@@ -2078,11 +2078,16 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                           <div className="text-[10px] sm:text-xs text-gray-500 truncate">@{matchup.user2.user.username}</div>
                                         </div>
                                       </div>
-                                      {/* Watch button — always on its own row so it's never clipped */}
-                                      <div className="flex justify-end">
+                                      {/* Captain badge + Watch button */}
+                                      <div className="flex items-center justify-between gap-2">
+                                        {matchup.captainEnabled && (
+                                          <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold shrink-0">
+                                            🎖️ Captain Mode
+                                          </span>
+                                        )}
                                         <button
                                           onClick={() => router.push(`/scores/${matchup.id}?from=spectate`)}
-                                          className="bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold px-4 py-1 rounded-lg transition-colors"
+                                          className="bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold px-4 py-1 rounded-lg transition-colors ml-auto"
                                         >
                                           👁 Watch
                                         </button>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { calculateTotalPointsWithSwap } from '@/lib/benchSwapUtils';
+import { calculateFinalLineup } from '@/lib/benchSwapUtils';
 
 // Spectate view shows live contest scores — 5 min cache is a reasonable
 // trade-off between freshness and DB load.
@@ -26,27 +26,57 @@ export async function GET() {
           where: {
             status: 'COMPLETED'
           },
-          include: {
+          select: {
+            id: true,
+            status: true,
+            user1Id: true,
+            user2Id: true,
+            captainEnabled: true,
+            user1CaptainPickId: true,
+            user2CaptainPickId: true,
             user1: {
-              include: {
+              select: {
+                id: true,
                 user: {
                   select: { id: true, name: true, username: true }
                 }
               }
             },
             user2: {
-              include: {
+              select: {
+                id: true,
                 user: {
                   select: { id: true, name: true, username: true }
                 }
               }
             },
             draftPicks: {
-              include: {
+              select: {
+                id: true,
+                playerId: true,
+                pickOrder: true,
+                pickedByUserId: true,
+                isBench: true,
                 player: {
-                  include: {
-                    iplTeam: true,
-                    stats: true
+                  select: {
+                    id: true,
+                    name: true,
+                    role: true,
+                    iplTeam: {
+                      select: { id: true, name: true, shortName: true, color: true }
+                    },
+                    stats: {
+                      select: {
+                        iplGameId: true,
+                        points: true,
+                        didNotPlay: true,
+                        runs: true,
+                        wickets: true,
+                        catches: true,
+                        runOuts: true,
+                        stumpings: true
+                      }
+                    }
                   }
                 }
               },
@@ -77,8 +107,19 @@ export async function GET() {
           p => p.pickedByUserId === matchup.user2.id
         );
 
-        const user1Score = calculateTotalPointsWithSwap(user1Picks as any, iplGameId).totalPoints;
-        const user2Score = calculateTotalPointsWithSwap(user2Picks as any, iplGameId).totalPoints;
+        const { finalLineup: user1Lineup } = calculateFinalLineup(
+          user1Picks as any, 
+          iplGameId, 
+          matchup.user1CaptainPickId
+        );
+        const { finalLineup: user2Lineup } = calculateFinalLineup(
+          user2Picks as any, 
+          iplGameId, 
+          matchup.user2CaptainPickId
+        );
+        
+        const user1Score = user1Lineup.reduce((sum, p) => sum + p.points, 0);
+        const user2Score = user2Lineup.reduce((sum, p) => sum + p.points, 0);
 
         return {
           id: matchup.id,
@@ -87,6 +128,7 @@ export async function GET() {
           user2: matchup.user2,
           user1Score,
           user2Score,
+          captainEnabled: matchup.captainEnabled,
           draftPicksCount: matchup.draftPicks.length
         };
       })
