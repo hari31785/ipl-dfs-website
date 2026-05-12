@@ -483,11 +483,17 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     const opponent = matchup?.opponentUsername ?? 'Unknown'
                     const myScore = matchup?.myScore ?? '—'
                     const oppScore = matchup?.opponentScore ?? '—'
+                    const captainEnabled = matchup?.captainEnabled ?? false
 
                     return (
                       <div key={matchup?.id ?? signup.id} className={`rounded-xl border p-4 ${isWinner ? 'bg-green-50 border-green-200' : isTie ? 'bg-gray-50 border-gray-200' : 'bg-red-50 border-red-200'}`}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-semibold text-gray-900 text-sm">{gameLabel}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-900 text-sm">{gameLabel}</span>
+                            {captainEnabled && (
+                              <span className="text-xs bg-yellow-500 text-white px-1.5 py-0.5 rounded-full font-bold" title="Captain Mode Enabled">🎖️</span>
+                            )}
+                          </div>
                           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-green-600 text-white' : isTie ? 'bg-gray-500 text-white' : 'bg-red-600 text-white'}`}>
                             {isWinner ? '🏆 Won' : isTie ? '🤝 Tie' : '😔 Lost'}
                           </span>
@@ -586,24 +592,28 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
         const leftTotal = isViewedUser1 ? u1Total : u2Total
         const rightTotal = isViewedUser1 ? u2Total : u1Total
 
-        const renderRow = (pick: any, isBench = false) => {
+        const renderRow = (pick: any, isBench = false, isCaptain = false) => {
           const stats = scorecardStatsMap[pick.player?.id] ?? pick.player?.stats?.find((s: any) => s.iplGameId === gameId)
-          const pts = stats?.points ?? 0
+          const basePts = stats?.points ?? 0
+          const pts = isCaptain ? basePts * 2 : basePts
           const dnp = stats?.didNotPlay ?? false
           return (
-            <div key={pick.id ?? pick.player?.id} className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-xs ${isBench ? 'opacity-60' : ''} ${pick.isSwapped ? 'bg-blue-50' : pick.swappedOut ? 'bg-orange-50' : ''}`}>
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${isBench ? 'bg-gray-400' : 'bg-green-700'}`}>
-                {pick.pickOrder}
+            <div key={pick.id ?? pick.player?.id} className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-xs ${isBench ? 'opacity-60' : ''} ${pick.isSwapped ? 'bg-blue-50' : pick.swappedOut ? 'bg-orange-50' : ''} ${isCaptain ? 'bg-yellow-50 border border-yellow-300' : ''}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${isBench ? 'bg-gray-400' : isCaptain ? 'bg-yellow-600' : 'bg-green-700'}`}>
+                {isCaptain ? '⭐' : pick.pickOrder}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 truncate">{pick.player?.name}</div>
+                <div className="font-semibold text-gray-900 truncate">{pick.player?.name}{isCaptain && ' (C)'}</div>
                 <div className="text-gray-500">{pick.player?.role}</div>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 {pick.isSwapped && <span className="text-blue-600 text-xs">↑</span>}
                 {pick.swappedOut && <span className="text-orange-500 text-xs">↓</span>}
                 {dnp && !pick.swappedOut && <span className="text-red-500 font-bold">DNP</span>}
-                <span className={`font-bold w-8 text-right ${isBench ? 'text-gray-400' : 'text-gray-900'}`}>{pts}</span>
+                <span className={`font-bold w-8 text-right ${isBench ? 'text-gray-400' : isCaptain ? 'text-yellow-700' : 'text-gray-900'}`}>
+                  {isCaptain && basePts > 0 ? `${pts}` : pts}
+                </span>
+                {isCaptain && basePts > 0 && <span className="text-yellow-600 text-[10px] font-bold">×2</span>}
               </div>
             </div>
           )
@@ -620,6 +630,9 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-green-600 text-white' : isTie ? 'bg-gray-500 text-white' : 'bg-red-600 text-white'}`}>
                       {isWinner ? '🏆 Won' : isTie ? '🤝 Tie' : '😔 Lost'}
                     </span>
+                    {captainEnabled && (
+                      <span className="text-xs bg-yellow-500 text-white px-2 py-0.5 rounded-full font-bold" title="Captain Mode Enabled">🎖️ Captain Mode</span>
+                    )}
                     <span className="text-xs text-gray-500">{signup.contest?.coinValue}-coin contest</span>
                   </div>
                 </div>
@@ -652,13 +665,17 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                   <div>
                     <div className="text-xs font-bold text-gray-500 uppercase mb-2">⭐ Starting 5</div>
                     <div className="space-y-1">
-                      {leftLineup.map((p: any) => renderRow(p, false))}
+                      {leftLineup.map((p: any) => {
+                        const leftCaptainPickId = isViewedUser1 ? u1CaptainPickId : u2CaptainPickId
+                        const isCaptain = captainEnabled && leftCaptainPickId === p.id
+                        return renderRow(p, false, isCaptain)
+                      })}
                     </div>
                     {leftBench.length > 0 && (
                       <>
                         <div className="text-xs font-bold text-gray-400 uppercase mt-3 mb-2">🪑 Bench</div>
                         <div className="space-y-1">
-                          {leftBench.map((p: any) => renderRow(p, true))}
+                          {leftBench.map((p: any) => renderRow(p, true, false))}
                         </div>
                       </>
                     )}
@@ -667,13 +684,17 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                   <div>
                     <div className="text-xs font-bold text-gray-500 uppercase mb-2">⭐ Starting 5</div>
                     <div className="space-y-1">
-                      {rightLineup.map((p: any) => renderRow(p, false))}
+                      {rightLineup.map((p: any) => {
+                        const rightCaptainPickId = isViewedUser1 ? u2CaptainPickId : u1CaptainPickId
+                        const isCaptain = captainEnabled && rightCaptainPickId === p.id
+                        return renderRow(p, false, isCaptain)
+                      })}
                     </div>
                     {rightBench.length > 0 && (
                       <>
                         <div className="text-xs font-bold text-gray-400 uppercase mt-3 mb-2">🪑 Bench</div>
                         <div className="space-y-1">
-                          {rightBench.map((p: any) => renderRow(p, true))}
+                          {rightBench.map((p: any) => renderRow(p, true, false))}
                         </div>
                       </>
                     )}

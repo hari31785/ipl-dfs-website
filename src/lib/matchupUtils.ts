@@ -17,6 +17,64 @@ function secureShuffleArray<T>(array: T[]): T[] {
 }
 
 /**
+ * Calculate which opponents each user should avoid based on round-robin cycle logic.
+ * A user's "cycle" consists of all opponents they must face before repeating any.
+ * Once a user has faced all available opponents, their cycle resets.
+ * 
+ * @returns Map of userId -> Set of opponent IDs they've already faced in current cycle
+ */
+function calculateRoundRobinCycles(
+  signups: SignupForPairing[],
+  pastMatchups: Array<{ user1: { userId: string }, user2: { userId: string } }>
+): Map<string, Set<string>> {
+  // Build map of all potential opponents for each user
+  const allUsers = new Set(signups.map(s => s.userId));
+  const userOpponents = new Map<string, Set<string>>();
+  
+  for (const userId of allUsers) {
+    const potentialOpponents = new Set([...allUsers].filter(id => id !== userId));
+    userOpponents.set(userId, potentialOpponents);
+  }
+  
+  // Build map of which opponents each user has faced in tournament history
+  const facedOpponents = new Map<string, Set<string>>();
+  for (const userId of allUsers) {
+    facedOpponents.set(userId, new Set());
+  }
+  
+  for (const matchup of pastMatchups) {
+    const u1 = matchup.user1.userId;
+    const u2 = matchup.user2.userId;
+    facedOpponents.get(u1)?.add(u2);
+    facedOpponents.get(u2)?.add(u1);
+  }
+  
+  // Calculate current cycle state for each user
+  const currentCycleOpponents = new Map<string, Set<string>>();
+  
+  for (const userId of allUsers) {
+    const potential = userOpponents.get(userId)!;
+    const faced = facedOpponents.get(userId)!;
+    
+    // Get unfaced opponents in current cycle
+    const unfaced = new Set([...potential].filter(id => !faced.has(id)));
+    
+    // If unfaced is empty, cycle is complete - reset by clearing faced opponents
+    // If unfaced has opponents, those are the ones we should prioritize
+    // For cycle tracking, we store who they've FACED (to exclude from random selection)
+    if (unfaced.size === 0) {
+      // Cycle complete - no opponents to exclude, all are available
+      currentCycleOpponents.set(userId, new Set());
+    } else {
+      // Cycle in progress - exclude already faced opponents
+      currentCycleOpponents.set(userId, faced);
+    }
+  }
+  
+  return currentCycleOpponents;
+}
+
+/**
  * Pairs signups for a contest, preferring to avoid rematches within the same
  * tournament. Falls back to a rematch only when no fresh pairing is possible.
  *
@@ -134,6 +192,12 @@ export async function fairPairSignups(
   }
   // ────────────────────────────────────────────────────────────────────────
 
+  // ── Round-Robin Cycle Tracking ───────────────────────────────────────────
+  // Calculate which opponents each user has already faced in their current cycle.
+  // When a user has faced all available opponents, their cycle automatically resets.
+  const cycleOpponents = calculateRoundRobinCycles(signups, pastMatchups);
+  // ────────────────────────────────────────────────────────────────────────
+
   // Shuffle pool for base randomness, then sort so multi-entry users come first.
   // Processing most-constrained users first ensures they get spread across
   // different opponents before single-entry users are considered, preventing
@@ -151,29 +215,94 @@ export async function fairPairSignups(
   // don't face the same opponent across their entries.
   const sessionUserPairs = new Set<string>();
 
-  // Greedy pass: for each unmatched signup (processed most-entries-first),
-  // find the unmatched partner with fewest previous meetings in this tournament.
+  // Hybrid pass: for each unmatched signup (processed most-entries-first),
+  // filter candidates to unfaced opponents in current round-robin cycle,
+  // then randomly select from the filtered pool using Fisher-Yates.
+  // If no unfaced opponents exist (cycle complete), all opponents become available.
   // Hard-banned pairs (last 3 opponents) are skipped unless no other option exists.
   for (let i = 0; i < pool.length; i++) {
     if (used.has(pool[i].id)) continue;
 
-    let bestPartnerIdx = -1;
-    let bestCount = Infinity;
-
+    const currentUserId = pool[i].userId;
+    const currentUserCycleFaced = cycleOpponents.get(currentUserId) ?? new Set();
+    
+    // Collect all eligible candidates (unfaced in cycle, not hard-banned, not same user)
+    const eligibleCandidates: Array<{ idx: number; userId: string; weight: number; }> = [];
+    
     for (let j = i + 1; j < pool.length; j++) {
       if (used.has(pool[j].id)) continue;
-      // Never pair a user against themselves (multi-entry guard)
-      if (pool[j].userId === pool[i].userId) continue;
-      // Skip if these two users are already matched elsewhere in this session
-      const sessionKey = [pool[i].userId, pool[j].userId].sort().join('|');
+      if (pool[j].userId === currentUserId) continue; // never self-pair
+      
+      const sessionKey = [currentUserId, pool[j].userId].sort().join('|');
       if (sessionUserPairs.has(sessionKey)) continue;
-      // Option E: skip hard-banned pairs in the main pass (last 3 opponents)
-      if (hardBanPairs.has(sessionKey)) continue;
-      const count = pairCount.get(sessionKey) ?? 0;
-      if (count < bestCount) {
-        bestCount = count;
-        bestPartnerIdx = j;
-        if (count === 0) break; // can't do better than a fresh pairing
+      if (hardBanPairs.has(sessionKey)) continue; // skip hard-banned pairs
+      
+      // Check if opponent is unfaced in current cycle
+      if (!currentUserCycleFaced.has(pool[j].userId)) {
+        const weight = pairCount.get(sessionKey) ?? 0;
+        eligibleCandidates.push({ idx: j, userId: pool[j].userId, weight });
+      }
+    }
+
+    let bestPartnerIdx = -1;
+
+    // If we have eligible unfaced candidates, use weighted random selection
+    // Lower weights (less recent/frequent) have higher probability of selection
+    if (eligibleCandidates.length > 0) {
+      if (eligibleCandidates.length === 1) {
+        // Only one option, take it
+        bestPartnerIdx = eligibleCandidates[0].idx;
+      } else {
+        // Weighted random selection: inverse weights for probability
+        // Find max weight to calculate inverse probabilities
+        const maxWeight = Math.max(...eligibleCandidates.map(c => c.weight));
+        const minWeight = Math.min(...eligibleCandidates.map(c => c.weight));
+        
+        // If all weights are the same, do pure random selection
+        if (maxWeight === minWeight) {
+          const shuffled = secureShuffleArray(eligibleCandidates);
+          bestPartnerIdx = shuffled[0].idx;
+        } else {
+          // Calculate inverse probabilities (lower weight = higher probability)
+          // Use (maxWeight - weight + 1) to ensure all candidates have non-zero probability
+          const probabilities = eligibleCandidates.map(c => maxWeight - c.weight + 1);
+          const totalProb = probabilities.reduce((sum, p) => sum + p, 0);
+          
+          // Generate random value and select candidate based on cumulative probability
+          const randomValue = Math.random() * totalProb;
+          let cumulative = 0;
+          let selectedIdx = 0;
+          
+          for (let k = 0; k < eligibleCandidates.length; k++) {
+            cumulative += probabilities[k];
+            if (randomValue <= cumulative) {
+              selectedIdx = k;
+              break;
+            }
+          }
+          
+          bestPartnerIdx = eligibleCandidates[selectedIdx].idx;
+        }
+      }
+    } else {
+      // No unfaced candidates available (cycle complete or all are hard-banned/unavailable)
+      // Fall back to weighted selection from all non-hard-banned candidates
+      let bestCount = Infinity;
+      
+      for (let j = i + 1; j < pool.length; j++) {
+        if (used.has(pool[j].id)) continue;
+        if (pool[j].userId === currentUserId) continue; // never self-pair
+        
+        const sessionKey = [currentUserId, pool[j].userId].sort().join('|');
+        if (sessionUserPairs.has(sessionKey)) continue;
+        if (hardBanPairs.has(sessionKey)) continue; // skip hard-banned pairs
+        
+        const count = pairCount.get(sessionKey) ?? 0;
+        if (count < bestCount) {
+          bestCount = count;
+          bestPartnerIdx = j;
+          if (count === 0) break; // can't do better than a fresh pairing
+        }
       }
     }
 
@@ -184,14 +313,14 @@ export async function fairPairSignups(
       const sessionKey = [pool[i].userId, pool[bestPartnerIdx].userId].sort().join('|');
       sessionUserPairs.add(sessionKey);
     } else {
-      // No ideal pairing available — relax hard-ban (Option E fallback) but
+      // No ideal pairing available — relax hard-ban (fallback) but
       // still prefer least-played. NEVER pair a user against themselves.
       let fallbackIdx = -1;
       let fallbackCount = Infinity;
       for (let j = i + 1; j < pool.length; j++) {
         if (used.has(pool[j].id)) continue;
-        if (pool[j].userId === pool[i].userId) continue; // never self-pair
-        const sessionKey = [pool[i].userId, pool[j].userId].sort().join('|');
+        if (pool[j].userId === currentUserId) continue; // never self-pair
+        const sessionKey = [currentUserId, pool[j].userId].sort().join('|');
         if (sessionUserPairs.has(sessionKey)) continue;
         const count = pairCount.get(sessionKey) ?? 0;
         if (count < fallbackCount) {
