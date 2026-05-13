@@ -622,9 +622,14 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                 {pick.swappedOut && <span className="text-orange-500 text-xs">↓</span>}
                 {dnp && !pick.swappedOut && <span className="text-red-500 font-bold">DNP</span>}
                 <span className={`font-bold w-8 text-right ${isBench ? 'text-gray-400' : isCaptain ? 'text-yellow-700' : 'text-gray-900'}`}>
-                  {isCaptain && basePts > 0 ? `${pts}` : pts}
+                  {basePts}
                 </span>
-                {isCaptain && basePts > 0 && <span className="text-yellow-600 text-[10px] font-bold">×2</span>}
+                {isCaptain && basePts > 0 && (
+                  <>
+                    <span className="text-yellow-600 text-[10px] font-bold">×2</span>
+                    <span className="text-yellow-700 font-bold text-xs">={pts}</span>
+                  </>
+                )}
               </div>
             </div>
           )
