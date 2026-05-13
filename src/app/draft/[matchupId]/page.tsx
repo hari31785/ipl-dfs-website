@@ -1207,9 +1207,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
         ) : !matchup.firstPickUser ? (
           <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg px-3 py-2 mb-2 shadow-sm">
             <p className="text-center font-bold text-sm flex items-center justify-center gap-1.5 text-yellow-700">
-              <span className="animate-spin inline-block">🪙</span>
-              Waiting for toss to complete…
-              <span className="animate-pulse bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full text-[10px] font-normal">Refreshing…</span>
+              🪙 Waiting for toss to complete…
             </p>
           </div>
         ) : (
