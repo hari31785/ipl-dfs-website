@@ -1201,22 +1201,25 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     Waiting for {opponent.name} — Pick #{currentPickOrder}
                     <span className="animate-pulse bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full text-[10px] font-normal">Refreshing…</span>
                   </div>
-                  <button
-                    onClick={handleNudge}
-                    disabled={nudging || nudgeTimeRemaining > 0}
-                    className={`text-xs font-semibold px-3 py-1 rounded-full transition-all ${
-                      nudgeTimeRemaining > 0 
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-sm hover:shadow-md'
-                    }`}
-                  >
-                    {nudgeTimeRemaining > 0 
-                      ? `Wait ${Math.ceil(nudgeTimeRemaining / 60000)}m`
-                      : nudging 
-                        ? 'Nudging...'
-                        : '⏰ Nudge'
-                    }
-                  </button>
+                  <div className="flex flex-col items-center gap-1">
+                    <button
+                      onClick={handleNudge}
+                      disabled={nudging || nudgeTimeRemaining > 0}
+                      className={`text-xs font-semibold px-3 py-1 rounded-full transition-all ${
+                        nudgeTimeRemaining > 0 
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-sm hover:shadow-md'
+                      }`}
+                    >
+                      {nudgeTimeRemaining > 0 
+                        ? `Wait ${Math.ceil(nudgeTimeRemaining / 60000)}m`
+                        : nudging 
+                          ? 'Nudging...'
+                          : '⏰ Nudge'
+                      }
+                    </button>
+                    <span className="text-[10px] text-gray-500 italic">Send a friendly reminder</span>
+                  </div>
                 </div>
               )}
             </p>
