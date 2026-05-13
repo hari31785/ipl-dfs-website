@@ -483,7 +483,8 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     const opponent = matchup?.opponentUsername ?? 'Unknown'
                     const myScore = matchup?.myScore ?? '—'
                     const oppScore = matchup?.opponentScore ?? '—'
-                    const captainEnabled = matchup?.captainEnabled ?? false
+                    const captainEnabled = (matchup?.captainEnabled ?? false) && 
+                      (matchup?.user1CaptainPickId != null || matchup?.user2CaptainPickId != null)
 
                     return (
                       <div key={matchup?.id ?? signup.id} className={`rounded-xl border p-4 ${isWinner ? 'bg-green-50 border-green-200' : isTie ? 'bg-gray-50 border-gray-200' : 'bg-red-50 border-red-200'}`}>
@@ -575,7 +576,8 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
         const user1Picks = injectStats((matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user1Id))
         const user2Picks = injectStats((matchup?.draftPicks ?? []).filter((p: any) => p.pickedByUserId === matchup.user2Id))
 
-        const captainEnabled = matchup?.captainEnabled
+        const captainEnabled = matchup?.captainEnabled &&
+          (matchup?.user1CaptainPickId != null || matchup?.user2CaptainPickId != null)
         const u1CaptainPickId = captainEnabled ? (matchup?.user1CaptainPickId ?? null) : null
         const u2CaptainPickId = captainEnabled ? (matchup?.user2CaptainPickId ?? null) : null
 
