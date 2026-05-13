@@ -135,6 +135,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [nudging, setNudging] = useState(false);
   const [nudgeCooldownEnds, setNudgeCooldownEnds] = useState<Date | null>(null);
   const [nudgeTimeRemaining, setNudgeTimeRemaining] = useState<number>(0);
+  const [nudgeMessage, setNudgeMessage] = useState<{ text: string; success: boolean } | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
@@ -406,12 +407,17 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
 
       const data = await response.json();
 
+      const showMsg = (text: string, success: boolean) => {
+        setNudgeMessage({ text, success });
+        setTimeout(() => setNudgeMessage(null), 4000);
+      };
+
       if (response.ok) {
         // Set cooldown timer and persist to localStorage
         const cooldownEnd = new Date(data.cooldownEndsAt);
         setNudgeCooldownEnds(cooldownEnd);
         localStorage.setItem(`nudge-cooldown-${matchupId}`, cooldownEnd.toISOString());
-        alert(data.message);
+        showMsg(data.pushSent ? `✅ ${data.message}` : `📵 Opponent has no push notifications — nudge sent but they'll only see it when they check back.`, data.pushSent);
       } else {
         // Handle cooldown or other errors
         if (data.cooldownEndsAt) {
@@ -419,11 +425,12 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           setNudgeCooldownEnds(cooldownEnd);
           localStorage.setItem(`nudge-cooldown-${matchupId}`, cooldownEnd.toISOString());
         }
-        alert(data.message);
+        showMsg(`⚠️ ${data.message}`, false);
       }
     } catch (error) {
       console.error('Error nudging opponent:', error);
-      alert(`Failed to nudge opponent: ${error instanceof Error ? error.message : String(error)}`);
+      setNudgeMessage({ text: `❌ Failed to nudge. Please try again.`, success: false });
+      setTimeout(() => setNudgeMessage(null), 4000);
     } finally {
       setNudging(false);
     }
@@ -1230,7 +1237,15 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                           : '⏰ Nudge'
                       }
                     </button>
-                    <span className="text-[10px] text-gray-500 italic">Send a friendly reminder</span>
+                    {nudgeMessage ? (
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                        nudgeMessage.success ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                      }`}>
+                        {nudgeMessage.text}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-gray-500 italic">Send a friendly reminder</span>
+                    )}
                   </div>
                 </div>
               )}
