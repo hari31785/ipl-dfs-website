@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import webpush from 'web-push';
+import { sendToUser } from "@/lib/pushNotifications";
 
 export async function POST(
   request: NextRequest,
@@ -94,41 +94,18 @@ export async function POST(
     const opponent = isUser1 ? matchup.user2.user : matchup.user1.user;
 
     // Try to send push notification if user has subscription
-    const pushSubscription = await prisma.pushSubscription.findFirst({
-      where: { userId: opponent.id },
-      orderBy: { createdAt: 'desc' },
-    });
-
     let pushSent = false;
-    if (pushSubscription) {
-      try {
-        const subscription = {
-          endpoint: pushSubscription.endpoint,
-          keys: {
-            p256dh: pushSubscription.p256dh,
-            auth: pushSubscription.auth,
-          },
-        };
-        
-        await webpush.sendNotification(
-          subscription,
-          JSON.stringify({
-            title: `⏰ @${nudger.username} is waiting!`,
-            body: `Your opponent is waiting for your draft pick`,
-            icon: '/icon-192x192.png',
-            badge: '/badge-72x72.png',
-            tag: `nudge-${matchupId}`,
-            data: {
-              url: `/draft/${matchupId}`,
-              matchupId,
-            },
-          })
-        );
-        pushSent = true;
-      } catch (pushError) {
-        console.error('Push notification failed:', pushError);
-        // Continue even if push fails
-      }
+    try {
+      await sendToUser(opponent.id, {
+        title: `⏰ @${nudger.username} is waiting!`,
+        body: `Your opponent is waiting for your draft pick`,
+        icon: '/icon-192x192.png',
+        url: `/draft/${matchupId}`,
+      });
+      pushSent = true;
+    } catch (pushError) {
+      console.error('Push notification failed:', pushError);
+      // Continue even if push fails
     }
 
     // Return 5-minute cooldown

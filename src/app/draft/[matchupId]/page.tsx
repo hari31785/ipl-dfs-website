@@ -423,7 +423,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       }
     } catch (error) {
       console.error('Error nudging opponent:', error);
-      alert('Failed to nudge opponent. Please try again.');
+      alert(`Failed to nudge opponent: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setNudging(false);
     }
