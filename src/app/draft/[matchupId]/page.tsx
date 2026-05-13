@@ -1220,6 +1220,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     Waiting for {opponent.name} — Pick #{currentPickOrder}
                     <span className="animate-pulse bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full text-[10px] font-normal">Refreshing…</span>
                   </div>
+                  {matchup.status === 'DRAFTING' && (
                   <div className="flex flex-col items-center gap-1">
                     <button
                       onClick={handleNudge}
@@ -1247,6 +1248,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                       <span className="text-[10px] text-gray-500 italic">Send a friendly reminder</span>
                     )}
                   </div>
+                  )}
                 </div>
               )}
             </p>
