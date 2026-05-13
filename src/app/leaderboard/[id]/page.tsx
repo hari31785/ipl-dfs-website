@@ -519,7 +519,16 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
 
                               if (pollRes.status === 'fulfilled' && pollRes.value.ok) {
                                 const poll = await pollRes.value.json()
-                                setScorecardSignup({ ...signup, matchup: { ...signup.matchup, draftPicks: poll.draftPicks } })
+                                setScorecardSignup({ 
+                                  ...signup, 
+                                  matchup: { 
+                                    ...signup.matchup, 
+                                    draftPicks: poll.draftPicks,
+                                    captainEnabled: poll.captainEnabled,
+                                    user1CaptainPickId: poll.user1CaptainPickId,
+                                    user2CaptainPickId: poll.user2CaptainPickId,
+                                  } 
+                                })
                               }
                               if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
                                 setScorecardStatsMap(await statsRes.value.json())
