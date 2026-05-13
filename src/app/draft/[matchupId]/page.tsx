@@ -131,6 +131,11 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
   const [showCaptainPickModal, setShowCaptainPickModal] = useState(false);
   const [selectingCaptain, setSelectingCaptain] = useState(false);
 
+  // Nudge feature states
+  const [nudging, setNudging] = useState(false);
+  const [nudgeCooldownEnds, setNudgeCooldownEnds] = useState<Date | null>(null);
+  const [nudgeTimeRemaining, setNudgeTimeRemaining] = useState<number>(0);
+
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
     if (userData) {
@@ -387,6 +392,76 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       setMakingPick(false);
     }
   };
+
+  const handleNudge = async () => {
+    if (!currentUser || nudging) return;
+
+    setNudging(true);
+    try {
+      const response = await fetch(`/api/draft/${matchupId}/nudge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Set cooldown timer and persist to localStorage
+        const cooldownEnd = new Date(data.cooldownEndsAt);
+        setNudgeCooldownEnds(cooldownEnd);
+        localStorage.setItem(`nudge-cooldown-${matchupId}`, cooldownEnd.toISOString());
+        alert(data.message);
+      } else {
+        // Handle cooldown or other errors
+        if (data.cooldownEndsAt) {
+          const cooldownEnd = new Date(data.cooldownEndsAt);
+          setNudgeCooldownEnds(cooldownEnd);
+          localStorage.setItem(`nudge-cooldown-${matchupId}`, cooldownEnd.toISOString());
+        }
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Error nudging opponent:', error);
+      alert('Failed to nudge opponent. Please try again.');
+    } finally {
+      setNudging(false);
+    }
+  };
+
+  // Cooldown timer effect
+  useEffect(() => {
+    // Load cooldown from localStorage on mount
+    const storedCooldown = localStorage.getItem(`nudge-cooldown-${matchupId}`);
+    if (storedCooldown) {
+      const cooldownEnd = new Date(storedCooldown);
+      if (cooldownEnd > new Date()) {
+        setNudgeCooldownEnds(cooldownEnd);
+      } else {
+        // Expired cooldown, remove it
+        localStorage.removeItem(`nudge-cooldown-${matchupId}`);
+      }
+    }
+
+    if (!nudgeCooldownEnds) {
+      setNudgeTimeRemaining(0);
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = new Date();
+      const remaining = Math.max(0, nudgeCooldownEnds.getTime() - now.getTime());
+      setNudgeTimeRemaining(remaining);
+
+      if (remaining === 0) {
+        setNudgeCooldownEnds(null);
+        localStorage.removeItem(`nudge-cooldown-${matchupId}`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [matchupId, nudgeCooldownEnds]);
 
   const initiateToss = async () => {
     if (!matchup || !currentUser) return;
@@ -1120,11 +1195,29 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                   <span className="animate-pulse bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full text-[10px] font-normal">🔴 LIVE</span>
                 </>
               ) : (
-                <>
-                  <Clock className="h-4 w-4 shrink-0" />
-                  Waiting for {opponent.name} — Pick #{currentPickOrder}
-                  <span className="animate-pulse bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full text-[10px] font-normal">Refreshing…</span>
-                </>
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 shrink-0" />
+                    Waiting for {opponent.name} — Pick #{currentPickOrder}
+                    <span className="animate-pulse bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full text-[10px] font-normal">Refreshing…</span>
+                  </div>
+                  <button
+                    onClick={handleNudge}
+                    disabled={nudging || nudgeTimeRemaining > 0}
+                    className={`text-xs font-semibold px-3 py-1 rounded-full transition-all ${
+                      nudgeTimeRemaining > 0 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-sm hover:shadow-md'
+                    }`}
+                  >
+                    {nudgeTimeRemaining > 0 
+                      ? `Wait ${Math.ceil(nudgeTimeRemaining / 60000)}m`
+                      : nudging 
+                        ? 'Nudging...'
+                        : '⏰ Nudge'
+                    }
+                  </button>
+                </div>
               )}
             </p>
           </div>

@@ -1,0 +1,154 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { prisma } from "@/lib/prisma";
+import webpush from 'web-push';
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ matchupId: string }> }
+) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = token?.sub;
+
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { matchupId } = await params;
+
+    // Get matchup with signup info
+    const matchup = await prisma.headToHeadMatchup.findUnique({
+      where: { id: matchupId },
+      include: {
+        user1: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              }
+            }
+          }
+        },
+        user2: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              }
+            }
+          }
+        },
+        draftPicks: {
+          select: { pickOrder: true },
+          orderBy: { pickOrder: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    if (!matchup) {
+      return NextResponse.json({ message: "Matchup not found" }, { status: 404 });
+    }
+
+    // Check if user is part of this matchup
+    const isUser1 = matchup.user1.userId === userId;
+    const isUser2 = matchup.user2.userId === userId;
+
+    if (!isUser1 && !isUser2) {
+      return NextResponse.json({ message: "Not authorized for this matchup" }, { status: 403 });
+    }
+
+    // Check if matchup is in drafting status
+    if (matchup.status !== 'DRAFTING') {
+      return NextResponse.json({ message: "Draft is not active" }, { status: 400 });
+    }
+
+    // Check if it's currently the opponent's turn
+    const lastPickOrder = matchup.draftPicks[0]?.pickOrder ?? 0;
+    const nextPickOrder = lastPickOrder + 1;
+    
+    // Determine whose turn it is based on snake draft order
+    let isUser1Turn: boolean;
+    if (matchup.firstPickUser === 'user1') {
+      // User1 picks: 1,4,5,8,9,12,13
+      // User2 picks: 2,3,6,7,10,11,14
+      isUser1Turn = [1,4,5,8,9,12,13].includes(nextPickOrder);
+    } else {
+      // User2 picks: 1,4,5,8,9,12,13
+      // User1 picks: 2,3,6,7,10,11,14
+      isUser1Turn = [2,3,6,7,10,11,14].includes(nextPickOrder);
+    }
+
+    // Check if user is trying to nudge when it's their own turn
+    if ((isUser1 && isUser1Turn) || (isUser2 && !isUser1Turn)) {
+      return NextResponse.json(
+        { message: "It's your turn to pick!" },
+        { status: 400 }
+      );
+    }
+
+    // Get opponent info
+    const nudger = isUser1 ? matchup.user1.user : matchup.user2.user;
+    const opponent = isUser1 ? matchup.user2.user : matchup.user1.user;
+
+    // Try to send push notification if user has subscription
+    const pushSubscription = await prisma.pushSubscription.findFirst({
+      where: { userId: opponent.id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let pushSent = false;
+    if (pushSubscription) {
+      try {
+        const subscription = {
+          endpoint: pushSubscription.endpoint,
+          keys: {
+            p256dh: pushSubscription.p256dh,
+            auth: pushSubscription.auth,
+          },
+        };
+        
+        await webpush.sendNotification(
+          subscription,
+          JSON.stringify({
+            title: `⏰ @${nudger.username} is waiting!`,
+            body: `Your opponent is waiting for your draft pick`,
+            icon: '/icon-192x192.png',
+            badge: '/badge-72x72.png',
+            tag: `nudge-${matchupId}`,
+            data: {
+              url: `/draft/${matchupId}`,
+              matchupId,
+            },
+          })
+        );
+        pushSent = true;
+      } catch (pushError) {
+        console.error('Push notification failed:', pushError);
+        // Continue even if push fails
+      }
+    }
+
+    // Return 5-minute cooldown
+    const cooldownEndsAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+    return NextResponse.json({
+      success: true,
+      pushSent,
+      cooldownEndsAt,
+      message: pushSent 
+        ? `Nudged @${opponent.username}! They received a push notification.`
+        : `Nudged @${opponent.username}! They'll see it when they check back.`,
+    });
+
+  } catch (error) {
+    console.error("Error nudging opponent:", error);
+    return NextResponse.json(
+      { message: "Failed to nudge opponent" },
+      { status: 500 }
+    );
+  }
+}
