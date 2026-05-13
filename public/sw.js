@@ -1,4 +1,28 @@
 // Service Worker for IPL DFS Web Push Notifications
+// Cache version — bump this string on every deploy to force SW update on all clients
+const SW_VERSION = '2026-05-12-v2';
+
+// Network-first strategy for HTML navigation requests.
+// This ensures the homescreen PWA always loads the latest JS bundles
+// rather than serving a stale cached app shell.
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // Only intercept same-origin navigation requests (page loads)
+  const url = new URL(request.url);
+  if (
+    request.mode === 'navigate' &&
+    url.origin === self.location.origin
+  ) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        // If offline, fall back to cache
+        return caches.match(request);
+      })
+    );
+  }
+  // All other requests (JS, CSS, images, API calls) fall through to the browser default
+});
 
 self.addEventListener('push', (event) => {
   if (!event.data) return;
