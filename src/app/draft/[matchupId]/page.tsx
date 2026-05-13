@@ -401,6 +401,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
       const response = await fetch(`/api/draft/${matchupId}/nudge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
       });
 
       const data = await response.json();

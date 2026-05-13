@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import webpush from 'web-push';
 
@@ -8,8 +7,8 @@ export async function POST(
   { params }: { params: Promise<{ matchupId: string }> }
 ) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    const userId = token?.sub;
+    const body = await request.json();
+    const userId = body.userId;
 
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
