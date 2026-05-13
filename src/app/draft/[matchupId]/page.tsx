@@ -1205,18 +1205,38 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             </p>
           </div>
         ) : !matchup.firstPickUser ? (
-          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg px-3 py-2 mb-2 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className="animate-pulse text-xl">🪙</div>
-                <div>
-                  <p className="font-bold text-yellow-800 text-sm">Waiting for {opponent.name} to call the toss...</p>
-                  <p className="text-yellow-700 text-xs">Browse available players below while you wait — the draft will start automatically!</p>
+          callingUser === currentUser.id ? (
+            <div className="bg-amber-50 border-2 border-amber-500 rounded-lg px-3 py-2 mb-2 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="animate-bounce text-xl">🪙</div>
+                  <div>
+                    <p className="font-bold text-amber-800 text-sm">It&apos;s your turn to call the toss!</p>
+                    <p className="text-amber-700 text-xs">Choose Heads or Tails to decide who picks first.</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => { setShowToss(true); setTossPhase('calling'); }}
+                  className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow"
+                >
+                  Call Toss
+                </button>
               </div>
-              <a href="/dashboard" className="shrink-0 text-yellow-700 hover:text-yellow-900 text-xs font-semibold underline">← Dashboard</a>
             </div>
-          </div>
+          ) : (
+            <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg px-3 py-2 mb-2 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="animate-pulse text-xl">🪙</div>
+                  <div>
+                    <p className="font-bold text-yellow-800 text-sm">Waiting for {opponent.name} to call the toss...</p>
+                    <p className="text-yellow-700 text-xs">Browse available players below while you wait — the draft will start automatically!</p>
+                  </div>
+                </div>
+                <a href="/dashboard" className="shrink-0 text-yellow-700 hover:text-yellow-900 text-xs font-semibold underline">← Dashboard</a>
+              </div>
+            </div>
+          )
         ) : (
           <div className={`border-2 rounded-lg px-3 py-2 mb-2 shadow-sm ${isMyTurn ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-cricket-600' : 'bg-indigo-50 border-indigo-400'}`}>
             <p className={`text-center font-bold text-sm flex items-center justify-center gap-1.5 ${isMyTurn ? 'text-orange-700' : 'text-indigo-700'}`}>
