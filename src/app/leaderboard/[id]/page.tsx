@@ -591,6 +591,8 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
           : { finalLineup: u1Lineup, benchPlayers: u1Bench }
         const leftTotal = isViewedUser1 ? u1Total : u2Total
         const rightTotal = isViewedUser1 ? u2Total : u1Total
+        const leftCaptainPickId = isViewedUser1 ? u1CaptainPickId : u2CaptainPickId
+        const rightCaptainPickId = isViewedUser1 ? u2CaptainPickId : u1CaptainPickId
 
         const renderRow = (pick: any, isBench = false, isCaptain = false) => {
           const stats = scorecardStatsMap[pick.player?.id] ?? pick.player?.stats?.find((s: any) => s.iplGameId === gameId)
@@ -666,7 +668,6 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     <div className="text-xs font-bold text-gray-500 uppercase mb-2">⭐ Starting 5</div>
                     <div className="space-y-1">
                       {leftLineup.map((p: any) => {
-                        const leftCaptainPickId = isViewedUser1 ? u1CaptainPickId : u2CaptainPickId
                         const isCaptain = captainEnabled && leftCaptainPickId === p.id
                         return renderRow(p, false, isCaptain)
                       })}
@@ -685,7 +686,6 @@ export default function TournamentLeaderboardPage({ params }: { params: Promise<
                     <div className="text-xs font-bold text-gray-500 uppercase mb-2">⭐ Starting 5</div>
                     <div className="space-y-1">
                       {rightLineup.map((p: any) => {
-                        const rightCaptainPickId = isViewedUser1 ? u2CaptainPickId : u1CaptainPickId
                         const isCaptain = captainEnabled && rightCaptainPickId === p.id
                         return renderRow(p, false, isCaptain)
                       })}
