@@ -1158,6 +1158,17 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
               <div className="text-center text-sm text-gray-600 bg-gray-50 rounded p-3">
                 💡 <strong>Pro Tip:</strong> Players are sorted by avg pts — pick from the top of the list for your starting 5, then fill substitutes with good value picks!
               </div>
+
+              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
+                <h4 className="font-bold text-yellow-800 mb-2 flex items-center gap-2">🎖️ 6. Captain Mode (Optional)</h4>
+                <ul className="text-sm space-y-1 text-yellow-700">
+                  <li>• Before the draft starts, both players are asked if they want to enable Captain Mode</li>
+                  <li>• <strong>Both must agree</strong> — if either player declines, Captain Mode is off for that contest</li>
+                  <li>• After all 7 picks are made, each player secretly chooses one of their starting 5 as captain</li>
+                  <li>• The captain earns <strong>2× points</strong> — so pick your highest-scoring player!</li>
+                  <li>• Captains are revealed on the scorecard after the match is settled</li>
+                </ul>
+              </div>
             </div>
           )}
         </div>
