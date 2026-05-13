@@ -107,21 +107,10 @@ export async function PUT(
       );
     }
 
-    // When contest goes LIVE: auto-disable captain for matchups where not both picks are set
-    if (status === 'LIVE' || status === 'ACTIVE') {
-      const captainMatchups = await prisma.headToHeadMatchup.findMany({
-        where: { contestId: id, captainEnabled: true },
-        select: { id: true, user1CaptainPickId: true, user2CaptainPickId: true },
-      });
-      for (const m of captainMatchups) {
-        if (!m.user1CaptainPickId || !m.user2CaptainPickId) {
-          await prisma.headToHeadMatchup.update({
-            where: { id: m.id },
-            data: { captainEnabled: false, captainDeclined: true },
-          });
-        }
-      }
-    }
+    // When contest goes LIVE: if one player didn't pick their captain, captain mode stays
+    // ACTIVE — only the player who picked gets the 2× bonus. The other player forfeits it.
+    // We do NOT disable captain mode or set captainDeclined — that would misrepresent the situation.
+    // (No action needed here; scoring already handles null captainPickId as no bonus.)
 
     // Push notification when contest moves to DRAFT_PHASE (draft room opens)
     if (status === 'DRAFT_PHASE') {

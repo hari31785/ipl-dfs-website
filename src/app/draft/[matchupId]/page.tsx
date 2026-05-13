@@ -1020,9 +1020,11 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
           const borderColor = matchup.captainDeclined ? 'border-gray-300 bg-gray-50' : 'border-amber-300 bg-amber-50';
 
           // Message line below the status row
+          const opponentCaptainPickId = isUser1 ? matchup.user2CaptainPickId : matchup.user1CaptainPickId;
           const message = (() => {
             if (matchup.captainDeclined) return <span className="text-xs text-gray-500">Captain Mode is <span className="font-semibold">off</span> — one player opted out.</span>;
             if (matchup.captainEnabled && isDraftComplete && !myCaptainPickId) return <span className="text-xs font-semibold text-amber-800">Pick your captain below — your captain scores 2× points!</span>;
+            if (matchup.captainEnabled && isDraftComplete && myCaptainPickId && !opponentCaptainPickId) return <span className="text-xs text-amber-700">🎖️ Your captain is locked in. Opponent didn&apos;t pick — only you get the 2× bonus.</span>;
             if (matchup.captainEnabled && isDraftComplete && myCaptainPickId) return <span className="text-xs text-amber-700">🎖️ Your captain is locked in.</span>;
             if (matchup.captainEnabled) return <span className="text-xs text-amber-700">Both in! Pick your captain after the draft.</span>;
             if (!opponentAgreed) return <span className="text-xs text-amber-700">Waiting for {opponent.name} to respond…</span>;
