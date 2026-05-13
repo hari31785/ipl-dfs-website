@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Limit static generation workers to reduce memory pressure on Vercel
+    cpus: 1,
+  },
 };
 
 export default nextConfig;
