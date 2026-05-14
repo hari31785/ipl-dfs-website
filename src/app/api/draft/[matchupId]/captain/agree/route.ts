@@ -90,7 +90,7 @@ export async function POST(
       return NextResponse.json({ agreed: true, captainEnabled: true, bothAgreed: true });
     }
 
-    // Only one has agreed so far — notify the opponent
+    // Only one has agreed so far — notify the opponent so they know to respond.
     const opponentUser = isUser1 ? matchup.user2.user : matchup.user1.user;
     const myUser = isUser1 ? matchup.user1.user : matchup.user2.user;
     await sendToUser(opponentUser.id, {

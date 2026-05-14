@@ -143,11 +143,22 @@ export async function POST(
       if (nextPickerSignupId && nextPickerSignupId !== userSignupId) {
         const nextPickerUser = nextPickerSignupId === matchup.user1.id ? matchup.user1.user : matchup.user2.user;
         const pickerName = matchup.user1.user.id === userId ? matchup.user1.user.name : matchup.user2.user.name;
-        await sendToUser(nextPickerUser.id, {
-          title: `🏏 Your Turn — Pick #${currentPickOrder + 1}`,
-          body: `${pickerName} just picked ${draftPick.player.name}. Go now!`,
-          url: `/draft/${matchupId}`,
-        }).catch(() => {});
+
+        // Suppress notification after pick #1 if the toss winner (current picker) opted into captain.
+        // Sending it would reveal who won the toss + their first pick before the opponent enters the room.
+        // If the toss winner opted OUT, it's safe to notify since there's nothing strategic to hide.
+        const isFirstPick = currentPickOrder === 1;
+        const pickerIsUser1 = matchup.user1.user.id === userId;
+        const pickerCaptainAgreed = pickerIsUser1 ? matchup.captainAgreedUser1 : matchup.captainAgreedUser2;
+        const suppressNotif = isFirstPick && (matchup.captainEnabled || pickerCaptainAgreed);
+
+        if (!suppressNotif) {
+          await sendToUser(nextPickerUser.id, {
+            title: `🏏 Your Turn — Pick #${currentPickOrder + 1}`,
+            body: `${pickerName} just made their pick. It's your turn — go now!`,
+            url: `/draft/${matchupId}`,
+          }).catch(() => {});
+        }
       }
     }
 
