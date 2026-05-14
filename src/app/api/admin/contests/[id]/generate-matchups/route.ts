@@ -61,9 +61,11 @@ export async function POST(
 
     console.log(`🔀 Generating matchups for contest ${contest.id} (fair pairing)...`);
     
-    // Fair pairing: prefer opponents not yet faced in this tournament
+    // Fair pairing: prefer opponents not yet faced in this contest type.
+    // Scoping to contestType ensures 100c users cycle through 100c opponents
+    // independently of who they've faced in 50c or 25c contests.
     const tournamentId = contest.iplGame?.tournamentId ?? '';
-    const pairs = await fairPairSignups(signups, tournamentId, id, prisma);
+    const pairs = await fairPairSignups(signups, tournamentId, id, prisma, contest.contestType);
     
     // Create head-to-head matchups
     const matchups = [];

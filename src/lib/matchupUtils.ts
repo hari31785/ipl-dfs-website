@@ -89,16 +89,20 @@ export async function fairPairSignups(
   tournamentId: string,
   currentContestId: string,
   prisma: PrismaClient,
+  contestType?: string,
   seedPairs?: Set<string>
 ): Promise<[SignupForPairing, SignupForPairing][]> {
   const SAME_DAY_PENALTY = 1000; // effectively ban same-day rematches
 
-  // Fetch all past USER-level pairings in this tournament (excluding current contest)
-  // Include contestId so we can rank contests by recency for decay weighting (Option B)
+  // Fetch past USER-level pairings scoped to the same contest type in this tournament.
+  // Scoping by contestType ensures 100c history drives 100c pairing, 50c drives 50c, etc.
+  // This means the round-robin cycle, hard-ban, and recency weights all operate
+  // within the same tier so small pools in one tier don't pollute others.
   const pastMatchups = await prisma.headToHeadMatchup.findMany({
     where: {
       contest: {
         iplGame: { tournamentId },
+        ...(contestType ? { contestType } : {}),
       },
       contestId: { not: currentContestId },
     },

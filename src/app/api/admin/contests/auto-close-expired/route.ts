@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
           
           const tournamentId = contest.iplGame?.tournament?.id ?? '';
           const seedPairs = batchPairs.get(tournamentId);
-          const pairs = await fairPairSignups(signups, tournamentId, contest.id, prisma, seedPairs);
+          const pairs = await fairPairSignups(signups, tournamentId, contest.id, prisma, contest.contestType, seedPairs);
           
           // Accumulate committed pairs into the batch map so subsequent
           // contests in this cron run avoid the same pairings.
@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
 
           const tournamentId = contest.iplGame?.tournament?.id ?? '';
           const seedPairsOdd = batchPairs.get(tournamentId);
-          const pairs = await fairPairSignups(finalSignups, tournamentId, contest.id, prisma, seedPairsOdd);
+          const pairs = await fairPairSignups(finalSignups, tournamentId, contest.id, prisma, contest.contestType, seedPairsOdd);
           
           const newKeysOdd = extractPairKeys(pairs);
           const existingOdd = batchPairs.get(tournamentId) ?? new Set<string>();
