@@ -198,6 +198,8 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
   const [draftedCaptainEnabled, setDraftedCaptainEnabled] = useState(false)
   const [draftedUser1CaptainPickId, setDraftedUser1CaptainPickId] = useState<string | null>(null)
   const [draftedUser2CaptainPickId, setDraftedUser2CaptainPickId] = useState<string | null>(null)
+  const [savingDraftedCaptain, setSavingDraftedCaptain] = useState(false)
+  const [draftedCaptainError, setDraftedCaptainError] = useState<string | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(() => {
     try {
       const stored = typeof window !== 'undefined' ? sessionStorage.getItem('dismissedAlerts') : null
@@ -2476,6 +2478,60 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                 className="text-white hover:text-indigo-100 text-2xl font-bold leading-none"
               >×</button>
             </div>
+
+            {/* Captain Pick Banner — shown when captain is enabled and current user hasn't picked yet */}
+            {(() => {
+              if (!draftedCaptainEnabled || loadingDraftedPicks) return null;
+              const mySignupId = selectedDraftedContest.id;
+              const myIsUser1 = selectedDraftedContest.matchup?.user1Id === mySignupId;
+              const myCaptainPickId = myIsUser1 ? draftedUser1CaptainPickId : draftedUser2CaptainPickId;
+              if (myCaptainPickId) return null;
+              const myStarterPicks = draftedTeamPicks
+                .filter(p => p.pickedByUserId === mySignupId && !p.isBench)
+                .sort((a: any, b: any) => a.pickOrder - b.pickOrder);
+              return (
+                <div className="border-b border-amber-200 bg-amber-50 px-3 py-3">
+                  <p className="text-xs font-bold text-amber-800 mb-2">🎖️ Pick Your Captain — you haven&apos;t chosen one yet!</p>
+                  {draftedCaptainError && <p className="text-xs text-red-600 mb-1">{draftedCaptainError}</p>}
+                  <div className="flex flex-wrap gap-1.5">
+                    {myStarterPicks.map((pick: any) => (
+                      <button
+                        key={pick.id}
+                        disabled={savingDraftedCaptain}
+                        onClick={async () => {
+                          if (!user) return;
+                          const confirmed = confirm(`Make ${pick.player.name} your captain? This cannot be changed.`);
+                          if (!confirmed) return;
+                          setSavingDraftedCaptain(true);
+                          setDraftedCaptainError(null);
+                          try {
+                            const res = await fetch(`/api/draft/${selectedDraftedContest.matchup?.id}/captain/pick`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ userId: user.id, draftPickId: pick.id }),
+                            });
+                            if (res.ok) {
+                              if (myIsUser1) setDraftedUser1CaptainPickId(pick.id);
+                              else setDraftedUser2CaptainPickId(pick.id);
+                            } else {
+                              const err = await res.json();
+                              setDraftedCaptainError(err.message ?? 'Failed to save captain');
+                            }
+                          } catch {
+                            setDraftedCaptainError('Network error — please try again');
+                          } finally {
+                            setSavingDraftedCaptain(false);
+                          }
+                        }}
+                        className="text-[11px] font-semibold px-2 py-1 rounded-lg border-2 border-amber-300 bg-white hover:bg-amber-100 hover:border-amber-500 transition-colors disabled:opacity-50"
+                      >
+                        ⭐ {pick.player.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Body — comparison table */}
             <div className="overflow-y-auto">
