@@ -168,6 +168,8 @@ export async function GET(request: NextRequest) {
               user1Score: true,
               user2Score: true,
               captainEnabled: true,
+              captainAgreedUser1: true,
+              captainAgreedUser2: true,
               _count: { select: { draftPicks: true } },
               user2: { select: { user: { select: { username: true } } } },
             },
@@ -183,6 +185,8 @@ export async function GET(request: NextRequest) {
               user1Score: true,
               user2Score: true,
               captainEnabled: true,
+              captainAgreedUser1: true,
+              captainAgreedUser2: true,
               _count: { select: { draftPicks: true } },
               user1: { select: { user: { select: { username: true } } } },
             },
@@ -221,6 +225,7 @@ export async function GET(request: NextRequest) {
               myScore: isUser1 ? matchup.user1Score : matchup.user2Score,
               opponentScore: isUser1 ? matchup.user2Score : matchup.user1Score,
               captainEnabled: matchup.captainEnabled ?? false,
+              captainActive: !!(matchup.captainEnabled || matchup.captainAgreedUser1 || matchup.captainAgreedUser2),
             },
           }
         })
