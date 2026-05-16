@@ -126,7 +126,12 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
     return localStorage.getItem(`captain-modal-dismissed-${matchupId}`) === 'true';
   });
   // Whether the captain question has been resolved (so toss can proceed)
-  const [captainResolved, setCaptainResolved] = useState(false);
+  const [captainResolved, setCaptainResolved] = useState(() => {
+    // If the user already dismissed the captain modal on a prior visit,
+    // captain is resolved and the toss can start immediately on re-mount.
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(`captain-modal-dismissed-${matchupId}`) === 'true';
+  });
   // Captain pick modal (shown after draft completion)
   const [showCaptainPickModal, setShowCaptainPickModal] = useState(false);
   const [selectingCaptain, setSelectingCaptain] = useState(false);
@@ -1182,21 +1187,6 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
             </div>
           )}
         </div>
-
-        {/* Toss waiting banner — shown to the non-calling user while waiting for toss */}
-        {showToss && tossPhase === 'calling' && callingUser !== currentUser.id && (
-          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="animate-pulse text-2xl">🪙</div>
-              <div>
-                <p className="font-bold text-yellow-800">Waiting for {opponent.name} to call the toss...</p>
-                <p className="text-yellow-700 text-sm">Browse available players below while you wait — the draft will start automatically!</p>
-                {myAgreed && <p className="text-amber-700 text-xs mt-1 font-medium">🎖️ You opted in to Captain Mode — waiting for {opponent.name} to respond.</p>}
-              </div>
-            </div>
-            <a href="/dashboard" className="shrink-0 text-yellow-700 hover:text-yellow-900 text-sm font-semibold underline">← Dashboard</a>
-          </div>
-        )}
 
         {/* Draft Status */}
         {isDraftComplete ? (
