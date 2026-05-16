@@ -65,38 +65,43 @@ export async function POST(
       return NextResponse.json({ message: "Draft is not active" }, { status: 400 });
     }
 
-    // Check if it's currently the opponent's turn
-    const lastPickOrder = matchup.draftPicks[0]?.pickOrder ?? 0;
-    const nextPickOrder = lastPickOrder + 1;
-    
-    // Determine whose turn it is based on snake draft order
-    let isUser1Turn: boolean;
-    if (matchup.firstPickUser === 'user1') {
-      // User1 picks: 1,4,5,8,9,12,13
-      // User2 picks: 2,3,6,7,10,11,14
-      isUser1Turn = [1,4,5,8,9,12,13].includes(nextPickOrder);
-    } else {
-      // User2 picks: 1,4,5,8,9,12,13
-      // User1 picks: 2,3,6,7,10,11,14
-      isUser1Turn = [2,3,6,7,10,11,14].includes(nextPickOrder);
-    }
-
-    // Check if user is trying to nudge when it's their own turn
-    if ((isUser1 && isUser1Turn) || (isUser2 && !isUser1Turn)) {
-      return NextResponse.json(
-        { message: "It's your turn to pick!" },
-        { status: 400 }
-      );
-    }
-
     // Get opponent info
     const nudger = isUser1 ? matchup.user1.user : matchup.user2.user;
     const opponent = isUser1 ? matchup.user2.user : matchup.user1.user;
 
-    // Try to send push notification if user has subscription
+    // Toss-waiting scenario: toss hasn't been called yet
+    // The nudger is waiting; the opponent (toss caller) needs to act.
+    const tossPending = !matchup.firstPickUser;
+
+    if (!tossPending) {
+      // Normal pick-turn nudge — verify it's actually the opponent's turn
+      const lastPickOrder = matchup.draftPicks[0]?.pickOrder ?? 0;
+      const nextPickOrder = lastPickOrder + 1;
+
+      let isUser1Turn: boolean;
+      if (matchup.firstPickUser === 'user1') {
+        isUser1Turn = [1,4,5,8,9,12,13].includes(nextPickOrder);
+      } else {
+        isUser1Turn = [2,3,6,7,10,11,14].includes(nextPickOrder);
+      }
+
+      if ((isUser1 && isUser1Turn) || (isUser2 && !isUser1Turn)) {
+        return NextResponse.json(
+          { message: "It's your turn to pick!" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Try to send push notification
     let pushSent = false;
     try {
-      await sendToUser(opponent.id, {
+      await sendToUser(opponent.id, tossPending ? {
+        title: `🪙 @${nudger.username} is waiting!`,
+        body: `Your opponent is in the draft room — go call the toss!`,
+        icon: '/icon-192x192.png',
+        url: `/draft/${matchupId}`,
+      } : {
         title: `⏰ @${nudger.username} is waiting!`,
         body: `Your opponent is waiting for your draft pick`,
         icon: '/icon-192x192.png',
