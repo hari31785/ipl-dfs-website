@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { fairPairSignups } from '@/lib/matchupUtils';
+import { fairPairSignups, extractPairKeys } from '@/lib/matchupUtils';
 
 
 // POST /api/admin/contests/[id]/close-signups
@@ -142,7 +142,28 @@ export async function POST(
       
       // Fair pairing: scope to same contest type so 100c cycles through 100c opponents only
       const tournamentId = updatedContest.iplGame.tournament?.id ?? '';
-      const pairs = await fairPairSignups(signups, tournamentId, updatedContest.id, prisma, updatedContest.contestType);
+
+      // Build a same-day cross-tier seed set: any pairings already created today
+      // for the SAME game (regardless of contest type) get a high penalty so users
+      // are not paired against the same opponent in both 100c and 50c on the same day.
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const sameDayPairings = await prisma.headToHeadMatchup.findMany({
+        where: {
+          contest: { iplGameId: updatedContest.iplGame.id },
+          createdAt: { gte: todayStart },
+          contestId: { not: updatedContest.id },
+        },
+        select: { user1: { select: { userId: true } }, user2: { select: { userId: true } } },
+      });
+      const crossTierSeedPairs = extractPairKeys(
+        sameDayPairings.map(m => [
+          { id: '', userId: m.user1.userId },
+          { id: '', userId: m.user2.userId },
+        ])
+      );
+
+      const pairs = await fairPairSignups(signups, tournamentId, updatedContest.id, prisma, updatedContest.contestType, crossTierSeedPairs);
       
       // Create head-to-head matchups
       const matchups = [];

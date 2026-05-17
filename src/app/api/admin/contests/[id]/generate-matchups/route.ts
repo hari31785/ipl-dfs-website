@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { fairPairSignups } from '@/lib/matchupUtils';
+import { fairPairSignups, extractPairKeys } from '@/lib/matchupUtils';
 
 // POST /api/admin/contests/[id]/generate-matchups
 export async function POST(
@@ -13,7 +13,7 @@ export async function POST(
     const contest = await prisma.contest.findUnique({
       where: { id },
       include: {
-        iplGame: { select: { tournamentId: true } },
+        iplGame: { select: { id: true, tournamentId: true } },
         signups: {
           include: { user: true },
           orderBy: { signupAt: 'asc' }
@@ -65,7 +65,28 @@ export async function POST(
     // Scoping to contestType ensures 100c users cycle through 100c opponents
     // independently of who they've faced in 50c or 25c contests.
     const tournamentId = contest.iplGame?.tournamentId ?? '';
-    const pairs = await fairPairSignups(signups, tournamentId, id, prisma, contest.contestType);
+
+    // Build a same-day cross-tier seed set: any pairings already created today
+    // for the SAME game (regardless of contest type) get a high penalty so users
+    // are not paired against the same opponent in both 100c and 50c on the same day.
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const sameDayPairings = await prisma.headToHeadMatchup.findMany({
+      where: {
+        contest: { iplGameId: contest.iplGame.id },
+        createdAt: { gte: todayStart },
+        contestId: { not: id },
+      },
+      select: { user1: { select: { userId: true } }, user2: { select: { userId: true } } },
+    });
+    const crossTierSeedPairs = extractPairKeys(
+      sameDayPairings.map(m => [
+        { id: '', userId: m.user1.userId },
+        { id: '', userId: m.user2.userId },
+      ])
+    );
+
+    const pairs = await fairPairSignups(signups, tournamentId, id, prisma, contest.contestType, crossTierSeedPairs);
     
     // Create head-to-head matchups
     const matchups = [];
