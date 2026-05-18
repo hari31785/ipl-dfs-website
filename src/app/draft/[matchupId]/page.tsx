@@ -1225,11 +1225,11 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     <p className="text-yellow-700 text-xs">Browse available players below while you wait — the draft will start automatically!</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className="flex flex-col items-end gap-1 min-w-0 max-w-[120px]">
                   <button
                     onClick={handleNudge}
                     disabled={nudging || nudgeTimeRemaining > 0}
-                    className={`text-xs font-semibold px-3 py-1 rounded-full transition-all ${
+                    className={`shrink-0 text-xs font-semibold px-3 py-1 rounded-full transition-all ${
                       nudgeTimeRemaining > 0
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-sm hover:shadow-md'
@@ -1243,7 +1243,7 @@ export default function DraftPage({ params }: { params: Promise<{ matchupId: str
                     }
                   </button>
                   {nudgeMessage && (
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                    <span className={`text-[10px] px-2 py-0.5 rounded-lg font-medium text-right break-words whitespace-normal w-full ${
                       nudgeMessage.success ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                     }`}>
                       {nudgeMessage.text}
