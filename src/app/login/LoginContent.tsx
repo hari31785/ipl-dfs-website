@@ -35,7 +35,11 @@ export default function LoginContent() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.message || "Login failed")
+        if (response.status === 500 || response.status === 503) {
+          setError('We\'re experiencing a temporary database issue. Please try again in a few minutes.')
+        } else {
+          setError(data.message || 'Login failed')
+        }
         setIsLoading(false)
         return
       }
