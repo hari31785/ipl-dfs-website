@@ -31,7 +31,7 @@ export default function DbStatusBanner() {
 
   return (
     <div className="w-full bg-red-600 text-white text-center px-4 py-2.5 text-sm font-medium z-50 sticky top-0">
-      ⚠️ We&apos;re experiencing a temporary database issue. Login and other features may be unavailable — please check back in a few minutes.
+      ⚠️ We&apos;re experiencing a temporary database issue. Login and other features may be unavailable — please try again after sometime.
     </div>
   );
 }
