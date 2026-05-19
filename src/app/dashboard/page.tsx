@@ -2,6 +2,8 @@ import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import DashboardClient from './DashboardClient'
 
+export const dynamic = 'force-dynamic'
+
 // Cache tournament data server-side for 1 hour.
 // Available Contests is the first tab users see — pre-loading it here means
 // the data is baked into the initial HTML and renders without any client waterfall.
