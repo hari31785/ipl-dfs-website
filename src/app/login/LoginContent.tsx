@@ -36,7 +36,7 @@ export default function LoginContent() {
 
       if (!response.ok) {
         if (response.status === 500 || response.status === 503) {
-          setError('We\'re experiencing a temporary database issue. Please try again in a few minutes.')
+          setError('We\'re experiencing a temporary database issue. Please try again sometime.')
         } else {
           setError(data.message || 'Login failed')
         }
