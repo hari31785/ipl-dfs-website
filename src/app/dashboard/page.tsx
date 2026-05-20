@@ -87,8 +87,16 @@ const getCachedDashboardTournaments = unstable_cache(
 )
 
 export default async function DashboardPage() {
-  const { tournaments: initialTournaments, leaderboardTournamentId } =
-    await getCachedDashboardTournaments()
+  let initialTournaments: any[] = []
+  let leaderboardTournamentId: string | null = null
+
+  try {
+    const data = await getCachedDashboardTournaments()
+    initialTournaments = data.tournaments
+    leaderboardTournamentId = data.leaderboardTournamentId
+  } catch {
+    // DB unreachable — render with empty data; DbStatusBanner will inform the user
+  }
 
   return (
     <DashboardClient

@@ -101,29 +101,32 @@ async function fetchStats(gameId: string) {
 export default async function ScoresPage({ params }: { params: Promise<{ matchupId: string }> }) {
   const { matchupId } = await params
 
-  // Always fetch matchup fresh — it's a tiny indexed query and we need
-  // the status to decide whether to cache stats
-  const matchup = await fetchMatchup(matchupId)
-  if (!matchup) notFound()
+  let matchup: Awaited<ReturnType<typeof fetchMatchup>> = null
+  let statsMap: Awaited<ReturnType<typeof fetchStats>> = {}
 
-  const gameId = matchup.contest.iplGame.id
-  const isCompleted = matchup.status === 'COMPLETED'
+  try {
+    matchup = await fetchMatchup(matchupId)
+    if (!matchup) notFound()
 
-  // For LIVE/ACTIVE contests, opt out of caching entirely to ensure fresh data
-  if (!isCompleted) {
-    unstable_noStore()
+    const gameId = matchup.contest.iplGame.id
+    const isCompleted = matchup.status === 'COMPLETED'
+
+    if (!isCompleted) {
+      unstable_noStore()
+    }
+
+    statsMap = isCompleted
+      ? await unstable_cache(
+          () => fetchStats(gameId),
+          [`scores-stats-${gameId}`],
+          { revalidate: 3600, tags: [`scores-game-${gameId}`] }
+        )()
+      : await fetchStats(gameId)
+  } catch (err: unknown) {
+    // If DB is down, matchup will be null — show not-found rather than crash
+    if (!matchup) notFound()
+    throw err
   }
-
-  // COMPLETED matchups: cache stats for 1 hour at the server layer.
-  // Tag allows instant invalidation when admin pushes new stats.
-  // LIVE/ACTIVE/DRAFTING: always fresh — scores are changing.
-  const statsMap = isCompleted
-    ? await unstable_cache(
-        () => fetchStats(gameId),
-        [`scores-stats-${gameId}`],
-        { revalidate: 3600, tags: [`scores-game-${gameId}`] }
-      )()
-    : await fetchStats(gameId)
 
   return (
     <ScoresClient
