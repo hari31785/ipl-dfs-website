@@ -41,9 +41,8 @@ export async function POST(
           }
         },
         draftPicks: {
-          select: { pickOrder: true },
+          select: { pickOrder: true, pickedByUserId: true },
           orderBy: { pickOrder: 'desc' },
-          take: 1,
         },
       },
     });
@@ -85,7 +84,15 @@ export async function POST(
         isUser1Turn = [2,3,6,7,10,11,14].includes(nextPickOrder);
       }
 
-      if ((isUser1 && isUser1Turn) || (isUser2 && !isUser1Turn)) {
+      // Count how many picks each user has already made
+      const nudgerSignupId = isUser1 ? matchup.user1Id : matchup.user2Id;
+      const nudgerPickCount = matchup.draftPicks.filter(p => p.pickedByUserId === nudgerSignupId).length;
+
+      // If the nudger has already finished all their picks (6 in a 13-pick draft),
+      // it's definitely the opponent's remaining turns — always allow the nudge
+      const nudgerDone = nudgerPickCount >= 6;
+
+      if (!nudgerDone && ((isUser1 && isUser1Turn) || (isUser2 && !isUser1Turn))) {
         return NextResponse.json(
           { message: "It's your turn to pick!" },
           { status: 400 }
