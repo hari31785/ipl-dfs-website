@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendToUser } from "@/lib/pushNotifications";
+import { parseFirstPickUser } from "@/lib/draftUtils";
 
 export async function POST(
   request: NextRequest,
@@ -41,8 +42,9 @@ export async function POST(
           }
         },
         draftPicks: {
-          select: { pickOrder: true, pickedByUserId: true },
+          select: { pickOrder: true },
           orderBy: { pickOrder: 'desc' },
+          take: 1,
         },
       },
     });
@@ -73,30 +75,32 @@ export async function POST(
     const tossPending = !matchup.firstPickUser;
 
     if (!tossPending) {
-      // Normal pick-turn nudge — verify it's actually the opponent's turn
-      const lastPickOrder = matchup.draftPicks[0]?.pickOrder ?? 0;
-      const nextPickOrder = lastPickOrder + 1;
+      // Check if the nudger has already ended their draft
+      // firstPickUser encodes waiver flags: :w1/:h1 = user1 ended, :w2/:h2 = user2 ended
+      const { user1WaivedBench, user2WaivedBench, user1HalfWaived, user2HalfWaived } =
+        parseFirstPickUser(matchup.firstPickUser);
+      const nudgerEndedDraft = isUser1
+        ? (user1WaivedBench || user1HalfWaived)
+        : (user2WaivedBench || user2HalfWaived);
 
-      let isUser1Turn: boolean;
-      if (matchup.firstPickUser === 'user1') {
-        isUser1Turn = [1,4,5,8,9,12,13].includes(nextPickOrder);
-      } else {
-        isUser1Turn = [2,3,6,7,10,11,14].includes(nextPickOrder);
-      }
+      if (!nudgerEndedDraft) {
+        // Nudger hasn't ended draft — check if it's actually their turn
+        const lastPickOrder = matchup.draftPicks[0]?.pickOrder ?? 0;
+        const nextPickOrder = lastPickOrder + 1;
 
-      // Count how many picks each user has already made
-      const nudgerSignupId = isUser1 ? matchup.user1Id : matchup.user2Id;
-      const nudgerPickCount = matchup.draftPicks.filter(p => p.pickedByUserId === nudgerSignupId).length;
+        let isUser1Turn: boolean;
+        if (matchup.firstPickUser?.startsWith('user1')) {
+          isUser1Turn = [1,4,5,8,9,12,13].includes(nextPickOrder);
+        } else {
+          isUser1Turn = [2,3,6,7,10,11,14].includes(nextPickOrder);
+        }
 
-      // If the nudger has already finished all their picks (6 in a 13-pick draft),
-      // it's definitely the opponent's remaining turns — always allow the nudge
-      const nudgerDone = nudgerPickCount >= 6;
-
-      if (!nudgerDone && ((isUser1 && isUser1Turn) || (isUser2 && !isUser1Turn))) {
-        return NextResponse.json(
-          { message: "It's your turn to pick!" },
-          { status: 400 }
-        );
+        if ((isUser1 && isUser1Turn) || (isUser2 && !isUser1Turn)) {
+          return NextResponse.json(
+            { message: "It's your turn to pick!" },
+            { status: 400 }
+          );
+        }
       }
     }
 
