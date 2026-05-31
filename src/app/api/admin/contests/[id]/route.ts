@@ -95,7 +95,8 @@ export async function PUT(
           } else if (opponents.length === 1) {
             body = `${gameTitle} is underway — you're up against @${opponents[0]}. Check your active contest!`;
           } else {
-            body = `${gameTitle} is underway — you have ${opponents.length} matchups in this contest. Check your active contests!`;
+            const names = opponents.map(o => `@${o}`).join(' and ');
+            body = `${gameTitle} is underway — you have ${opponents.length} matchups vs ${names}. Check your active contests!`;
           }
           return sendToUser(userId, {
             title: `🏏 Contest Live · ${contestTypeLabel}`,
@@ -156,7 +157,8 @@ export async function PUT(
           } else if (opponents.length === 1) {
             body = `You're up against @${opponents[0]} in ${gameTitle} — head to your dashboard to draft your team!`;
           } else {
-            body = `You have ${opponents.length} matchups in ${gameTitle} — head to your dashboard to draft your teams!`;
+            const names = opponents.map(o => `@${o}`).join(' and ');
+            body = `Draft open for ${gameTitle} — you have ${opponents.length} matchups vs ${names}. Head to your dashboard!`;
           }
           return sendToUser(userId, {
             title: `⚡ Draft Open · ${contestTypeLabel}`,
