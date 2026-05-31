@@ -121,6 +121,14 @@ export async function GET() {
         const user1Score = user1Lineup.reduce((sum, p) => sum + p.points, 0);
         const user2Score = user2Lineup.reduce((sum, p) => sum + p.points, 0);
 
+        // Resolve captain player names from draftPick IDs
+        const user1CaptainPick = matchup.user1CaptainPickId
+          ? matchup.draftPicks.find(p => p.id === matchup.user1CaptainPickId)
+          : null;
+        const user2CaptainPick = matchup.user2CaptainPickId
+          ? matchup.draftPicks.find(p => p.id === matchup.user2CaptainPickId)
+          : null;
+
         return {
           id: matchup.id,
           status: matchup.status,
@@ -129,7 +137,9 @@ export async function GET() {
           user1Score,
           user2Score,
           captainEnabled: matchup.captainEnabled,
-          draftPicksCount: matchup.draftPicks.length
+          draftPicksCount: matchup.draftPicks.length,
+          user1CaptainName: user1CaptainPick?.player.name ?? null,
+          user2CaptainName: user2CaptainPick?.player.name ?? null,
         };
       })
     }));

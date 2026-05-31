@@ -2087,9 +2087,21 @@ export default function DashboardClient({ initialTournaments, initialLeaderboard
                                       {/* Captain badge + Watch button */}
                                       <div className="flex items-center justify-between gap-2">
                                         {matchup.captainEnabled && (
-                                          <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold shrink-0">
-                                            🎖️ Captain Mode
-                                          </span>
+                                          <div className="flex flex-col gap-0.5 shrink-0">
+                                            <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">
+                                              🎖️ Captain Mode
+                                            </span>
+                                            {(matchup.user1CaptainName || matchup.user2CaptainName) && (
+                                              <div className="text-[9px] text-amber-700 px-2 space-y-0.5">
+                                                {matchup.user1CaptainName && (
+                                                  <div>@{matchup.user1.user.username}: <span className="font-semibold">{matchup.user1CaptainName}</span></div>
+                                                )}
+                                                {matchup.user2CaptainName && (
+                                                  <div>@{matchup.user2.user.username}: <span className="font-semibold">{matchup.user2CaptainName}</span></div>
+                                                )}
+                                              </div>
+                                            )}
+                                          </div>
                                         )}
                                         <button
                                           onClick={() => router.push(`/scores/${matchup.id}?from=spectate`)}

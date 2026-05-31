@@ -146,11 +146,14 @@ export default function ScoresClient({ initialMatchup, initialStatsMap, matchupI
   const myPicksWithStats = injectStats(myPicks);
   const opponentPicksWithStats = injectStats(opponentPicks);
 
-  const myCaptainPickId = matchup.captainEnabled
-    ? (isUser1 ? matchup.user1CaptainPickId : matchup.user2CaptainPickId) ?? null
+  // For spectators: left panel = user1, right panel = user2
+  // captainEnabled may be false if only one user agreed — still show their captain if they picked one
+  const captainActive = !!(matchup.captainEnabled || matchup.user1CaptainPickId || matchup.user2CaptainPickId);
+  const myCaptainPickId = captainActive
+    ? (isSpectator ? matchup.user1CaptainPickId : isUser1 ? matchup.user1CaptainPickId : matchup.user2CaptainPickId) ?? null
     : null;
-  const opponentCaptainPickId = matchup.captainEnabled
-    ? (isUser1 ? matchup.user2CaptainPickId : matchup.user1CaptainPickId) ?? null
+  const opponentCaptainPickId = captainActive
+    ? (isSpectator ? matchup.user2CaptainPickId : isUser1 ? matchup.user2CaptainPickId : matchup.user1CaptainPickId) ?? null
     : null;
 
   const myTotalPoints = calculateTotalPointsWithSwap(myPicksWithStats, gameId, myCaptainPickId).totalPoints;
